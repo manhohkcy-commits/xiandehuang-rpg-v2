@@ -16,7 +16,7 @@
   <div class="card">
     <div class="row"><span class="k">我的位号（box）</span>
       <span class="v"><input id="box" placeholder="例如 gct6kdvygp" style="width:210px;"></span></div>
-    <div class="hint" style="margin-top:6px;">第一次玩可以随便填（例如 test1），会自动建新档。</div>
+    <div class="hint" style="margin-top:6px;">第一次玩可以留空，点进去会自动发一个位号并建新档。</div>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;">
@@ -74,10 +74,15 @@ box.oninput = () => localStorage.setItem("rpg2:box", box.value.trim());
 
 document.querySelectorAll("[data-go]").forEach((b) => {
   b.onclick = () => {
-    const b0 = (box.value || "").trim();
-    if (b0) localStorage.setItem("rpg2:box", b0);
+    let b0 = (box.value || "").trim();
     const page = b.dataset.go;
     if (page.endsWith(".md")) { location.href = page; return; }
+    if (!b0 && page !== "affixes.html") {
+      // 新人位号留空：自动发一个，别让「缺少 box」劝退
+      b0 = "p" + Math.random().toString(36).slice(2, 8);
+      box.value = b0;
+    }
+    if (b0) localStorage.setItem("rpg2:box", b0);
     location.href = page + (b0 ? ("?box=" + encodeURIComponent(b0)) : "");
   };
 });

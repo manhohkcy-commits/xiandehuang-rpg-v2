@@ -47,12 +47,19 @@ function readBox() {
 
 async function load() {
   box = readBox();
-  $("boxTag").textContent = box || "缺 box 参数";
-  if (!box) { view().innerHTML = '<div class="card"><div class="card-title">缺少 box</div><div class="hint">请用 create.html?box=你的位号 打开</div></div>'; return; }
+  if (!box) {
+    // 没带位号：自动发一个，别把新人卡在「缺少 box」
+    box = "p" + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem("rpg2:box", box);
+    try { history.replaceState(null, "", "create.html?box=" + encodeURIComponent(box)); } catch (e) {}
+  }
+  $("boxTag").textContent = box;
   const cached = cacheLoad(box);
+  let exists = false;
   try {
     const row = await cloudGet(box);
     if (row && row.store && Number(row.store.v) === 2) {
+      exists = true;
       const pw = row.store.__pw || "";
       if (pw) {
         const tip = "这个位号设了口令，请输入口令（忘记就无法取回）";
@@ -77,22 +84,30 @@ async function load() {
         }
       }
     } else if (row && row.store) {
+      exists = true;
       toast("旧版存档（v1）：新版先新建角色", true);
     }
   } catch (e) {
     if (cached) { store = cached.store; toast("离线：用本机缓存", true); }
   }
-  if (!store && cached && Number(cached.store.v) === 2) store = cached.store;
+  if (!store && cached && Number(cached.store.v) === 2) { store = cached.store; exists = true; }
+  if (!store && !exists) {
+    // 全新位号：直接开好新档，落在建角页
+    store = newStore();
+    ensureSeed(false);
+    await save();
+    toast("🆕 新位号 " + box + " 已开好，先捏个角色吧");
+  }
   if (store) ensureSeed();
 }
 
-function ensureSeed() {
+function ensureSeed(withDefaultChar = true) {
   if (!store.flags) store.flags = {};
   if (!store.flags.__seed) {
     store.gold = 3000; store.flags.stone = 60; store.flags.shards = 20; store.flags.bstone = 5;
     store.flags.__seed = 1;
   }
-  if (!store.chars.length) {
+  if (withDefaultChar && !store.chars.length) {
     store.chars.push(newChar("Zyn"));
     store.chars[0].equip.weapon = Object.assign({}, WEAPONS[0], { lv: 1, star: 1 });
     store.activeChar = store.chars[0].id;
