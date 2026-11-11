@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌RPG v2 · 总入口</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="card" style="text-align:center;padding:18px 16px;">
+    <div style="font-size:22px;font-weight:800;color:#6ea8fe;">🎮 闲得慌 RPG · v2</div>
+    <div class="hint" style="margin-top:6px;">一个入口进所有地方。位号会记在本机，下次自动带。</div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="k">我的位号（box）</span>
+      <span class="v"><input id="box" placeholder="例如 gct6kdvygp" style="width:210px;"></span></div>
+    <div class="hint" style="margin-top:6px;">第一次玩可以随便填（例如 test1），会自动建新档。</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;">
+    <button class="entry" data-go="create.html">
+      <div style="font-size:22px;">🧑</div>
+      <div class="t">我的角色</div>
+      <div class="hint">建角 / 属性 / 装备 / 商店 / 背包</div>
+    </button>
+    <button class="entry" data-go="battle.html">
+      <div style="font-size:22px;">⚔️</div>
+      <div class="t">单人战斗</div>
+      <div class="hint">选关 / 回合战斗 / 掉落</div>
+    </button>
+    <button class="entry" data-go="rooms.html">
+      <div style="font-size:22px;">👥</div>
+      <div class="t">联机房间</div>
+      <div class="hint">建房 / 加入 / 1v1~6v6</div>
+    </button>
+    <button class="entry" data-go="affixes.html">
+      <div style="font-size:22px;">📖</div>
+      <div class="t">词条一览</div>
+      <div class="hint">四批词条与数值区间</div>
+    </button>
+    </div>
+
+  <div class="card">
+    <div class="card-title">系统自检</div>
+    <div class="row"><span class="k">战斗引擎</span><span class="v" id="engineTag">检查中…</span></div>
+    <div class="row"><span class="k">数据表</span><span class="v" id="dataTag">检查中…</span></div>
+    <div class="row"><span class="k">词条库</span><span class="v" id="affixTag">检查中…</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">进不来的时候看这里</div>
+    <div class="hint" style="line-height:2;">
+      ① 直接打开就能玩，存档自动同步到云端<br>② 联机房间：朋友在同一页面建房 / 加房<br>③ 位号就是你的档，换电脑填同一位号即继续<br>④ 玩别人的档：把位号换成他的（例如 <code>gct6kdvygp</code>）
+    </div>
+  </div>
+</div>
+
+<style>
+.entry { text-align:left; padding:14px 14px; border-radius:12px; background:#141422; border:1px solid #2f2f4a; cursor:pointer; }
+.entry:hover { border-color:#6ea8fe; background:#182238; }
+.entry .t { font-size:14px; font-weight:700; color:#eaeaea; margin:4px 0 2px; }
+</style>
+
+<script type="module">
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, PRESETS } from "./js/data.js";
+import { createBattle, nextActor, commit } from "./js/battle.js";
+import { AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes.js";
+
+const box = document.getElementById("box");
+box.value = localStorage.getItem("rpg2:box") || "";
+box.oninput = () => localStorage.setItem("rpg2:box", box.value.trim());
+
+document.querySelectorAll("[data-go]").forEach((b) => {
+  b.onclick = () => {
+    const b0 = (box.value || "").trim();
+    if (b0) localStorage.setItem("rpg2:box", b0);
+    const page = b.dataset.go;
+    if (page.endsWith(".md")) { location.href = page; return; }
+    location.href = page + (b0 ? ("?box=" + encodeURIComponent(b0)) : "");
+  };
+});
+
+try {
+  const st = createBattle([
+    { id: "a", side: "A", spd: 120, hp: 1000, maxHp: 1000 },
+    { id: "b", side: "B", spd: 100, hp: 1000, maxHp: 1000 }
+  ]);
+  const first = nextActor(st);
+  commit(st, first.id);
+  document.getElementById("engineTag").textContent = "正常（先手：" + first.id + "）";
+} catch (e) {
+  document.getElementById("engineTag").textContent = "❌ " + e.message;
+}
+document.getElementById("dataTag").textContent =
+  WEAPONS.length + " 武器 · " + ARMORS.length + " 防具 · " + ACCESSORIES.length +
+  " 饰品 · " + STAGES.length + " 关卡 · " + PRESETS.length + " 预设";
+document.getElementById("affixTag").textContent =
+  "扩展 " + AFFIX_LIB_EXT.length + " · 二批 " + AFFIX_LIB_2.length + " · 三批 " + AFFIX_LIB_3.length;
+</script>
+</body>
+</html>

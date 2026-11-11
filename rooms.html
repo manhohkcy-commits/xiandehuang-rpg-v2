@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌RPG v2 · 联机房间</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <a href="index.html">← 返回</a>
+    <span class="tag" id="boxTag">—</span>
+    <span class="tag">联机 · 第 1 步</span>
+  </div>
+  <div id="view"></div>
+  <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:8px 14px;border-radius:10px;background:#1b1b2e;border:1px solid #3a3a5c;font-size:12.5px;display:none;"></div>
+</div>
+
+<script type="module">
+import { cloudGet, cacheLoad, esc, fmt, gateLoad } from "./js/core.js";
+import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js";
+
+let box = "", store = null, room = null, roomId = "", seq = 0, timer = 0;
+const $ = (id) => document.getElementById(id);
+const view = () => $("view");
+const myName = () => {
+  const ch = (store && store.chars || []).find((c) => c.id === store.activeChar) || (store && store.chars || [])[0];
+  return ch ? ch.name : "玩家";
+};
+
+function toast(m, bad) {
+  const t = $("toast");
+  t.textContent = m; t.style.display = "block";
+  t.style.color = bad ? "#ff9b9b" : "#eaeaea";
+  t.style.borderColor = bad ? "#ff9b9b" : "#3a3a5c";
+  setTimeout(() => { t.style.display = "none"; }, 2000);
+}
+function readBox() {
+  const q = new URLSearchParams(location.search);
+  return q.get("box") || localStorage.getItem("rpg2:box") || "";
+}
+
+async function boot() {
+  box = readBox();
+  $("boxTag").textContent = box || "缺 box";
+  const cached = cacheLoad(box);
+  if (cached && Number(cached.store.v) === 2) store = cached.store;
+  try {
+    const g = await gateLoad(box, {});
+    if (g.ok) store = g.store;
+  } catch (e) {}
+  const q = new URLSearchParams(location.search);
+  const rid = q.get("room");
+  if (rid) { roomId = rid; await pull(); startPoll(); }
+  render();
+}
+
+async function pull() {
+  try {
+    const got = await getRoom(roomId);
+    if (!got) { room = null; return; }
+    if (changed(seq, got.room)) { seq = got.room.seq; room = got.room; render(); }
+    else room = got.room;
+  } catch (e) {}
+}
+
+function startPoll() {
+  clearInterval(timer);
+  timer = setInterval(pull, 400);
+}
+
+async function doCreate() {
+  if (!box) return toast("缺 box", true);
+  const r = await createRoom(box, myName());
+  if (!r.ok) return toast(r.reason || "建房失败", true);
+  roomId = r.id; room = r.room; seq = room.seq;
+  history.replaceState(null, "", "?box=" + encodeURIComponent(box) + "&room=" + roomId);
+  startPoll(); render();
+}
+
+async function doJoin(id) {
+  const r = await joinRoom(id, box, myName());
+  if (!r.ok) return toast(r.reason, true);
+  roomId = id; room = r.room; seq = room.seq;
+  history.replaceState(null, "", "?box=" + encodeURIComponent(box) + "&room=" + roomId);
+  startPoll(); render();
+}
+
+async function doReady(v) {
+  const r = await setReady(roomId, box, v);
+  if (!r.ok) return toast(r.reason, true);
+  room = r.room; seq = room.seq; render();
+}
+
+async function doLeave() {
+  await leaveRoom(roomId, box);
+  clearInterval(timer);
+  roomId = ""; room = null; seq = 0;
+  history.replaceState(null, "", "?box=" + encodeURIComponent(box));
+  render();
+}
+
+function render() {
+  if (!roomId) {
+    view().innerHTML =
+      '<div class="card"><div class="card-title">联机房间</div>' +
+        '<div class="hint">房主建房后把房号发给朋友；朋友在下面输入房号加入。最多 4 人。</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+          '<button id="btnCreate">🏠 建房</button>' +
+          '<input id="joinId" placeholder="房号（6 位）" style="width:130px;">' +
+          '<button id="btnJoin">🚪 加入</button>' +
+        '</div></div>' +
+      '<div class="card"><div class="hint">下一轮：房间跑通后接「主机开战 + 客户端观战」（见 DESIGN-联机.md 步 2）</div></div>';
+    $("btnCreate").onclick = doCreate;
+    $("btnJoin").onclick = () => {
+      const id = ($("joinId").value || "").trim();
+      if (!id) return toast("先填房号", true);
+      doJoin(id);
+    };
+    return;
+  }
+
+  const isHost = room.host === box;
+  const me = (room.members || {})[box] || {};
+  const list = Object.keys(room.members || {}).map((k) => {
+    const m = room.members[k];
+    return '<div class="row"><span class="k">' + (k === room.host ? "👑 " : "") + esc(m.name) +
+      '<div class="hint">' + esc(k) + (m.side === "A" ? " · 蓝方" : " · 红方") + '</div></span>' +
+      '<span class="v">' + (m.ready ? '<span style="color:#7ee787;">已准备</span>' : '<span style="color:#8a8ab0;">未准备</span>') + '</span></div>';
+  }).join("");
+
+  view().innerHTML =
+    '<div class="card"><div class="card-title">房间 ' + esc(room.room) + ' · ' + esc(room.phase) + '</div>' +
+      '<div class="hint">房主：' + esc(room.host) + '　|　你是：' + (isHost ? "👑 房主" : "玩家") + '　|　人数 ' + Object.keys(room.members || {}).length + '/4</div>' +
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        '<button id="btnReady">' + (me.ready ? "✅ 已准备（点一下取消）" : "🟢 准备") + '</button>' +
+        '<button id="btnLeave" style="border-color:#ff9b9b;color:#ff9b9b;">🚪 退出房间</button>' +
+        '<button id="btnCopy">📋 复制房号</button>' +
+      '</div>' +
+      '<div class="hint" style="margin-top:6px;">把房号发给朋友：' + esc(room.room) + '</div>' +
+    '</div>' +
+    '<div class="card"><div class="card-title">成员</div>' + list + '</div>' +
+    '<div class="card"><div class="hint">步骤 1 只做到「建房 / 加入 / 准备」。<br>下一步（步 2）：房主开战 → 战斗状态写进房间 → 其他人只读观战。</div></div>';
+
+  $("btnReady").onclick = () => doReady(!me.ready);
+  $("btnLeave").onclick = doLeave;
+  $("btnCopy").onclick = () => {
+    try { navigator.clipboard.writeText(room.room); toast("房号已复制"); } catch (e) { toast("复制失败，手动记：" + room.room, true); }
+  };
+}
+
+boot();
+</script>
+</body>
+</html>

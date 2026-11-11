@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌RPG v2 · 战斗</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <a href="index.html">← 返回</a>
+    <a href="create.html" id="backCreate">🎒 我的角色</a>
+    <span class="tag" id="boxTag">—</span>
+    <button id="btnSave" style="margin-left:auto;">💾 保存</button>
+  </div>
+  <div id="view"></div>
+</div>
+
+<script type="module">
+import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js";
+import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js";
+import { addStatus } from "./js/battle.js";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES } from "./js/data.js";
+import { makeItem } from "./js/items.js";
+import { charFinal, charPower } from "./js/power.js";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js";
+
+let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
+const $ = (id) => document.getElementById(id);
+const view = () => $("view");
+const activeChar = () => (store && store.chars || []).find((c) => c.id === store.activeChar) || (store && store.chars || [])[0] || null;
+
+function readBox() {
+  const q = new URLSearchParams(location.search);
+  if (q.get("box")) return q.get("box");
+  return localStorage.getItem("rpg2:box") || "";
+}
+
+async function load() {
+  box = readBox();
+  $("boxTag").textContent = box || "缺 box";
+  $("backCreate").href = "create.html" + (box ? "?box=" + encodeURIComponent(box) : "");
+  const g = await gateLoad(box, {});
+  if (!g.ok) {
+    view().innerHTML = '<div class="card"><div class="card-title">进不去</div><div class="hint">' + esc(g.reason) + '</div>' +
+      '<div class="hint" style="margin-top:6px;">先去 <a href="create.html?box=' + encodeURIComponent(box) + '">我的角色</a> 验证一次</div></div>';
+    return;
+  }
+  store = g.store; updatedAt = g.updatedAt || "";
+  renderPick();
+}
+
+async function save() {
+  if (!box || !store) return false;
+  store.__at = Date.now();
+  cacheSave(box, store);
+  if (!updatedAt) return false;   // 新位号还没云端行：本机试用模式
+  try {
+    const r = await cloudSave(box, store, updatedAt, activeChar() ? activeChar().name : "");
+    if (r.ok) updatedAt = r.row.updated_at || updatedAt;
+    return r.ok;
+  } catch (e) { return false; }
+}
+
+// ── 选关 ──────────────────────────────────────────────
+function renderPick() {
+  const ch = activeChar();
+  if (!ch) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
+  const f = charFinal(ch);
+  view().innerHTML =
+    '<div class="card"><div class="card-title">出战</div>' +
+      '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
+      '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>' +
+    '</div>' +
+    '<div class="card"><div class="card-title">选择关卡</div>' +
+      STAGES.map((s) => '<div class="row"><span class="k">' + esc(s.name) +
+        '<div class="hint">' + esc(s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) + ' · 攻 ' + s.foe.atk + '</div></span>' +
+        '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>').join("") +
+    '</div>';
+  view().querySelectorAll("[data-stage]").forEach((b) => {
+    b.onclick = () => startBattle(b.dataset.stage);
+  });
+}
+
+// ── 开战 ──────────────────────────────────────────────
+// 🧑‍🤝‍🧑 多人建战：把房间成员的角色快照补全，生成 2v2 / 3v3 单位表
+async function buildMultiBattle(stageId) {
+  const got = await getRoom(roomId);
+  if (!got) return false;
+  const room = got.room;
+  const stg = STAGES.find((x) => x.id === stageId) || STAGES[0];
+  // 1) 补全每个成员的角色快照
+  for (const bx of Object.keys(room.members || {})) {
+    const m = room.members[bx];
+    if (m.char) continue;
+    let ch = null;
+    if (bx === box) { ch = activeChar(); }
+    else {
+      try {
+        const row = await cloudGet(bx);
+        const s2 = row && row.store;
+        if (s2 && Number(s2.v) === 2) ch = (s2.chars || [])[0] || null;
+      } catch (e) {}
+    }
+    if (ch) {
+      const f = charFinal(ch);
+      m.char = {
+        lv: ch.lv, atk: f.atk, hp: f.hp, def: f.def, res: f.res, spd: f.spd,
+        critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut,
+        weapon: (ch.equip && ch.equip.weapon) || null
+      };
+    } else {
+      m.char = { lv: 1, atk: 60, hp: 500, def: 20, res: 15, spd: 10, critRate: 5, critDmg: 150, dmgCut: 0 };
+    }
+  }
+  // 2) 生成单位
+  const built = buildUnits(room, 6);
+  st = createBattle(built.units.map((u) => Object.assign({ power: 0 }, u)));
+  st.__stage = stg.id;
+  st.__owners = built.owners;
+  st.__multi = true;
+  const myUnit = unitOfPlayer(room, box);
+  st.__myUnit = myUnit;
+  st.__weapon = (myUnit && built.units.find((u) => u.id === myUnit) || {}).weapon || null;
+  log = [];
+  lastRound = 1;
+  pushLog("— 回合 1 —", "hdr");
+  pushLog("👥 多人战：蓝方 " + built.units.filter((u) => u.side === "A").length + " 人 · 红方 " + built.units.filter((u) => u.side === "B").length + " 人", "line");
+  await putRoom(Object.assign(room, { phase: "fighting" }), got.updatedAt);
+  renderBattle();
+  setTimeout(aiTurnIfNeeded, 300);
+  return true;
+}
+
+// ♻️ 房主刷新后恢复对局：从房间 state 重建战斗
+async function tryRestore() {
+  if (!roomId) return false;
+  const got = await getRoom(roomId);
+  if (!got || got.room.host !== box) return false;
+  const s = got.room.state;
+  if (!s || s.finished || !s.units || !s.units.length) return false;
+  st = createBattle(s.units.map((u) => ({
+    id: u.id, name: u.name, side: u.side, spd: u.spd, power: 0,
+    hp: u.hp, maxHp: u.maxHp, atk: u.atk || 60, def: u.def || 20,
+    critRate: u.critRate || 5, critDmg: u.critDmg || 150, dmgCut: u.dmgCut || 0
+  })));
+  // 把当时的血量/冷却/怒气/状态/回合贴回去
+  st.round = Number(s.round) || 1;
+  st.__stage = s.stage || "k1";
+  st.__owners = s.owners || null;
+  st.__myUnit = unitOfPlayer(got.room, box);
+  st.__restored = true;
+  st.units.forEach((u) => {
+    const src = s.units.find((x) => x.id === u.id);
+    if (!src) return;
+    u.hp = src.hp; u.maxHp = src.maxHp; u.cd = src.cd || 0; u.rage = src.rage || 0;
+    u.statuses = src.statuses || [];
+    if (u.hp <= 0) u.alive = false;
+  });
+  // 回合开始标记：把已行动次数清掉（恢复后按新回合开始）
+  st.units.forEach((u) => { u.acted = 0; u.allowed = 1; });
+  log = (s.log || []).slice(-40);
+  lastRound = st.round;
+  pushLog("♻️ 已从房间恢复对局（回合 " + st.round + "）", "line");
+  renderBattle();
+  setTimeout(aiTurnIfNeeded, 300);
+  return true;
+}
+
+function startBattle(stageId) {
+  if (roomId && amHost) { buildMultiBattle(stageId); return; }
+  const ch = activeChar();
+  const f = charFinal(ch);
+  const s = STAGES.find((x) => x.id === stageId);
+  if (!s) return;
+  st = createBattle([
+    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0 },
+    { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
+  ]);
+  st.__stage = s.id;
+  st.__weapon = ch.equip.weapon || null;
+  log = [];
+  lastRound = 1;
+  pushLog("— 回合 1 —", "hdr");
+  renderBattle();
+  aiTurnIfNeeded();
+}
+
+// 行动条预览：本回合剩余 + 下一回合完整顺序
+function previewOrder(n = 6) {
+  if (!st) return [];
+  const cmp = (a, b) => {
+    if (b.spd !== a.spd) return b.spd - a.spd;
+    if (b.power !== a.power) return b.power - a.power;
+    if (a.side !== b.side) return a.side === "A" ? -1 : 1;
+    return a.seq - b.seq;
+  };
+  const live = st.units.filter((u) => u.alive !== false);
+  const pending = live.filter((u) => (u.acted || 0) < (u.allowed || 1)).sort(cmp);
+  const out = pending.slice(0, n);
+  if (live.length <= 1) return out;      // 只剩一人：不重复铺满
+  if (out.length < n) {
+    live.slice().sort(cmp).forEach((u) => { if (out.length < n) out.push(u); });
+  }
+  return out;
+}
+
+function queueHtml2() {
+  if (!st) return "";
+  const cmp = (a, b) => {
+    if (b.spd !== a.spd) return b.spd - a.spd;
+    if (b.power !== a.power) return b.power - a.power;
+    if (a.side !== b.side) return a.side === "A" ? -1 : 1;
+    return a.seq - b.seq;
+  };
+  const live = st.units.filter((u) => u.alive !== false);
+  const nowList = live.filter((u) => (u.acted || 0) < (u.allowed || 1)).sort(cmp);
+  const nextList = live.slice().sort(cmp);
+  const cur = nextActor(st);
+
+  const cell = (u, idx, showNum) => {
+    const on = cur && u.id === cur.id;
+    const col = u.side === "A" ? "#6ea8fe" : "#ff9b9b";
+    return '<div style="flex:1;min-width:0;padding:4px 6px;border-radius:7px;text-align:center;' +
+      'background:' + (on ? col + '33' : '#15152380') + ';border:1px solid ' + (on ? col : '#2f2f4a') + ';">' +
+      '<div style="font-size:' + (on ? '11.5' : '10.5') + 'px;color:' + col + ';font-weight:' + (on ? '800' : '500') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+      (on ? "▶ " : (showNum ? (idx + 1) + ". " : "")) + esc(u.name) + '</div>' +
+      '<div style="font-size:9px;color:#5a5a78;">速 ' + Math.round(u.spd) + '</div></div>';
+  };
+
+  const left = nowList.map((u, i) => cell(u, i, true)).join("");
+  const right = nextList.slice(0, 4).map((u) => cell(u, 0, false)).join("");
+  return '<div style="margin:8px 0 4px;">' +
+    '<div style="display:flex;justify-content:space-between;font-size:10px;color:#6a6a86;margin-bottom:4px;">' +
+      '<span>本回合剩余</span><span>下回合</span></div>' +
+    '<div style="display:flex;gap:4px;align-items:stretch;">' +
+      '<div style="flex:2;display:flex;gap:4px;">' + (left || '<div style="flex:1;text-align:center;font-size:10.5px;color:#5a5a78;">（本回合已行动完）</div>') + '</div>' +
+      '<div style="width:1px;background:#2f2f4a;margin:0 2px;"></div>' +
+      '<div style="flex:2;display:flex;gap:4px;">' + (right || '') + '</div>' +
+    '</div>' +
+    '<div style="text-align:right;font-size:10px;color:#6a6a86;margin-top:3px;">回合 ' + st.round + '</div></div>';
+}
+
+function queueHtml() {
+  const list = previewOrder(6);
+  if (!list.length) return "";
+  const cur = nextActor(st);
+  const cells = list.map((u, i) => {
+    const on = cur && u.id === cur.id;
+    const col = u.side === "A" ? "#6ea8fe" : "#ff9b9b";
+    return '<div style="flex:1;min-width:0;padding:4px 6px;border-radius:7px;text-align:center;' +
+      'background:' + (on ? col + '33' : '#15152380') + ';border:1px solid ' + (on ? col : '#2f2f4a') + ';' +
+      'transform:' + (on ? 'scale(1.06)' : 'none') + ';transition:all .15s;' + (on ? 'box-shadow:0 0 0 1px ' + col + '55;' : '') + '">' +
+      '<div style="font-size:' + (on ? '11.5' : '10.5') + 'px;color:' + col + ';font-weight:' + (on ? '800' : '500') + ';' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (on ? "▶ " : (i + 1) + ". ") + esc(u.name) + '</div>' +
+      '<div style="font-size:9px;color:#5a5a78;margin-top:1px;">速 ' + Math.round(u.spd) + '</div></div>';
+  }).join("");
+  return '<div style="margin:8px 0 4px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+      '<span style="font-size:10px;color:#6a6a86;">出手顺序（本回合剩余 → 下回合）</span>' +
+      '<span style="font-size:10px;color:#6a6a86;">回合 ' + st.round + '</span>' +
+    '</div>' +
+    '<div style="display:flex;gap:4px;align-items:stretch;">' + cells + '</div></div>';
+}
+
+function pushLog(text, kind, subs) {
+  log.push({ text, kind: kind || "line", subs: subs || [] });
+  if (log.length > 200) log = log.slice(-200);
+}
+
+// 回合切换时结算持续伤害（灼烧 = 每回合 最大生命 × v%）
+// 防御加成只持续到「该单位下次行动」：出手前先还原
+function clearDefend(u) {
+  if (u && u.__defBonus) {
+    u.dmgCut = Math.max(0, (Number(u.dmgCut) || 0) - 30);
+    u.__defBonus = 0;
+  }
+}
+
+function afterCommit() {
+  if (!st || st.finished) return;
+  if (st.round !== lastRound) {
+    lastRound = st.round;
+    pushLog("— 回合 " + st.round + " —", "hdr");
+    tickStatuses();
+  }
+}
+
+function tickStatuses() {
+  if (!st) return;  ["me", "foe"].forEach((id) => {
+    const u = st.units.find((x) => x.id === id);
+    if (!u || u.alive === false) return;
+    (u.statuses || []).forEach((s) => {
+      if (s.key !== "burn") return;
+      const d = Math.max(1, Math.round(u.maxHp * s.v / 100));
+      u.hp = Math.max(0, u.hp - d);
+      if (u.hp === 0) u.alive = false;
+      pushLog("🔥 " + u.name + " 灼烧 −" + d);
+    });
+  });
+}
+
+function me() { return st.units.find((u) => u.id === "me"); }
+function foe() { return st.units.find((u) => u.id === "foe"); }
+
+function skillBtnHtml(m) {
+  const wp = (st.__weapon && st.__weapon.data) || {};
+  const name = wp.sName || "招式";
+  const mult = Number(wp.sMult) || 150;
+  const hits = Number(wp.sHits) || 1;
+  const cdTotal = Number(wp.sCd) || 2;
+  const rage = Number(wp.sRage) || 10;
+  const cd = Number(m.cd) || 0;
+  const can = cd <= 0;
+  const core = "「" + name + "」" + (hits > 1 ? (hits + "×" + mult + "%（共 " + (hits * mult) + "%）") : (mult + "%")) +
+    " · 冷却 " + cdTotal + " 回合 · 回怒 " + rage + "%";
+  return '<button data-act="skill" ' + (can ? '' : 'disabled') + ' title="' + esc(core) + '">' +
+    '🥋 ' + (can ? ('「' + esc(name) + '」' + (mult + "%")) : ('「' + esc(name) + '」冷却 ' + cd + ' 回合')) + '</button>' +
+    '<div class="hint" style="flex-basis:100%;margin-top:4px;">' + esc(core) + (can ? '' : '（还剩 ' + cd + ' 回合）') + '</div>';
+}
+
+function ultBtnHtml(m) {
+  const rage = Number(m.rage) || 0;
+  const can = rage >= 100;
+  return '<button data-act="ult" ' + (can ? '' : 'disabled') + ' title="必杀：250% 单体 · 需要 100 怒气（每次行动 +25）">' +
+    '💥 必杀' + (can ? '（250%）' : '（怒气 ' + Math.round(rage) + '/100）') + '</button>';
+}
+
+// 📡 联机（步 2）：把战斗状态写进房间，供其他人观战
+let roomId = "", roomAt = "", amHost = true;
+async function publishState() {
+  if (!roomId || !amHost || !st) return;
+  try {
+    const got = await getRoom(roomId);
+    if (!got) return;
+    const room = got.room;
+    if (room.host !== box) { amHost = false; return; }
+    room.phase = st.finished ? "done" : "fighting";
+    room.state = {
+      round: st.round,
+      stage: st.__stage || "k1",
+      owners: st.__owners || null,
+      turn: (nextActor(st) || {}).id || null,
+      units: st.units.map((u) => ({
+        id: u.id, name: u.name, side: u.side, hp: Math.round(u.hp), maxHp: Math.round(u.maxHp),
+        spd: u.spd, cd: u.cd || 0, rage: Math.round(u.rage || 0),
+        atk: u.atk, def: u.def, critRate: u.critRate, critDmg: u.critDmg, dmgCut: u.dmgCut,
+        statuses: (u.statuses || []).map((s) => ({ key: s.key, v: s.v, turns: s.turns, label: s.label }))
+      })),
+      log: log.slice(-40),
+      finished: !!st.finished,
+      winner: st.winner || null
+    };
+    const r = await putRoom(room, got.updatedAt);
+    if (r.ok) roomAt = r.updatedAt;
+  } catch (e) {}
+}
+
+// 📡 联机（步 4）：房主轮询客户端 intent 并执行；客户端在「自己那手」时能出手
+let lastIntentSeq = 0;
+async function pullIntents() {
+  if (!roomId || !amHost || !st || st.finished) return;
+  try {
+    const r = await takeIntents(roomId, lastIntentSeq);
+    if (!r.ok || !r.intents.length) return;
+    for (const it of r.intents) {
+      lastIntentSeq = Math.max(lastIntentSeq, Number(it.seq) || 0);
+      const who = st.units.find((u) => u.id === it.unitId);
+      const cur = nextActor(st);
+      // 校验①：这个单位是不是他控的（多人模式按 owner 判定）
+      if (st.__owners && st.__owners[it.unitId] !== it.by) continue;
+      // 校验②：必须是这个单位该出手
+      if (!who || !cur || cur.id !== who.id) continue;
+      if (it.act === "skill" && who.cd > 0) continue;
+      if (it.act === "ult" && (Number(who.rage) || 0) < 100) continue;
+      const other = st.units.find((u) => u.id !== who.id);
+      if (it.act === "defend") {
+        who.dmgCut = (Number(who.dmgCut) || 0) + 30;
+        who.__defBonus = 1;
+        pushLog("🛡️ " + who.name + " 进入防御", "act");
+      } else {
+        const wp = (st.__weapon && st.__weapon.data) || {};
+        const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
+        const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
+        if (it.act === "ult") who.rage = 0;
+        else who.rage = Math.min(100, (Number(who.rage) || 0) + 25);
+        if (it.act === "skill" && wp.hitStatus) {
+          addStatus(st, other.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
+        }
+        pushLog((it.act === "ult" ? "💥 " : it.act === "skill" ? "🥋 " : "⚔️ ") + who.name + " → " + other.name + " " + res.dmg + (res.crit ? " 暴击💥" : ""), "act");
+      }
+      commit(st, who.id);
+    }
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 300);
+  } catch (e) {}
+}
+
+function renderBattle() {
+  if (!st) return;
+  afterCommit();
+  const a = nextActor(st);
+  const m = me(), f2 = foe();
+  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—"));
+
+  const hpBar = (u) => {
+    const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));
+    return '<div class="bar' + (pct <= 25 ? '' : ' full') + '"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) + (u.cd > 0 ? ' · 招式冷却 ' + u.cd : '') + '</div>';
+  };
+
+  view().innerHTML =
+    '<div class="card"><div class="card-title">' + turnText + '</div>' +
+      queueHtml2() +
+      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + m.hp + '/' + m.maxHp + '</span></div>' + hpBar(m) +
+      '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + f2.hp + '/' + f2.maxHp + '</span></div>' + hpBar(f2) +
+    '</div>' +
+    (st.finished ? '<div class="card"><div class="card-title">' + (st.winner === "A" ? "🏆 胜利" : "💀 失败") + '</div>' +
+      (st.winner === "A" && st.__reward
+        ? '<div class="row"><span class="k">金币</span><span class="v" style="color:#ffd666;">+' + fmt(st.__reward.gold) + '</span></div>' +
+          '<div class="row"><span class="k">经验</span><span class="v" style="color:#7ee787;">+' + fmt(st.__reward.exp) + '</span></div>' +
+          '<div class="row"><span class="k">关卡</span><span class="v">' + esc(st.__reward.stage) + '</span></div>' +
+          '<div class="hint" style="margin-top:6px;">已写入存档（角色页可见）</div>'
+        : '<div class="hint">没有奖励，回去练练再来</div>') +
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button id="btnAgain">🔁 再来一场</button><button id="btnBack">← 返回选关</button></div></div>'
+      : '<div class="card"><div class="card-title">行动</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
+          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>⚔️ 普攻</button>' +
+          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
+            '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "招式") + ' ' + (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '%')) + '</button>' +
+          '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 ? 'disabled' : '') + '>' +
+            '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' 250%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
+          '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>🛡️ 防御</button>' +
+        '</div>' +
+        '<div class="hint" style="margin-top:8px;line-height:1.8;">' +
+          '招式：' + esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "—") + ' · ' +
+          (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '% · 冷却 ' +
+          (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sCd) || 2)) + ' 回合 　|　 ' +
+          '必杀 250%，每次行动 +25 怒气 　|　 防御：本回合减伤 +30%，持续到你下次行动' +
+        '</div></div>') +
+    '<div class="card"><div class="card-title">战斗日志</div><div class="log">' +
+      log.map((l) => l.kind === "hdr"
+        ? '<div style="color:#ffd666;font-weight:700;margin:6px 0 2px;">' + esc(l.text) + '</div>'
+        : '<div class="act">' + esc(l.text) + (l.subs && l.subs.length ? l.subs.map((x) => '<div class="sub">↳ ' + esc(x) + '</div>').join("") : "") + '</div>'
+      ).join("") + '</div></div>';
+
+  if ($("btnBack")) $("btnBack").onclick = renderPick;
+  if ($("btnAgain")) $("btnAgain").onclick = () => startBattle(st.__stage);
+  view().querySelectorAll("[data-act]").forEach((b) => { b.onclick = () => doAct(b.dataset.act); });
+  // 日志自动滚到最新
+  try {
+    const lg = view().querySelector(".log");
+    if (lg) lg.scrollTop = lg.scrollHeight;
+  } catch (e) {}
+  publishState();
+}
+
+function doAct(kind) {
+  if (!st || st.finished || busy) return;
+  if (st.finished) return;
+  const a = nextActor(st);
+  if (!a || a.id !== "me") return;
+  const m = me(), f2 = foe();
+  clearDefend(m);
+  const wp = (st.__weapon && st.__weapon.data) || {};
+  const rounds = [];
+
+  if (kind === "defend") {
+    pushLog("🛡️ " + m.name + " 进入防御（本回合减伤 +30%）");
+    m.dmgCut = (m.dmgCut || 0) + 30;
+    m.__defBonus = 1;
+    commit(st, "me");
+  } else if (kind === "ult") {
+    const r = damage(st, "me", "foe", { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg });
+    m.rage = 0;
+    pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    commit(st, "me");
+  } else if (kind === "skill") {
+    const mult = Number(wp.sMult) || 150;
+    const cd = Number(wp.sCd) || 3;
+    const r = damage(st, "me", "foe", { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
+    const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "")];
+    if (wp.hitStatus && r.dmg > 0) {
+      addStatus(st, "foe", wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
+      subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
+    }
+    pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act", subs);
+    setCooldown(st, "me", cd);
+    commit(st, "me");
+  } else {
+    const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
+    pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
+      ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
+    commit(st, "me");
+  }
+
+  if (st.finished) { finish(); renderBattle(); return; }
+  if (kind !== "ult") m.rage = Math.min(100, (Number(m.rage) || 0) + 25);
+  renderBattle();
+  setTimeout(aiTurnIfNeeded, 380);
+}
+
+function aiTurnIfNeeded() {
+  if (!st || st.finished) return;
+  if (roomId && amHost) {
+    // 联机模式：等对手提交；超时 20 秒由房主代打
+    const a0 = nextActor(st);
+    if (a0 && a0.id === "foe" && window.__guestControls) {
+      if (!window.__waitSince || window.__waitUnit !== a0.id) { window.__waitSince = Date.now(); window.__waitUnit = a0.id; }
+      const waited = Date.now() - window.__waitSince;
+      if (waited < 20000) { setTimeout(pullIntents, 350); return; }
+      window.__waitSince = 0;
+      pushLog("⏳ " + a0.name + " 超时未出手，房主代打", "line");
+    }
+  }  const a = nextActor(st);
+  if (!a) return;
+  if (a.id !== "foe") { renderBattle(); return; }
+  busy = true;
+  setTimeout(() => {
+    const f2 = foe(), m = me();
+    clearDefend(f2);
+    const useSkill = Math.random() < 0.3;
+    const mult = useSkill ? 150 : 100;
+    const r = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg });
+    pushLog((useSkill ? "🥋 " : "⚔️ ") + f2.name + (useSkill ? " 技能" : " 普攻") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    commit(st, "foe");
+    busy = false;
+    if (st.finished) finish();
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 300);
+  }, 420);
+}
+
+function finish() {
+  const ch = activeChar();
+  if (!st || !st.finished || st.__done) return;
+  st.__done = true;
+  if (st.winner !== "A") { pushLog("💀 战斗失败"); return; }
+  const s = STAGES.find((x) => x.id === st.__stage) || STAGES[0];
+  const gold = Number(s.gold) || (120 + s.foe.lv * 8);
+  const exp = Number(s.exp) || (40 + s.foe.lv * 6);
+  store.gold = (Number(store.gold) || 0) + gold;
+  store.exp = (Number(store.exp) || 0) + exp;
+  // 🎁 掉落：碎片必掉、强化石必掉、装备按概率
+  const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
+  const dp = s.drop || { shards: [5, 8], stone: [1, 2], gearChance: 5 };
+  const shards = rnd(dp.shards), stone = rnd(dp.stone);
+  store.flags = store.flags || {};
+  store.flags.shards = (Number(store.flags.shards) || 0) + shards;
+  store.flags.stone = (Number(store.flags.stone) || 0) + stone;
+  const drops = [{ name: "碎片", count: shards }, { name: "强化石", count: stone }];
+  if (Math.random() * 100 < (dp.gearChance || 0)) {
+    const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
+    const list = pool[Math.floor(Math.random() * pool.length)];
+    const def = list[Math.floor(Math.random() * list.length)];
+    const cat = pool[0] === WEAPONS && list === WEAPONS ? "weapon" : (list === ARMORS ? "armor" : "accessory");
+    store.items.push(makeItem(cat, def));
+    drops.push({ name: def.name, count: 1 });
+  }
+  addReceipt(store, "战斗", s.name, { gold, items: drops });
+  st.__reward = { gold, exp, stage: s.name, drops };
+  pushLog("🏆 胜利：金币 +" + gold + " · 经验 +" + exp + " · " + drops.map((d) => d.name + "×" + d.count).join("、"));
+  save();
+}
+
+$("btnSave").onclick = () => save();
+(async () => {
+  await load();
+  // 联机：URL 里带 room → 从房间读状态
+  const q = new URLSearchParams(location.search);
+  roomId = q.get("room") || "";
+  if (roomId) {
+    try {
+      const got = await getRoom(roomId);
+      if (got) {
+        amHost = got.room.host === box;
+        if (!amHost && got.room.state) renderSpectator(got.room.state);
+        if (amHost) { const okRestore = await tryRestore(); }
+        setInterval(async () => {
+          if (amHost) return;
+          try {
+            const g2 = await getRoom(roomId);
+            if (g2 && g2.room.state && g2.room.seq !== seq) {
+              seq = g2.room.seq; lastStateAt = Date.now();
+              renderSpectator(g2.room.state);
+            } else if (lastStateAt && Date.now() - lastStateAt > 20000) {
+              const tag = document.getElementById("hostOffline");
+              if (tag) tag.style.display = "inline-block";
+            }
+          } catch (e) {}
+        }, 500);
+      }
+    } catch (e) {}
+  }
+})();
+
+// 👀 观战视图（只读）
+let seq = 0, lastStateAt = 0;
+function renderSpectator(state) {
+  const meU = state.units.find((u) => u.id === "me") || state.units[0];
+  const foeU = state.units.find((u) => u.id !== meU.id) || state.units[1];
+  const bar = (u) => {
+    const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));
+    return '<div class="bar' + (pct <= 25 ? '' : ' full') + '"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) + (u.cd ? ' · 冷却 ' + u.cd : '') +
+      (u.statuses && u.statuses.length ? ' · ' + u.statuses.map((s) => (s.label || s.key) + (s.turns ? '(' + s.turns + ')' : '')).join('、') : '') + '</div>';
+  };
+  const myTurn = !amHost && !state.finished && state.turn === foeU.id;
+  const myUnit = (!amHost && st && st.__myUnit) ? st.__myUnit : null;
+  const myTurnReal = !amHost && !state.finished && (!myUnit || state.turn === myUnit) && state.turn !== null;
+  const ctrlUnit = myUnit && state.units ? state.units.find((u) => u.id === myUnit) : null;
+  const A = state.units.filter((u) => u.side === "A");
+  const B = state.units.filter((u) => u.side !== "A");
+  const listHtml = (arr, label, color) => '<div class="card-title" style="color:' + color + ';margin-top:8px;">' + label + '（' + arr.length + '）</div>' +
+    arr.map((u) => '<div class="row"><span class="k">' + (state.turn === u.id ? "▶ " : "") + esc(u.name) + ' <span class="tag">Lv' + (u.lv || 1) + ' · 速' + Math.round(u.spd) + '</span>' +
+      (u.cd ? ' <span class="tag">冷却 ' + u.cd + '</span>' : '') +
+      (u.rage >= 100 ? ' <span class="tag" style="color:#ffd666;">怒气满</span>' : '') +
+      ((u.statuses || []).length ? '<div class="hint">' + u.statuses.map((s) => (s.label || s.key) + (s.turns ? '(' + s.turns + ')' : '')).join('、') + '</div>' : '') +
+      '</span><span class="v">' + u.hp + '/' + u.maxHp + '</span></div>' + bar(u)).join("");
+  view().innerHTML =
+    '<div class="card"><div class="card-title">' + (amHost ? "👀 观战中" : (myTurnReal ? "⚡ 轮到你（" + esc(ctrlUnit ? ctrlUnit.name : "你的单位") + "）" : "👀 等待")) +
+      ' · 回合 ' + (state.round || 1) + (state.finished ? (state.winner === "A" ? " · 🏆 蓝方胜" : " · 🏆 红方胜") : '') + '</div>' +
+      listHtml(A, "🔵 蓝方", "#6ea8fe") + listHtml(B, "🔴 红方", "#ff9b9b") +
+      '<div id="hostOffline" style="display:none;margin-top:6px;font-size:11px;color:#ff9b9b;">⚠️ 主机 20 秒没有更新，可能掉线了</div>' +
+      (myTurnReal
+        ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+            '<button data-intent="normal" style="flex:1;min-width:100px;height:36px;">⚔️ 普攻</button>' +
+            '<button data-intent="skill" style="flex:1;min-width:100px;height:36px;" ' + ((ctrlUnit && ctrlUnit.cd > 0) ? 'disabled' : '') + '>🥋 招式' + ((ctrlUnit && ctrlUnit.cd > 0) ? ' 冷却 ' + ctrlUnit.cd : '') + '</button>' +
+            '<button data-intent="ult" style="flex:1;min-width:100px;height:36px;" ' + ((ctrlUnit && ctrlUnit.rage < 100) ? 'disabled' : '') + '>💥 必杀 ' + Math.round((ctrlUnit && ctrlUnit.rage) || 0) + '/100</button>' +
+            '<button data-intent="defend" style="flex:1;min-width:100px;height:36px;">🛡️ 防御</button>' +
+          '</div>'
+        : '<div class="hint" style="margin-top:6px;">' + (myUnit ? "等自己的单位出手" : "你在观战（房间已满或没分到单位）") + '；数值由房主计算。</div>') + '</div>' +
+    '<div class="card"><div class="card-title">战斗日志</div><div class="log">' +
+      (state.log || []).map((l) => l.kind === "hdr"
+        ? '<div style="color:#ffd666;font-weight:700;margin:6px 0 2px;">' + esc(l.text) + '</div>'
+        : '<div class="act">' + esc(l.text) + ((l.subs || []).length ? l.subs.map((x) => '<div class="sub">↳ ' + esc(x) + '</div>').join("") : "") + '</div>').join("") +
+    '</div></div>';
+
+  view().querySelectorAll("[data-intent]").forEach((b) => b.onclick = async () => {
+    b.disabled = true;
+    const r = await pushIntent(roomId, { by: box, unitId: myUnit || (ctrlUnit && ctrlUnit.id) || foeU.id, act: b.dataset.intent });
+    if (!r.ok) { b.disabled = false; return; }
+  });
+}
+
+function pushLogLocal(text) {
+  log.push({ text, kind: "line" });
+}
+</script>
+</body>
+</html>

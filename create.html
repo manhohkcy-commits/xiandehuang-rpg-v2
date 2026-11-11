@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌RPG v2</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="index.html">← 返回</a><span class="tag" id="boxTag">—</span><span class="tag">v2.0.0</span>
+    <button id="btnSave" style="margin-left:auto;">💾 保存</button></div>
+  <div class="nav">
+    <button data-tab="char" class="on">🧑 我的角色</button>
+    <button data-tab="store">🎒 仓库</button>
+    <button data-tab="shop">🏪 商店</button>
+  </div>
+  <div id="view"></div>
+  <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:8px 14px;border-radius:10px;background:#1b1b2e;border:1px solid #3a3a5c;font-size:12.5px;display:none;"></div>
+</div>
+
+<script type="module">
+import { newStore, newChar, cloudGet, cloudSave, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS } from "./js/data.js";
+import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf } from "./js/power.js";
+import { GRADE, APTITUDE } from "./js/data.js";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
+
+let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
+const $ = (id) => document.getElementById(id);
+const view = () => $("view");
+const activeChar = () => (store && store.chars || []).find((c) => c.id === store.activeChar) || (store && store.chars || [])[0] || null;
+
+function toast(msg, bad) {
+  const t = $("toast");
+  t.textContent = msg; t.style.display = "block";
+  t.style.color = bad ? "#ff9b9b" : "#eaeaea";
+  t.style.borderColor = bad ? "#ff9b9b" : "#3a3a5c";
+  clearTimeout(tt); tt = setTimeout(() => { t.style.display = "none"; }, 2200);
+}
+function readBox() {
+  const q = new URLSearchParams(location.search);
+  if (q.get("box")) return q.get("box");
+  const m = /box=([^&]+)/.exec(location.hash || "");
+  return m ? decodeURIComponent(m[1]) : "";
+}
+
+async function load() {
+  box = readBox();
+  $("boxTag").textContent = box || "缺 box 参数";
+  if (!box) { view().innerHTML = '<div class="card"><div class="card-title">缺少 box</div><div class="hint">请用 create.html?box=你的位号 打开</div></div>'; return; }
+  const cached = cacheLoad(box);
+  try {
+    const row = await cloudGet(box);
+    if (row && row.store && Number(row.store.v) === 2) {
+      const pw = row.store.__pw || "";
+      if (pw) {
+        const tip = "这个位号设了口令，请输入口令（忘记就无法取回）";
+        for (let i = 0; i < 3; i++) {
+          const input = prompt(tip);
+          if (input == null) { store = null; return; }
+          if ((await hashPw(input)) === pw) { store = row.store; updatedAt = row.updated_at || ""; break; }
+          toast("口令不对（还有 " + (2 - i) + " 次）", true);
+        }
+        if (!store) { view().innerHTML = '<div class="card"><div class="hint">口令验证失败，无法进入这个位号。</div></div>'; return; }
+      } else {
+        store = row.store;
+        updatedAt = row.updated_at || "";
+        const set = confirm("这个位号还没设口令。要不要现在设一个？（推荐，防止别人用你的档）");
+        if (set) {
+          const p1 = prompt("设置口令（4~20 位）");
+          if (p1 && p1.length >= 4) {
+            store.__pw = await hashPw(p1);
+            await save();
+            toast("口令已设置，请记牢");
+          }
+        }
+      }
+    } else if (row && row.store) {
+      toast("旧版存档（v1）：新版先新建角色", true);
+    }
+  } catch (e) {
+    if (cached) { store = cached.store; toast("离线：用本机缓存", true); }
+  }
+  if (!store && cached && Number(cached.store.v) === 2) store = cached.store;
+  if (store) ensureSeed();
+}
+
+function ensureSeed() {
+  if (!store.flags) store.flags = {};
+  if (!store.flags.__seed) {
+    store.gold = 3000; store.flags.stone = 60; store.flags.shards = 20; store.flags.bstone = 5;
+    store.flags.__seed = 1;
+  }
+  if (!store.chars.length) {
+    store.chars.push(newChar("Zyn"));
+    store.chars[0].equip.weapon = Object.assign({}, WEAPONS[0], { lv: 1, star: 1 });
+    store.activeChar = store.chars[0].id;
+  }
+}
+
+async function save() {
+  if (!box || !store) return false;
+  store.__at = Date.now();
+  cacheSave(box, store);
+  try {
+    const r = await cloudSave(box, store, updatedAt || null, activeChar() ? activeChar().name : "");
+    if (!r.ok) { toast("保存未生效：" + r.reason, true); return false; }
+    updatedAt = (r.row && r.row.updated_at) || updatedAt;
+    toast("已保存");
+    return true;
+  } catch (e) { toast("保存失败：" + e.message, true); return false; }
+}
+
+const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
+
+function eqCard(ch, kind, label) {
+  const d = ch.equip[kind];
+  if (!d) return '<div style="flex:1;min-width:150px;padding:9px 10px;border-radius:9px;background:#101020;border:1px dashed #3a3a5c;">' +
+    '<div style="font-size:11px;color:#6a6a86;">' + label + '</div><div style="font-size:12px;color:#5a5a78;margin-top:4px;">未装备</div></div>';
+  return '<div style="flex:1;min-width:150px;padding:9px 10px;border-radius:9px;background:#12182a;border:1px solid #2f4a6a;">' +
+    '<div style="font-size:11px;color:#6a6a86;">' + label + '</div>' +
+    '<div style="font-size:12.5px;font-weight:600;margin-top:3px;">' + esc(d.name) + '</div>' +
+    '<div style="font-size:10.5px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</div>' +
+    '<div style="margin-top:6px;"><button data-unequip="' + kind + '">脱下</button></div></div>';
+}
+
+function attrRow(label, key, ch) {
+  const free = Number(ch.free) || 0;
+  return '<div class="row"><span class="k">' + label + '</span><span class="v">' + (ch[key] || 0) +
+    ' <button class="mini" style="height:22px;padding:0 8px;font-size:11px;margin-left:6px;" data-attr="' + key + '" ' +
+    (free > 0 ? '' : 'disabled') + '>＋</button></span></div>';
+}
+
+function receiptsHtml() {
+  const list = (store.receipts || []).slice(-8).reverse();
+  if (!list.length) return '<div class="hint">还没有记录</div>';
+  return list.map((r) => {
+    const t = new Date(r.at);
+    const hh = String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
+    const gold = Number(r.gold) || 0;
+    const items = (r.items || []).map((i) => i.name + "×" + (i.count || 1)).join("、");
+    return '<div class="row"><span class="k">' + hh + ' · ' + esc(r.kind) + ' ' + esc(r.title) +
+      (items ? '<div class="hint">' + esc(items) + '</div>' : '') + '</span>' +
+      '<span class="v" style="color:' + (gold >= 0 ? "#7ee787" : "#ff9b9b") + '">' + (gold ? (gold > 0 ? "+" : "") + fmt(gold) + " 金" : "") + '</span></div>';
+  }).join("");
+}
+
+// 📋 装备详情弹窗（v2）：把一件装备的「基础 + 词条 + 招式」全列出来
+function showItemDetail(it) {
+  if (!it || !it.data) return;
+  const d = it.data;
+  const b = itemBonus(it);
+  const names = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", atkPct: "攻击加成", dmgCut: "减伤", thorns: "反伤" };
+  const unit = { critRate: "%", critDmg: "%", atkPct: "%", dmgCut: "%", thorns: "%" };
+  const rows = Object.keys(names).filter((k) => Number(b[k]) > 0).map((k) =>
+    '<div class="row"><span class="k">' + names[k] + '</span><span class="v">+' + (Math.round((Number(b[k]) || 0) * 10) / 10) + (unit[k] || "") + '</span></div>').join("");
+  const skill = d.sMult
+    ? '<div class="row"><span class="k">招式</span><span class="v">「' + esc(d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits : '') + '</span></div>' +
+      '<div class="row"><span class="k">冷却 / 回怒</span><span class="v">' + (d.sCd || 2) + ' 回合 / ' + (d.sRage || 0) + '%</span></div>' +
+      (d.hitStatus ? '<div class="row"><span class="k">附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
+    : "";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  ov.innerHTML = '<div class="card" style="width:min(460px,92vw);max-height:80vh;overflow:auto;margin:0;">' +
+    '<div class="card-title">' + esc(d.name || "装备") + '　<span class="tag">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
+    (rows || '<div class="hint">没有属性加成</div>') + skill +
+    '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#dpClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
+function createCharacter(name, weaponId, armorId, accId, attrs, basic) {
+  const ch = newChar(name);
+  if (attrs) { ch.str = attrs.str || 0; ch.intel = attrs.intel || 0; ch.tech = attrs.tech || 0; ch.agi = attrs.agi || 0; }
+  if (basic) ch.basic = { hp: basic.hp || 0, atk: basic.atk || 0, def: basic.def || 0, res: basic.res || 0 };
+  ch.grade = "D"; ch.apt = 1; ch.breaks = 0; ch.free = 0;
+  const w = WEAPONS.find((x) => x.id === weaponId) || WEAPONS[0];
+  const ar = ARMORS.find((x) => x.id === armorId) || ARMORS[0];
+  const ac = ACCESSORIES.find((x) => x.id === accId) || ACCESSORIES[0];
+  ch.equip.weapon = Object.assign({}, w, { lv: 1, star: 1 });
+  ch.equip.armor = Object.assign({}, ar, { lv: 1, star: 1 });
+  ch.equip.accessory = Object.assign({}, ac, { lv: 1, star: 1 });
+  store.chars.push(ch);
+  store.activeChar = ch.id;
+  addReceipt(store, "建角", ch.name, {
+    items: [{ name: w.name, count: 1 }, { name: ar.name, count: 1 }, { name: ac.name, count: 1 }],
+    note: "初始装备"
+  });
+}
+
+function buildCreateScreen() {
+  const D = { name: "", weapon: WEAPONS[0].id, armor: ARMORS[0].id, acc: ACCESSORIES[0].id,
+    str: 0, agi: 0, intel: 0, tech: 0, hp: 0, atk: 0, def: 0, res: 0 };
+  const state = Object.assign({}, D, window.__cc || {});
+  window.__cc = state;
+  const free = () => BIRTH.specPoints - (state.str + state.agi + state.intel + state.tech);
+  const basicFree = () => BIRTH.basicPoints - (state.hp + state.atk + state.def + state.res);
+  const basicRow = (k, label) => '<div class="row"><span class="k">' + label + '（' + state[k] + ' 点 → +' + (state[k] * BIRTH.basicPct) + '%）</span><span class="v">' +
+    '<button class="mini" data-basic="' + k + ':-1" style="height:22px;padding:0 8px;" ' + (state[k] <= 0 ? 'disabled' : '') + '>−</button> ' +
+    '<button class="mini" data-basic="' + k + ':1" style="height:22px;padding:0 8px;" ' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? 'disabled' : '') + '>＋</button>' +
+    '</span></div>';
+
+  const pickCard = (list, cur, key, label, sub) =>
+    '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">' +
+    list.map((d) => {
+      const on = cur === d.id;
+      return '<button data-pick="' + key + ':' + d.id + '" style="text-align:left;padding:8px 10px;border-color:' + (on ? "#6ea8fe" : "#3a3a5c") + ';' +
+        'background:' + (on ? "#1b2740" : "#151523") + ';">' +
+        '<span style="font-weight:600;color:' + (on ? "#cfe6ff" : "#eaeaea") + ';">' + esc(d.name) + '</span> ' +
+        '<span class="tag">' + d.rarity + '</span>' +
+        '<div class="hint">' + sub(d) + '</div></button>';
+    }).join("") + '</div>';
+
+  const attr = (k, label) => '<div class="row"><span class="k">' + label + '</span><span class="v">' +
+    '<button class="mini" data-attr="' + k + ':-1" style="height:22px;padding:0 8px;" ' + (state[k] <= 0 ? 'disabled' : '') + '>−</button> ' +
+    state[k] + ' <button class="mini" data-attr="' + k + ':1" style="height:22px;padding:0 8px;" ' + (free() <= 0 ? 'disabled' : '') + '>＋</button>' +
+    '</span></div>';
+
+  view().innerHTML =
+    '<div class="card"><div class="card-title">创建角色</div>' +
+      '<div class="row"><span class="k">名字</span><span class="v"><input id="cName" maxlength="16" placeholder="最多 16 字" value="' + esc(state.name) + '"></span></div>' +
+      '<div class="hint">决定你以后在战斗/排行榜里显示的名字，之后可改。</div>' +
+    '</div>' +
+    '<div class="card"><div class="card-title">初始武器（决定招式）</div>' +
+      pickCard(WEAPONS, state.weapon, "weapon", "武器", (d) => "招式「" + (d.sName || "—") + "」" + (d.sMult || 150) + "% · 冷却 " + (d.sCd || 2) + " 回合") +
+    '</div>' +
+    '<div class="card"><div class="card-title">初始防具 / 饰品</div>' +
+      '<div class="hint">防具</div>' + pickCard(ARMORS, state.armor, "armor", "防具", (d) => "减伤 " + (d.dmgCut || 0) + "%" + (d.thorns ? " · 反伤 " + d.thorns + "%" : "")) +
+      '<div class="hint" style="margin-top:10px;">饰品</div>' + pickCard(ACCESSORIES, state.acc, "acc", "饰品", (d) => (d.atkPct ? "攻击 +" + d.atkPct + "% " : "") + (d.critDmg ? "暴伤 +" + d.critDmg + "%" : "")) +
+    '</div>' +
+    '<div class="card"><div class="card-title">预设模型（一键套用，可再微调）</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        PRESETS.map((p) => '<button data-preset="' + p.id + '" style="font-size:11.5px;padding:5px 10px;">' + p.name + '<div class="hint">' + p.role + '</div></button>').join("") +
+      '</div></div>' +
+    '<div class="card"><div class="card-title">基础四项（共 ' + (BIRTH.basicPoints) + ' 点 · 每点 +' + BIRTH.basicPct + '% · 单项上限 ' + BIRTH.basicCap + '）</div>' +
+      basicRow("hp", "生命") + basicRow("atk", "攻击") + basicRow("def", "防御") + basicRow("res", "法抗") +
+      '<div class="hint" style="margin-top:6px;">剩余点数：<b style="color:' + (basicFree() > 0 ? "#7ee787" : "#6a6a86") + ';">' + basicFree() + '</b></div>' +
+    '</div>' +
+    '<div class="card"><div class="card-title">专精四项（共 ' + (BIRTH.specPoints) + ' 点 · 每点 +' + BIRTH.specEffect.str + ' · 单项上限 ' + BIRTH.specCap + '）</div>' +
+      attr("str", "力量（近战伤害 +2/点）") + attr("intel", "智力（法术伤害 +2/点）") +
+      attr("tech", "技巧（远程伤害 +2/点）") + attr("agi", "敏捷（速度 +0.6/点）") +
+      '<div class="hint" style="margin-top:6px;">剩余点数：<b style="color:' + (free() > 0 ? "#7ee787" : "#6a6a86") + ';">' + free() + '</b></div>' +
+    '</div>' +
+    '<div class="card"><button id="btnCreate" style="width:100%;height:40px;border-color:#7ee787;color:#7ee787;" ' + ((free() < 0 || basicFree() < 0) ? 'disabled' : '') + '>✨ 创建角色</button></div>';
+
+  const nameInput = $("cName");
+  nameInput.oninput = () => { state.name = nameInput.value; };
+  view().querySelectorAll("[data-pick]").forEach((b) => b.onclick = () => {
+    const [k, id] = b.dataset.pick.split(":");
+    state[k] = id;
+    render();
+  });
+  view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = () => {
+    const [k, d] = b.dataset.attr.split(":");
+    const next = state[k] + Number(d);
+    if (next < 0 || next > BIRTH.specCap) return;
+    if (Number(d) > 0 && free() <= 0) return;
+    state[k] = next;
+    render();
+  });
+  view().querySelectorAll("[data-basic]").forEach((b) => b.onclick = () => {
+    const [k, d] = b.dataset.basic.split(":");
+    const next = state[k] + Number(d);
+    if (next < 0 || next > BIRTH.basicCap) return;
+    if (Number(d) > 0 && basicFree() <= 0) return;
+    state[k] = next;
+    render();
+  });
+  view().querySelectorAll("[data-preset]").forEach((b) => b.onclick = () => {
+    const p = PRESETS.find((x) => x.id === b.dataset.preset);
+    if (!p) return;
+    Object.assign(state, p.basic, p.spec);
+    render();
+  });
+  $("btnCreate").onclick = async () => {
+    const name = (state.name || "").trim() || "无名";
+    createCharacter(name, state.weapon, state.armor, state.acc,
+      { str: state.str, agi: state.agi, intel: state.intel, tech: state.tech },
+      { hp: state.hp, atk: state.atk, def: state.def, res: state.res });
+    window.__cc = null;
+    await save();
+    render();
+  };
+}
+
+// ⚡ 突破行：显示节点进度 + 突破按钮
+function breakRow(ch) {
+  const done = Math.max(0, Number(ch.breaks) || 0);
+  const next = BREAKS[done] || null;
+  const dots = BREAKS.map((b, i) => '<span style="color:' + (i < done ? "#7ee787" : (i === done ? "#ffd666" : "#3a3a5c")) + ';">●</span>' +
+    (i < BREAKS.length - 1 ? '<span style="color:#2f2f4a;">──</span>' : '')).join("");
+  if (!next) {
+    return '<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#101020;border:1px dashed #3a3a5c;">' +
+      '<div class="hint">突破 ' + BREAKS.map((b) => b.at).join(" ▸ ") + '　' + dots + '</div>' +
+      '<div class="hint" style="color:#7ee787;margin-top:4px;">已全部突破（+15% 全属性）</div></div>';
+  }
+  const lv = Number(ch.lv) || 1;
+  const near = lv >= next.at;
+  const stone = Number((store.flags || {}).stone) || 0;
+  const canDo = near && stone >= next.stone && (Number(store.gold) || 0) >= next.gold;
+  return '<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#101020;border:1px solid #2f2f4a;">' +
+    '<div class="hint">突破 ' + BREAKS.map((b) => b.at).join(" ▸ ") + '　' + dots + '</div>' +
+    '<div class="hint" style="margin-top:4px;">下一次：Lv' + next.at + '（' + (near ? "已到" : "还需 " + (next.at - lv) + " 级") +
+      '）· 突破石 ' + next.stone + '（有 ' + stone + '）· 金 ' + fmt(next.gold) + '</div>' +
+    '<div class="hint" style="margin-top:2px;">突破奖励：全属性 +' + next.bonus + '%，属性点 +' + next.points + '，等级上限 → ' + next.capTo + '</div>' +
+    '<button id="btnBreak" style="margin-top:6px;height:30px;border-color:' + (canDo ? "#7ee787" : "#3a3a5c") + ';color:' + (canDo ? "#7ee787" : "#6a6a86") + ';"' + (canDo ? '' : ' disabled') + '>⚡ 突破</button>' +
+    '</div>';
+}
+
+// 🎖️ 资历评级 / 🎯 资质评估 卡片
+function gradeCard(ch) {
+  const g = gradeOf(ch), a = aptitudeOf(ch);
+  const nextG = GRADE[GRADE.indexOf(g) + 1] || null;
+  const nextA = APTITUDE[APTITUDE.indexOf(a) + 1] || null;
+  const ms = Number((store.flags || {}).manuscript) || 0;
+  const md = Number((store.flags || {}).medal) || 0;
+  const canG = nextG && ms >= nextG.cost;
+  const canA = nextA && md >= nextA.cost;
+  return card("资历与资质",
+    '<div class="row"><span class="k">资历评级</span><span class="v" style="color:' + g.color + ';">' + g.name + ' ' + g.key +
+      ' <span class="hint">（全属性 ×' + g.mult.toFixed(2) + '）</span></span></div>' +
+    (nextG
+      ? '<div class="row"><span class="k">升资历 → ' + nextG.name + ' ' + nextG.key + '</span><span class="v">' +
+        '<span style="color:#ffd666;">📜 ' + nextG.cost + '/有 ' + ms + '</span> ' +
+        '<button data-grade="1" ' + (canG ? '' : 'disabled') + '>晋升</button></span></div>'
+      : '<div class="hint">已到最高资历（红 SS）</div>') +
+    '<div class="row" style="margin-top:6px;"><span class="k">资质评估</span><span class="v" style="color:#ffd666;">' + a.star + '★ ' +
+      '<span class="hint">（全属性 ×' + a.mult.toFixed(2) + '）</span></span></div>' +
+    (nextA
+      ? '<div class="row"><span class="k">升资质 → ' + nextA.star + '★</span><span class="v">' +
+        '<span style="color:#ffd666;">🎖️ ' + nextA.cost + '/有 ' + md + '</span> ' +
+        '<button data-apt="1" ' + (canA ? '' : 'disabled') + '>评估</button></span></div>'
+      : '<div class="hint">已到最高资质（7★）</div>'));
+}
+
+function renderChar() {
+  const ch = activeChar();
+  if (!ch) {
+    if (!window.__creating) window.__creating = 1;
+    buildCreateScreen();
+    return;
+  }
+  const f = charFinal(ch), pw = charPower(ch);
+  const need = CHAR.expNeed(ch.lv);
+  const pct = Math.min(100, Math.round(((store.exp || 0) / need) * 100));
+  const canLv = ch.lv < CHAR.maxLevel && (store.exp || 0) >= need;
+  const spec = Math.round(((ch.str || 0) * CHAR.spec.str + (ch.agi || 0) * CHAR.spec.agi + (ch.intel || 0) * CHAR.spec.intel + (ch.tech || 0) * CHAR.spec.tech) * 10) / 10;
+
+  view().innerHTML =
+    '<div class="card">' +
+      '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + ch.lv + (ch.lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
+      '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="hint">经验 ' + fmt(store.exp || 0) + ' / ' + fmt(need) + '</div>' +
+      breakRow(ch) +
+      (ch.lv < CHAR.maxLevel ? '<div style="margin-top:8px;"><button id="btnLv" ' + (canLv ? '' : 'disabled') + '>⬆️ 升级到 Lv' + (ch.lv + 1) + '</button></div>' : '') +
+    '</div>' +
+    card("综合战力（含装备）", '<div style="font-size:26px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>') +
+    gradeCard(ch) +
+    card("属性（含装备）", row("攻击", Math.round(f.atk)) + row("生命", Math.round(f.hp)) + row("防御", Math.round(f.def)) +
+      row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
+      row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%")) +
+    card("天赋与专精", row("专精换算", "+" + spec) +
+      attrRow("力量", "str", ch) + attrRow("敏捷", "agi", ch) + attrRow("智力", "intel", ch) + attrRow("技巧", "tech", ch) +
+      '<div class="hint" style="margin-top:6px;">剩余可分配点数：<b style="color:' + ((ch.free || 0) > 0 ? "#7ee787" : "#6a6a86") + ';">' + (ch.free || 0) + '</b>（每次升级 +2）</div>') +
+    card("装备栏", '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + eqCard(ch, "weapon", "⚔️ 武器") + eqCard(ch, "armor", "🛡️ 防具") + eqCard(ch, "accessory", "💍 饰品") + '</div>') +
+    card("资源", row("金币", fmt(store.gold || 0)) + row("强化石", fmt(store.flags.stone || 0)) + row("碎片", fmt(store.flags.shards || 0)) + row("突破石", fmt(store.flags.bstone || 0)) + row("资历手稿", fmt(store.flags.manuscript || 0)) + row("资质鉴定勋章", fmt(store.flags.medal || 0))) +
+    card("操作", '<button id="btnRename">✏️ 改名字</button>') +
+    card("最近收据", receiptsHtml());
+
+  if ($("btnRename")) $("btnRename").onclick = async () => {
+    const nn = prompt("新的角色名", ch.name);
+    if (!nn || nn === ch.name) return;
+    ch.name = nn.trim().slice(0, 16);
+    addReceipt(store, "改名", ch.name);
+    await save(); render();
+  };
+
+  view().querySelectorAll("[data-grade]").forEach((b) => b.onclick = async () => {
+    const g = gradeOf(ch), next = GRADE[GRADE.indexOf(g) + 1];
+    if (!next) return;
+    store.flags = store.flags || {};
+    const ms = Number(store.flags.manuscript) || 0;
+    if (ms < next.cost) return toast("资历手稿不够（需要 " + next.cost + "）", true);
+    store.flags.manuscript = ms - next.cost;
+    ch.grade = next.key;
+    addReceipt(store, "晋升", ch.name + " 资历 → " + next.name + " " + next.key, { items: [{ name: "资历手稿", count: -next.cost }] });
+    await save(); render();
+    toast("🎖️ 资历晋升：" + next.name + " " + next.key);
+  });
+  view().querySelectorAll("[data-apt]").forEach((b) => b.onclick = async () => {
+    const a = aptitudeOf(ch), next = APTITUDE[APTITUDE.indexOf(a) + 1];
+    if (!next) return;
+    store.flags = store.flags || {};
+    const md = Number(store.flags.medal) || 0;
+    if (md < next.cost) return toast("资质鉴定勋章不够（需要 " + next.cost + "）", true);
+    store.flags.medal = md - next.cost;
+    ch.apt = next.star;
+    addReceipt(store, "评估", ch.name + " 资质 → " + next.star + "★", { items: [{ name: "资质鉴定勋章", count: -next.cost }] });
+    await save(); render();
+    toast("🎯 资质评估：" + next.star + "★");
+  });
+  if ($("btnBreak")) $("btnBreak").onclick = async () => {
+    const done = Math.max(0, Number(ch.breaks) || 0);
+    const next = BREAKS[done];
+    if (!next) return;
+    if ((Number(ch.lv) || 1) < next.at) return toast("还没到突破等级", true);
+    store.flags = store.flags || {};
+    const stone = Number(store.flags.stone) || 0;
+    if (stone < next.stone) return toast("突破石不够（需要 " + next.stone + "）", true);
+    if ((Number(store.gold) || 0) < next.gold) return toast("金币不够（需要 " + next.gold + "）", true);
+    store.flags.stone = stone - next.stone;
+    store.gold -= next.gold;
+    ch.breaks = done + 1;
+    ch.free = (Number(ch.free) || 0) + next.points;
+    addReceipt(store, "突破", ch.name + " 第 " + ch.breaks + " 突", { gold: -next.gold, items: [{ name: "突破石", count: -next.stone }], note: "全属性 +" + next.bonus + "% · 属性点 +" + next.points });
+    await save(); render();
+    toast("⚡ 突破成功：全属性 +" + next.bonus + "%，属性点 +" + next.points);
+  };
+  if ($("btnLv")) $("btnLv").onclick = async () => {
+    // 到突破节点必须先突破
+    const done = Math.max(0, Number(ch.breaks) || 0);
+    const next = BREAKS[done];
+    if (next && (Number(ch.lv) || 1) >= next.at) return toast("先突破才能继续升级（Lv" + next.at + "）", true);
+    store.exp -= need; ch.lv += 1;
+    ch.free = (Number(ch.free) || 0) + 2;
+    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: "获得 2 点属性点" });
+    await save(); render();
+  };
+  view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = async () => {
+    const free = Number(ch.free) || 0;
+    if (free <= 0) return toast("没有可分配点数", true);
+    ch[b.dataset.attr] = (Number(ch[b.dataset.attr]) || 0) + 1;
+    ch.free = free - 1;
+    await save(); render();
+  });
+  view().querySelectorAll("[data-unequip]").forEach((b) => b.onclick = async () => {
+    const r = unequip(store, ch.id, b.dataset.unequip);
+    if (!r.ok) return toast(r.why, true);
+    await save(); render();
+  });
+}
+
+function renderStore() {
+  const ch = activeChar(), all = store.items || [];
+  const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
+  const batch = window.__batch || (window.__batch = { on: false, sel: {} });
+
+  const filtered = all.filter((it) => F.cat === "all" || it.cat === F.cat);
+  const rank = { R: 1, SR: 2, SSR: 3, UR: 4 };
+  filtered.sort((a, b) => {
+    if (F.sort === "rarity") {
+      const d = (rank[b.data.rarity] || 0) - (rank[a.data.rarity] || 0);
+      if (d) return d;
+    }
+    if (F.sort === "name") return String(a.data.name).localeCompare(String(b.data.name));
+    return (Number(b.data.lv) || 1) - (Number(a.data.lv) || 1);
+  });
+
+  const chip = (key, label) => '<button data-f="' + key + '" style="font-size:11px;padding:3px 9px;border-color:' + (F.cat === key ? "#6ea8fe" : "#3a3a5c") + ';color:' + (F.cat === key ? "#cfe6ff" : "#8a8ab0") + ';">' + label + '</button>';
+  const tool = '<div class="card" style="padding:10px 12px;">' +
+    '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">' +
+      chip("all", "全部") + chip("weapon", "⚔️武器") + chip("armor", "🛡️防具") + chip("accessory", "💍饰品") +
+      '<span style="width:10px;"></span>' +
+      '<button data-sort="lv" style="font-size:11px;padding:3px 9px;border-color:' + (F.sort === "lv" ? "#6ea8fe" : "#3a3a5c") + ';">等级↓</button>' +
+      '<button data-sort="rarity" style="font-size:11px;padding:3px 9px;border-color:' + (F.sort === "rarity" ? "#6ea8fe" : "#3a3a5c") + ';">品质↓</button>' +
+      '<button data-sort="name" style="font-size:11px;padding:3px 9px;border-color:' + (F.sort === "name" ? "#6ea8fe" : "#3a3a5c") + ';">名字</button>' +
+      '<span style="margin-left:auto;"></span>' +
+      (batch.on
+        ? '<button id="bAll" style="font-size:11px;">全选</button><button id="bRun" style="font-size:11px;border-color:#ff9b9b;color:#ff9b9b;">分解选中(' + Object.keys(batch.sel).length + ')</button><button id="bExit" style="font-size:11px;">退出</button>'
+        : '<button id="bOn" style="font-size:11px;">🧹 批量分解</button>') +
+    '</div></div>';
+
+  if (!filtered.length) {
+    view().innerHTML = tool + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
+    bindStoreTool(filtered);
+    return;
+  }
+
+  const rows = filtered.map((it) => {
+    const d = it.data || {}, chk = cultCheck(it, "level", store);
+    const picked = !!batch.sel[it.id];
+    return '<div style="border:1px solid ' + (picked ? "#ff9b9b" : "#23233a") + ';border-radius:10px;padding:10px;margin:8px 0;">' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+        (batch.on ? '<input type="checkbox" data-pick="' + it.id + '" ' + (picked ? 'checked' : '') + '>' : '') +
+        '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;" data-detail="' + it.id + '">' + (it.lock ? "🔒 " : "") + esc(d.name) + '</span>' +
+        '<span class="tag">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span>' +
+        '<span style="margin-left:auto;color:#ffd666;font-size:11.5px;">售价 ' + sellPrice(it) + '</span></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+        (ch && isEquip(it) ? '<button data-equip="' + it.id + '">穿上</button>' : '') +
+        '<button data-cult="' + it.id + '" ' + (chk.ok ? '' : 'disabled') + '>强化+1' + (chk.ok ? '（' + chk.gold + '金/' + chk.stone + '石' + (chk.breakStone ? '/突破' + chk.breakStone : '') + '）' : '') + '</button>' +
+        '<button data-star="' + it.id + '">升星</button>' +
+        '<button data-lock="' + it.id + '">' + (it.lock ? '🔓 解锁' : '🔒 锁定') + '</button>' +
+        '<button data-inherit="' + it.id + '">🔁 继承到…</button>' +
+        '<button data-sell="' + it.id + '" style="border-color:#ffd666;color:#ffd666;">出售</button>' +
+        '<button data-dis="' + it.id + '" style="border-color:#ff9b9b;color:#ff9b9b;">分解</button>' +
+      '</div></div>';
+  }).join("");
+
+  view().innerHTML = tool + '<div class="card"><div class="card-title">仓库（' + filtered.length + ' / ' + all.length + ' 件）</div>' + rows + '</div>';
+  bindStoreTool(filtered);
+}
+
+function bindStoreTool(filtered) {
+  const F = window.__stFilter, batch = window.__batch;
+  view().querySelectorAll("[data-f]").forEach((b) => b.onclick = () => { F.cat = b.dataset.f; render(); });
+  view().querySelectorAll("[data-sort]").forEach((b) => b.onclick = () => { F.sort = b.dataset.sort; render(); });
+  if ($("bOn")) $("bOn").onclick = () => { batch.on = true; batch.sel = {}; render(); };
+  if ($("bExit")) $("bExit").onclick = () => { batch.on = false; batch.sel = {}; render(); };
+  if ($("bAll")) $("bAll").onclick = () => {
+    filtered.forEach((it) => { if (!it.lock) batch.sel[it.id] = 1; });
+    render();
+  };
+  if ($("bRun")) $("bRun").onclick = async () => {
+    const ids = Object.keys(batch.sel);
+    if (!ids.length) return toast("还没选装备", true);
+    if (!confirm("确定分解这 " + ids.length + " 件？（锁定的会跳过）")) return;
+    let ok = 0, skip = 0;
+    ids.forEach((id) => {
+      const r = dismantle(store, id);
+      if (r.ok) ok++; else skip++;
+    });
+    addReceipt(store, "批量分解", ok + " 件", { note: "跳过 " + skip });
+    batch.on = false; batch.sel = {};
+    await save(); render();
+    toast("批量分解：成功 " + ok + " 件" + (skip ? "，跳过 " + skip : ""));
+  };
+  view().querySelectorAll("[data-pick]").forEach((c) => c.onchange = () => {
+    if (c.checked) batch.sel[c.dataset.pick] = 1; else delete batch.sel[c.dataset.pick];
+    render();
+  });
+  view().querySelectorAll("[data-inherit]").forEach((b) => b.onclick = () => openInherit(b.dataset.inherit));
+  view().querySelectorAll("[data-detail]").forEach((b) => b.onclick = () => showItemDetail(findItem(store, b.dataset.detail)));
+  view().querySelectorAll("[data-equip]").forEach((b) => b.onclick = async () => {
+    const r = equip(store, activeChar().id, b.dataset.equip);
+    if (!r.ok) return toast(r.why, true);
+    await save(); render();
+  });
+  view().querySelectorAll("[data-cult]").forEach((b) => b.onclick = async () => {
+    const it = findItem(store, b.dataset.cult), r = cultApply(store, it, "level");
+    if (!r.ok) return toast(r.why, true);
+    addReceipt(store, "培养", it.data.name + " → Lv" + r.lv);
+    await save(); render();
+  });
+  view().querySelectorAll("[data-star]").forEach((b) => b.onclick = async () => {
+    const it = findItem(store, b.dataset.star), r = cultApply(store, it, "star");
+    if (!r.ok) return toast(r.why, true);
+    await save(); render();
+  });
+  view().querySelectorAll("[data-lock]").forEach((b) => b.onclick = async () => {
+    const it = findItem(store, b.dataset.lock); it.lock = !it.lock;
+    await save(); render();
+  });
+  view().querySelectorAll("[data-sell]").forEach((b) => b.onclick = async () => {
+    const it = findItem(store, b.dataset.sell);
+    if (!confirm("出售「" + it.data.name + "」？")) return;
+    const r = sell(store, b.dataset.sell);
+    if (!r.ok) return toast(r.why, true);
+    addReceipt(store, "出售", it.data.name, { gold: r.price });
+    await save(); render();
+  });
+  view().querySelectorAll("[data-dis]").forEach((b) => b.onclick = async () => {
+    const it = findItem(store, b.dataset.dis);
+    if (!confirm("分解「" + it.data.name + "」？")) return;
+    const r = dismantle(store, b.dataset.dis);
+    if (!r.ok) return toast(r.why, true);
+    addReceipt(store, "分解", it.data.name, { items: [{ name: "强化石", count: r.stone }] });
+    await save(); render();
+  });
+}
+
+// 🏪 每日货架：按日期生成固定一批（同一天所有人一样），买过就没了
+function dayKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+}
+function shelfOf(store) {
+  const day = dayKey();
+  const f = (store.flags = store.flags || {});
+  if (!f.shop || f.shop.day !== day) {
+    // 用日期做种子，保证同一天稳定
+    let seed = 0;
+    for (const ch of day) seed = (seed * 31 + ch.charCodeAt(0)) % 100000;
+    const pickN = (list, n) => {
+      const out = [];
+      const pool = list.slice();
+      for (let i = 0; i < n && pool.length; i++) {
+        seed = (seed * 1103515245 + 12345) % 2147483647;
+        out.push(pool.splice(seed % pool.length, 1)[0]);
+      }
+      return out;
+    };
+    f.shop = {
+      day,
+      weapons: pickN(WEAPONS, 3).map((x) => x.id),
+      armors: pickN(ARMORS, 2).map((x) => x.id),
+      accessories: pickN(ACCESSORIES, 2).map((x) => x.id),
+      bought: []
+    };
+  }
+  return f.shop;
+}
+function shelfItems(store) {
+  const sh = shelfOf(store);
+  const pick = (list, ids) => list.filter((x) => ids.indexOf(x.id) >= 0);
+  return {
+    weapons: pick(WEAPONS, sh.weapons),
+    armors: pick(ARMORS, sh.armors),
+    accessories: pick(ACCESSORIES, sh.accessories),
+    bought: sh.bought || []
+  };
+}
+
+// 🔁 继承面板：选一件同部位、且培养更低的装备作为目标
+function openInherit(fromId) {
+  const src = findItem(store, fromId);
+  if (!src) return;
+  const targets = (store.items || []).filter((it) => it.id !== fromId && it.cat === src.cat && inheritCheck(store, fromId, it.id).ok);
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  ov.innerHTML = '<div class="card" style="width:min(520px,94vw);max-height:80vh;overflow:auto;margin:0;">' +
+    '<div class="card-title">🔁 继承：' + esc(src.data.name) + '（Lv' + (src.data.lv || 1) + ' · ' + (src.data.star || 1) + '★）</div>' +
+    '<div class="hint">把培养搬到目标装备，源装备回到 Lv1/1★；同部位才能继承。</div>' +
+    (targets.length
+      ? targets.map((t) => {
+          const c = inheritCheck(store, fromId, t.id).cost;
+          return '<div class="row"><span class="k">' + esc(t.data.name) +
+            '<div class="hint">Lv' + (t.data.lv || 1) + ' · ' + (t.data.star || 1) + '★ → Lv' + Math.max(t.data.lv || 1, src.data.lv || 1) +
+            ' · ' + Math.max(t.data.star || 1, src.data.star || 1) + '★　费用 ' + c.gold + ' 金</div></span>' +
+            '<span class="v"><button data-go="' + t.id + '">继承</button></span></div>';
+        }).join("")
+      : '<div class="hint">没有可继承的目标（同部位且培养更低）</div>') +
+    '<div style="margin-top:10px;"><button id="inhClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#inhClose").onclick = () => ov.remove();
+  ov.querySelectorAll("[data-go]").forEach((b) => b.onclick = async () => {
+    const r = inheritApply(store, fromId, b.dataset.go);
+    if (!r.ok) { toast(r.why, true); return; }
+    addReceipt(store, "继承", src.data.name + " → " + findItem(store, b.dataset.go).data.name, { gold: -r.gold });
+    ov.remove();
+    await save(); render();
+    toast("继承完成：目标 Lv" + r.lv + " · " + r.star + "★（花费 " + r.gold + " 金）");
+  });
+}
+
+function renderShop() {
+  const shelf = shelfItems(store);
+  const grp = (title, cat, list) => card(title, list.map((d) => {
+    const price = SHOP_PRICE[cat][d.rarity] || 500;
+    const sold = shelf.bought.indexOf(d.id) >= 0;
+    return '<div class="row"><span class="k">' + esc(d.name) + ' <span class="tag">' + d.rarity + '</span></span>' +
+      '<span class="v"><span style="color:#ffd666;">' + price + ' 金</span> ' +
+      (sold ? '<span class="hint">已售罄</span>' : '<button data-buy="' + cat + ':' + d.id + '">购买</button>') +
+      '</span></div>';
+  }).join("") || '<div class="hint">今天的货架空了</div>');
+
+  view().innerHTML =
+    '<div class="card" style="padding:10px 12px;"><div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<span style="font-size:11px;color:#8a8ab0;">🏪 今日货架（每天 0 点换新，卖完就没有）</span>' +
+      '<span style="font-size:11px;color:#6a6a86;">' + dayKey() + '</span></div></div>' +
+    grp("⚔️ 武器", "weapon", shelf.weapons) + grp("🛡️ 防具", "armor", shelf.armors) + grp("💍 饰品", "accessory", shelf.accessories) +
+    card("💰 补给", CONSUMABLES.map((p) => '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">' + esc(p.desc) + '</div></span>' +
+      '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button></span></div>').join("")) +
+    card("♻️ 出售（把仓库里的装备换成金币）",
+      (store.items || []).length
+        ? (store.items || []).map((it) => {
+            const d = it.data || {};
+            return '<div class="row"><span class="k">' + (it.lock ? "🔒 " : "") + esc(d.name) +
+              '<div class="hint">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</div></span>' +
+              '<span class="v"><span style="color:#ffd666;">' + sellPrice(it) + ' 金</span> ' +
+              (it.lock ? '<span class="hint">已锁定</span>' : '<button data-sellshop="' + it.id + '" style="border-color:#ffd666;color:#ffd666;">出售</button>') +
+              '</span></div>';
+          }).join("")
+        : '<div class="hint">仓库里没有可卖的东西</div>');
+
+  view().querySelectorAll("[data-sellshop]").forEach((b) => b.onclick = async () => {
+    const it = findItem(store, b.dataset.sellshop);
+    if (!it) return;
+    const price = sellPrice(it);
+    if (!confirm("出售「" + it.data.name + "」得 " + price + " 金？")) return;
+    const r = sell(store, b.dataset.sellshop);
+    if (!r.ok) return toast(r.why, true);
+    addReceipt(store, "出售", it.data.name, { gold: r.price });
+    await save(); render();
+  });
+
+  view().querySelectorAll("[data-buy]").forEach((b) => b.onclick = async () => {
+    const [cat, id] = b.dataset.buy.split(":");
+    let def = null, price = 0;
+    if (cat === "weapon") { def = WEAPONS.find((x) => x.id === id); price = SHOP_PRICE.weapon[def.rarity]; }
+    if (cat === "armor") { def = ARMORS.find((x) => x.id === id); price = SHOP_PRICE.armor[def.rarity]; }
+    if (cat === "accessory") { def = ACCESSORIES.find((x) => x.id === id); price = SHOP_PRICE.accessory[def.rarity]; }
+    if (cat === "prop") {
+      def = CONSUMABLES.find((x) => x.id === id); price = def.price;
+      if ((store.gold || 0) < price) return toast("金币不够", true);
+      store.gold -= price;
+      store.flags[id] = (store.flags[id] || 0) + 1;
+      addReceipt(store, "购买", def.name, { gold: -price });
+      await save(); render(); return;
+    }
+    if (!def) return;
+    if ((store.gold || 0) < price) return toast("金币不够", true);
+    store.gold -= price;
+    store.items.push(makeItem(cat, def));
+    try { shelfOf(store).bought.push(def.id); } catch (e) {}
+    addReceipt(store, "购买", def.name, { gold: -price, items: [{ name: def.name, count: 1 }] });
+    await save(); render();
+  });
+}
+
+function render() {
+  if (!store) {
+    view().innerHTML =
+      '<div class="card"><div class="card-title">这个位号里是旧版存档（v1）</div>' +
+      '<div class="hint">新版不会读取也不会覆盖它。请选一种方式开始：</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+        '<button id="btnLocal">💾 本机试用（不写云端）</button>' +
+        '<button id="btnNewBox">🆕 换一个新位号正式玩</button>' +
+      '</div></div>';
+    const bLocal = document.getElementById("btnLocal");
+    if (bLocal) bLocal.onclick = () => {
+      store = newStore();
+      ensureSeed();
+      toast("本机试用：不会写云端，放心点");
+      render();
+    };
+    const bNew = document.getElementById("btnNewBox");
+    if (bNew) bNew.onclick = () => {
+      const nb = prompt("输入一个新的位号（英文/数字，例如 zyn2）", "zyn2");
+      if (!nb) return;
+      localStorage.setItem("rpg2:box", nb);
+      location.href = "create.html?box=" + encodeURIComponent(nb);
+    };
+    return;
+  }
+  document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
+  if (tab === "char") renderChar();
+  else if (tab === "store") renderStore();
+  else renderShop();
+}
+
+document.querySelectorAll("[data-tab]").forEach((b) => {
+  b.onclick = () => { tab = b.dataset.tab; render(); };
+});
+$("btnSave").onclick = () => save();
+
+(async () => { await load(); render(); })();
+</script>
+</body>
+</html>
