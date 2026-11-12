@@ -571,38 +571,39 @@ function renderTalent() {
     (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 重置全部天赋（免费）</button></div>' : '') +
     '</div>';
 
-  // ② 分支链（表头）+ 阶 × 分支 矩阵
-  const head = '<div style="display:grid;grid-template-columns:44px repeat(' + branches.length + ',1fr);gap:4px;align-items:stretch;">' +
-    '<div></div>' +
-    branches.map((b) => {
-      const lock = lv < b.unlockLv;
-      return '<div style="text-align:center;padding:6px 2px;border-radius:8px;background:#101020;border:1px solid ' + (lock ? "#2f2f4a" : tree.color + "66") + ';">' +
-        '<div style="font-size:12.5px;font-weight:700;color:' + (lock ? "#6a6a86" : tree.color) + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.name + '</div>' +
-        '<div class="hint" style="font-size:9.5px;">' + (lock ? "Lv" + b.unlockLv : b.desc) + '</div></div>';
-    }).join("");
+  // ② 分支链（表头）+ 阶 × 分支 矩阵（用 table，避免 grid 在窄屏挤歪）
+  const headCell = (b) => {
+    const lock = lv < b.unlockLv;
+    return '<th style="padding:4px 2px 6px;font-size:11.5px;color:' + (lock ? "#6a6a86" : tree.color) + ';font-weight:700;border-bottom:1px solid #2f2f4a;text-align:center;">' +
+      '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.name + '</div>' +
+      '<div class="hint" style="font-size:9px;font-weight:400;">' + (lock ? "Lv" + b.unlockLv + " 解锁" : b.desc) + '</div></th>';
+  };
   const rows = [];
   for (let i = 0; i < TALENT_TIER_LV.length; i++) {
-    rows.push('<div style="display:grid;grid-template-columns:44px repeat(' + branches.length + ',1fr);gap:4px;align-items:stretch;">' +
-      '<div style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#8a8ab0;">' + (i + 1) + '阶</div>' +
-      branches.map((b) => {
-        const n = b.nodes[i];
-        if (!n) return '<div></div>';
-        const bSpent = talentSpentInBranch(ch, tree.id, b.id);
-        const has = !!ch.talent.points[n.id];
-        const lvLock = lv < b.unlockLv;
-        const tierLock = lv < (TALENT_TIER_LV[i] || 1);
-        const lock = lvLock || tierLock;
-        const can = !has && !lock && left > 0 && bSpent >= i;
-        const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
-        const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
-        return '<button data-tp="' + n.id + '" style="height:46px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
-          (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';" ' + (can ? '' : 'disabled') + '>' +
-          '<span style="font-size:13px;line-height:1;">' + mark + '</span>' +
-          '<span style="font-size:9.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + n.name + '</span></button>';
-      }).join("") +
-      '</div>');
+    const cells = branches.map((b) => {
+      const n = b.nodes[i];
+      if (!n) return '<td></td>';
+      const bSpent = talentSpentInBranch(ch, tree.id, b.id);
+      const has = !!ch.talent.points[n.id];
+      const lvLock = lv < b.unlockLv;
+      const tierLock = lv < (TALENT_TIER_LV[i] || 1);
+      const lock = lvLock || tierLock;
+      const can = !has && !lock && left > 0 && bSpent >= i;
+      const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
+      const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
+      return '<td style="padding:2px;">' +
+        '<button data-tp="' + n.id + '" style="width:100%;height:44px;padding:1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
+        (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';" ' + (can ? '' : 'disabled') + '>' +
+        '<span style="font-size:12px;line-height:1;">' + mark + '</span>' +
+        '<span style="font-size:8.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + n.name + '</span></button></td>';
+    }).join("");
+    rows.push('<tr><th style="padding:2px 4px;font-size:10px;color:#8a8ab0;font-weight:400;border-bottom:1px dotted #23233a;white-space:nowrap;text-align:left;">' +
+      (i + 1) + '阶<div class="hint" style="font-size:8px;">Lv' + TALENT_TIER_LV[i] + '</div></th>' + cells + '</tr>');
   }
-  const grid = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">' + head + rows.join("") + '</div>';
+  const grid = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;">' +
+    '<colgroup><col style="width:40px;">' + branches.map(() => '<col>').join("") + '</colgroup>' +
+    '<thead><tr><th></th>' + branches.map(headCell).join("") + '</tr></thead>' +
+    '<tbody>' + rows.join("") + '</tbody></table>';
 
   // ③ 天赋链详情
   const detail = branches.map((b) => {
@@ -638,7 +639,8 @@ function renderTalent() {
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
     ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span></div>' +
-    '<div class="hint">天赋 Lv5 开放；分支 Lv5 / 30 / 60 解锁，14 阶按 Lv5→97 逐级开放；每条链要顺着点。</div>' + grid +
+    '<div class="hint">天赋 Lv5 开放；分支 Lv5 / 30 / 60 解锁，14 阶按 Lv5→97 逐级开放；每条链要顺着点。</div>' +
+    (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
     (actRow ? actRow : '') + '</div>' +
     '<div class="card"><div class="card-title">📜 天赋链详情</div>' + detail + '</div>';
 
