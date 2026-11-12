@@ -23,6 +23,11 @@ export const AFFIX_LIB = {
     armor:     [["生命加成", 2, 12, "%"], ["防御加成", 2, 10, "%"], ["法抗加成", 2, 10, "%"], ["减伤", 1, 8, "%"], ["反伤", 5, 25, "%"]],
     accessory: [["攻击加成", 2, 10, "%"], ["生命加成", 2, 10, "%"], ["暴击率", 1, 6, "%"], ["暴击伤害", 4, 16, "%"], ["怒气获取", 5, 20, "%"]]
   },
+  专精: {
+    weapon:    [["力量", 1, 3], ["技巧", 1, 3]],
+    armor:     [["力量", 1, 2], ["敏捷", 1, 2]],
+    accessory: [["智力", 1, 3], ["敏捷", 1, 2]]
+  },
   条数规则: { R: 2, SR: 3, SSR: 4, UR: 5 }
 };
 
@@ -82,9 +87,9 @@ export const AFFIX_LIB_3 = [
 ];
 
 const PCT_BY_CAT = {
-  weapon:    [["atkPct", 2, 12], ["critRate", 1, 8], ["critDmg", 4, 20], ["ragePct", 5, 25]],
-  armor:     [["hpPct", 2, 12], ["defPct", 2, 10], ["resPct", 2, 10], ["dmgCut", 1, 8], ["thorns", 5, 25]],
-  accessory: [["atkPct", 2, 10], ["hpPct", 2, 10], ["critRate", 1, 6], ["critDmg", 4, 16], ["ragePct", 5, 20]]
+  weapon:    [["atkPct", 2, 12], ["critRate", 1, 8], ["critDmg", 4, 20], ["ragePct", 5, 25], ["str", 1, 3], ["tech", 1, 3]],
+  armor:     [["hpPct", 2, 12], ["defPct", 2, 10], ["resPct", 2, 10], ["dmgCut", 1, 8], ["thorns", 5, 25], ["str", 1, 2], ["agi", 1, 2]],
+  accessory: [["atkPct", 2, 10], ["hpPct", 2, 10], ["critRate", 1, 6], ["critDmg", 4, 16], ["ragePct", 5, 20], ["intel", 1, 3], ["agi", 1, 2]]
 };
 
 // 🥈 第二批：战斗词条（会真的接进战斗，字段名和 power.js 的 combatTraits 对应）

@@ -23,7 +23,7 @@ const catName = { weapon: "⚔️ 武器", armor: "🛡️ 防具", accessory: "
 
 // 第一批：按「基础 / 百分比」与部位分组，只列名字
 let first = "";
-for (const kind of ["基础数值", "百分比"]) {
+for (const kind of ["基础数值", "百分比", "专精"]) {
   const byCat = AFFIX_LIB[kind] || {};
   first += '<div class="hint" style="margin-top:10px;color:#8fd8ff;font-weight:700;">' + kind + '</div>';
   for (const cat of Object.keys(byCat)) {

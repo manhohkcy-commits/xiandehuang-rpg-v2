@@ -64,7 +64,7 @@ export function itemBonus(it) {
   const rm = RARITY_MULT[d.rarity] || 1;
   const out = {};
   Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul; });
-  ["dmgCut", "thorns", "atkPct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk"].forEach((k) => {
+  ["dmgCut", "thorns", "atkPct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi"].forEach((k) => {
     const v = Number(d[k]) || 0;
     if (v) out[k] = (out[k] || 0) + v;
   });
@@ -108,12 +108,20 @@ export function charFinal(ch) {
   ["atk", "hp", "def", "res", "spd"].forEach((k) => { f[k] = f[k] * gm * am; });
   // 装备之后不再乘（装备是外物，不随资质长大）
   ["weapon", "armor", "accessory"].forEach((k) => {
-    const b = itemBonus(ch.equip && ch.equip[k]);
+    const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
     Object.keys(b).forEach((kk) => {
       if (kk === "atkPct") f.atkPct += b[kk];
       else f[kk] = (f[kk] || 0) + b[kk];
     });
   });
+  // 🎯 装备的「专精」词条：力量/智力/技巧/敏捷
+  let gearSpec = 0;
+  ["weapon", "armor", "accessory"].forEach((k) => {
+    const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
+    gearSpec += (Number(b.str) || 0) * CHAR.spec.str + (Number(b.intel) || 0) * CHAR.spec.intel + (Number(b.tech) || 0) * CHAR.spec.tech;
+    f.spd += (Number(b.agi) || 0) * CHAR.spec.agi;
+  });
+  f.atk += gearSpec;
   f.atk = f.atk * (1 + (f.atkPct || 0) / 100);
   // ⚡ 突破加成：每突破一次，全属性 +3%
   const brk = Math.max(0, Math.min(5, Number(ch.breaks) || 0));
