@@ -91,31 +91,64 @@ const groups = [
   { cat: "armor", title: "🛡️ 防具", list: ARMORS },
   { cat: "accessory", title: "💍 饰品", list: ACCESSORIES }
 ];
+const RARITIES = ["R", "SR", "SSR", "UR"];
+const F = (window.__eqFilter = window.__eqFilter || { cat: "all", rarity: "all" });
+const chip = (type, val, label) => {
+  const on = F[type] === val;
+  return '<button data-f="' + type + ':' + val + '" style="font-size:11px;padding:3px 10px;border-radius:20px;' +
+    (on ? 'border-color:#6ea8fe;color:#cfe6ff;background:#1b2740;' : '') + '">' + label + '</button>';
+};
 
-document.getElementById("view").innerHTML =
-  card("📚 装备图鉴",
-    '<div class="hint">当前全部装备（' + list.length + ' 件）。点任意一件查看完整属性与招式。</div>') +
-  groups.map((g) => card(g.title + "（" + g.list.length + "）",
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px;">' +
-    g.list.map((d) => {
-      const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
-      const b = itemBonus({ cat: g.cat, data: d });
-      const mk = mainKeysOf({ cat: g.cat, data: d });
-      const mainTxt = statText(b, mk);
-      const subTxt = statText(b, Object.keys(b).filter((k) => mk.indexOf(k) < 0));
-      return '<button data-i="' + list.findIndex((x) => x.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
-        '<div style="font-size:13px;font-weight:700;color:' + rc + ';">' + d.name + '</div>' +
-        '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") + '</div>' +
-        (mainTxt ? '<div style="font-size:10px;color:#ffd666;margin-top:5px;line-height:1.4;">主　' + mainTxt + '</div>' : '') +
-        (subTxt ? '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;line-height:1.4;">副　' + subTxt + '</div>' : '') +
-        '</button>';
-    }).join("") + '</div>')).join("");
+function render() {
+  const shown = (cat) => F.cat === "all" || F.cat === cat;
+  const byRarity = (d) => F.rarity === "all" || d.rarity === F.rarity;
+  const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+    '<span class="hint" style="font-size:10.5px;">部位</span>' +
+    chip("cat", "all", "全部") + chip("cat", "weapon", "⚔️武器") + chip("cat", "armor", "🛡️防具") + chip("cat", "accessory", "💍饰品") +
+    '<span style="width:8px;"></span><span class="hint" style="font-size:10.5px;">品质</span>' +
+    chip("rarity", "all", "全部") + RARITIES.map((r) => chip("rarity", r, r)).join("") +
+    '</div></div>';
+  document.getElementById("view").innerHTML =
+    card("📚 装备图鉴",
+      '<div class="hint">当前全部装备（' + list.length + ' 件）。点任意一件查看完整属性与招式。</div>') +
+    bar +
+    groups.filter((g) => shown(g.cat)).map((g) => {
+      const rows = g.list.filter(byRarity);
+      return card(g.title + "（" + rows.length + "）",
+        rows.length
+          ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px;">' +
+            rows.map((d) => {
+              const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
+              const b = itemBonus({ cat: g.cat, data: d });
+              const mk = mainKeysOf({ cat: g.cat, data: d });
+              const mainTxt = statText(b, mk);
+              const subTxt = statText(b, Object.keys(b).filter((k) => mk.indexOf(k) < 0));
+              return '<button data-i="' + list.findIndex((x) => x.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
+                '<div style="font-size:13px;font-weight:700;color:' + rc + ';">' + d.name + '</div>' +
+                '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") + '</div>' +
+                (mainTxt ? '<div style="font-size:10px;color:#ffd666;margin-top:5px;line-height:1.4;">主　' + mainTxt + '</div>' : '') +
+                (subTxt ? '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;line-height:1.4;">副　' + subTxt + '</div>' : '') +
+                '</button>';
+            }).join("") + '</div>'
+          : '<div class="hint">这个条件下没有装备</div>');
+    }).join("");
+}
+
+render();
 
 document.getElementById("view").addEventListener("click", (e) => {
+  const f = e.target.closest("[data-f]");
+  if (f) {
+    const [k, v] = f.dataset.f.split(":");
+    F[k] = v;
+    render();
+    return;
+  }
   const el = e.target.closest("[data-i]");
-  if (!el) return;
-  const it = list[Number(el.dataset.i)];
-  if (it) detail(it);
+  if (el) {
+    const it = list[Number(el.dataset.i)];
+    if (it) detail(it);
+  }
 });
 </script>
 </body>
