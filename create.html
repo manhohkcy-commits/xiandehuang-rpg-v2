@@ -13,6 +13,7 @@
   <div class="nav">
     <button data-tab="char" class="on">🧑 我的角色</button>
     <button data-tab="talent">🌳 天赋</button>
+    <button data-tab="cult">⚒ 培养</button>
     <button data-tab="store">🎒 仓库</button>
   </div>
   <div id="view"></div>
@@ -860,6 +861,64 @@ function renderDaily() {
   });
 }
 
+// ⚒ 装备培养：强化 / 升星 / 继承（装备栏 + 仓库都能养）
+function renderCult() {
+  const ch = activeChar();
+  if (!ch) { window.__creating = 1; buildCreateScreen(); return; }
+  const entries = [];
+  ["weapon", "armor", "accessory"].forEach((k) => {
+    const d = ch.equip && ch.equip[k];
+    if (d) entries.push({ key: "eq:" + k, d, where: "已装备", id: null, lock: false });
+  });
+  (store.items || []).forEach((it) => {
+    if (isEquip(it)) entries.push({ key: "it:" + it.id, d: it.data || {}, where: "仓库", id: it.id, lock: !!it.lock });
+  });
+
+  const resolve = (key) => (key.indexOf("eq:") === 0 ? { data: ch.equip[key.slice(3)] } : findItem(store, key.slice(3)));
+
+  const row = (e) => {
+    const it = resolve(e.key);
+    if (!it || !it.data) return "";
+    const chk = cultCheck(it, "level", store);
+    const star = cultCheck(it, "star", store);
+    return '<div style="border:1px solid #23233a;border-radius:10px;padding:10px;margin:8px 0;">' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+        '<span style="font-weight:600;">' + esc(e.d.name || "装备") + '</span>' +
+        '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.star || 1) + '★ · Lv' + (e.d.lv || 1) + '</span>' +
+        '<span class="tag">' + e.where + '</span></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+        '<button data-cult2="' + e.key + '" ' + (chk.ok ? '' : 'disabled') + '>强化 +1' +
+          (chk.ok ? '（' + chk.gold + ' 金 / ' + chk.stone + ' 石' + (chk.breakStone ? ' / 突破石 ' + chk.breakStone : '') + '）' : '') + '</button>' +
+        '<button data-star2="' + e.key + '" ' + (star.ok ? '' : 'disabled') + '>' +
+          (star.ok ? '升星 → ' + star.to + '★（碎片 ' + star.shards + '）' : '已满星') + '</button>' +
+        (e.id && !e.lock ? '<button data-inh="' + e.id + '">🔁 继承到…</button>' : '') +
+      '</div></div>';
+  };
+
+  view().innerHTML = card("⚒ 装备培养",
+    '<div class="hint">强化 Lv1~150（带突破节点）、升星 1~5★、继承同部位。装备栏里的也能直接培养。</div>' +
+    (entries.length ? entries.map(row).join("") : '<div class="hint">还没有装备。</div>'));
+
+  view().querySelectorAll("[data-cult2]").forEach((b) => b.onclick = async () => {
+    const it = resolve(b.dataset.cult2);
+    if (!it) return toast("找不到装备", true);
+    const r = cultApply(store, it, "level");
+    if (!r.ok) return toast(r.why, true);
+    bumpDaily(store, "cults");
+    addReceipt(store, "培养", it.data.name + " → Lv" + r.lv);
+    await save(); render();
+  });
+  view().querySelectorAll("[data-star2]").forEach((b) => b.onclick = async () => {
+    const it = resolve(b.dataset.star2);
+    if (!it) return toast("找不到装备", true);
+    const r = cultApply(store, it, "star");
+    if (!r.ok) return toast(r.why, true);
+    bumpDaily(store, "cults");
+    await save(); render();
+  });
+  view().querySelectorAll("[data-inh]").forEach((b) => b.onclick = () => openInherit(b.dataset.inh));
+}
+
 function renderStore() {
   const ch = activeChar(), all = store.items || [];
   const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
@@ -907,10 +966,7 @@ function renderStore() {
         '<span style="margin-left:auto;color:#ffd666;font-size:11.5px;">售价 ' + sellPrice(it) + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
         (ch && isEquip(it) ? '<button data-equip="' + it.id + '">穿上</button>' : '') +
-        '<button data-cult="' + it.id + '" ' + (chk.ok ? '' : 'disabled') + '>强化+1' + (chk.ok ? '（' + chk.gold + '金/' + chk.stone + '石' + (chk.breakStone ? '/突破' + chk.breakStone : '') + '）' : '') + '</button>' +
-        '<button data-star="' + it.id + '">升星</button>' +
         '<button data-lock="' + it.id + '">' + (it.lock ? '🔓 解锁' : '🔒 锁定') + '</button>' +
-        '<button data-inherit="' + it.id + '">🔁 继承到…</button>' +
         '<button data-sell="' + it.id + '" style="border-color:#ffd666;color:#ffd666;">出售</button>' +
         '<button data-dis="' + it.id + '" style="border-color:#ff9b9b;color:#ff9b9b;">分解</button>' +
       '</div></div>';
@@ -1177,6 +1233,7 @@ function render() {
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
   if (tab === "char") renderChar();
   else if (tab === "talent") renderTalent();
+  else if (tab === "cult") renderCult();
   else if (tab === "rank") renderRank();
   else if (tab === "daily") renderDaily();
   else if (tab === "store") renderStore();
@@ -1190,7 +1247,7 @@ $("btnSave").onclick = () => save();
 
 // 从首页带 tab 参数进来（任务 / 排行榜）
 const bootTab = new URLSearchParams(location.search).get("tab");
-if (bootTab && ["char", "talent", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
+if (bootTab && ["char", "talent", "cult", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
 
 (async () => { await load(); render(); })();
 </script>
