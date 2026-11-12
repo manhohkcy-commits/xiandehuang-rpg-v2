@@ -14,6 +14,7 @@
     <button data-tab="char" class="on">🧑 我的角色</button>
     <button data-tab="talent">🌳 天赋</button>
     <button data-tab="rank">🏆 排行榜</button>
+    <button data-tab="daily">📅 任务</button>
     <button data-tab="store">🎒 仓库</button>
     <button data-tab="shop">🏪 商店</button>
   </div>
@@ -22,8 +23,8 @@
 </div>
 
 <script type="module">
-import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY } from "./js/data.js";
+import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS } from "./js/data.js";
 import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
@@ -494,6 +495,7 @@ function renderChar() {
     if (next && (Number(ch.lv) || 1) >= next.at) return toast("先突破才能继续升级（Lv" + next.at + "）", true);
     store.exp -= need; ch.lv += 1;
     ch.tp = (Number(ch.tp) || 0) + 1;
+    bumpDaily(store, "levels");
     ch.free = (Number(ch.free) || 0) + 2;
     addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: "获得 2 点属性点" });
     await save(); render();
@@ -728,6 +730,49 @@ async function renderRank() {
       '<div class="hint" style="margin-top:8px;">只统计最近更新的 200 个位号；同分按先后。</div>');
 }
 
+// 📅 日常任务：每天 3 个，完成领金币，全勤额外奖励
+function renderDaily() {
+  const d = dailyOf(store);
+  const claimed = d.claimed || [];
+  const allDone = DAILY_QUESTS.every((q) => (Number(d[q.key]) || 0) >= q.target);
+  const rows = DAILY_QUESTS.map((q) => {
+    const cur = Number(d[q.key]) || 0;
+    const done = cur >= q.target;
+    const got = claimed.indexOf(q.id) >= 0;
+    return '<div class="row"><span class="k">' + q.name + '<div class="hint">进度 ' + Math.min(cur, q.target) + ' / ' + q.target + '</div></span>' +
+      '<span class="v"><span style="color:#ffd666;">' + q.gold + ' 金</span> ' +
+      (got ? '<span class="hint">已领取</span>' : '<button data-claim="' + q.id + '" ' + (done ? '' : 'disabled') + '>领取</button>') +
+      '</span></div>';
+  }).join("");
+  const bonusHtml = allDone
+    ? (d.bonus ? '<div class="hint" style="color:#7ee787;">全勤奖励已领取</div>'
+               : '<div class="row"><span class="k">🏅 全勤奖励</span><span class="v"><span style="color:#ffd666;">' + DAILY_BONUS + ' 金</span> <button data-claim="bonus">领取</button></span></div>')
+    : '<div class="hint">三个任务都完成后可领全勤奖励 ' + DAILY_BONUS + ' 金</div>';
+  view().innerHTML = card("📅 日常任务 · " + d.day,
+    '<div class="hint">每天 0 点重置（按本机日期）。</div>' + rows + bonusHtml);
+
+  view().querySelectorAll("[data-claim]").forEach((b) => b.onclick = async () => {
+    const id = b.dataset.claim;
+    if (id === "bonus") {
+      if (d.bonus) return;
+      d.bonus = 1;
+      store.gold = (Number(store.gold) || 0) + DAILY_BONUS;
+      addReceipt(store, "任务", "全勤奖励", { gold: DAILY_BONUS });
+      await save(); render(); toast("全勤奖励 +" + DAILY_BONUS + " 金");
+      return;
+    }
+    const q = DAILY_QUESTS.find((x) => x.id === id);
+    if (!q) return;
+    if ((Number(d[q.key]) || 0) < q.target) return toast("还没完成", true);
+    if ((d.claimed || []).indexOf(id) >= 0) return;
+    d.claimed = d.claimed || [];
+    d.claimed.push(id);
+    store.gold = (Number(store.gold) || 0) + q.gold;
+    addReceipt(store, "任务", q.name, { gold: q.gold });
+    await save(); render(); toast("任务奖励 +" + q.gold + " 金");
+  });
+}
+
 function renderStore() {
   const ch = activeChar(), all = store.items || [];
   const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
@@ -826,12 +871,14 @@ function bindStoreTool(filtered) {
   view().querySelectorAll("[data-cult]").forEach((b) => b.onclick = async () => {
     const it = findItem(store, b.dataset.cult), r = cultApply(store, it, "level");
     if (!r.ok) return toast(r.why, true);
+    bumpDaily(store, "cults");
     addReceipt(store, "培养", it.data.name + " → Lv" + r.lv);
     await save(); render();
   });
   view().querySelectorAll("[data-star]").forEach((b) => b.onclick = async () => {
     const it = findItem(store, b.dataset.star), r = cultApply(store, it, "star");
     if (!r.ok) return toast(r.why, true);
+    bumpDaily(store, "cults");
     await save(); render();
   });
   view().querySelectorAll("[data-lock]").forEach((b) => b.onclick = async () => {
@@ -1039,6 +1086,7 @@ function render() {
   if (tab === "char") renderChar();
   else if (tab === "talent") renderTalent();
   else if (tab === "rank") renderRank();
+  else if (tab === "daily") renderDaily();
   else if (tab === "store") renderStore();
   else renderShop();
 }

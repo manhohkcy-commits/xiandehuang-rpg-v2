@@ -124,6 +124,14 @@ export const BREAKS = [
   { at: 80,  capTo: 100, stone: 90,  gold: 28000, bonus: 3, points: 3 },
   { at: 100, capTo: 100, stone: 150, gold: 50000, bonus: 3, points: 3 }
 ];
+// 📅 日常任务：每天 3 个，跨天重置
+export const DAILY_QUESTS = [
+  { id: "q_battle", name: "打 2 场战斗", key: "battles", target: 2, gold: 300 },
+  { id: "q_level", name: "升 1 级", key: "levels", target: 1, gold: 300 },
+  { id: "q_cult", name: "强化装备 1 次", key: "cults", target: 1, gold: 300 }
+];
+export const DAILY_BONUS = 800;
+
 export const SHOP_PRICE = {
   weapon: { R: 400, SR: 1000, SSR: 2200, UR: 5400 },
   armor: { R: 350, SR: 850, SSR: 1900, UR: 4400 },

@@ -18,7 +18,7 @@
 </div>
 
 <script type="module">
-import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js";
+import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, CONTENT_READY } from "./js/data.js";
 import { makeItem } from "./js/items.js";
@@ -765,6 +765,7 @@ function finish() {
     drops.push({ name: def.name, count: 1 });
   }
   addReceipt(store, "战斗", s.name, { gold, items: drops });
+  bumpDaily(store, "battles");
   st.__reward = { gold, exp, stage: s.name, drops };
   pushLog("🏆 胜利：金币 +" + gold + " · 经验 +" + exp + " · " + drops.map((d) => d.name + "×" + d.count).join("、"));
   save();

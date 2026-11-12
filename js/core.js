@@ -119,8 +119,23 @@ export async function gateLoad(box, opts = {}) {
   return { ok: true, store: st, updatedAt: row.updated_at || "" };
 }
 
-export function cacheSave(box, store) {
-  try { localStorage.setItem("rpg2:" + box, JSON.stringify({ at: now(), store })); } catch (e) {}
+// 📅 日常任务：按本地日期重置
+const dk = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+export function dailyOf(store) {
+  if (!store) return { day: dk(), battles: 0, levels: 0, cults: 0, claimed: [] };
+  store.flags = store.flags || {};
+  const k = dk();
+  const d = store.flags.daily;
+  if (!d || d.day !== k) store.flags.daily = { day: k, battles: 0, levels: 0, cults: 0, claimed: [] };
+  return store.flags.daily;
+}
+export function bumpDaily(store, key, n = 1) {
+  const d = dailyOf(store);
+  d[key] = (Number(d[key]) || 0) + n;
+  return d;
+}
+
+export function cacheSave(box, store) {  try { localStorage.setItem("rpg2:" + box, JSON.stringify({ at: now(), store })); } catch (e) {}
 }
 export function cacheLoad(box) {
   try {
