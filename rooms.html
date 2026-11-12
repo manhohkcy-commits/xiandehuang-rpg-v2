@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>闲得慌RPG v2 · 联机房间</title>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=86f850dd">
 </head>
 <body>
 <div class="wrap">
@@ -18,8 +18,8 @@
 </div>
 
 <script type="module">
-import { cloudGet, cacheLoad, esc, fmt, gateLoad } from "./js/core.js";
-import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js";
+import { cloudGet, cacheLoad, esc, fmt, gateLoad } from "./js/core.js?v=773297ab";
+import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js?v=f9b6158c";
 
 let box = "", store = null, room = null, roomId = "", seq = 0, timer = 0;
 const $ = (id) => document.getElementById(id);

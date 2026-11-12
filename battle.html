@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>闲得慌RPG v2 · 战斗</title>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=86f850dd">
 </head>
 <body>
 <div class="wrap">
@@ -18,12 +18,12 @@
 </div>
 
 <script type="module">
-import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js";
-import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY } from "./js/data.js";
-import { makeItem } from "./js/items.js";
-import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js";
+import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=773297ab";
+import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY } from "./js/data.js?v=1541fe7e";
+import { makeItem } from "./js/items.js?v=22282a49";
+import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2bad05a4";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=c4ed415b";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);

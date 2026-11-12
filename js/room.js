@@ -2,7 +2,7 @@
 //  闲得慌RPG v2 · 房间（联机第 1 步：建房 / 加入 / 准备）
 //  房间存在 slots 的 __room__<房号> 位号里；这里只做读写与合并
 // ═══════════════════════════════════════════════════════════
-import { CLOUD, now, uid } from "./core.js";
+import { CLOUD, now, uid } from "./core.js?v=773297ab";
 
 const H = () => ({ apikey: CLOUD.key, Authorization: "Bearer " + CLOUD.key, "Content-Type": "application/json" });
 const boxOf = (room) => "__room__" + room;

@@ -1,7 +1,7 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js";
-import { uid } from "./core.js";
-import { applyAffixes } from "./affixes.js";
+import { CULT } from "./data.js?v=1541fe7e";
+import { uid } from "./core.js?v=773297ab";
+import { applyAffixes } from "./affixes.js?v=5dad8d37";
 
 export const isEquip = (it) => !!(it && (it.cat === "weapon" || it.cat === "armor" || it.cat === "accessory"));
 export function makeItem(cat, def) {
