@@ -659,12 +659,12 @@ function doAct(kind) {
     }
     if (!tryDualborn(m)) commit(st, "me");
   } else {
-    const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: "phys", style: (wpOf(st.__weapon).style || "melee") });
+    const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     // 🗡️ 连击：普攻概率再打一次（半伤）
     if (Number((m.traits || {}).doubleStrike) > 0 && f2.hp > 0 && Math.random() * 100 < Number(m.traits.doubleStrike)) {
-      const r2 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: "phys", style: (wpOf(st.__weapon).style || "melee") });
+      const r2 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
       pushLog("🗡️ 连击追加 " + r2.dmg, "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
@@ -713,7 +713,7 @@ function aiTurnIfNeeded() {
     // 🔁 反击：被击后概率反打 60%
     const cb = Number((m.traits || {}).counter) || 0;
     if (cb > 0 && m.alive !== false && f2.alive !== false && Math.random() * 100 < cb) {
-      const rc = damage(st, "me", "foe", { atk: m.atk, mult: 60, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: "phys", style: (wpOf(st.__weapon).style || "melee") });
+      const rc = damage(st, "me", "foe", { atk: m.atk, mult: 60, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
       pushLog("🔁 " + m.name + " 反击 " + rc.dmg, "line");
     }
     // 🛡️ 防具反制：缴械 / 嘲讽
