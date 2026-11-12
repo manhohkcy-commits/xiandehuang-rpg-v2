@@ -144,6 +144,7 @@ export function buildUnits(room, maxPerSide = 6) {
         atk: Number(c.atk) || 60, def: Number(c.def) || 20, res: Number(c.res) || 15,
         spd: Number(c.spd) || 10, critRate: Number(c.critRate) || 5, critDmg: Number(c.critDmg) || 150,
         dmgCut: Number(c.dmgCut) || 0, rage: 0,
+        traits: c.traits || {},
         weapon: c.weapon || null
       });
       owners[id] = x.box;

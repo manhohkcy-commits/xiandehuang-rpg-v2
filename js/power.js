@@ -70,3 +70,19 @@ export function powerOf(f) {
     (f.res || 0) * 5 + (f.spd || 0) * 28 + (f.critRate || 0) * 16 + (f.critDmg || 0) * 5);
 }
 export const charPower = (ch) => powerOf(charFinal(ch));
+
+// ⚔️ 战斗词条汇总（第二批）：三件装备的数据字段相加
+//   引擎里只认这几个键：cdReduce / rageOnSkill / rageOnKill / rageStart /
+//   sunderBoost / statusPower / statusHit / statusResist / block / tenacity / lowHpCut
+const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "sunderBoost",
+  "statusPower", "statusHit", "statusResist", "block", "tenacity", "lowHpCut"];
+
+export function combatTraits(ch) {
+  const out = {};
+  COMBAT_KEYS.forEach((k) => { out[k] = 0; });
+  ["weapon", "armor", "accessory"].forEach((slot) => {
+    const d = (ch && ch.equip && ch.equip[slot]) || {};
+    COMBAT_KEYS.forEach((k) => { if (d[k]) out[k] += Number(d[k]) || 0; });
+  });
+  return out;
+}

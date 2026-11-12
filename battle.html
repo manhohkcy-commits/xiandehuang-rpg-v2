@@ -22,8 +22,8 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES } from "./js/data.js";
 import { makeItem } from "./js/items.js";
-import { charFinal, charPower } from "./js/power.js";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js";
+import { charFinal, charPower, combatTraits } from "./js/power.js";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus } from "./js/battle.js";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
@@ -107,10 +107,11 @@ async function buildMultiBattle(stageId) {
       m.char = {
         lv: ch.lv, atk: f.atk, hp: f.hp, def: f.def, res: f.res, spd: f.spd,
         critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut,
-        weapon: (ch.equip && ch.equip.weapon) || null
+        weapon: (ch.equip && ch.equip.weapon) || null,
+        traits: combatTraits(ch)
       };
     } else {
-      m.char = { lv: 1, atk: 60, hp: 500, def: 20, res: 15, spd: 10, critRate: 5, critDmg: 150, dmgCut: 0 };
+      m.char = { lv: 1, atk: 60, hp: 500, def: 20, res: 15, spd: 10, critRate: 5, critDmg: 150, dmgCut: 0, traits: {} };
     }
   }
   // 2) 生成单位
@@ -142,7 +143,8 @@ async function tryRestore() {
   st = createBattle(s.units.map((u) => ({
     id: u.id, name: u.name, side: u.side, spd: u.spd, power: 0,
     hp: u.hp, maxHp: u.maxHp, atk: u.atk || 60, def: u.def || 20,
-    critRate: u.critRate || 5, critDmg: u.critDmg || 150, dmgCut: u.dmgCut || 0
+    critRate: u.critRate || 5, critDmg: u.critDmg || 150, dmgCut: u.dmgCut || 0,
+    traits: u.traits || {}, rage: u.rage || 0
   })));
   // 把当时的血量/冷却/怒气/状态/回合贴回去
   st.round = Number(s.round) || 1;
@@ -171,10 +173,11 @@ function startBattle(stageId) {
   if (roomId && amHost) { buildMultiBattle(stageId); return; }
   const ch = activeChar();
   const f = charFinal(ch);
+  const traits = combatTraits(ch);
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
   st = createBattle([
-    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0 },
+    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits },
     { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
   ]);
   st.__stage = s.id;
@@ -345,6 +348,7 @@ async function publishState() {
         id: u.id, name: u.name, side: u.side, hp: Math.round(u.hp), maxHp: Math.round(u.maxHp),
         spd: u.spd, cd: u.cd || 0, rage: Math.round(u.rage || 0),
         atk: u.atk, def: u.def, critRate: u.critRate, critDmg: u.critDmg, dmgCut: u.dmgCut,
+        traits: u.traits || {},
         statuses: (u.statuses || []).map((s) => ({ key: s.key, v: s.v, turns: s.turns, label: s.label }))
       })),
       log: log.slice(-40),
@@ -380,12 +384,16 @@ async function pullIntents() {
         pushLog("🛡️ " + who.name + " 进入防御", "act");
       } else {
         const wp = (st.__weapon && st.__weapon.data) || {};
+        const tr = who.traits || {};
         const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
         const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
         if (it.act === "ult") who.rage = 0;
-        else who.rage = Math.min(100, (Number(who.rage) || 0) + 25);
+        else who.rage = Math.min(100, (Number(who.rage) || 0) + 25 * (1 + (Number(tr.rageOnSkill) || 0) / 100));
         if (it.act === "skill" && wp.hitStatus) {
-          addStatus(st, other.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
+          applyStatus(st, who.id, other.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
+        }
+        if (it.act === "skill") {
+          setCooldown(st, who.id, Number(wp.sCd) || 2);
         }
         pushLog((it.act === "ult" ? "💥 " : it.act === "skill" ? "🥋 " : "⚔️ ") + who.name + " → " + other.name + " " + res.dmg + (res.crit ? " 暴击💥" : ""), "act");
       }
@@ -394,6 +402,15 @@ async function pullIntents() {
     renderBattle();
     setTimeout(aiTurnIfNeeded, 300);
   } catch (e) {}
+}
+
+// 🧩 战斗词条展示（第二批）
+const TRAIT_NAMES = { cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", sunderBoost: "破防强度", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤" };
+function traitsLine(tr) {
+  const keys = Object.keys(TRAIT_NAMES).filter((k) => Number(tr && tr[k]) > 0);
+  if (!keys.length) return "";
+  return '<div class="hint" style="margin-top:4px;color:#8fd8ff;">🧩 战斗词条：' +
+    keys.map((k) => TRAIT_NAMES[k] + (k === "cdReduce" ? " " + tr[k] + " 回合" : " " + tr[k] + "%")).join(" · ") + '</div>';
 }
 
 function renderBattle() {
@@ -437,7 +454,7 @@ function renderBattle() {
           (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '% · 冷却 ' +
           (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sCd) || 2)) + ' 回合 　|　 ' +
           '必杀 250%，每次行动 +25 怒气 　|　 防御：本回合减伤 +30%，持续到你下次行动' +
-        '</div></div>') +
+        '</div>' + traitsLine(m.traits) + '</div></div>') +
     '<div class="card"><div class="card-title">战斗日志</div><div class="log">' +
       log.map((l) => l.kind === "hdr"
         ? '<div style="color:#ffd666;font-weight:700;margin:6px 0 2px;">' + esc(l.text) + '</div>'
@@ -477,15 +494,21 @@ function doAct(kind) {
     commit(st, "me");
   } else if (kind === "skill") {
     const mult = Number(wp.sMult) || 150;
-    const cd = Number(wp.sCd) || 3;
+    const tr = m.traits || {};
+    const baseCd = Number(wp.sCd) || 3;
+    const cd = Math.max(1, baseCd - (Number(tr.cdReduce) || 0));
     const r = damage(st, "me", "foe", { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
-    const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "")];
+    const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "") +
+      (cd !== baseCd ? " · 冷却缩减 → " + cd + " 回合" : "")];
     if (wp.hitStatus && r.dmg > 0) {
-      addStatus(st, "foe", wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
-      subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
+      const v = Number(wp.hitStatusV) || 3;
+      const turns = Number(wp.hitStatusTurns) || 2;
+      const nm = wp.hitStatusName || wp.hitStatus;
+      const ok = applyStatus(st, "me", "foe", wp.hitStatus, v, turns, nm);
+      subs.push(ok ? "对 " + f2.name + " 施加「" + nm + "」" : "「" + nm + "」被 " + f2.name + " 抗掉了");
     }
     pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act", subs);
-    setCooldown(st, "me", cd);
+    setCooldown(st, "me", baseCd);
     commit(st, "me");
   } else {
     const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
@@ -495,7 +518,10 @@ function doAct(kind) {
   }
 
   if (st.finished) { finish(); renderBattle(); return; }
-  if (kind !== "ult") m.rage = Math.min(100, (Number(m.rage) || 0) + 25);
+  if (kind !== "ult") {
+    const gain = 25 * (1 + (Number((m.traits || {}).rageOnSkill) || 0) / 100);
+    m.rage = Math.min(100, (Number(m.rage) || 0) + gain);
+  }
   renderBattle();
   setTimeout(aiTurnIfNeeded, 380);
 }

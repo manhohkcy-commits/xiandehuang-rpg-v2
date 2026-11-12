@@ -87,6 +87,15 @@ const PCT_BY_CAT = {
   accessory: [["atkPct", 2, 10], ["hpPct", 2, 10], ["critRate", 1, 6], ["critDmg", 4, 16], ["ragePct", 5, 20]]
 };
 
+// 🥈 第二批：战斗词条（会真的接进战斗，字段名和 power.js 的 combatTraits 对应）
+const COMBAT_BY_CAT = {
+  weapon:    [["cdReduce", 1, 1], ["rageOnSkill", 20, 50], ["rageOnKill", 10, 30], ["statusHit", 10, 40], ["sunderBoost", 10, 60]],
+  armor:     [["block", 10, 25], ["tenacity", 10, 30], ["lowHpCut", 10, 20], ["statusResist", 10, 40]],
+  accessory: [["rageStart", 20, 50], ["rageOnKill", 10, 30], ["statusPower", 10, 50], ["sunderBoost", 10, 60]]
+};
+// 稀有度 → 该装备「带一条战斗词条」的概率（会替换掉一条百分比词条）
+const COMBAT_CHANCE = { R: 0.08, SR: 0.18, SSR: 0.32, UR: 0.5 };
+
 // 稀有度 → 词条条数
 const COUNT = { R: 2, SR: 3, SSR: 4, UR: 5 };
 
@@ -108,6 +117,18 @@ export function rollAffixes(cat, rarity) {
     const [k, lo, hi] = pool.splice(idx, 1)[0];
     if (out[k] !== undefined) continue;
     out[k] = R(lo, hi);
+  }
+  // 🥈 按稀有度换一条战斗词条（保留基础数值词条，替换百分比那条）
+  if (Math.random() < (COMBAT_CHANCE[rarity] != null ? COMBAT_CHANCE[rarity] : 0.1)) {
+    const cpool = (COMBAT_BY_CAT[cat] || []).slice();
+    if (cpool.length) {
+      const [k, lo, hi] = cpool[Math.floor(Math.random() * cpool.length)];
+      const pctKeys = Object.keys(out).filter((key) => (PCT_BY_CAT[cat] || []).some(([kk]) => kk === key));
+      if (out[k] === undefined) {
+        if (pctKeys.length) delete out[pctKeys[pctKeys.length - 1]];
+        out[k] = R(lo, hi);
+      }
+    }
   }
   return out;
 }

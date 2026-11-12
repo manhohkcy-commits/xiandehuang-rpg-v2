@@ -21,6 +21,7 @@ export function createBattle(units) {
   const st = { round: 1, units: [], log: [], finished: false, winner: null };
   (units || []).forEach((u, i) => {
     if (!u || !u.id) return;
+    const traits = u.traits || {};
     st.units.push({
       id: String(u.id), name: u.name || u.id, side: u.side || "A",
       spd: Number(u.spd) || 1, power: Number(u.power) || 0,
@@ -28,6 +29,8 @@ export function createBattle(units) {
       atk: Number(u.atk) || 0, def: Number(u.def) || 0, res: Number(u.res) || 0,
       critRate: Number(u.critRate) || 0, critDmg: Number(u.critDmg) || 150,
       dmgCut: Number(u.dmgCut) || 0,
+      traits,
+      rage: u.rage != null ? (Number(u.rage) || 0) : (Number(traits.rageStart) || 0),
       alive: true, acted: 0, allowed: 1, cd: 0, statuses: [], seq: i
     });
   });
@@ -75,21 +78,38 @@ export function commit(st, unitId) {
 export function damage(st, atkId, defId, opts = {}) {
   const atk = st.units.find((u) => u.id === String(atkId));
   const def = st.units.find((u) => u.id === String(defId));
-  if (!atk || !def) return { dmg: 0, crit: false };
+  if (!atk || !def) return { dmg: 0, crit: false, killed: false };
+  const at = atk.traits || {};
+  const dt = def.traits || {};
   const mult = Number(opts.mult) || 100;
   const crit = Math.random() * 100 < (Number(opts.critRate) || 0);
-  const critMul = crit ? (Number(opts.critDmg) || 150) / 100 : 1;
+  // 🧱 韧性：削弱暴击倍率（暴伤 150% + 韧性 40% → 130%）
+  const critMul = crit
+    ? 1 + ((Number(opts.critDmg) || 150) / 100 - 1) * (1 - Math.min(80, Number(dt.tenacity) || 0) / 100)
+    : 1;
   let raw = (Number(opts.atk) || 0) * (mult / 100) * critMul;
-  raw *= 1 - Math.min(70, Number(def.dmgCut) || 0) / 100;
+  // 🛡️ 格挡：和减伤叠加，总上限 60%
+  const block = Math.min(60, (Number(def.dmgCut) || 0) + (Number(dt.block) || 0));
+  raw *= 1 - block / 100;
+  // 🩸 残血减伤：生命 <30% 时再乘一次
+  if (def.hp <= (Number(def.maxHp) || 0) * 0.3) raw *= 1 - Math.min(60, Number(dt.lowHpCut) || 0) / 100;
   raw *= 1 - Math.min(0.8, (Number(def.def) || 0) / ((Number(def.def) || 0) + 150));
   const dmg = Math.max(1, Math.round(raw));
   def.hp = Math.max(0, def.hp - dmg);
   if (def.hp === 0) def.alive = false;
-  return { dmg, crit };
+  // 😤 击杀回怒
+  if (def.hp === 0 && Number(at.rageOnKill) > 0) {
+    atk.rage = Math.min(100, (Number(atk.rage) || 0) + Number(at.rageOnKill));
+  }
+  return { dmg, crit, killed: def.hp === 0 };
 }
 export function setCooldown(st, unitId, cd) {
   const u = st.units.find((x) => x.id === String(unitId));
-  if (u) u.cd = Math.max(0, Number(cd) || 0);
+  if (u) {
+    const base = Number(cd) || 0;
+    const reduce = Number((u.traits || {}).cdReduce) || 0;
+    u.cd = base > 0 ? Math.max(1, base - reduce) : 0;
+  }
   return st;
 }
 export function addStatus(st, unitId, key, value, turns, label) {
@@ -104,4 +124,20 @@ export function addStatus(st, unitId, key, value, turns, label) {
     u.statuses.push({ key, v: value, turns, label: label || key });
   }
   return st;
+}
+
+// 🧪 带「命中 / 强度 / 抗性 / 破防」结算的状态施加：命中返回 true，被抗掉返回 false
+export function applyStatus(st, atkId, defId, key, value, turns, label) {
+  const atk = st.units.find((u) => u.id === String(atkId));
+  const def = st.units.find((u) => u.id === String(defId));
+  if (!atk || !def) return false;
+  const at = atk.traits || {};
+  const dt = def.traits || {};
+  const chance = Math.max(5, Math.min(100, 100 + (Number(at.statusHit) || 0) - (Number(dt.statusResist) || 0)));
+  if (Math.random() * 100 >= chance) return false;
+  let v = Number(value) || 0;
+  v *= 1 + (Number(at.statusPower) || 0) / 100;
+  if (key === "sunder") v *= 1 + (Number(at.sunderBoost) || 0) / 100;
+  addStatus(st, defId, key, v, turns, label);
+  return true;
 }
