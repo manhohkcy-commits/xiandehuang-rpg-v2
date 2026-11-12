@@ -8,8 +8,12 @@ export const SLOT_BASE = {
   accessory: { atk: 8, hp: 60, def: 4, res: 10, spd: 2 }
 };
 export const WEAPONS = [
+  // ── R 阶（新手档）────────────────────────────
   { id: "w_iron", name: "铁剑", rarity: "R", sName: "斩击", sMult: 150, sCd: 2, sRage: 10, style: "melee" },
-  { id: "w_bow", name: "短弓", rarity: "R", sName: "连射", sMult: 180, sCd: 3, sRage: 10, sHits: 2, style: "ranged" },
+  { id: "w_bow", name: "短弓", rarity: "R", sName: "连射", sMult: 180, sCd: 3, sRage: 10, style: "ranged" },
+  { id: "w_wood", name: "木法杖", rarity: "R", sName: "木灵弹", sMult: 145, sCd: 2, sRage: 10, dmgType: "spell", style: "focus" },
+  { id: "w_dagger", name: "短匕", rarity: "R", sName: "快刺", sMult: 120, sCd: 1, sRage: 8, style: "melee" },
+  // ── SR / SSR / UR ───────────────────────────
   { id: "w_fire", name: "火石长刀", rarity: "SSR", sName: "火斩", sMult: 180, sCd: 3, sRage: 30, hitStatus: "burn", hitStatusV: 3, hitStatusTurns: 2, hitStatusName: "灼烧", dmgType: "spell", style: "melee" },
   { id: "w_cross", name: "复合十字弩", rarity: "SR", sName: "穿甲箭", sMult: 165, sCd: 3, sRage: 15, style: "ranged" },
   { id: "w_kusanagi", name: "草薙京", rarity: "UR", sName: "百式·鬼烧", sMult: 180, sCd: 2, sRage: 20, sHits: 3, style: "melee" },
