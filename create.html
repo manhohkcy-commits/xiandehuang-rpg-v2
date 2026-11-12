@@ -212,7 +212,7 @@ function showItemDetail(it) {
         if (Math.abs(diff) > 1e-9) cmp = ' <span class="hint" style="color:' + (diff > 0 ? "#7ee787" : "#ff9b9b") + ';">（现有 ' + val(k, other) + (diff > 0 ? " ↑" : " ↓") + '）</span>';
         else if (other > 0) cmp = ' <span class="hint">（现有 ' + val(k, other) + '）</span>';
       }
-      return '<div class="row"><span class="k">' + (ITEM_NAMES[k] || k) + '</span><span class="v" style="color:' + rc + ';">+' + val(k, mine) + cmp + '</span></div>';
+      return '<div class="row"><span class="k">' + (ITEM_NAMES[k] || k) + '</span><span class="v" style="color:' + rc + ';">' + (FLAG_TEXT[k] ? '✔ 已获得' : ('+' + val(k, mine))) + cmp + '</span></div>';
     }).join("");
     return rows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">' + g.title + '</div>' + rows : "";
   }).join("");
@@ -588,9 +588,17 @@ const EFF_LABELS = {
   charge: "蓄势", sunderBoost: "破防强度", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", ragePct: "怒气获取"
 };
 const EFF_NOPCT = new Set(["cdReduce", "rageStart", "rageOnKill", "atk", "hp", "def", "res", "spd"]);
+// 这些是「开关型」机制，数值只代表开启，不显示成百分比
+const FLAG_TEXT = {
+  reverse: "逆流（生命 <25% 时攻击 +40%、受击减伤 20%）",
+  fate: "天命（每场第一次致死伤害无效）",
+  charge: "蓄势（防御后下一次攻击 +60%）",
+  taunt: "嘲讽（受击时强制目标攻击自己 1 回合）"
+};
 const CN_NUM = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭"];
 function effText(eff) {
   return Object.keys(eff).map((k) => {
+    if (FLAG_TEXT[k]) return FLAG_TEXT[k];
     const u = k === "cdReduce" ? " 回合" : (EFF_NOPCT.has(k) ? "" : "%");
     return (EFF_LABELS[k] || k) + " +" + eff[k] + u;
   }).join(" · ");
