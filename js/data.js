@@ -194,7 +194,7 @@ export const CULT = {
   },
   // ⬜ 升阶白值：让低阶多次升阶后能在终局反超高阶
   flatGain: {
-    promote: { weapon: { atk: 8 }, armor: { hp: 40 }, accessory: { atk: 2 } }
+    promote: { weapon: { atk: 5 }, armor: { hp: 30 }, accessory: { atk: 1 } }
   }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
