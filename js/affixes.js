@@ -100,6 +100,25 @@ const countFor = (rarity) => {
   const r = COUNT[rarity] || [2, 2];
   return r[0] + Math.floor(Math.random() * (r[1] - r[0] + 1));
 };
+
+// 🎯 每件装备的词条数（按设计而定，不写满；未列出的按稀有度随机）
+const AFFIX_PLAN = {
+  // R 武器：入门简单，1 条
+  w_iron: 1, w_bow: 1, w_wood: 1, w_dagger: 1, w_fist: 1, w_spear: 1, w_sling: 1, w_hunt: 1, w_torch: 1, w_shield: 1,
+  // SR 武器：主力 2 条；重击/法术型 3 条；辅助型 1 条
+  w_twin: 2, w_axe: 3, w_spear2: 2, w_cross: 2, w_longbow: 3,
+  w_firestaff: 3, w_thunder: 2, w_aegis: 1, w_purify: 1,
+  // R 防具 / 饰品：1 条
+  a_cloth: 1, a_leather: 1, a_rattan: 1, a_cloak: 1, a_mirror: 1, a_spike: 1,
+  c_rope: 1, c_beads: 1, c_charm: 1, c_glove: 1, c_luck: 1, c_band: 1,
+  // SR 防具：常规 2 条；重甲型 3 条
+  a_lava: 2, a_mitril: 2, a_vine: 3, a_guard: 2, a_bulwark: 3, a_rock: 2,
+  a_berserk: 2, a_rift: 2, a_wind: 2, a_shadow: 2, a_rune: 2, a_aura: 2, a_pray: 2, a_watch: 2,
+  // SR 饰品：常规 2 条；堆属性型 3 条
+  c_ring: 2, c_lavastone: 3, c_feather: 2, c_mitril: 3, c_bulwark: 2, c_ironheart: 2,
+  c_badge: 2, c_fury: 2, c_goggle: 2, c_windcharm: 2, c_arcanestone: 2, c_runering: 2,
+  c_bell: 2, c_mercy: 2
+};
 const PCT_KEYS = new Set(ALL_PCT.map(([k]) => k));
 
 // 从池里换掉一条百分比，加入特殊词条
@@ -113,8 +132,8 @@ function swapIn(out, pool, rarityChance) {
   out[k] = R(lo, hi);
 }
 
-export function rollAffixes(cat, rarity) {
-  const n = countFor(rarity);
+export function rollAffixes(cat, rarity, forced) {
+  const n = Number(forced) > 0 ? Number(forced) : countFor(rarity);
   const out = {};
   // 先塞 1~2 条基础数值
   const bases = BASE_POOL.slice();
@@ -140,7 +159,7 @@ export function rollAffixes(cat, rarity) {
 
 // 把词条并进装备数据（不覆盖装备自带的核心字段）
 export function applyAffixes(data, cat, rarity) {
-  const roll = rollAffixes(cat, rarity);
+  const roll = rollAffixes(cat, rarity, AFFIX_PLAN[data.id]);
   Object.keys(roll).forEach((k) => {
     if (data[k] === undefined) data[k] = roll[k];
   });

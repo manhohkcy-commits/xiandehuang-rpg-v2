@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { AFFIX_LIB, AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes.js?v=e5d3fe27";
+import { AFFIX_LIB, AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes.js?v=ee432832";
 
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
 
@@ -76,8 +76,7 @@ for (const g of Object.keys(AFFIX_LIB)) {
 document.getElementById("view").innerHTML =
   card("📖 词条库",
     '<div class="hint">所有装备共用同一套词条池，不按部位限制。点任意词条可以看说明；具体数值随稀有度、强化与星级变化，以装备详情为准。</div>' +
-    '<div style="margin-top:8px;"><span class="tag">R = 1~2 条</span><span class="tag">SR = 2~3 条</span>' +
-    '<span class="tag">SSR = 3~4 条</span><span class="tag">UR = 4~5 条</span></div>') +
+    '<div style="margin-top:8px;"><span class="tag">词条数按装备设计而定</span><span class="tag">约 1~4 条</span><span class="tag">不是每件都写满</span></div>') +
   card("通用词条", first) +
   card("数值扩展 · 乘区类（" + AFFIX_LIB_EXT.length + " 种）", chipsOf("数值扩展")) +
   card("第二批 · 战斗词条（" + AFFIX_LIB_2.length + " 种）", chipsOf("第二批 · 战斗词条")) +
