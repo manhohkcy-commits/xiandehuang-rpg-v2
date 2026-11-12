@@ -111,7 +111,7 @@ function render() {
           '<input id="joinId" placeholder="房号（6 位）" style="width:130px;">' +
           '<button id="btnJoin">🚪 加入</button>' +
         '</div></div>' +
-      '<div class="card"><div class="hint">下一轮：房间跑通后接「主机开战 + 客户端观战」（见 DESIGN-联机.md 步 2）</div></div>';
+      '<div class="card"><div class="hint">建房后把房号发给朋友；房主点「开战」进入对战，朋友点「进入对战 / 观战」。</div></div>';
     $("btnCreate").onclick = doCreate;
     $("btnJoin").onclick = () => {
       const id = ($("joinId").value || "").trim();
@@ -130,20 +130,26 @@ function render() {
       '<span class="v">' + (m.ready ? '<span style="color:#7ee787;">已准备</span>' : '<span style="color:#8a8ab0;">未准备</span>') + '</span></div>';
   }).join("");
 
+  const started = room.phase === "fighting" || room.phase === "done" || !!room.state;
+  const battleHref = "battle.html?box=" + encodeURIComponent(box) + "&room=" + encodeURIComponent(room.room);
+
   view().innerHTML =
     '<div class="card"><div class="card-title">房间 ' + esc(room.room) + ' · ' + esc(room.phase) + '</div>' +
       '<div class="hint">房主：' + esc(room.host) + '　|　你是：' + (isHost ? "👑 房主" : "玩家") + '　|　人数 ' + Object.keys(room.members || {}).length + '/4</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
         '<button id="btnReady">' + (me.ready ? "✅ 已准备（点一下取消）" : "🟢 准备") + '</button>' +
+        '<button id="btnStart" ' + (isHost ? '' : 'disabled') + ' style="border-color:#7ee787;color:#7ee787;">⚔️ 开战</button>' +
+        (started ? '<button id="btnEnter" style="border-color:#6ea8fe;color:#6ea8fe;">🚪 进入对战 / 观战</button>' : '') +
         '<button id="btnLeave" style="border-color:#ff9b9b;color:#ff9b9b;">🚪 退出房间</button>' +
         '<button id="btnCopy">📋 复制房号</button>' +
       '</div>' +
-      '<div class="hint" style="margin-top:6px;">把房号发给朋友：' + esc(room.room) + '</div>' +
+      '<div class="hint" style="margin-top:6px;">房号 ' + esc(room.room) + '　' + (isHost ? '（你是房主，点「开战」进入对战）' : '（等房主开战）') + '</div>' +
     '</div>' +
-    '<div class="card"><div class="card-title">成员</div>' + list + '</div>' +
-    '<div class="card"><div class="hint">步骤 1 只做到「建房 / 加入 / 准备」。<br>下一步（步 2）：房主开战 → 战斗状态写进房间 → 其他人只读观战。</div></div>';
+    '<div class="card"><div class="card-title">成员</div>' + list + '</div>';
 
   $("btnReady").onclick = () => doReady(!me.ready);
+  $("btnStart").onclick = () => { location.href = battleHref; };
+  if ($("btnEnter")) $("btnEnter").onclick = () => { location.href = battleHref; };
   $("btnLeave").onclick = doLeave;
   $("btnCopy").onclick = () => {
     try { navigator.clipboard.writeText(room.room); toast("房号已复制"); } catch (e) { toast("复制失败，手动记：" + room.room, true); }

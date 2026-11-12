@@ -783,7 +783,11 @@ $("btnSave").onclick = () => save();
       if (got) {
         amHost = got.room.host === box;
         if (!amHost && got.room.state) renderSpectator(got.room.state);
-        if (amHost) { const okRestore = await tryRestore(); }
+        if (!amHost && !got.room.state) {
+          view().innerHTML = '<div class="card"><div class="card-title">等待房主开战…</div>' +
+            '<div class="hint">房主开战后这里会自动切到观战/出手界面，不用刷新。</div></div>';
+        }
+        if (amHost) { const okRestore = await tryRestore(); if (!okRestore) renderPick(); }
         setInterval(async () => {
           if (amHost) return;
           try {
