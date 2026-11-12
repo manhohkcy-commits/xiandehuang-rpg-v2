@@ -3,56 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>闲得慌RPG v2 · 词条一览</title>
+<title>闲得慌RPG v2 · 词条库</title>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 <div class="wrap">
   <div class="nav"><a href="index.html">← 返回</a><span class="tag">词条库</span>
-    <a href="create.html" style="margin-left:auto;">🎒 去装备页</a></div>
+    <a href="create.html" style="margin-left:auto;">🎒 去仓库</a></div>
   <div id="view"></div>
 </div>
 
 <script type="module">
 import { AFFIX_LIB, AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes.js";
-import { esc } from "./js/core.js";
 
-const $ = (id) => document.getElementById(id);
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
-const row = (a, b, c) => '<div class="row"><span class="k">' + a + (c ? '<div class="hint">' + c + '</div>' : '') + '</span><span class="v">' + b + '</span></div>';
-
-// 第一批：现在的装备会随机出的
-let first = "";
+const chips = (names) => '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' +
+  [...new Set(names)].map((n) => '<span class="tag" style="font-size:11.5px;padding:3px 9px;">' + n + '</span>').join("") + '</div>';
 const catName = { weapon: "⚔️ 武器", armor: "🛡️ 防具", accessory: "💍 饰品" };
-for (const kind of Object.keys(AFFIX_LIB)) {
-  if (kind === "条数规则") continue;
-  first += '<div class="card-title" style="margin-top:10px;color:#8fd8ff;">' + kind + '</div>';
-  const byCat = AFFIX_LIB[kind];
+
+// 第一批：按「基础 / 百分比」与部位分组，只列名字
+let first = "";
+for (const kind of ["基础数值", "百分比"]) {
+  const byCat = AFFIX_LIB[kind] || {};
+  first += '<div class="hint" style="margin-top:10px;color:#8fd8ff;font-weight:700;">' + kind + '</div>';
   for (const cat of Object.keys(byCat)) {
-    first += '<div class="hint" style="margin-top:6px;color:#6a6a86;">' + catName[cat] + '</div>';
-    byCat[cat].forEach((a) => {
-      first += '<div class="row"><span class="k">' + a[0] + '</span><span class="v" style="color:#7ee787;">' + a[1] + ' ~ ' + a[2] + (a[3] || "") + '</span></div>';
-    });
+    first += '<div class="hint" style="margin-top:6px;color:#6a6a86;">' + (catName[cat] || cat) + '</div>';
+    first += chips(byCat[cat].map((a) => a[0]));
   }
 }
 
-const countRule = Object.keys(AFFIX_LIB.条数规则)
-  .map((k) => '<span class="tag" style="margin-right:6px;">' + k + ' = ' + AFFIX_LIB.条数规则[k] + ' 条</span>').join("");
+const secondOnly = chips(AFFIX_LIB_2.map((a) => a[0]));
+const thirdOnly = chips(AFFIX_LIB_3.map((a) => a[0]));
+const extOnly = chips(AFFIX_LIB_EXT.map((a) => a[0]));
 
-const second = AFFIX_LIB_2.map((a) => row(a[0], '<span style="color:#ffd666;">' + a[1] + '</span>', a[2])).join("");
-const ext = AFFIX_LIB_EXT.map((a) => row(a[0], '<span style="color:#8fd8ff;">' + a[1] + '</span>', a[2])).join("");
-const third = AFFIX_LIB_3.map((a) => row(a[0], '<span style="color:#c9a0ff;">' + a[1] + '</span>', a[2])).join("");
-
-$("view").innerHTML =
-  card("📖 词条一览（共 " +
-    (Object.values(AFFIX_LIB).filter((x) => !Array.isArray(x)).length ? "" : "") + "3 批）",
-    '<div class="hint">第一批已经生效：商店购买 / 关卡掉落 / 初始装备 都会随机带词条。<br>' +
-    '第二批要接进战斗才会生效（明天做）；第三批需要新机制。</div>' +
-    '<div style="margin-top:8px;">' + countRule + '</div>') +
-  card("第一批 · 纯数值（已生效）", first) +
-  card("数值扩展 · 乘区类（待接战斗，" + AFFIX_LIB_EXT.length + " 条）", ext) +
-  card("第二批 · 小改（待接战斗）", second) +
-  card("第三批 · 新机制（待开发）", third);
+document.getElementById("view").innerHTML =
+  card("📖 词条库",
+    '<div class="hint">这里只列出词条种类。具体数值随装备稀有度、强化与星级变化，以装备详情为准。</div>' +
+    '<div style="margin-top:8px;"><span class="tag">R = 2 条</span><span class="tag">SR = 3 条</span>' +
+    '<span class="tag">SSR = 4 条</span><span class="tag">UR = 5 条</span></div>') +
+  card("第一批 · 纯数值", first) +
+  card("数值扩展 · 乘区类（" + AFFIX_LIB_EXT.length + " 种）", extOnly) +
+  card("第二批 · 战斗词条（" + AFFIX_LIB_2.length + " 种）", secondOnly) +
+  card("第三批 · 机制词条（" + AFFIX_LIB_3.length + " 种）", thirdOnly);
 </script>
 </body>
 </html>
