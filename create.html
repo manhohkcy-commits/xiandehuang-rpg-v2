@@ -255,8 +255,19 @@ function showItemDetail(it) {
 
 function createCharacter(name, weaponId, armorId, accId, attrs, basic) {
   const ch = newChar(name);
-  if (attrs) { ch.str = attrs.str || 0; ch.intel = attrs.intel || 0; ch.tech = attrs.tech || 0; ch.agi = attrs.agi || 0; }
-  if (basic) ch.basic = { hp: basic.hp || 0, atk: basic.atk || 0, def: basic.def || 0, res: basic.res || 0 };
+  const SC = Number(BIRTH.specCap) || 20, BC = Number(BIRTH.basicCap) || 30;
+  if (attrs) {
+    ch.str = Math.min(SC, Math.max(0, attrs.str || 0));
+    ch.intel = Math.min(SC, Math.max(0, attrs.intel || 0));
+    ch.tech = Math.min(SC, Math.max(0, attrs.tech || 0));
+    ch.agi = Math.min(SC, Math.max(0, attrs.agi || 0));
+  }
+  if (basic) ch.basic = {
+    hp: Math.min(BC, Math.max(0, basic.hp || 0)),
+    atk: Math.min(BC, Math.max(0, basic.atk || 0)),
+    def: Math.min(BC, Math.max(0, basic.def || 0)),
+    res: Math.min(BC, Math.max(0, basic.res || 0))
+  };
   ch.grade = "D"; ch.apt = 1; ch.breaks = 0; ch.free = 0;
   const w = WEAPONS.find((x) => x.id === weaponId) || WEAPONS[0];
   const ar = ARMORS.find((x) => x.id === armorId) || ARMORS[0];
@@ -305,7 +316,7 @@ function buildCreateScreen() {
     '<button class="g-step" data-basic="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
     '<span class="g-val">' + state[k] + '</span>' +
     '<button class="g-step" data-basic="' + k + ':1"' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? " disabled" : "") + '>＋</button>' +
-    '</div><span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%　/ 上限 ' + (BIRTH.basicCap * BIRTH.basicPct) + '%</span></div>';
+    '</div><span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%　/ 上限 ' + BIRTH.basicCap + ' 点（+' + (BIRTH.basicCap * BIRTH.basicPct) + '%）</span></div>';
 
   const specLine = (k, label) => {
     const eff = BIRTH.specEffect[k === "intel" ? "int" : k];
@@ -313,7 +324,7 @@ function buildCreateScreen() {
     '<button class="g-step" data-attr="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
     '<span class="g-val">' + state[k] + '</span>' +
     '<button class="g-step" data-attr="' + k + ':1"' + (free() <= 0 || state[k] >= BIRTH.specCap ? " disabled" : "") + '>＋</button>' +
-    '</div><span class="g-hint">' + (eff ? "每点 +" + eff : "") + '　/ 上限 ' + BIRTH.specCap + '</span></div>';
+    '</div><span class="g-hint">' + (eff ? "每点 +" + eff : "") + '　/ 上限 ' + BIRTH.specCap + ' 点</span></div>';
   };
 
   const gearSub = (x) => {
