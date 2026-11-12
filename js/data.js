@@ -1,7 +1,8 @@
 // 闲得慌RPG v2 · 数据（纯数据，无逻辑）
 export const RARITY_MULT = { R: 1, SR: 1.6, SSR: 2.4, UR: 3.4 };
-// 🚧 内容开关：正式关卡/初始装备等内容待定，先隐藏展示（底层数据保留）
-export const CONTENT_READY = false;
+// 🚧 内容开关：装备选择已开放；关卡内容仍待定（数据保留）
+export const CONTENT_READY = true;
+export const STAGE_READY = false;
 export const SLOT_BASE = {
   weapon: { atk: 40 },
   armor: { hp: 220, def: 18, res: 14 },

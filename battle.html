@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, CONTENT_READY } from "./js/data.js";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY } from "./js/data.js";
 import { makeItem } from "./js/items.js";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js";
@@ -74,8 +74,8 @@ function renderPick() {
       '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
       '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>' +
     '</div>' +
-    '<div class="card"><div class="card-title">' + (CONTENT_READY ? "选择关卡" : "开始战斗") + '</div>' +
-      (CONTENT_READY
+    '<div class="card"><div class="card-title">' + (STAGE_READY ? "选择关卡" : "开始战斗") + '</div>' +
+      (STAGE_READY
         ? STAGES.map((s) => '<div class="row"><span class="k">' + esc(s.name) +
             '<div class="hint">' + esc(s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) + ' · 攻 ' + s.foe.atk + '</div></span>' +
             '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>').join("")
