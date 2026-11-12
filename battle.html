@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=8b89ef2b";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY } from "./js/data.js?v=142a4767";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR } from "./js/data.js?v=142a4767";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=22282a49";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2bad05a4";
@@ -81,10 +81,29 @@ function renderPick() {
   const ch = activeChar();
   if (!ch) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
   const f = charFinal(ch);
+  const origList = ORIGINALS.filter((o) => o.camp !== "ally");
+  const playOrig = window.__playOrig ? ORIGINALS.find((o) => o.id === window.__playOrig) : null;
   view().innerHTML =
-    '<div class="card"><div class="card-title">出战</div>' +
-      '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
-      '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>' +
+    '<div class="card"><div class="card-title">出战角色</div>' +
+      '<div class="row"><span class="k">🧑 ' + esc(ch.name) + '<div class="hint">我的角色 · Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</div></span>' +
+        '<span class="v"><button data-play="me" ' + (playOrig ? '' : 'style="border-color:#6ea8fe;color:#6ea8fe;"') + '>' + (playOrig ? "选择" : "✅ 出战中") + '</button></span></div>' +
+      (origList.length
+        ? origList.map((o) => {
+            const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
+            return '<div class="row"><span class="k">🧬 ' + esc(o.name) + (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') +
+              '<div class="hint">原创角色 · Lv' + prog.lv + ' · 经验 ' + fmt(prog.exp) + '</div></span>' +
+              '<span class="v"><button data-playorig="' + o.id + '" ' + (playOrig && playOrig.id === o.id ? 'style="border-color:#ffb347;color:#ffb347;"' : '') + '>' +
+              (playOrig && playOrig.id === o.id ? "✅ 出战中" : "选择") + '</button></span></div>';
+          }).join("")
+        : '<div class="hint">还没有原创角色（主机端设计好后会出现）。</div>') +
+    '</div>' +
+    '<div class="card"><div class="card-title">当前面板</div>' +
+      (playOrig
+        ? (() => { const s = origStats(playOrig); return '<div class="hint">🧬 ' + esc(playOrig.name) + '（原创角色）</div>' +
+            '<div class="row"><span class="k">攻击 / 生命</span><span class="v">' + Math.round(s.atk) + ' / ' + Math.round(s.hp) + '</span></div>' +
+            '<div class="row"><span class="k">防御 / 法抗</span><span class="v">' + Math.round(s.def) + ' / ' + Math.round(s.res) + '</span></div>'; })()
+        : '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
+          '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>') +
     '</div>' +
     '<div class="card"><div class="card-title">' + (STAGE_READY ? "选择关卡" : "开始战斗") + '</div>' +
       (STAGE_READY
@@ -105,6 +124,8 @@ function renderPick() {
           '<span class="v"><button data-ally="' + o.id + '">' + (window.__allyId === o.id ? "✅ 已同行" : "邀请同行") + '</button></span></div>').join("") +
         '</div>'
       : "");
+  view().querySelectorAll("[data-play]").forEach((b) => b.onclick = () => { window.__playOrig = null; renderPick(); });
+  view().querySelectorAll("[data-playorig]").forEach((b) => b.onclick = () => { window.__playOrig = b.dataset.playorig; renderPick(); });
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => startBattle(b.dataset.stage);
   });
@@ -205,6 +226,20 @@ async function tryRestore() {
   return true;
 }
 
+// 🧬 原创角色：按自己的等级成长（每级 +5% 攻/血/防/抗，速度 +0.1）
+function origStats(o) {
+  const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
+  const lv = Number(prog.lv) || 1;
+  const k = 1 + 0.05 * (lv - 1);
+  const s = o.stats || {};
+  return {
+    atk: (Number(s.atk) || 60) * k, hp: (Number(s.hp) || 500) * k,
+    def: (Number(s.def) || 20) * k, res: (Number(s.res) || 15) * k,
+    spd: (Number(s.spd) || 10) + 0.1 * (lv - 1),
+    critRate: Number(s.critRate) || 5, critDmg: Number(s.critDmg) || 150
+  };
+}
+
 function startOriginal(id) {
   const o = ORIGINALS.find((x) => x.id === id);
   if (!o) return;
@@ -235,11 +270,19 @@ function startBattle(stageId) {
   const traits = combatTraits(ch);
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
+  const playOrig = window.__playOrig ? ORIGINALS.find((o) => o.id === window.__playOrig) : null;
+  const meUnit = playOrig
+    ? (() => {
+        const g = origStats(playOrig);
+        return { id: "me", name: playOrig.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg };
+      })()
+    : { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits };
   const units = [
-    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits },
+    meUnit,
     { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
   ];
   st = createBattle(units);
+  st.__origId = playOrig ? playOrig.id : null;
   // 🤝 友方原创角色同行：作为不出现在行动条上的助战单位
   const ally = window.__allyId ? ORIGINALS.find((o) => o.id === window.__allyId && o.camp === "ally") : null;
   if (ally) {
@@ -250,8 +293,8 @@ function startBattle(stageId) {
     pushLog("🤝 " + ally.name + " 与你同行", "line");
   }
   st.__stage = s.id;
-  st.__weapon = ch.equip.weapon || null;
-  st.__talent = talentActive(ch);
+  st.__weapon = playOrig ? null : (ch.equip.weapon || null);
+  st.__talent = playOrig ? null : talentActive(ch);
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
@@ -808,6 +851,24 @@ function finish() {
   if (!st || !st.finished || st.__done) return;
   st.__done = true;
   if (st.winner !== "A") { pushLog("💀 战斗失败"); return; }
+  // 🧬 用原创角色出战：经验只给这个原创角色，不动玩家存档
+  if (st.__origId) {
+    const o = ORIGINALS.find((x) => x.id === st.__origId);
+    if (o) {
+      store.orig = store.orig || {};
+      const cur = store.orig[o.id] || { lv: 1, exp: 0 };
+      const gain = 120;
+      cur.exp = (Number(cur.exp) || 0) + gain;
+      let lvUp = 0;
+      while (cur.lv < CHAR.maxLevel && cur.exp >= CHAR.expNeed(cur.lv)) { cur.exp -= CHAR.expNeed(cur.lv); cur.lv++; lvUp++; }
+      store.orig[o.id] = cur;
+      pushLog("🧬 " + o.name + " 经验 +" + gain + "（当前 Lv" + cur.lv + (lvUp ? " ↑升级" : "") + "）");
+      addReceipt(store, "原创", o.name, { note: "原创角色经验 +" + gain });
+      save();
+      renderBattle();
+      return;
+    }
+  }
   const s = STAGES.find((x) => x.id === st.__stage) || STAGES[0];
   const gold = Number(s.gold) || (120 + s.foe.lv * 8);
   const exp = Number(s.exp) || (40 + s.foe.lv * 6);
