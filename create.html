@@ -24,10 +24,10 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=f206471a";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=ad6938d2";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=17e286b2";
-import { GRADE, APTITUDE } from "./js/data.js?v=f206471a";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=bb36289c";
+import { GRADE, APTITUDE } from "./js/data.js?v=ad6938d2";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=bb7ece25";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -1100,7 +1100,7 @@ function renderCult() {
           }
           if (!canStar || i < 0) return '';
           const next = order[i + 1];
-          const label = next === "UR" ? "⚡ 觉醒 → UR1🔥" : "⬆️ 升阶 → " + next;
+          const label = next === "UR" ? "⬆️ 升阶 → UR1🔥" : "⬆️ 升阶 → " + next;
           return '<button data-promote="' + e.key + '" ' + (pm.ok ? '' : 'disabled') + ' style="border-color:#ffb347;color:#ffb347;">' +
             label + (pm.ok ? '（碎片 ' + pm.shards + ' / ' + pm.gold + ' 金）' : '') + '</button>';
         })() +

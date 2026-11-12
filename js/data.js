@@ -179,7 +179,8 @@ export const CULT = {
   maxFire: 5,
   promote: {
     SR: { shards: 200, gold: 2000 },
-    SSR: { shards: 500, gold: 6000 }
+    SSR: { shards: 500, gold: 6000 },
+    UR: { shards: 1200, gold: 18000 }
   },
   awaken: {
     ur1: { shards: 1000, gold: 15000 }

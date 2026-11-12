@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=f206471a";
+import { CULT } from "./data.js?v=ad6938d2";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -91,8 +91,9 @@ export function promoteCheck(it, store) {
   if (i < 0 || i >= order.length - 1) return { ok: false, why: "已是最高品质" };
   const next = order[i + 1];
   if (next === "UR") {
-    const cost = (CULT.awaken || {}).ur1 || { shards: 0, gold: 0 };
-    return check(cost, { action: "awakenUR1", next: "UR", fire: 1, label: "觉醒 → UR1🔥" });
+    // SSR5⭐ → 升阶 → UR1🔥（这一步是升阶，不是觉醒）
+    const cost = (CULT.promote || {}).UR || { shards: 1200, gold: 18000 };
+    return check(cost, { action: "promote", next: "UR", fire: 1, label: "升阶 → UR1🔥" });
   }
   const cost = (CULT.promote || {})[next] || { shards: 0, gold: 0 };
   return check(cost, { action: "promote", next, fire: 0, label: "升阶 → " + next });
@@ -106,7 +107,7 @@ export function promoteApply(store, it) {
   store.gold = (Number(store.gold) || 0) - c.gold;
   it.data.rarity = c.next;
   it.data.star = 5;
-  if (c.action === "awakenUR1" || c.action === "awakenFire") it.data.fire = c.fire;
+  if (c.next === "UR" && c.fire) it.data.fire = c.fire;
   it.data.ups = (Number(it.data.ups) || 0) + 1;
   return { ok: true, next: c.next, fire: c.fire, action: c.action, ups: it.data.ups };
 }
