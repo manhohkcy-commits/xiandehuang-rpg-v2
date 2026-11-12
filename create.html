@@ -352,10 +352,7 @@ function buildCreateScreen() {
     if (x.res) bonus.push("法抗 +" + x.res);
     if (x.dmgCut) bonus.push("减伤 " + x.dmgCut + "%");
     if (x.thorns) bonus.push("反伤 " + x.thorns + "%");
-    return st + " · " + tp +
-      "<br>普攻 " + (Number(x.aMult) || 100) + "%" + ((Number(x.aHits) || 1) > 1 ? " ×" + x.aHits : "") +
-      " ／ 必杀 " + (Number(x.uMult) || 250) + "%" +
-      (bonus.length ? "<br>" + bonus.join(" · ") : "");
+    return st + " · " + tp + (bonus.length ? "<br>" + bonus.join(" · ") : "");
   };
 
   view().innerHTML = '<div class="gform">' +
