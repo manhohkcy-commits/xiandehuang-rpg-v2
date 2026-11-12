@@ -51,6 +51,12 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
 .gform button.g-step:hover:not(:disabled){border-color:#6ea8fe;color:#fff}
 .gform button.g-step:disabled{opacity:.3}
 .gform .g-val{min-width:24px;text-align:center;font-size:14px;font-weight:700;color:#ffd666}
+.gform .g-num-in{width:56px;height:28px;text-align:center;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;
+  color:#ffd666;font-size:15px;font-weight:700;font-family:inherit;padding:0 4px}
+.gform .g-num-in:focus{outline:none;border-color:#6ea8fe;background:#0e1422}
+.gform .g-num-in::-webkit-outer-spin-button,
+.gform .g-num-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.gform .g-num-in{-moz-appearance:textfield;appearance:textfield}
 .gform .g-hint{font-size:10.5px;color:#8a8ab0}
 .gform .g-rest{font-size:11.5px;color:#9aa4b8;margin-top:6px}
 .gform .g-rest b{color:#ffd666}

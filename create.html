@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>闲得慌RPG v2</title>
-<link rel="stylesheet" href="css/app.css?v=86f850dd">
+<link rel="stylesheet" href="css/app.css?v=d8dee059">
 </head>
 <body>
 <div class="wrap">
@@ -314,7 +314,7 @@ function buildCreateScreen() {
 
   const basicLine = (k, label) => '<div class="g-attr"><span class="g-k">' + label + '</span><div class="g-ctrl">' +
     '<button class="g-step" data-basic="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
-    '<span class="g-val">' + state[k] + '</span>' +
+    '<input class="g-num-in" type="number" min="0" max="' + BIRTH.basicCap + '" value="' + state[k] + '" data-basic-num="' + k + '">' +
     '<button class="g-step" data-basic="' + k + ':1"' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? " disabled" : "") + '>＋</button>' +
     '</div><span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%　/ 上限 ' + BIRTH.basicCap + ' 点（+' + (BIRTH.basicCap * BIRTH.basicPct) + '%）</span></div>';
 
@@ -322,7 +322,7 @@ function buildCreateScreen() {
     const eff = BIRTH.specEffect[k === "intel" ? "int" : k];
     return '<div class="g-attr"><span class="g-k">' + label + '</span><div class="g-ctrl">' +
     '<button class="g-step" data-attr="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
-    '<span class="g-val">' + state[k] + '</span>' +
+    '<input class="g-num-in" type="number" min="0" max="' + BIRTH.specCap + '" value="' + state[k] + '" data-attr-num="' + k + '">' +
     '<button class="g-step" data-attr="' + k + ':1"' + (free() <= 0 || state[k] >= BIRTH.specCap ? " disabled" : "") + '>＋</button>' +
     '</div><span class="g-hint">' + (eff ? "每点 +" + eff : "") + '　/ 上限 ' + BIRTH.specCap + ' 点</span></div>';
   };
@@ -411,6 +411,25 @@ function buildCreateScreen() {
     if (Number(d) > 0 && free() <= 0) return;
     state[k] = next;
     render();
+  });
+  // 直接填数字
+  const commitNum = (k, raw, kind) => {
+    const cap = kind === "basic" ? BIRTH.basicCap : BIRTH.specCap;
+    const left = kind === "basic" ? basicFree() + state[k] : free() + state[k];
+    let v = Math.floor(Number(raw));
+    if (!Number.isFinite(v)) v = state[k];
+    v = Math.max(0, Math.min(cap, v));
+    v = Math.min(v, left);
+    state[k] = v;
+    render();
+  };
+  view().querySelectorAll("[data-basic-num]").forEach((inp) => {
+    inp.onchange = () => commitNum(inp.dataset.basicNum, inp.value, "basic");
+    inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } };
+  });
+  view().querySelectorAll("[data-attr-num]").forEach((inp) => {
+    inp.onchange = () => commitNum(inp.dataset.attrNum, inp.value, "spec");
+    inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } };
   });
   view().querySelectorAll("[data-preset]").forEach((b) => b.onclick = () => {
     const p = PRESETS.find((x) => x.id === b.dataset.preset);
