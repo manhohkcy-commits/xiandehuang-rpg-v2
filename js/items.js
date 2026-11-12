@@ -108,7 +108,8 @@ export function promoteApply(store, it) {
   it.data.rarity = c.next;
   it.data.star = 5;
   if (c.next === "UR" && c.fire) it.data.fire = c.fire;
-  it.data.ups = (Number(it.data.ups) || 0) + 1;
+  // 只有「升阶」才加印记；觉醒走火数加成，避免重复
+  if (c.action === "promote") it.data.ups = (Number(it.data.ups) || 0) + 1;
   return { ok: true, next: c.next, fire: c.fire, action: c.action, ups: it.data.ups };
 }
 
