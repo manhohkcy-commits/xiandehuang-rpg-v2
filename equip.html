@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=0763b9ef";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=2111effa";
 import { itemBonus, mainKeysOf } from "./js/power.js?v=789e90d1";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
@@ -92,7 +92,7 @@ const groups = [
   { cat: "accessory", title: "💍 饰品", list: ACCESSORIES }
 ];
 const RARITIES = ["R", "SR", "SSR", "UR"];
-const F = (window.__eqFilter = window.__eqFilter || { cat: "all", rarity: "all" });
+const F = (window.__eqFilter = window.__eqFilter || { cat: "all", rarity: "all", part: "all" });
 const chip = (type, val, label) => {
   const on = F[type] === val;
   return '<button data-f="' + type + ':' + val + '" style="font-size:11px;padding:3px 10px;border-radius:20px;' +
@@ -102,18 +102,21 @@ const chip = (type, val, label) => {
 function render() {
   const shown = (cat) => F.cat === "all" || F.cat === cat;
   const byRarity = (d) => F.rarity === "all" || d.rarity === F.rarity;
+  const byPart = (d) => F.part === "all" || d.part === F.part;
   const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
-    '<span class="hint" style="font-size:10.5px;">部位</span>' +
+    '<span class="hint" style="font-size:10.5px;">类别</span>' +
     chip("cat", "all", "全部") + chip("cat", "weapon", "⚔️武器") + chip("cat", "armor", "🛡️防具") + chip("cat", "accessory", "💍饰品") +
     '<span style="width:8px;"></span><span class="hint" style="font-size:10.5px;">品质</span>' +
     chip("rarity", "all", "全部") + RARITIES.map((r) => chip("rarity", r, r)).join("") +
+    '<span style="width:8px;"></span><span class="hint" style="font-size:10.5px;">部位</span>' +
+    chip("part", "all", "全部") + chip("part", "top", "上装") + chip("part", "bottom", "下装") +
     '</div></div>';
   document.getElementById("view").innerHTML =
     card("📚 装备图鉴",
       '<div class="hint">当前全部装备（' + list.length + ' 件）。点任意一件查看完整属性与招式。</div>') +
     bar +
     groups.filter((g) => shown(g.cat)).map((g) => {
-      const rows = g.list.filter(byRarity);
+      const rows = g.list.filter(byRarity).filter(byPart);
       return card(g.title + "（" + rows.length + "）",
         rows.length
           ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px;">' +
@@ -125,7 +128,8 @@ function render() {
               const subTxt = statText(b, Object.keys(b).filter((k) => mk.indexOf(k) < 0));
               return '<button data-i="' + list.findIndex((x) => x.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
                 '<div style="font-size:13px;font-weight:700;color:' + rc + ';">' + d.name + '</div>' +
-                '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") + '</div>' +
+                '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") +
+                (d.part ? ' · ' + (d.part === "bottom" ? "下装" : "上装") : "") + '</div>' +
                 (mainTxt ? '<div style="font-size:10px;color:#ffd666;margin-top:5px;line-height:1.4;">主　' + mainTxt + '</div>' : '') +
                 (subTxt ? '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;line-height:1.4;">副　' + subTxt + '</div>' : '') +
                 '</button>';

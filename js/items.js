@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=0763b9ef";
+import { CULT } from "./data.js?v=2111effa";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -17,13 +17,13 @@ export function equip(store, charId, itemId) {
   if (!ch) return { ok: false, why: "没有这个角色" };
   if (!it) return { ok: false, why: "装备不在仓库" };
   if (!isEquip(it)) return { ok: false, why: "这不是装备" };
-  // 🛡 防具两格：先填防具一，再填防具二，都满则替换防具一
+  // 🛡 防具按身体部位分格：上装 → armor，下装 → armor2
   let slot = it.cat;
   if (it.cat === "armor") {
-    slot = !ch.equip.armor ? "armor" : (!ch.equip.armor2 ? "armor2" : "armor");
+    slot = (it.data.part === "bottom") ? "armor2" : "armor";
     const other = slot === "armor" ? "armor2" : "armor";
     if (ch.equip[other] && ch.equip[other].id === it.data.id) {
-      return { ok: false, why: "同一种防具不能穿两件" };
+      return { ok: false, why: "同一件装备不能重复穿" };
     }
   }
   const old = ch.equip[slot];

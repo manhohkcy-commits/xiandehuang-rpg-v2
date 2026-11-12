@@ -61,32 +61,28 @@ export const WEAPONS = [
 ];
 // ── SR / SSR / UR 尚未设计：旧占位装备已移除，等正式设计后再加 ─────
 export const ARMORS = [
-  { id: "a_cloth", name: "粗布衣", rarity: "R", main: { hp: 100 }, dmgCut: 2, desc: "最普通的粗布衣服，挡不住刀，但聊胜于无。" },
-  { id: "a_leather", name: "皮甲", rarity: "R", main: { def: 8 }, desc: "鞣过的兽皮缝成的背心，硬邦邦的，挡钝器还行。" },
-  { id: "a_rattan", name: "藤甲", rarity: "R", main: { hp: 160 }, desc: "藤条编的护身甲，轻，但挨打时会吱呀响。" },
-  { id: "a_cloak", name: "轻便斗篷", rarity: "R", main: { spd: 2 }, desc: "薄布斗篷，不挡刀，胜在不拖脚步。" },
-  { id: "a_mirror", name: "护心镜", rarity: "R", main: { res: 10 }, desc: "一块磨亮的铜镜挂在胸口，图个心安。" },
-  { id: "a_spike", name: "钉刺背心", rarity: "R", main: { def: 6 }, thorns: 3, desc: "内衬钉了铁刺，谁抱上来谁疼。" },
-  // ── SR ─────────────────────────────
-  { id: "a_lava", name: "熔岩护甲", rarity: "SR", main: { hp: 220, def: 10 }, dmgCut: 6, thorns: 10, desc: "嵌了火山岩的厚甲，打上去会烫手。" },
-  { id: "a_mitril", name: "秘银轻甲", rarity: "SR", main: { hp: 180, def: 12 }, dmgCut: 5, spd: 2, desc: "轻得出奇，挨打时却比铁甲还硬。" },
-  { id: "a_vine", name: "藤蔓重甲", rarity: "SR", main: { hp: 320 }, def: 10, desc: "层层老藤缠成的重甲，笨重但耐打。" },
-  { id: "a_guard", name: "铁卫护心镜", rarity: "SR", main: { res: 18 }, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" },
-  // 守护
-  { id: "a_bulwark", name: "铁壁重甲", rarity: "SR", main: { hp: 260, def: 14 }, dmgCut: 7, desc: "厚得能当墙用，走两步就喘。" },
-  { id: "a_rock", name: "磐石护心镜", rarity: "SR", main: { def: 20 }, dmgCut: 4, desc: "整块石料磨的护心镜，硬得离谱。" },
-  // 先锋
-  { id: "a_berserk", name: "狂战皮甲", rarity: "SR", main: { hp: 160 }, atkPct: 4, desc: "划痕越多，穿的人越兴奋。" },
-  { id: "a_rift", name: "裂痕战衣", rarity: "SR", main: { hp: 200 }, thorns: 5, desc: "布面全是旧裂口，却没人补。" },
-  // 游侠
-  { id: "a_wind", name: "追风轻衣", rarity: "SR", main: { hp: 120, spd: 2 }, dmgCut: 3, desc: "薄得像一层风，跑起来几乎没声音。" },
-  { id: "a_shadow", name: "影行斗篷", rarity: "SR", main: { hp: 100, spd: 3 }, dmgCut: 2, critRate: 1, desc: "披上之后，脚步声会自己消失。" },
-  // 术士
-  { id: "a_rune", name: "法纹长袍", rarity: "SR", main: { hp: 180, res: 10 }, dmgCut: 2, desc: "袍角绣着细密法纹，碰一下会发麻。" },
-  { id: "a_aura", name: "灵能罩衣", rarity: "SR", main: { hp: 160, res: 12 }, dmgCut: 4, desc: "表面浮着一层看不见的薄膜。" },
-  // 辅佐
-  { id: "a_pray", name: "祷言圣袍", rarity: "SR", main: { hp: 200, res: 12 }, dmgCut: 2, desc: "袖口磨得发白，显然常被攥紧。" },
-  { id: "a_watch", name: "守望轻甲", rarity: "SR", main: { hp: 240, def: 8 }, desc: "巡逻队制式，轻便又耐站。" }
+  // ── 上装（part: top）─────────────────
+  { id: "a_cloth", name: "粗布衣", part: "top", rarity: "R", main: { hp: 100 }, dmgCut: 2, desc: "最普通的粗布上衣，挡不住刀，但聊胜于无。" },
+  { id: "a_leather", name: "皮甲", part: "top", rarity: "R", main: { def: 8 }, desc: "鞣过的兽皮缝成的背心，硬邦邦的，挡钝器还行。" },
+  { id: "a_mirror", name: "护心镜", part: "top", rarity: "R", main: { res: 10 }, desc: "一块磨亮的铜镜挂在胸口，图个心安。" },
+  { id: "a_lava", name: "熔岩护甲", part: "top", rarity: "SR", main: { hp: 220, def: 10 }, dmgCut: 6, thorns: 10, desc: "嵌了火山岩的厚甲，打上去会烫手。" },
+  { id: "a_mitril", name: "秘银轻甲", part: "top", rarity: "SR", main: { hp: 180, def: 12 }, dmgCut: 5, spd: 2, desc: "轻得出奇，挨打时却比铁甲还硬。" },
+  { id: "a_guard", name: "铁卫护心镜", part: "top", rarity: "SR", main: { res: 18 }, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" },
+  { id: "a_bulwark", name: "铁壁重甲", part: "top", rarity: "SR", main: { hp: 260, def: 14 }, dmgCut: 7, desc: "厚得能当墙用，走两步就喘。" },
+  { id: "a_berserk", name: "狂战皮甲", part: "top", rarity: "SR", main: { hp: 160 }, atkPct: 4, desc: "划痕越多，穿的人越兴奋。" },
+  { id: "a_rune", name: "法纹长袍", part: "top", rarity: "SR", main: { hp: 180, res: 10 }, dmgCut: 2, desc: "袍角绣着细密法纹，碰一下会发麻。" },
+  { id: "a_pray", name: "祷言圣袍", part: "top", rarity: "SR", main: { hp: 200, res: 12 }, dmgCut: 2, desc: "袖口磨得发白，显然常被攥紧。" },
+  // ── 下装（part: bottom）───────────────
+  { id: "a_rattan", name: "藤甲护腿", part: "bottom", rarity: "R", main: { hp: 160 }, desc: "藤条编的护腿，轻，但挨打时会吱呀响。" },
+  { id: "a_cloak", name: "轻便护腿", part: "bottom", rarity: "R", main: { spd: 2 }, desc: "薄布护腿，不挡刀，胜在不拖脚步。" },
+  { id: "a_spike", name: "钉刺护腿", part: "bottom", rarity: "R", main: { def: 6 }, thorns: 3, desc: "内侧钉了铁刺，谁踢上来谁疼。" },
+  { id: "a_vine", name: "藤蔓重腿", part: "bottom", rarity: "SR", main: { hp: 320 }, def: 10, desc: "层层老藤缠成的重腿甲，笨重但耐打。" },
+  { id: "a_rock", name: "磐石护腿", part: "bottom", rarity: "SR", main: { def: 20 }, dmgCut: 4, desc: "整块石料磨的护腿，硬得离谱。" },
+  { id: "a_rift", name: "裂痕长裤", part: "bottom", rarity: "SR", main: { hp: 200 }, thorns: 5, desc: "裤面全是旧裂口，却没人补。" },
+  { id: "a_wind", name: "追风短裤", part: "bottom", rarity: "SR", main: { hp: 120, spd: 2 }, dmgCut: 3, desc: "薄得像一层风，跑起来几乎没声音。" },
+  { id: "a_shadow", name: "影行长裤", part: "bottom", rarity: "SR", main: { hp: 100, spd: 3 }, dmgCut: 2, critRate: 1, desc: "穿上之后，脚步声会自己消失。" },
+  { id: "a_aura", name: "灵能护腿", part: "bottom", rarity: "SR", main: { hp: 160, res: 12 }, dmgCut: 4, desc: "表面浮着一层看不见的薄膜。" },
+  { id: "a_watch", name: "守望护腿", part: "bottom", rarity: "SR", main: { hp: 240, def: 8 }, desc: "巡逻队制式，轻便又耐站。" }
 ];
 export const ACCESSORIES = [
   { id: "c_rope", name: "布绳", rarity: "R", main: { atk: 4, spd: 1 }, desc: "随手系在手腕上的布绳，图个心安。" },
