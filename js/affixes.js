@@ -95,7 +95,11 @@ const CONTROL_POOL = [
 ];
 const CONTROL_CHANCE = { R: 0, SR: 0, SSR: 0.04, UR: 0.12 };
 
-const COUNT = { R: 2, SR: 3, SSR: 4, UR: 5 };
+const COUNT = { R: [1, 2], SR: [2, 3], SSR: [3, 4], UR: [4, 5] };
+const countFor = (rarity) => {
+  const r = COUNT[rarity] || [2, 2];
+  return r[0] + Math.floor(Math.random() * (r[1] - r[0] + 1));
+};
 const PCT_KEYS = new Set(ALL_PCT.map(([k]) => k));
 
 // 从池里换掉一条百分比，加入特殊词条
@@ -110,11 +114,11 @@ function swapIn(out, pool, rarityChance) {
 }
 
 export function rollAffixes(cat, rarity) {
-  const n = COUNT[rarity] || 2;
+  const n = countFor(rarity);
   const out = {};
   // 先塞 1~2 条基础数值
   const bases = BASE_POOL.slice();
-  const baseCount = Math.min(bases.length, n >= 4 ? 2 : 1);
+  const baseCount = Math.min(bases.length, n <= 1 ? 1 : (Math.random() < 0.6 ? 1 : 2));
   for (let i = 0; i < baseCount && bases.length; i++) {
     const idx = Math.floor(Math.random() * bases.length);
     const [k, lo, hi] = bases.splice(idx, 1)[0];
