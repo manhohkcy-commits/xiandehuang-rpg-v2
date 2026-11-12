@@ -208,14 +208,17 @@ function showItemDetail(it) {
     return rows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">' + g.title + '</div>' + rows : "";
   }).join("");
 
-  const skill = d.sSupport
-    ? '<div class="row"><span class="k">辅助技</span><span class="v">「' + esc(d.sName || "—") + '」</span></div>' +
-      '<div class="row"><span class="k">冷却 / 回怒</span><span class="v">' + (d.sCd || 3) + ' 回合 / ' + (d.sRage || 0) + '%</span></div>'
-    : (d.sMult
-      ? '<div class="row"><span class="k">招式</span><span class="v">「' + esc(d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits : '') + '</span></div>' +
-        '<div class="row"><span class="k">冷却 / 回怒</span><span class="v">' + (d.sCd || 2) + ' 回合 / ' + (d.sRage || 0) + '%</span></div>' +
-        (d.hitStatus ? '<div class="row"><span class="k">附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
-      : "");
+  // 招式组：普攻 / 技能（R 以上有）/ 必杀
+  const skill = '<div class="hint" style="margin-top:10px;font-weight:700;color:#8fd8ff;">招式</div>' +
+    '<div class="row"><span class="k">普攻</span><span class="v">100% · 物理</span></div>' +
+    (d.sSupport
+      ? '<div class="row"><span class="k">技能（辅助）</span><span class="v">「' + esc(d.sName || "—") + '」· CD ' + (d.sCd || 3) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>'
+      : (d.sMult
+        ? '<div class="row"><span class="k">技能</span><span class="v">「' + esc(d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits : '') +
+          ' · CD ' + (d.sCd || 2) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>' +
+          (d.hitStatus ? '<div class="row"><span class="k">　└ 附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
+        : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶以上才有</span></div>')) +
+    '<div class="row"><span class="k">必杀</span><span class="v">250% · 怒气满 100 时可用</span></div>';
 
   const meta = (d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "—") +
     " · " + (d.dmgType === "spell" ? "法术" : "物理");
@@ -227,7 +230,7 @@ function showItemDetail(it) {
       ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
     '<div class="hint">' + meta + (cur ? '　|　对比：' + esc(cur.name || "当前装备") : '　|　未装备同类') + '</div>' +
     (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
-    (skill ? '<div class="hint" style="margin-top:10px;font-weight:700;color:#8fd8ff;">招式</div>' + skill : '') +
+    skill +
     '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +
     '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
