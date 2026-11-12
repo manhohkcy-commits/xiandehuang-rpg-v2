@@ -906,6 +906,10 @@ function renderShop() {
     grp("⚔️ 武器", "weapon", shelf.weapons) + grp("🛡️ 防具", "armor", shelf.armors) + grp("💍 饰品", "accessory", shelf.accessories) +
     card("💰 补给", CONSUMABLES.map((p) => '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">' + esc(p.desc) + '</div></span>' +
       '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button></span></div>').join("")) +
+    card("📜 资历材料",
+      '<div class="row"><span class="k">资历手稿<div class="hint">资历晋升用</div></span><span class="v"><span style="color:#ffd666;">350 金</span> <button data-buy="material:manuscript">购买</button></span></div>' +
+      '<div class="row"><span class="k">资质鉴定勋章<div class="hint">资质评估用</div></span><span class="v"><span style="color:#ffd666;">600 金</span> <button data-buy="material:medal">购买</button></span></div>' +
+      '<div class="hint">持有：手稿 ' + Number((store.flags || {}).manuscript || 0) + ' · 勋章 ' + Number((store.flags || {}).medal || 0) + '</div>') +
     card("♻️ 出售（把仓库里的装备换成金币）",
       (store.items || []).length
         ? (store.items || []).map((it) => {
@@ -935,6 +939,16 @@ function renderShop() {
     if (cat === "weapon") { def = WEAPONS.find((x) => x.id === id); price = SHOP_PRICE.weapon[def.rarity]; }
     if (cat === "armor") { def = ARMORS.find((x) => x.id === id); price = SHOP_PRICE.armor[def.rarity]; }
     if (cat === "accessory") { def = ACCESSORIES.find((x) => x.id === id); price = SHOP_PRICE.accessory[def.rarity]; }
+    if (cat === "material") {
+      const mp = id === "manuscript" ? 350 : 600;
+      const nm = id === "manuscript" ? "资历手稿" : "资质鉴定勋章";
+      if ((Number(store.gold) || 0) < mp) return toast("金币不够", true);
+      store.gold -= mp;
+      store.flags = store.flags || {};
+      store.flags[id] = (Number(store.flags[id]) || 0) + 1;
+      addReceipt(store, "购买", nm, { gold: -mp });
+      await save(); render(); return;
+    }
     if (cat === "prop") {
       def = CONSUMABLES.find((x) => x.id === id); price = def.price;
       if ((store.gold || 0) < price) return toast("金币不够", true);

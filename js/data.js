@@ -40,7 +40,19 @@ export const STAGES = [
     drop: { shards: [26, 40], stone: [10, 16], gearChance: 45, manuscript: 4, medal: 1, medalChance: 60 } },
   { id: "k4", name: "无尽·第一层", tier: 4, gold: 900, exp: 320,
     foe: { name: "影武者", lv: 50, hp: 5200, atk: 260, def: 90, res: 60, spd: 15 },
-    drop: { shards: [40, 60], stone: [18, 28], gearChance: 70, manuscript: 6, medal: 2, medalChance: 80 } }
+    drop: { shards: [40, 60], stone: [18, 28], gearChance: 70, manuscript: 6, medal: 2, medalChance: 80 } },
+  { id: "k5", name: "鬼武者", tier: 5, gold: 1400, exp: 460,
+    foe: { name: "鬼武者", lv: 65, hp: 7200, atk: 330, def: 130, res: 90, spd: 17 },
+    drop: { shards: [55, 75], stone: [24, 34], gearChance: 80, manuscript: 8, medal: 2, medalChance: 85 } },
+  { id: "k6", name: "影众·头目", tier: 6, gold: 2000, exp: 650,
+    foe: { name: "影众头目", lv: 80, hp: 9800, atk: 420, def: 170, res: 120, spd: 19 },
+    drop: { shards: [70, 95], stone: [30, 42], gearChance: 85, manuscript: 10, medal: 3, medalChance: 90 } },
+  { id: "k7", name: "剑圣·试炼", tier: 7, gold: 2800, exp: 900,
+    foe: { name: "剑圣", lv: 90, hp: 13000, atk: 520, def: 210, res: 150, spd: 21 },
+    drop: { shards: [90, 120], stone: [38, 52], gearChance: 90, manuscript: 12, medal: 3, medalChance: 95 } },
+  { id: "k8", name: "无尽·主宰", tier: 8, gold: 3800, exp: 1200,
+    foe: { name: "无尽主宰", lv: 100, hp: 18000, atk: 650, def: 260, res: 190, spd: 23 },
+    drop: { shards: [120, 160], stone: [48, 66], gearChance: 100, manuscript: 15, medal: 4, medalChance: 100 } }
 ];
 export const CONSUMABLES = [
   { id: "p_hp", name: "伤药", desc: "战斗外回 300 生命", price: 120 },
