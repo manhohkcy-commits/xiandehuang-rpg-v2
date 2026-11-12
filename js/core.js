@@ -12,7 +12,7 @@ export function newChar(name) {
   return {
     id: uid("char"), name: String(name || "无名"), lv: 1, exp: 0,
     str: 10, agi: 5, intel: 0, tech: 0,
-    equip: { weapon: null, armor: null, accessory: null },
+    equip: { weapon: null, armor: null, armor2: null, accessory: null },
     talent: { path: "", points: {} },
     tp: 0
   };

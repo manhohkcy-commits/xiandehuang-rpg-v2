@@ -1,6 +1,6 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
 import { CULT } from "./data.js?v=0763b9ef";
-import { uid } from "./core.js?v=8b89ef2b";
+import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
 export const isEquip = (it) => !!(it && (it.cat === "weapon" || it.cat === "armor" || it.cat === "accessory"));
@@ -17,10 +17,19 @@ export function equip(store, charId, itemId) {
   if (!ch) return { ok: false, why: "没有这个角色" };
   if (!it) return { ok: false, why: "装备不在仓库" };
   if (!isEquip(it)) return { ok: false, why: "这不是装备" };
-  const old = ch.equip[it.cat];
+  // 🛡 防具两格：先填防具一，再填防具二，都满则替换防具一
+  let slot = it.cat;
+  if (it.cat === "armor") {
+    slot = !ch.equip.armor ? "armor" : (!ch.equip.armor2 ? "armor2" : "armor");
+    const other = slot === "armor" ? "armor2" : "armor";
+    if (ch.equip[other] && ch.equip[other].id === it.data.id) {
+      return { ok: false, why: "同一种防具不能穿两件" };
+    }
+  }
+  const old = ch.equip[slot];
   store.items = store.items.filter((x) => x.id !== itemId);
-  if (old) store.items.push({ id: uid("it"), cat: it.cat, lock: false, data: old });
-  ch.equip[it.cat] = it.data;
+  if (old) store.items.push({ id: uid("it"), cat: slot, lock: false, data: old });
+  ch.equip[slot] = it.data;
   return { ok: true };
 }
 

@@ -126,7 +126,7 @@ export function charFinal(ch) {
   const gm = gradeOf(ch).mult, am = aptitudeOf(ch).mult;
   ["atk", "hp", "def", "res", "spd"].forEach((k) => { f[k] = f[k] * gm * am; });
   // 装备之后不再乘（装备是外物，不随资质长大）
-  ["weapon", "armor", "accessory"].forEach((k) => {
+  ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
     const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
     Object.keys(b).forEach((kk) => {
       if (kk === "atkPct") f.atkPct += b[kk];
@@ -139,7 +139,7 @@ export function charFinal(ch) {
   });
   // 🎯 装备的「专精」平值 + 专精 % 加成
   const gs = { str: 0, intel: 0, tech: 0, agi: 0 };
-  ["weapon", "armor", "accessory"].forEach((k) => {
+  ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
     const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
     gs.str += Number(b.str) || 0;
     gs.intel += Number(b.intel) || 0;
@@ -184,7 +184,7 @@ const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "rage
 export function combatTraits(ch) {
   const out = {};
   COMBAT_KEYS.forEach((k) => { out[k] = 0; });
-  ["weapon", "armor", "accessory"].forEach((slot) => {
+  ["weapon", "armor", "armor2", "accessory"].forEach((slot) => {
     const d = (ch && ch.equip && ch.equip[slot]) || {};
     COMBAT_KEYS.forEach((k) => { if (d[k]) out[k] += Number(d[k]) || 0; });
   });

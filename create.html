@@ -23,11 +23,11 @@
 </div>
 
 <script type="module">
-import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=8b89ef2b";
+import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=0763b9ef";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=78d03f44";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=789e90d1";
 import { GRADE, APTITUDE } from "./js/data.js?v=0763b9ef";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=f92221c9";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -583,7 +583,7 @@ function renderChar() {
     card("天赋与专精", row("专精换算", "+" + spec) +
       attrRow("力量", "str", ch) + attrRow("敏捷", "agi", ch) + attrRow("智力", "intel", ch) + attrRow("技巧", "tech", ch) +
       '<div class="hint" style="margin-top:6px;">剩余可分配点数：<b style="color:' + ((ch.free || 0) > 0 ? "#7ee787" : "#6a6a86") + ';">' + (ch.free || 0) + '</b>（每次升级 +2）</div>') +
-    card("装备栏", '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + eqCard(ch, "weapon", "⚔️ 武器") + eqCard(ch, "armor", "🛡️ 防具") + eqCard(ch, "accessory", "💍 饰品") + '</div>') +
+    card("装备栏", '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + eqCard(ch, "weapon", "⚔️ 武器") + eqCard(ch, "armor", "🛡️ 防具一") + eqCard(ch, "armor2", "🛡️ 防具二") + eqCard(ch, "accessory", "💍 饰品") + '</div>') +
     card("操作", '<button id="btnRename">✏️ 改名字</button>') +
     card("最近收据", receiptsHtml());
 
@@ -1051,7 +1051,7 @@ function renderCult() {
   const ch = activeChar();
   if (!ch) { window.__creating = 1; buildCreateScreen(); return; }
   const entries = [];
-  ["weapon", "armor", "accessory"].forEach((k) => {
+  ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
     const d = ch.equip && ch.equip[k];
     if (d) entries.push({ key: "eq:" + k, d, where: "已装备", id: null, lock: false });
   });
