@@ -24,6 +24,36 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":
 const ROLES = ["通用", "守护", "先锋", "游侠", "术士", "辅佐"];
 const DUTY = { 守护: "坦克 / 减伤", 先锋: "近战爆发", 游侠: "远程 / 速度", 术士: "法术 / 持续", 辅佐: "治疗 / 护盾", 通用: "自由定位" };
 
+// 🔒 设计师口令：首次进入设置，之后每次要输（只存哈希在本机）
+const PWKEY = "rpg2:designpw";
+async function sha(s) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("xd2|" + s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function deny(msg) {
+  document.getElementById("view").innerHTML =
+    '<div class="card"><div class="card-title">🔒 需要设计师口令</div>' +
+    '<div class="hint">' + esc(msg) + '</div>' +
+    '<div style="margin-top:10px;"><a href="index.html"><button>← 回首页</button></a></div></div>';
+}
+async function gate() {
+  const stored = localStorage.getItem(PWKEY);
+  if (!stored) {
+    const p1 = prompt("首次使用：设置设计师口令（4 位以上）");
+    if (!p1 || p1.length < 4) { deny("口令太短，未设置。刷新重试。"); return false; }
+    localStorage.setItem(PWKEY, await sha(p1));
+    alert("口令已设置。下次进入设计器需要输入它。");
+    return true;
+  }
+  for (let i = 0; i < 3; i++) {
+    const p = prompt("请输入设计师口令（第 " + (i + 1) + " 次）");
+    if (p == null) { deny("已取消。"); return false; }
+    if ((await sha(p)) === stored) return true;
+  }
+  deny("口令错误 3 次。");
+  return false;
+}
+
 function loadAll() {
   try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
 }
@@ -203,7 +233,7 @@ function refreshPreview() {
   // 列表不变，不整页重绘以免输入框失焦
 }
 
-render();
+if (await gate()) render();
 </script>
 </body>
 </html>
