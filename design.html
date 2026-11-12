@@ -9,7 +9,7 @@
 <body>
 <div class="wrap">
   <div class="nav"><a href="index.html">← 返回</a><span class="tag">原创角色设计器</span>
-    <span class="tag">与玩家存档无关</span></div>
+    <button id="btnLock" style="font-size:11px;margin-left:auto;">🔒 锁定设计器</button></div>
   <div id="view"></div>
 </div>
 
@@ -38,17 +38,24 @@ function deny(msg) {
 }
 async function gate() {
   const stored = localStorage.getItem(PWKEY);
+  // 本机已验证过：直接进，不再问
+  if (stored && localStorage.getItem("rpg2:designok") === stored) return true;
   if (!stored) {
     const p1 = prompt("首次使用：设置设计师口令（4 位以上）");
     if (!p1 || p1.length < 4) { deny("口令太短，未设置。刷新重试。"); return false; }
-    localStorage.setItem(PWKEY, await sha(p1));
-    alert("口令已设置。下次进入设计器需要输入它。");
+    const h = await sha(p1);
+    localStorage.setItem(PWKEY, h);
+    localStorage.setItem("rpg2:designok", h);
+    alert("口令已设置，这台设备已记住。下次直接进入；想锁定点右上角「锁定设计器」。");
     return true;
   }
   for (let i = 0; i < 3; i++) {
     const p = prompt("请输入设计师口令（第 " + (i + 1) + " 次）");
     if (p == null) { deny("已取消。"); return false; }
-    if ((await sha(p)) === stored) return true;
+    if ((await sha(p)) === stored) {
+      localStorage.setItem("rpg2:designok", stored);
+      return true;
+    }
   }
   deny("口令错误 3 次。");
   return false;
@@ -232,6 +239,12 @@ function refreshPreview() {
   if (last) last.outerHTML = previewHtml(editing);
   // 列表不变，不整页重绘以免输入框失焦
 }
+
+document.getElementById("btnLock").onclick = () => {
+  if (!confirm("锁定设计器？下次打开需要重新输入口令。")) return;
+  localStorage.removeItem("rpg2:designok");
+  location.reload();
+};
 
 if (await gate()) render();
 </script>
