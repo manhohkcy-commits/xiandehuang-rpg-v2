@@ -93,10 +93,11 @@ export function damage(st, atkId, defId, opts = {}) {
   // ✨ 增益：攻击提升（辅佐）
   const up = (atk.statuses || []).find((s) => s.key === "atkUp");
   if (up) raw *= 1 + (Number(up.v) || 0) / 100;
-  // 🎯 伤害类型加成（普攻/技能/必杀 × 物理/法术）
+  // 🎯 伤害类型加成（普攻/技能/必杀 × 物理/法术 × 近战/远程/法器）
   const kindPct = opts.kind === "normal" ? at.normalPct : opts.kind === "skill" ? at.skillPct : opts.kind === "ult" ? at.ultPct : 0;
   const typePct = opts.dmgType === "spell" ? at.spellPct : at.physPct;
-  raw *= 1 + ((Number(kindPct) || 0) + (Number(typePct) || 0)) / 100;
+  const stylePct = opts.style === "ranged" ? at.rangedPct : opts.style === "focus" ? at.focusPct : at.meleePct;
+  raw *= 1 + ((Number(kindPct) || 0) + (Number(typePct) || 0) + (Number(stylePct) || 0)) / 100;
   // 🗡️ 穿透：无视目标一部分减伤/格挡
   const reduce = (Number(def.dmgCut) || 0) + (Number(dt.block) || 0);
   const block = Math.max(0, Math.min(60, reduce - (Number(at.penetrate) || 0)));
@@ -108,8 +109,12 @@ export function damage(st, atkId, defId, opts = {}) {
   if (atk.__charged) { raw *= 1.6; atk.__charged = 0; }
   // 🩸 残血减伤：生命 <30% 时再乘一次
   if (def.hp <= (Number(def.maxHp) || 0) * 0.3) raw *= 1 - Math.min(60, Number(dt.lowHpCut) || 0) / 100;
-  // 🛡️ 防御 + 法抗共同减伤（法抗按 1.5 倍折算，避免纯法抗没收益）
-  const guard = (Number(def.def) || 0) + (Number(def.res) || 0) * 1.5;
+  // 🛡️ 防御 + 法抗共同减伤（法抗按 1.5 倍折算）；穿透按伤害类型削减对应部分
+  let gDef = Number(def.def) || 0;
+  let gRes = (Number(def.res) || 0) * 1.5;
+  if (opts.dmgType === "spell") gRes *= 1 - Math.min(80, Number(at.spellPen) || 0) / 100;
+  else gDef *= 1 - Math.min(80, Number(at.physPen) || 0) / 100;
+  const guard = gDef + gRes;
   raw *= 1 - Math.min(0.8, guard / (guard + 150));
   let dmg = Math.max(1, Math.round(raw));
   // 🛡️ 护盾先吸伤
