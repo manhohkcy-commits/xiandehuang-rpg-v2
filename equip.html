@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=f45f5a1c";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=81454047";
 import { itemBonus, baseBonus } from "./js/power.js?v=2bad05a4";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
@@ -41,8 +41,12 @@ function detail(it) {
   };
   const keys = Object.keys(NAMES).filter((k) => Number(b[k]) > 0);
   const mainBlock = mainKeys.length
-    ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' +
-      mainKeys.filter((k) => Number(b[k]) > 0).map(row).join("")
+    ? (() => {
+        const txt = mainKeys.filter((k) => Number(b[k]) > 0)
+          .map((k) => (NAMES[k] || k) + " +" + (Math.round(Number(b[k]) * 10) / 10) + (UNITS[k] || "")).join(" · ");
+        return txt ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' +
+          '<div class="hint" style="color:#ffd666;line-height:1.7;">' + txt + '</div>' : "";
+      })()
     : "";
   const groups = [
     { t: "基础与加成", ks: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },

@@ -6,7 +6,7 @@ export const STAGE_READY = false;
 export const SLOT_BASE = {
   weapon: { atk: 40 },
   armor: { hp: 220, def: 18, res: 14 },
-  accessory: { atk: 8, hp: 60, def: 4, res: 10, spd: 2 }
+  accessory: { atk: 6, hp: 50, spd: 1 }
 };
 export const WEAPONS = [
   // ── R 阶（新手档）：只有普攻 + 必杀，没有技能 ──────────
