@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=8b89ef2b";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=6b74efd5";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=cfcf255e";
 import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2bad05a4";
-import { GRADE, APTITUDE } from "./js/data.js?v=6b74efd5";
+import { GRADE, APTITUDE } from "./js/data.js?v=cfcf255e";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
@@ -1369,6 +1369,17 @@ function openInherit(fromId) {
   });
 }
 
+// 🍱 战前准备文案
+function buffText(meal) {
+  const b = (meal && meal.buff) || {};
+  const p = [];
+  if (b.hpPct) p.push("生命 +" + b.hpPct + "%");
+  if (b.atkPct) p.push("攻击 +" + b.atkPct + "%");
+  if (b.defPct) p.push("防御 +" + b.defPct + "%");
+  if (b.spd) p.push("速度 +" + b.spd);
+  return p.join(" · ") || "无加成";
+}
+
 function renderShop() {
   const tab = window.__shopTab || "gear";
   const shelf = shelfItems(store);
@@ -1387,9 +1398,18 @@ function renderShop() {
     '</div>';
 
   const storeHtml = tabBar +
+    (store.flags && store.flags.meal
+      ? '<div class="card"><div class="card-title">🍱 已准备</div><div class="hint">' + esc(store.flags.meal.name) + '：' + buffText(store.flags.meal) + '（下一场战斗生效）</div></div>'
+      : "") +
     card("🏪 便利店 · 日常补给",
-      CONSUMABLES.map((p) => '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">' + esc(p.desc) + '</div></span>' +
-        '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button></span></div>').join("")) +
+      CONSUMABLES.map((p) => {
+        const own = Number((store.flags || {})[p.id]) || 0;
+        return '<div class="row"><span class="k">' + esc(p.name) + ' <span class="hint">持有 ' + own + '</span>' +
+          '<div class="hint">' + esc(p.desc) + '</div></span>' +
+          '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button>' +
+          (p.meal && own > 0 ? ' <button data-eat="' + p.id + '" style="border-color:#7ee787;color:#7ee787;">食用</button>' : '') +
+          '</span></div>';
+      }).join("")) +
     card("📜 杂货 · 资历材料",
       '<div class="row"><span class="k">资历手稿<div class="hint">资历晋升用</div></span><span class="v"><span style="color:#ffd666;">350 金</span> <button data-buy="material:manuscript">购买</button></span></div>' +
       '<div class="row"><span class="k">资质鉴定勋章<div class="hint">资质评估用</div></span><span class="v"><span style="color:#ffd666;">600 金</span> <button data-buy="material:medal">购买</button></span></div>' +
@@ -1416,6 +1436,19 @@ function renderShop() {
   view().querySelectorAll("[data-shoptab]").forEach((b) => b.onclick = () => {
     window.__shopTab = b.dataset.shoptab;
     render();
+  });
+
+  view().querySelectorAll("[data-eat]").forEach((b) => b.onclick = async () => {
+    const p = CONSUMABLES.find((x) => x.id === b.dataset.eat);
+    if (!p || !p.meal) return;
+    store.flags = store.flags || {};
+    const own = Number(store.flags[p.id]) || 0;
+    if (own <= 0) return toast("还没买", true);
+    store.flags[p.id] = own - 1;
+    store.flags.meal = { id: p.id, name: p.name, buff: p.meal };
+    addReceipt(store, "便利店", "食用 " + p.name, { note: "战前准备" });
+    await save(); render();
+    toast("🍱 已准备：" + p.name + "（下一场生效）");
   });
 
   view().querySelectorAll("[data-sellshop]").forEach((b) => b.onclick = async () => {

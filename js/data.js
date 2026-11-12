@@ -76,13 +76,13 @@ export const STAGES = [
     drop: { shards: [120, 160], stone: [48, 66], gearChance: 100, manuscript: 15, medal: 4, medalChance: 100 } }
 ];
 export const CONSUMABLES = [
-  { id: "p_hp", name: "伤药", desc: "战斗外回 300 生命", price: 120 },
+  { id: "p_hp", name: "伤药", desc: "战前吃：生命 +8%", price: 120, meal: { hpPct: 8 } },
   { id: "p_stone", name: "强化石", desc: "装备强化材料", price: 60 },
-  // 🏪 便利店日常货
-  { id: "p_rice", name: "饭团", desc: "便宜管饱，垫肚子用", price: 30 },
-  { id: "p_bento", name: "便当", desc: "热乎的，吃完有力气", price: 90 },
-  { id: "p_coffee", name: "罐装咖啡", desc: "提神，熬夜必备", price: 60 },
-  { id: "p_bandage", name: "绷带", desc: "简单包扎一下", price: 40 }
+  // 🏪 便利店日常货（战前准备：下一场战斗生效）
+  { id: "p_rice", name: "饭团", desc: "战前吃：生命 +5%", price: 30, meal: { hpPct: 5 } },
+  { id: "p_bento", name: "便当", desc: "战前吃：生命 +10% · 攻击 +5%", price: 90, meal: { hpPct: 10, atkPct: 5 } },
+  { id: "p_coffee", name: "罐装咖啡", desc: "战前喝：攻击 +8% · 速度 +1", price: 60, meal: { atkPct: 8, spd: 1 } },
+  { id: "p_bandage", name: "绷带", desc: "战前缠：防御 +6%", price: 40, meal: { defPct: 6 } }
 ];
 export const tier = (lv) => (lv <= 50 ? 1 : (lv <= 100 ? 2 : 4));
 export const CULT = {

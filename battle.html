@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=8b89ef2b";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR } from "./js/data.js?v=6b74efd5";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR } from "./js/data.js?v=cfcf255e";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=22282a49";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2bad05a4";
@@ -328,6 +328,19 @@ function startBattle(stageId) {
   st = createBattle(units);
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
+  // 🍱 战前准备：便利店的食物，下一场生效
+  const meal = store.flags && store.flags.meal;
+  if (meal && !playOrig) {
+    const b = meal.buff || {};
+    const u = st.units.find((x) => x.id === "me");
+    if (u) {
+      u.hp = Math.round(u.hp * (1 + (b.hpPct || 0) / 100)); u.maxHp = u.hp;
+      u.atk = Math.round(u.atk * (1 + (b.atkPct || 0) / 100));
+      u.def = Math.round(u.def * (1 + (b.defPct || 0) / 100));
+      u.spd = Math.round((u.spd + (b.spd || 0)) * 10) / 10;
+      st.__meal = meal.name;
+    }
+  }
   // 🤝 同行队伍：最多 5 名友方原创角色，作为独立单位（默认托管）
   const party = partyIds().map((id) => ORIGINALS.find((o) => o.id === id)).filter((o) => o && o.camp === "ally").slice(0, 5);
   if (party.length) {
@@ -355,6 +368,7 @@ function startBattle(stageId) {
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
+  if (st.__meal) pushLog("🍱 战前准备：" + st.__meal + " 生效（本场）", "line");
   renderBattle();
   aiTurnIfNeeded();
 }
@@ -948,7 +962,9 @@ function finish() {
   const ch = activeChar();
   if (!st || !st.finished || st.__done) return;
   st.__done = true;
-  if (st.winner !== "A") { pushLog("💀 战斗失败"); return; }
+  // 🍱 战前准备：吃完这场就没了（胜败都清）
+  if (st.__meal) { store.flags = store.flags || {}; store.flags.meal = null; }
+  if (st.winner !== "A") { pushLog("💀 战斗失败"); save(); return; }
   // 🧬 用原创角色出战：经验只给这个原创角色，不动玩家存档
   if (st.__origId) {
     const o = ORIGINALS.find((x) => x.id === st.__origId);
