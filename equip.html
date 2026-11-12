@@ -111,31 +111,40 @@ function render() {
     '<span style="width:8px;"></span><span class="hint" style="font-size:10.5px;">部位</span>' +
     chip("part", "all", "全部") + chip("part", "top", "上装") + chip("part", "bottom", "下装") +
     '</div></div>';
+  const RANK = { UR: 4, SSR: 3, SR: 2, R: 1 };
+  const CAT_TAG = { weapon: "⚔️ 武器", armor: "🛡️ 防具", accessory: "💍 饰品" };
+  const flat = list
+    .filter((x) => F.cat === "all" || x.cat === F.cat)
+    .filter((x) => byRarity(x.data)).filter((x) => byPart(x.data))
+    .sort((a, b) => (RANK[b.data.rarity] || 0) - (RANK[a.data.rarity] || 0) || String(a.data.name).localeCompare(String(b.data.name), "zh"));
+  const order = ["UR", "SSR", "SR", "R"].filter((r) => flat.some((x) => x.data.rarity === r));
+
   document.getElementById("view").innerHTML =
     card("📚 装备图鉴",
-      '<div class="hint">当前全部装备（' + list.length + ' 件）。点任意一件查看完整属性与招式。</div>') +
+      '<div class="hint">当前全部装备（' + list.length + ' 件）。按品质从高到低排列，点任意一件查看完整属性与招式。</div>') +
     bar +
-    groups.filter((g) => shown(g.cat)).map((g) => {
-      const rows = g.list.filter(byRarity).filter(byPart);
-      return card(g.title + "（" + rows.length + "）",
-        rows.length
-          ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px;">' +
-            rows.map((d) => {
-              const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
-              const b = itemBonus({ cat: g.cat, data: d });
-              const mk = mainKeysOf({ cat: g.cat, data: d });
+    (order.length
+      ? order.map((r) => {
+          const rc = RARITY_COLOR[r] || "#8a8ab0";
+          const rows = flat.filter((x) => x.data.rarity === r);
+          return card('<span style="color:' + rc + ';">' + r + '</span> 品质（' + rows.length + '）',
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px;">' +
+            rows.map((x) => {
+              const d = x.data;
+              const b = itemBonus({ cat: x.cat, data: d });
+              const mk = mainKeysOf({ cat: x.cat, data: d });
               const mainTxt = statText(b, mk);
               const subTxt = statText(b, Object.keys(b).filter((k) => mk.indexOf(k) < 0));
-              return '<button data-i="' + list.findIndex((x) => x.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
+              return '<button data-i="' + list.findIndex((y) => y.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
                 '<div style="font-size:13px;font-weight:700;color:' + rc + ';">' + d.name + '</div>' +
-                '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") +
+                '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (CAT_TAG[x.cat] || "") +
                 (d.part ? ' · ' + (d.part === "bottom" ? "下装" : "上装") : "") + '</div>' +
                 (mainTxt ? '<div style="font-size:10px;color:#ffd666;margin-top:5px;line-height:1.4;">主　' + mainTxt + '</div>' : '') +
                 (subTxt ? '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;line-height:1.4;">副　' + subTxt + '</div>' : '') +
                 '</button>';
-            }).join("") + '</div>'
-          : '<div class="hint">这个条件下没有装备</div>');
-    }).join("");
+            }).join("") + '</div>');
+        }).join("")
+      : '<div class="card"><div class="hint">这个条件下没有装备</div></div>');
 }
 
 render();
