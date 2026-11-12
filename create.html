@@ -22,7 +22,7 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV } from "./js/data.js";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY } from "./js/data.js";
 import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
@@ -251,10 +251,13 @@ function buildCreateScreen() {
     '<div class="g-row"><span class="g-k">姓　　名</span><div class="g-v"><input class="g-in" id="cName" maxlength="16" placeholder="请填写（最多 16 字）" value="' + esc(state.name) + '"></div></div>' +
     '<div class="g-row"><span class="g-k">申请类别</span><div class="g-v">新入会 · 初始装备三件 · 属性自行申报</div></div>' +
 
-    '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
-    pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => "「" + (x.sName || "—") + "」" + (x.sMult || 150) + "%") +
-    pickRow("armor", "防　具", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
-    pickRow("acc", "饰　品", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : "")) +
+    (CONTENT_READY
+      ? '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
+        pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => "「" + (x.sName || "—") + "」" + (x.sMult || 150) + "%") +
+        pickRow("armor", "防　具", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
+        pickRow("acc", "饰　品", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : ""))
+      : '<div class="g-sec">二、初始装备</div>' +
+        '<div class="g-row"><span class="g-k">装　备</span><div class="g-v">内容待定，先由协会配发默认装备</div></div>') +
 
     '<div class="g-sec">三、属性申报（基础 ' + BIRTH.basicPoints + ' 点 / 专精 ' + BIRTH.specPoints + ' 点）</div>' +
     '<div class="g-row"><span class="g-k">参考模板</span><div class="g-v g-picks">' +
