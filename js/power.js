@@ -78,8 +78,8 @@ export function itemBonus(it) {
   const rm = RARITY_MULT[d.rarity] || 1;
   // 🔥 UR 觉醒火数：1🔥 = SSR5★ 强度，之后每 🔥 +8%
   const fireMul = d.rarity === "UR" ? 1 + 0.08 * ((Number(d.fire) || 1) - 1) : 1;
-  // ⬆️ 升阶印记：每升阶/觉醒一次 +5%（按实际次数，不设上限）
-  const upMul = 1 + 0.05 * (Number(d.ups) || 0);
+  // ⬆️ 升阶印记：每升阶/觉醒一次 +8%（按实际次数，不设上限）
+  const upMul = 1 + 0.08 * (Number(d.ups) || 0);
   // ⛰ 强化突破节点：每过一个 +5% 主属性/副属性
   const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
   const breakMul = 1 + 0.05 * breakN;
