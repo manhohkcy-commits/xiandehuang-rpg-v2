@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=8b89ef2b";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=142a4767";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=6b74efd5";
 import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2bad05a4";
-import { GRADE, APTITUDE } from "./js/data.js?v=142a4767";
+import { GRADE, APTITUDE } from "./js/data.js?v=6b74efd5";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
@@ -1370,6 +1370,7 @@ function openInherit(fromId) {
 }
 
 function renderShop() {
+  const tab = window.__shopTab || "gear";
   const shelf = shelfItems(store);
   const grp = (title, cat, list) => card(title, list.map((d) => {
     const price = SHOP_PRICE[cat][d.rarity] || 500;
@@ -1380,18 +1381,26 @@ function renderShop() {
       '</span></div>';
   }).join("") || '<div class="hint">今天的货架空了</div>');
 
-  view().innerHTML =
-    '<div class="card" style="padding:10px 12px;"><div style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<span style="font-size:11px;color:#8a8ab0;">🏪 今日货架（每天 0 点换新，卖完就没有）</span>' +
-      '<span style="font-size:11px;color:#6a6a86;">' + dayKey() + '</span></div></div>' +
-    grp("⚔️ 武器", "weapon", shelf.weapons) + grp("🛡️ 防具", "armor", shelf.armors) + grp("💍 饰品", "accessory", shelf.accessories) +
-    card("💰 补给", CONSUMABLES.map((p) => '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">' + esc(p.desc) + '</div></span>' +
-      '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button></span></div>').join("")) +
-    card("📜 资历材料",
+  const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
+    '<button data-shoptab="store"' + (tab === "store" ? ' class="on"' : '') + '>🏪 便利店</button>' +
+    '<button data-shoptab="gear"' + (tab === "gear" ? ' class="on"' : '') + '>⚔️ 装备店</button>' +
+    '</div>';
+
+  const storeHtml = tabBar +
+    card("🏪 便利店 · 日常补给",
+      CONSUMABLES.map((p) => '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">' + esc(p.desc) + '</div></span>' +
+        '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button></span></div>').join("")) +
+    card("📜 杂货 · 资历材料",
       '<div class="row"><span class="k">资历手稿<div class="hint">资历晋升用</div></span><span class="v"><span style="color:#ffd666;">350 金</span> <button data-buy="material:manuscript">购买</button></span></div>' +
       '<div class="row"><span class="k">资质鉴定勋章<div class="hint">资质评估用</div></span><span class="v"><span style="color:#ffd666;">600 金</span> <button data-buy="material:medal">购买</button></span></div>' +
-      '<div class="hint">持有：手稿 ' + Number((store.flags || {}).manuscript || 0) + ' · 勋章 ' + Number((store.flags || {}).medal || 0) + '</div>') +
-    card("♻️ 出售（把仓库里的装备换成金币）",
+      '<div class="hint">持有：手稿 ' + Number((store.flags || {}).manuscript || 0) + ' · 勋章 ' + Number((store.flags || {}).medal || 0) + '</div>');
+
+  const gearHtml = tabBar +
+    '<div class="card" style="padding:10px 12px;"><div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<span style="font-size:11px;color:#8a8ab0;">⚔️ 今日货架（每天 0 点换新，卖完就没有）</span>' +
+      '<span style="font-size:11px;color:#6a6a86;">' + dayKey() + '</span></div></div>' +
+    grp("⚔️ 武器", "weapon", shelf.weapons) + grp("🛡️ 防具", "armor", shelf.armors) + grp("💍 饰品", "accessory", shelf.accessories) +
+    card("♻️ 回收（把仓库里的装备换成金币）",
       (store.items || []).length
         ? (store.items || []).map((it) => {
             const d = it.data || {};
@@ -1402,6 +1411,12 @@ function renderShop() {
               '</span></div>';
           }).join("")
         : '<div class="hint">仓库里没有可卖的东西</div>');
+
+  view().innerHTML = tab === "store" ? storeHtml : gearHtml;
+  view().querySelectorAll("[data-shoptab]").forEach((b) => b.onclick = () => {
+    window.__shopTab = b.dataset.shoptab;
+    render();
+  });
 
   view().querySelectorAll("[data-sellshop]").forEach((b) => b.onclick = async () => {
     const it = findItem(store, b.dataset.sellshop);

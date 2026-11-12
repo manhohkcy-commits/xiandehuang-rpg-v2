@@ -77,7 +77,12 @@ export const STAGES = [
 ];
 export const CONSUMABLES = [
   { id: "p_hp", name: "伤药", desc: "战斗外回 300 生命", price: 120 },
-  { id: "p_stone", name: "强化石", desc: "装备强化材料", price: 60 }
+  { id: "p_stone", name: "强化石", desc: "装备强化材料", price: 60 },
+  // 🏪 便利店日常货
+  { id: "p_rice", name: "饭团", desc: "便宜管饱，垫肚子用", price: 30 },
+  { id: "p_bento", name: "便当", desc: "热乎的，吃完有力气", price: 90 },
+  { id: "p_coffee", name: "罐装咖啡", desc: "提神，熬夜必备", price: 60 },
+  { id: "p_bandage", name: "绷带", desc: "简单包扎一下", price: 40 }
 ];
 export const tier = (lv) => (lv <= 50 ? 1 : (lv <= 100 ? 2 : 4));
 export const CULT = {
