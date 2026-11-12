@@ -15,7 +15,7 @@
 
 <script type="module">
 import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js";
-import { itemBonus } from "./js/power.js";
+import { itemBonus, baseBonus } from "./js/power.js";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
 const NAMES = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", atkPct: "攻击加成", hpPct: "生命加成", defPct: "防御加成", resPct: "法抗加成", ragePct: "怒气获取", dmgCut: "减伤", thorns: "反伤", str: "力量", intel: "智力", tech: "技巧", agi: "敏捷", strPct: "力量加成", intelPct: "智力加成", techPct: "技巧加成", agiPct: "敏捷加成", physPct: "物理伤害", spellPct: "法术伤害", normalPct: "普攻伤害", skillPct: "技能伤害", ultPct: "必杀伤害", physPen: "物理穿透", spellPen: "法术穿透", meleePct: "近战伤害", rangedPct: "远程伤害", focusPct: "法器伤害", cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", penetrate: "穿透", doubleStrike: "连击", chase: "追击", counter: "反击", dualborn: "双生", charge: "蓄势", reverse: "逆流", fate: "天命", splash: "溅射", stun: "眩晕", silence: "沉默", freeze: "冰冻", noheal: "禁疗", disarm: "缴械", taunt: "嘲讽", purify: "净化" };
@@ -23,12 +23,14 @@ const UNITS = { critRate: "%", critDmg: "%", atkPct: "%", hpPct: "%", defPct: "%
 const FLAGS = new Set(["reverse", "fate", "charge", "taunt"]);
 
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
-const statText = (b) => Object.keys(NAMES).filter((k) => Number(b[k]) > 0).slice(0, 4)
-  .map((k) => NAMES[k] + " +" + (Math.round(Number(b[k]) * 10) / 10) + (UNITS[k] || "")).join(" · ");
+const statText = (b, only) => Object.keys(b).filter((k) => only.indexOf(k) >= 0 && Number(b[k]) > 0)
+  .map((k) => (NAMES[k] || k) + " +" + (Math.round(Number(b[k]) * 10) / 10) + (UNITS[k] || "")).join(" · ");
 
 function detail(it) {
   const d = it.data;
   const b = itemBonus(it);
+  const bb = baseBonus(it.cat, d.rarity);
+  const mainKeys = Object.keys(bb);
   const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
   const styleText = d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "";
   const meta = [styleText, d.dmgType === "spell" ? "法术" : "物理"].filter(Boolean).join(" · ");
@@ -38,13 +40,17 @@ function detail(it) {
     return '<div class="row"><span class="k">' + NAMES[k] + '</span><span class="v" style="color:' + rc + ';">' + val + '</span></div>';
   };
   const keys = Object.keys(NAMES).filter((k) => Number(b[k]) > 0);
+  const mainBlock = mainKeys.length
+    ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' +
+      mainKeys.filter((k) => Number(b[k]) > 0).map(row).join("")
+    : "";
   const groups = [
     { t: "基础与加成", ks: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },
     { t: "专精", ks: ["str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"] },
     { t: "伤害类型", ks: ["physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"] },
     { t: "战斗词条", ks: keys.filter((k) => !["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct", "physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"].includes(k)) }
   ].map((g) => {
-    const ks = g.ks.filter((k) => Number(b[k]) > 0);
+    const ks = g.ks.filter((k) => Number(b[k]) > 0 && mainKeys.indexOf(k) < 0);
     return ks.length ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">' + g.t + '</div>' + ks.map(row).join("") : "";
   }).join("");
 
@@ -65,6 +71,7 @@ function detail(it) {
       ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + '</span></div>' +
     (meta ? '<div class="hint">' + meta + '</div>' : '') +
     (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + d.desc + '</div>' : '') +
+    mainBlock +
     (groups || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
     skill +
     '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
@@ -92,10 +99,16 @@ document.getElementById("view").innerHTML =
     g.list.map((d) => {
       const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
       const b = itemBonus({ cat: g.cat, data: d });
+      const bb = baseBonus(g.cat, d.rarity);
+      const mk = Object.keys(bb);
+      const mainTxt = statText(b, mk);
+      const subTxt = statText(b, Object.keys(b).filter((k) => mk.indexOf(k) < 0));
       return '<button data-i="' + list.findIndex((x) => x.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
         '<div style="font-size:13px;font-weight:700;color:' + rc + ';">' + d.name + '</div>' +
         '<div style="font-size:9.5px;letter-spacing:1px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") + '</div>' +
-        '<div style="font-size:10px;color:#9aa4b8;margin-top:5px;line-height:1.4;">' + (statText(b) || "—") + '</div></button>';
+        (mainTxt ? '<div style="font-size:10px;color:#ffd666;margin-top:5px;line-height:1.4;">主　' + mainTxt + '</div>' : '') +
+        (subTxt ? '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;line-height:1.4;">副　' + subTxt + '</div>' : '') +
+        '</button>';
     }).join("") + '</div>')).join("");
 
 document.getElementById("view").addEventListener("click", (e) => {

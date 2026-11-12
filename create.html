@@ -23,7 +23,7 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js";
-import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
+import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
 
@@ -202,8 +202,12 @@ function showItemDetail(it) {
     { title: "战斗词条", keys: ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "block", "tenacity", "lowHpCut", "statusPower", "statusHit", "statusResist", "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash", "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"] }
   ];
   const val = (k, v) => (Math.round((Number(v) || 0) * 10) / 10) + (ITEM_UNITS[k] || "");
+  const mainKeys = Object.keys(baseBonus(it.cat, d.rarity));
+  const mainRows = mainKeys.filter((k) => Number(b[k]) > 0).map((k) =>
+    '<div class="row"><span class="k">' + (ITEM_NAMES[k] || k) + '</span><span class="v" style="color:#ffd666;">+' + val(k, b[k]) + '</span></div>').join("");
+  const mainHtml = mainRows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' + mainRows : "";
   const groupsHtml = GROUPS.map((g) => {
-    const rows = g.keys.filter((k) => Number(b[k]) > 0).map((k) => {
+    const rows = g.keys.filter((k) => Number(b[k]) > 0 && mainKeys.indexOf(k) < 0).map((k) => {
       const mine = Number(b[k]) || 0;
       let cmp = "";
       if (cb) {
@@ -239,6 +243,7 @@ function showItemDetail(it) {
       ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
     '<div class="hint">' + meta + (cur ? '　|　对比：' + esc(cur.name || "当前装备") : '　|　未装备同类') + '</div>' +
     (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + esc(d.desc) + '</div>' : '') +
+    mainHtml +
     (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
     skill +
     '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +

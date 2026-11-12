@@ -55,6 +55,15 @@ export function talentSpentInBranch(ch, treeId, branchId) {
   return b ? b.nodes.filter((x) => pts[x.id]).length : 0;
 }
 
+// 🧱 部位基础属性（主属性）：每件装备天生自带，随稀有度放大
+export function baseBonus(cat, rarity) {
+  const base = SLOT_BASE[cat] || {};
+  const rm = RARITY_MULT[rarity] || 1;
+  const out = {};
+  Object.keys(base).forEach((k) => { out[k] = Math.round((Number(base[k]) || 0) * rm * 10) / 10; });
+  return out;
+}
+
 export function itemBonus(it) {
   if (!it || !it.data) return {};
   const d = it.data;
