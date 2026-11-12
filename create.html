@@ -660,8 +660,8 @@ function renderTalent() {
       const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
       const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
       return '<td style="padding:2px;">' +
-        '<button data-tp="' + n.id + '" style="width:100%;height:44px;padding:1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
-        (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';" ' + (can ? '' : 'disabled') + '>' +
+        '<button ' + (can ? 'data-tp="' + n.id + '"' : 'data-prev="' + n.id + '"') + ' style="width:100%;height:44px;padding:1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
+        (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';cursor:pointer;" title="点击预览">' +
         '<span style="font-size:12px;line-height:1;">' + mark + '</span>' +
         '<span style="font-size:8.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + n.name + '</span></button></td>';
     }).join("");
@@ -707,7 +707,7 @@ function renderTalent() {
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
     ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span></div>' +
-    '<div class="hint">天赋 Lv5 开放；分支 Lv5 / 30 / 60 解锁，14 阶按 Lv5→97 逐级开放；每条链要顺着点。</div>' +
+    '<div class="hint">天赋 Lv5 开放；分支 Lv5 / 30 / 60 解锁，14 阶每 5 级开放一阶（Lv5→70）；每条链要顺着点，未解锁的节点可以点开预览。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
     (actRow ? actRow : '') + '</div>' +
     '<div class="card"><div class="card-title">📜 天赋链详情</div>' + detail + '</div>';
@@ -722,6 +722,41 @@ function renderTalent() {
     window.__talentTree = b.dataset.tree;
     render();
   });
+
+  // 🔍 节点预览：未解锁也能点开看效果
+  const previewNode = (id) => {
+    const node = allNodes.find((n) => n.id === id);
+    if (!node) return;
+    const t = TALENT_TREES.find((x) => x.id === node.tree);
+    let br = null, idx = -1;
+    (t.branches || []).forEach((b) => {
+      const i = b.nodes.findIndex((n) => n.id === node.id);
+      if (i >= 0) { br = b; idx = i; }
+    });
+    const need = node.unlockLv != null ? node.unlockLv : (TALENT_TIER_LV[idx] || 1);
+    const has = !!ch.talent.points[node.id];
+    const lvOk = (Number(ch.lv) || 1) >= need;
+    const bSpent = br ? talentSpentInBranch(ch, t.id, br.id) : 0;
+    const chainOk = idx <= 0 || !!(br && ch.talent.points[br.nodes[idx - 1].id]);
+    const ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
+    ov.innerHTML = '<div class="card" style="width:min(420px,92vw);margin:0;border-color:' + t.color + ';">' +
+      '<div class="card-title" style="color:' + t.color + ';font-size:15px;">' + node.name +
+        ' <span class="tag" style="color:' + t.color + ';border-color:' + t.color + ';">' + t.role + '</span></div>' +
+      '<div class="hint">' + t.name + ' · ' + (br ? br.name + ' · 第 ' + (idx + 1) + ' 阶' : '主动技') +
+        '　|　需要 Lv' + need + '</div>' +
+      '<div class="hint" style="margin-top:8px;color:#eaeaea;">' + effText(node.eff) + '</div>' +
+      (node.mech ? '<div class="hint" style="margin-top:6px;color:#ffd666;">⚙ 第 14 阶机制：' + (br && br.style ? br.style : '专属效果') + '</div>' : '') +
+      '<div class="hint" style="margin-top:8px;">' + (has ? '状态：已学会' :
+        (!lvOk ? '状态：未解锁（还差 ' + (need - (Number(ch.lv) || 1)) + ' 级）' :
+         (!chainOk ? '状态：要先点前一阶' :
+          (bSpent < idx ? '状态：本链要先点满 ' + idx + ' 个节点' : '状态：可以学习')))) + '</div>' +
+      '<div style="margin-top:10px;"><button id="pvClose" style="width:100%;">关闭</button></div></div>';
+    document.body.appendChild(ov);
+    ov.querySelector("#pvClose").onclick = () => ov.remove();
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  };
+  view().querySelectorAll("[data-prev]").forEach((b) => b.onclick = () => previewNode(b.dataset.prev));
 
   view().querySelectorAll("[data-tp]").forEach((b) => b.onclick = async () => {
     const node = allNodes.find((n) => n.id === b.dataset.tp);
