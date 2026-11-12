@@ -206,74 +206,77 @@ function createCharacter(name, weaponId, armorId, accId, attrs, basic) {
   });
 }
 
-function buildCreateScreen() {
+function ccState() {
   const D = { name: "", weapon: WEAPONS[0].id, armor: ARMORS[0].id, acc: ACCESSORIES[0].id,
     str: 0, agi: 0, intel: 0, tech: 0, hp: 0, atk: 0, def: 0, res: 0 };
-  const state = Object.assign({}, D, window.__cc || {});
-  window.__cc = state;
+  window.__cc = Object.assign({}, D, window.__cc || {});
+  return window.__cc;
+}
+
+// 📜 建角：冒险者协会「入会登记表」（一页填完，交表盖章）
+function buildCreateScreen() {
+  const state = ccState();
   const free = () => BIRTH.specPoints - (state.str + state.agi + state.intel + state.tech);
   const basicFree = () => BIRTH.basicPoints - (state.hp + state.atk + state.def + state.res);
-  const basicRow = (k, label) => '<div class="row"><span class="k">' + label + '（' + state[k] + ' 点 → +' + (state[k] * BIRTH.basicPct) + '%）</span><span class="v">' +
-    '<button class="mini" data-basic="' + k + ':-1" style="height:22px;padding:0 8px;" ' + (state[k] <= 0 ? 'disabled' : '') + '>−</button> ' +
-    '<button class="mini" data-basic="' + k + ':1" style="height:22px;padding:0 8px;" ' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? 'disabled' : '') + '>＋</button>' +
-    '</span></div>';
+  const hasChars = !!(store && store.chars && store.chars.length);
+  const dd = new Date();
+  const dateStr = dd.getFullYear() + " 年 " + (dd.getMonth() + 1) + " 月 " + dd.getDate() + " 日";
 
-  const pickCard = (list, cur, key, label, sub) =>
-    '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">' +
-    list.map((d) => {
-      const on = cur === d.id;
-      return '<button data-pick="' + key + ':' + d.id + '" style="text-align:left;padding:8px 10px;border-color:' + (on ? "#6ea8fe" : "#3a3a5c") + ';' +
-        'background:' + (on ? "#1b2740" : "#151523") + ';">' +
-        '<span style="font-weight:600;color:' + (on ? "#cfe6ff" : "#eaeaea") + ';">' + esc(d.name) + '</span> ' +
-        '<span class="tag">' + d.rarity + '</span>' +
-        '<div class="hint">' + sub(d) + '</div></button>';
-    }).join("") + '</div>';
+  const pickRow = (k, label, list, cur, sub) => '<div class="g-row"><span class="g-k">' + label + '</span><div class="g-v g-picks">' +
+    list.map((x) => {
+      const on = cur === x.id;
+      return '<button class="g-pick' + (on ? " on" : "") + '" data-pick="' + k + ':' + x.id + '">' +
+        (on ? "● " : "○ ") + esc(x.name) + '<span class="g-sub">' + sub(x) + '</span></button>';
+    }).join("") + '</div></div>';
 
-  const attr = (k, label) => '<div class="row"><span class="k">' + label + '</span><span class="v">' +
-    '<button class="mini" data-attr="' + k + ':-1" style="height:22px;padding:0 8px;" ' + (state[k] <= 0 ? 'disabled' : '') + '>−</button> ' +
-    state[k] + ' <button class="mini" data-attr="' + k + ':1" style="height:22px;padding:0 8px;" ' + (free() <= 0 ? 'disabled' : '') + '>＋</button>' +
-    '</span></div>';
+  const basicLine = (k, label) => '<div class="g-row"><span class="g-k">' + label + '</span><div class="g-v g-num">' +
+    '<button class="g-step" data-basic="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
+    '<span class="g-val">' + state[k] + '</span>' +
+    '<button class="g-step" data-basic="' + k + ':1"' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? " disabled" : "") + '>＋</button>' +
+    '<span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%</span></div></div>';
 
-  view().innerHTML =
-    '<div class="card"><div class="card-title">创建角色</div>' +
-      '<div class="row"><span class="k">名字</span><span class="v"><input id="cName" maxlength="16" placeholder="最多 16 字" value="' + esc(state.name) + '"></span></div>' +
-      '<div class="hint">决定你以后在战斗/排行榜里显示的名字，之后可改。</div>' +
-    '</div>' +
-    '<div class="card"><div class="card-title">初始武器（决定招式）</div>' +
-      pickCard(WEAPONS, state.weapon, "weapon", "武器", (d) => "招式「" + (d.sName || "—") + "」" + (d.sMult || 150) + "% · 冷却 " + (d.sCd || 2) + " 回合") +
-    '</div>' +
-    '<div class="card"><div class="card-title">初始防具 / 饰品</div>' +
-      '<div class="hint">防具</div>' + pickCard(ARMORS, state.armor, "armor", "防具", (d) => "减伤 " + (d.dmgCut || 0) + "%" + (d.thorns ? " · 反伤 " + d.thorns + "%" : "")) +
-      '<div class="hint" style="margin-top:10px;">饰品</div>' + pickCard(ACCESSORIES, state.acc, "acc", "饰品", (d) => (d.atkPct ? "攻击 +" + d.atkPct + "% " : "") + (d.critDmg ? "暴伤 +" + d.critDmg + "%" : "")) +
-    '</div>' +
-    '<div class="card"><div class="card-title">预设模型（一键套用，可再微调）</div>' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        PRESETS.map((p) => '<button data-preset="' + p.id + '" style="font-size:11.5px;padding:5px 10px;">' + p.name + '<div class="hint">' + p.role + '</div></button>').join("") +
-      '</div></div>' +
-    '<div class="card"><div class="card-title">基础四项（共 ' + (BIRTH.basicPoints) + ' 点 · 每点 +' + BIRTH.basicPct + '% · 单项上限 ' + BIRTH.basicCap + '）</div>' +
-      basicRow("hp", "生命") + basicRow("atk", "攻击") + basicRow("def", "防御") + basicRow("res", "法抗") +
-      '<div class="hint" style="margin-top:6px;">剩余点数：<b style="color:' + (basicFree() > 0 ? "#7ee787" : "#6a6a86") + ';">' + basicFree() + '</b></div>' +
-    '</div>' +
-    '<div class="card"><div class="card-title">专精四项（共 ' + (BIRTH.specPoints) + ' 点 · 每点 +' + BIRTH.specEffect.str + ' · 单项上限 ' + BIRTH.specCap + '）</div>' +
-      attr("str", "力量（近战伤害 +2/点）") + attr("intel", "智力（法术伤害 +2/点）") +
-      attr("tech", "技巧（远程伤害 +2/点）") + attr("agi", "敏捷（速度 +0.6/点）") +
-      '<div class="hint" style="margin-top:6px;">剩余点数：<b style="color:' + (free() > 0 ? "#7ee787" : "#6a6a86") + ';">' + free() + '</b></div>' +
-    '</div>' +
-    '<div class="card"><button id="btnCreate" style="width:100%;height:40px;border-color:#7ee787;color:#7ee787;" ' + ((free() < 0 || basicFree() < 0) ? 'disabled' : '') + '>✨ 创建角色</button></div>';
+  const specLine = (k, label) => '<div class="g-row"><span class="g-k">' + label + '</span><div class="g-v g-num">' +
+    '<button class="g-step" data-attr="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
+    '<span class="g-val">' + state[k] + '</span>' +
+    '<button class="g-step" data-attr="' + k + ':1"' + (free() <= 0 || state[k] >= BIRTH.specCap ? " disabled" : "") + '>＋</button>' +
+    '<span class="g-hint">' + (BIRTH.specEffect[k] ? "每点 +" + BIRTH.specEffect[k] : "") + '</span></div></div>';
 
-  const nameInput = $("cName");
-  nameInput.oninput = () => { state.name = nameInput.value; };
+  view().innerHTML = '<div class="gform">' +
+    '<div class="g-org">闲得慌 · 冒险者协会</div>' +
+    '<h1>入会登记表</h1>' +
+    '<div class="g-meta"><span>受理编号：' + esc(box) + '</span><span>登记日期：' + dateStr + '</span></div>' +
+
+    '<div class="g-sec">一、申请人信息</div>' +
+    '<div class="g-row"><span class="g-k">姓　　名</span><div class="g-v"><input class="g-in" id="cName" maxlength="16" placeholder="请填写（最多 16 字）" value="' + esc(state.name) + '"></div></div>' +
+    '<div class="g-row"><span class="g-k">申请类别</span><div class="g-v">新入会 · 初始装备三件 · 属性自行申报</div></div>' +
+
+    '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
+    pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => "「" + (x.sName || "—") + "」" + (x.sMult || 150) + "%") +
+    pickRow("armor", "防　具", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
+    pickRow("acc", "饰　品", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : "")) +
+
+    '<div class="g-sec">三、属性申报（基础 ' + BIRTH.basicPoints + ' 点 / 专精 ' + BIRTH.specPoints + ' 点）</div>' +
+    '<div class="g-row"><span class="g-k">参考模板</span><div class="g-v g-picks">' +
+      PRESETS.map((p) => '<button class="g-preset" data-preset="' + p.id + '">' + p.name + '</button>').join("") +
+    '</div></div>' +
+    basicLine("hp", "生　命") + basicLine("atk", "攻　击") + basicLine("def", "防　御") + basicLine("res", "法　抗") +
+    specLine("str", "力　量") + specLine("intel", "智　力") + specLine("tech", "技　巧") + specLine("agi", "敏　捷") +
+    '<div class="g-rest">基础剩余 <b>' + basicFree() + '</b> 点　·　专精剩余 <b>' + free() + '</b> 点' +
+      ((free() > 0 || basicFree() > 0) ? '（点「参考模板」可一键填满）' : '') + '</div>' +
+
+    '<div class="g-sec">四、申请人承诺</div>' +
+    '<div class="g-note">本人自愿加入闲得慌冒险者协会，遵守协会章程，如实申报属性。所填资料经协会盖章受理后生效；姓名与装备日后仍可更改，属性点可凭升级与突破继续追加。</div>' +
+
+    '<div class="g-actions">' +
+      (hasChars ? '<button class="g-cancel" id="ccCancel">取消</button>' : '') +
+      '<button class="g-submit" id="btnCreate">提交申请</button>' +
+    '</div>' +
+  '</div>';
+
+  if ($("cName")) $("cName").oninput = () => { state.name = $("cName").value; };
   view().querySelectorAll("[data-pick]").forEach((b) => b.onclick = () => {
     const [k, id] = b.dataset.pick.split(":");
     state[k] = id;
-    render();
-  });
-  view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = () => {
-    const [k, d] = b.dataset.attr.split(":");
-    const next = state[k] + Number(d);
-    if (next < 0 || next > BIRTH.specCap) return;
-    if (Number(d) > 0 && free() <= 0) return;
-    state[k] = next;
     render();
   });
   view().querySelectorAll("[data-basic]").forEach((b) => b.onclick = () => {
@@ -284,20 +287,45 @@ function buildCreateScreen() {
     state[k] = next;
     render();
   });
+  view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = () => {
+    const [k, d] = b.dataset.attr.split(":");
+    const next = state[k] + Number(d);
+    if (next < 0 || next > BIRTH.specCap) return;
+    if (Number(d) > 0 && free() <= 0) return;
+    state[k] = next;
+    render();
+  });
   view().querySelectorAll("[data-preset]").forEach((b) => b.onclick = () => {
     const p = PRESETS.find((x) => x.id === b.dataset.preset);
     if (!p) return;
     Object.assign(state, p.basic, p.spec);
     render();
+    toast("已套用：" + p.name);
   });
-  $("btnCreate").onclick = async () => {
-    const name = (state.name || "").trim() || "无名";
-    createCharacter(name, state.weapon, state.armor, state.acc,
-      { str: state.str, agi: state.agi, intel: state.intel, tech: state.tech },
-      { hp: state.hp, atk: state.atk, def: state.def, res: state.res });
-    window.__cc = null;
-    await save();
-    render();
+  if ($("ccCancel")) $("ccCancel").onclick = () => { window.__creating = 0; window.__cc = null; render(); };
+  if ($("btnCreate")) $("btnCreate").onclick = async () => {
+    const name = (state.name || "").trim();
+    if (!name) return toast("先填个名字再交表", true);
+    const left = free() + basicFree();
+    if (left > 0 && !confirm("还有 " + left + " 点没申报，直接交表吗？")) return;
+    const w = state.weapon, ar = state.armor, ac = state.acc;
+    const attrs = { str: state.str, agi: state.agi, intel: state.intel, tech: state.tech };
+    const basic = { hp: state.hp, atk: state.atk, def: state.def, res: state.res };
+    $("btnCreate").disabled = true;
+    // 盖章 → 归档
+    const wrap = document.createElement("div");
+    wrap.className = "g-stamp-wrap";
+    wrap.innerHTML = '<div class="g-stamp">已受理</div><div class="g-stamp-tip">受理编号 ' + esc(box) + ' · 正在归档…</div>';
+    document.body.appendChild(wrap);
+    setTimeout(async () => {
+      createCharacter(name, w, ar, ac, attrs, basic);
+      window.__cc = null;
+      window.__creating = 0;
+      await save();
+      wrap.remove();
+      render();
+      toast("🎉 「" + name + "」登记成功，欢迎加入协会");
+    }, 1000);
   };
 }
 
@@ -353,8 +381,8 @@ function gradeCard(ch) {
 
 function renderChar() {
   const ch = activeChar();
-  if (!ch) {
-    if (!window.__creating) window.__creating = 1;
+  if (!ch || window.__creating) {
+    window.__creating = 1;
     buildCreateScreen();
     return;
   }
@@ -365,6 +393,13 @@ function renderChar() {
   const spec = Math.round(((ch.str || 0) * CHAR.spec.str + (ch.agi || 0) * CHAR.spec.agi + (ch.intel || 0) * CHAR.spec.intel + (ch.tech || 0) * CHAR.spec.tech) * 10) / 10;
 
   view().innerHTML =
+    card("角色 · 可切换",
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+      store.chars.map((c) => '<button data-char="' + c.id + '" style="padding:6px 10px;border-color:' + (c.id === ch.id ? "#6ea8fe" : "#3a3a5c") + ';' +
+        'color:' + (c.id === ch.id ? "#cfe6ff" : "#eaeaea") + ';">' + (c.id === ch.id ? "● " : "") + esc(c.name) +
+        ' <span class="hint">Lv' + (c.lv || 1) + '</span></button>').join("") +
+      '<button id="btnNewChar" style="padding:6px 10px;border-color:#7ee787;color:#7ee787;">＋ 新建角色</button>' +
+      '</div>') +
     '<div class="card">' +
       '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + ch.lv + (ch.lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
@@ -391,6 +426,18 @@ function renderChar() {
     ch.name = nn.trim().slice(0, 16);
     addReceipt(store, "改名", ch.name);
     await save(); render();
+  };
+
+  view().querySelectorAll("[data-char]").forEach((b) => b.onclick = async () => {
+    if (b.dataset.char === ch.id) return;
+    store.activeChar = b.dataset.char;
+    await save();
+    render();
+  });
+  if ($("btnNewChar")) $("btnNewChar").onclick = () => {
+    window.__cc = null;
+    window.__creating = 1;
+    buildCreateScreen();
   };
 
   view().querySelectorAll("[data-grade]").forEach((b) => b.onclick = async () => {
