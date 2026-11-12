@@ -217,7 +217,7 @@ function showItemDetail(it) {
         ? '<div class="row"><span class="k">技能</span><span class="v">「' + esc(d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits : '') +
           ' · CD ' + (d.sCd || 2) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>' +
           (d.hitStatus ? '<div class="row"><span class="k">　└ 附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
-        : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶以上才有</span></div>')) +
+        : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶没有技能（SR 起才有）</span></div>')) +
     '<div class="row"><span class="k">必杀</span><span class="v">250% · 怒气满 100 时可用</span></div>';
 
   const meta = (d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "—") +
@@ -304,7 +304,7 @@ function buildCreateScreen() {
 
     (CONTENT_READY
       ? '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
-        pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => "「" + (x.sName || "—") + "」" + (x.sMult || 150) + "%") +
+        pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => x.sMult ? "「" + (x.sName || "—") + "」" + x.sMult + "%" : "无技能 · 普攻/必杀") +
         pickRow("armor", "防　具", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
         pickRow("acc", "饰　品", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : ""))
       : '<div class="g-sec">二、初始装备</div>' +

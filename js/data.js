@@ -9,24 +9,31 @@ export const SLOT_BASE = {
   accessory: { atk: 8, hp: 60, def: 4, res: 10, spd: 2 }
 };
 export const WEAPONS = [
-  // ── R 阶（新手档）────────────────────────────
-  { id: "w_iron", name: "铁剑", rarity: "R", sName: "斩击", sMult: 150, sCd: 2, sRage: 10, style: "melee", atk: 5,
+  // ── R 阶（新手档）：只有普攻 + 必杀，没有技能 ──────────
+  { id: "w_iron", name: "铁剑", rarity: "R", style: "melee", atk: 5,
     desc: "协会统一配发的制式长剑，没有花哨的机关，胜在称手耐造。" },
-  { id: "w_bow", name: "短弓", rarity: "R", sName: "连射", sMult: 180, sCd: 3, sRage: 10, style: "ranged", critRate: 2,
+  { id: "w_bow", name: "短弓", rarity: "R", style: "ranged", critRate: 2,
     desc: "轻便的猎弓，拉满一箭能扎穿皮甲，出手比近战慢半拍。" },
-  { id: "w_wood", name: "木法杖", rarity: "R", sName: "木灵弹", sMult: 145, sCd: 2, sRage: 10, dmgType: "spell", style: "focus", res: 5,
+  { id: "w_wood", name: "木法杖", rarity: "R", dmgType: "spell", style: "focus", res: 5,
     desc: "学徒用的橡木杖，能引出一小团木灵之力，法术伤害但不算高。" },
-  { id: "w_dagger", name: "短匕", rarity: "R", sName: "快刺", sMult: 120, sCd: 1, sRage: 8, style: "melee", spd: 2,
+  { id: "w_dagger", name: "短匕", rarity: "R", style: "melee", spd: 2,
     desc: "贴身短刀，伤害不高，但出手极快，适合抢节奏。" },
   // ── SR / SSR / UR ───────────────────────────
-  { id: "w_fire", name: "火石长刀", rarity: "SSR", sName: "火斩", sMult: 180, sCd: 3, sRage: 30, hitStatus: "burn", hitStatusV: 3, hitStatusTurns: 2, hitStatusName: "灼烧", dmgType: "spell", style: "melee" },
-  { id: "w_cross", name: "复合十字弩", rarity: "SR", sName: "穿甲箭", sMult: 165, sCd: 3, sRage: 15, style: "ranged" },
-  { id: "w_kusanagi", name: "草薙京", rarity: "UR", sName: "百式·鬼烧", sMult: 180, sCd: 2, sRage: 20, sHits: 3, style: "melee" },
+  { id: "w_fire", name: "火石长刀", rarity: "SSR", sName: "火斩", sMult: 180, sCd: 3, sRage: 30, hitStatus: "burn", hitStatusV: 3, hitStatusTurns: 2, hitStatusName: "灼烧", dmgType: "spell", style: "melee",
+    desc: "刃身嵌着火山石的厚背长刀，挥砍时会带出灼人的火气。" },
+  { id: "w_cross", name: "复合十字弩", rarity: "SR", sName: "穿甲箭", sMult: 165, sCd: 3, sRage: 15, style: "ranged",
+    desc: "军械坊改的连发弩，弩箭能咬进甲缝里。" },
+  { id: "w_kusanagi", name: "草薙京", rarity: "UR", sName: "百式·鬼烧", sMult: 180, sCd: 2, sRage: 20, sHits: 3, style: "melee",
+    desc: "传说中草薙家的名刀，刀光一起便是三连斩。" },
   // ✨ 辅佐系武器：招式不是伤害，而是治疗/护盾/增益/驱散
-  { id: "w_holy", name: "圣光法典", rarity: "SSR", sName: "治愈之光", sSupport: "heal", sHealPct: 25, sCd: 3, sRage: 25, style: "focus" },
-  { id: "w_aegis", name: "守护权杖", rarity: "SR", sName: "圣盾", sSupport: "shield", sShieldPct: 20, sCd: 3, sRage: 20, style: "focus" },
-  { id: "w_hymn", name: "战歌琴", rarity: "SSR", sName: "战歌", sSupport: "buff", sBuffPct: 25, sCd: 3, sRage: 20, style: "focus" },
-  { id: "w_purify", name: "净化铃", rarity: "SR", sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 2, sRage: 15, style: "focus" }
+  { id: "w_holy", name: "圣光法典", rarity: "SSR", sName: "治愈之光", sSupport: "heal", sHealPct: 25, sCd: 3, sRage: 25, style: "focus",
+    desc: "协会圣堂的抄本，翻页时能唤出柔和的光。" },
+  { id: "w_aegis", name: "守护权杖", rarity: "SR", sName: "圣盾", sSupport: "shield", sShieldPct: 20, sCd: 3, sRage: 20, style: "focus",
+    desc: "祈礼用的权杖，能把信仰凝成一面盾。" },
+  { id: "w_hymn", name: "战歌琴", rarity: "SSR", sName: "战歌", sSupport: "buff", sBuffPct: 25, sCd: 3, sRage: 20, style: "focus",
+    desc: "琴弦一响，同伴的血液就热起来。" },
+  { id: "w_purify", name: "净化铃", rarity: "SR", sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 2, sRage: 15, style: "focus",
+    desc: "摇一摇就能把身上的晦气抖落。" }
 ];
 export const ARMORS = [
   { id: "a_cloth", name: "粗布衣", rarity: "R", dmgCut: 2 },

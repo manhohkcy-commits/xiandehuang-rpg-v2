@@ -404,6 +404,8 @@ async function pullIntents() {
         // 每个单位用自己的武器判定招式（联机时不再是房主武器）
         const wp = wpOf(who.weapon || st.__weapon);
         const tr = who.traits || {};
+        // R 阶没有技能：技能指令直接忽略，按普攻处理
+        if (it.act === "skill" && !wp.sMult && !wp.sSupport) it.act = "normal";
         // ✨ 辅佐武器：招式位变成辅助（自动选血量最低的队友）
         if (it.act === "skill" && wp.sSupport) {
           const allies = st.units.filter((u) => u.alive !== false && u.side === who.side);
@@ -508,8 +510,8 @@ function renderBattle() {
       : '<div class="card"><div class="card-title">行动</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
           '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || !canUseNormal(m) ? 'disabled' : '') + '>⚔️ 普攻</button>' +
-          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 || !canUseSkill(m) ? 'disabled' : '') + '>' +
-            '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%')) + '</button>' +
+          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 || !canUseSkill(m) || (!wpOf(st.__weapon).sMult && !wpOf(st.__weapon).sSupport) ? 'disabled' : '') + '>' +
+            '🥋 ' + ((!wpOf(st.__weapon).sMult && !wpOf(st.__weapon).sSupport) ? "无技能" : (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%'))) + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 || isStunned(m) || isSilenced(m) ? 'disabled' : '') + '>' +
             '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' 250%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
           '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || isStunned(m) ? 'disabled' : '') + '>🛡️ 防御</button>' +
@@ -625,6 +627,7 @@ function doAct(kind) {
     addStatus(st, "me", "scd", 0, Number(wp.sCd) || 3, "辅助技CD");
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "skill") {
+    if (!wp.sMult && !wp.sSupport) return;
     const mult = Number(wp.sMult) || 150;
     const tr = m.traits || {};
     const baseCd = Number(wp.sCd) || 3;
