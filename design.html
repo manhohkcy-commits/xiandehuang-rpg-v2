@@ -3,147 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>闲得慌RPG v2 · 原创角色设计器</title>
+<title>闲得慌 · 原创角色设计器（主机端）</title>
 <link rel="stylesheet" href="css/app.css?v=d8dee059">
+<style>
+  .ofield{width:100%;background:#0b0e17;border:1px solid #3a2c14;border-radius:8px;color:#f3e6cf;padding:8px;font-family:inherit;font-size:13px;}
+  .ofield:focus{outline:none;border-color:#ffb347;}
+  .onum{width:70px;height:32px;text-align:center;background:#0b0e17;border:1px solid #3a2c14;border-radius:8px;color:#ffcf7a;font-weight:800;font-size:15px;}
+  .ogrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ostat{display:flex;justify-content:space-between;padding:5px 2px;border-bottom:1px dotted #2a2317;font-size:12.5px;}
+  .ostat b{color:#ffcf7a;}
+  .obadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;border:1px solid #6b4a1e;color:#ffcf7a;}
+</style>
 </head>
 <body>
 <div class="wrap">
   <div class="nav"><a href="studio.html">← 工作室</a><span class="tag" style="color:#ffcf7a;border-color:#6b4a1e;">主机端</span>
     <button id="btnLock" style="font-size:11px;margin-left:auto;">🔒 锁定</button></div>
   <div style="background:#2a1f10;border:1px solid #6b4a1e;color:#ffcf7a;padding:7px 12px;border-radius:8px;font-size:11.5px;margin-bottom:10px;">
-    🧑‍💻 <b>主机端 · 设计模式</b>　这里只改设计数据，不写玩家存档 / 排行榜
+    🧑‍💻 <b>主机端 · 设计模式</b>　只改设计数据，不写玩家存档 / 排行榜
   </div>
   <div id="view"></div>
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=142a4767";
-import { charFinal, powerOf } from "./js/power.js?v=2bad05a4";
+import { powerOf } from "./js/power.js?v=2bad05a4";
 
 const KEY = "rpg2:designs";
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-const ROLES = ["通用", "守护", "先锋", "游侠", "术士", "辅佐"];
-const DUTY = { 守护: "坦克 / 减伤", 先锋: "近战爆发", 游侠: "远程 / 速度", 术士: "法术 / 持续", 辅佐: "治疗 / 护盾", 通用: "自由定位" };
-
-// 🔒 设计师口令：首次进入设置，之后每次要输（只存哈希在本机）
 const PWKEY = "rpg2:designpw";
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = (id) => document.getElementById(id);
+
+// 🧬 原创角色统一模板（固定数值 + 加点上限）
+const ORIGIN = {
+  normal: {
+    label: "普通原创", fix: { atk: 72, hp: 600, def: 24, res: 18, spd: 11, critRate: 8, critDmg: 150 },
+    basicPoints: 60, basicCap: 60, specPoints: 36, specCap: 36
+  },
+  rare: {
+    label: "稀有原创", fix: { atk: 90, hp: 750, def: 30, res: 22, spd: 12, critRate: 10, critDmg: 160 },
+    basicPoints: 80, basicCap: 80, specPoints: 48, specCap: 48
+  }
+};
+const ROLES = ["通用", "守护", "先锋", "游侠", "术士", "辅佐", "首领"];
+
 async function sha(s) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("xd2|" + s));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 function deny(msg) {
-  document.getElementById("view").innerHTML =
-    '<div class="card"><div class="card-title">🔒 需要设计师口令</div>' +
-    '<div class="hint">' + esc(msg) + '</div>' +
-    '<div style="margin-top:10px;"><a href="index.html"><button>← 回首页</button></a></div></div>';
+  $("view").innerHTML = '<div class="card"><div class="card-title">🔒 需要设计师口令</div><div class="hint">' + esc(msg) + '</div>' +
+    '<div style="margin-top:10px;"><a href="index.html"><button>← 回玩家端</button></a></div></div>';
 }
 async function gate() {
   const stored = localStorage.getItem(PWKEY);
-  // 本机已验证过：直接进，不再问
   if (stored && localStorage.getItem("rpg2:designok") === stored) return true;
   if (!stored) {
     const p1 = prompt("首次使用：设置设计师口令（4 位以上）");
-    if (!p1 || p1.length < 4) { deny("口令太短，未设置。刷新重试。"); return false; }
+    if (!p1 || p1.length < 4) { deny("口令太短。"); return false; }
     const h = await sha(p1);
-    localStorage.setItem(PWKEY, h);
-    localStorage.setItem("rpg2:designok", h);
-    alert("口令已设置，这台设备已记住。下次直接进入；想锁定点右上角「锁定设计器」。");
+    localStorage.setItem(PWKEY, h); localStorage.setItem("rpg2:designok", h);
+    alert("口令已设置，这台设备已记住。");
     return true;
   }
   for (let i = 0; i < 3; i++) {
     const p = prompt("请输入设计师口令（第 " + (i + 1) + " 次）");
     if (p == null) { deny("已取消。"); return false; }
-    if ((await sha(p)) === stored) {
-      localStorage.setItem("rpg2:designok", stored);
-      return true;
-    }
+    if ((await sha(p)) === stored) { localStorage.setItem("rpg2:designok", stored); return true; }
   }
   deny("口令错误 3 次。");
   return false;
 }
 
-function loadAll() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
-}
-function saveAll(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+const loadAll = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
+const saveAll = (l) => localStorage.setItem(KEY, JSON.stringify(l));
+const blank = () => ({
+  id: "d" + Date.now().toString(36), rare: false,
+  name: "", title: "", role: "通用", desc: "", gear: "", notes: "",
+  basic: { hp: 15, atk: 15, def: 15, res: 15 },
+  spec: { str: 9, int: 9, tech: 9, agi: 9 }
+});
+let editing = null;
 
-// 当前编辑中的设计
-let editing = null;   // 设计对象
-function blank() {
-  return {
-    id: "d" + Date.now().toString(36),
-    name: "", title: "", role: "通用", desc: "",
-    basic: { hp: 10, atk: 10, def: 10, res: 10 },
-    spec: { str: 6, int: 6, tech: 6, agi: 6 },
-    weapon: WEAPONS[0].id, armor: ARMORS[0].id, acc: ACCESSORIES[0].id,
-    notes: ""
-  };
-}
-
-function toChar(d) {
-  const w = WEAPONS.find((x) => x.id === d.weapon) || WEAPONS[0];
-  const ar = ARMORS.find((x) => x.id === d.armor) || ARMORS[0];
-  const ac = ACCESSORIES.find((x) => x.id === d.acc) || ACCESSORIES[0];
-  return {
-    name: d.name || "未命名", lv: 1, grade: "D", apt: 1, breaks: 0,
-    str: d.spec.str, intel: d.spec.int, tech: d.spec.tech, agi: d.spec.agi,
-    basic: d.basic,
-    equip: {
-      weapon: Object.assign({}, w, { lv: 1, star: 1 }),
-      armor: Object.assign({}, ar, { lv: 1, star: 1 }),
-      accessory: Object.assign({}, ac, { lv: 1, star: 1 })
-    },
-    talent: { points: {} }
-  };
-}
-
-function previewHtml(d) {
-  const ch = toChar(d);
-  const f = charFinal(ch);
-  const pw = powerOf(f);
-  const w = WEAPONS.find((x) => x.id === d.weapon);
-  const ar = ARMORS.find((x) => x.id === d.armor);
-  const ac = ACCESSORIES.find((x) => x.id === d.acc);
-  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
-  const equip = [w && ("⚔️ " + w.name), ar && ("🛡️ " + ar.name), ac && ("💍 " + ac.name)].filter(Boolean).join("　");
-  return '<div class="card"><div class="card-title">预览</div>' +
-    '<div style="font-size:18px;font-weight:800;">' + esc(d.name || "（未命名）") +
-      (d.title ? ' <span class="tag">' + esc(d.title) + '</span>' : '') + '</div>' +
-    '<div class="hint">' + esc(d.role) + ' · ' + esc(DUTY[d.role] || "") + '</div>' +
-    (d.desc ? '<div class="hint" style="margin-top:6px;color:#c9d0e0;line-height:1.7;">' + esc(d.desc) + '</div>' : '') +
-    '<div class="row" style="margin-top:8px;"><span class="k">战力</span><span class="v" style="color:#6ea8fe;font-weight:700;">' + pw + '</span></div>' +
-    row("攻击", Math.round(f.atk)) + row("生命", Math.round(f.hp)) + row("防御", Math.round(f.def)) +
-    row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
-    row("暴击率 / 暴伤", Math.round(f.critRate) + "% / " + Math.round(f.critDmg) + "%") +
-    '<div class="hint" style="margin-top:8px;">' + equip + '</div>' +
-    '<div class="hint" style="margin-top:4px;">基础 ' + sum(d.basic) + '/40　专精 ' + sum(d.spec) + '/24</div></div>';
-}
 const sum = (o) => Object.values(o).reduce((a, b) => a + (Number(b) || 0), 0);
 
-function formHtml(d) {
-  const num = (scope, k, max) => '<input class="g-num-in" type="number" min="0" max="' + max + '" value="' + (d[scope][k] || 0) + '" data-num="' + scope + ':' + k + '" style="width:58px;height:28px;text-align:center;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#ffd666;font-weight:700;">';
-  const sel = (scope, list, cur) => '<select data-sel="' + scope + '" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:6px;">' +
-    list.map((x) => '<option value="' + x.id + '"' + (cur === x.id ? ' selected' : '') + '>' + esc(x.name) + '（' + (x.rarity || "") + '）</option>').join("") + '</select>';
-  return '<div class="card"><div class="card-title">原创角色 · 设定</div>' +
-    '<div class="row"><span class="k">名字</span><input id="fName" maxlength="16" placeholder="例如：灰烬" value="' + esc(d.name) + '" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#fff;padding:7px;"></div>' +
-    '<div class="row"><span class="k">称号</span><input id="fTitle" maxlength="20" placeholder="例如：不眠的守夜人" value="' + esc(d.title) + '" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#fff;padding:7px;"></div>' +
-    '<div class="row"><span class="k">定位</span><select id="fRole" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:6px;">' +
-      ROLES.map((r) => '<option' + (d.role === r ? ' selected' : '') + '>' + r + '</option>').join("") + '</select></div>' +
-    '<div class="row"><span class="k">描述</span><textarea id="fDesc" rows="3" placeholder="性格、来历、战斗风格…" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:7px;font-family:inherit;">' + esc(d.desc) + '</textarea></div>' +
-    '<div class="hint" style="margin-top:10px;">基础四项（共 40）</div>' +
-    '<div class="row"><span class="k">生命</span>' + num("basic", "hp", 40) + '<span class="k">攻击</span>' + num("basic", "atk", 40) + '</div>' +
-    '<div class="row"><span class="k">防御</span>' + num("basic", "def", 40) + '<span class="k">法抗</span>' + num("basic", "res", 40) + '</div>' +
-    '<div class="hint" style="margin-top:10px;">专精四项（共 24）</div>' +
-    '<div class="row"><span class="k">力量</span>' + num("spec", "str", 24) + '<span class="k">敏捷</span>' + num("spec", "agi", 24) + '</div>' +
-    '<div class="row"><span class="k">智力</span>' + num("spec", "int", 24) + '<span class="k">技巧</span>' + num("spec", "tech", 24) + '</div>' +
-    '<div class="hint" style="margin-top:10px;">装备</div>' +
-    '<div class="row"><span class="k">武器</span>' + sel("weapon", WEAPONS, d.weapon) + '</div>' +
-    '<div class="row"><span class="k">防具</span>' + sel("armor", ARMORS, d.armor) + '</div>' +
-    '<div class="row"><span class="k">饰品</span>' + sel("acc", ACCESSORIES, d.acc) + '</div>' +
-    '<div class="hint" style="margin-top:10px;">备注（设计意图、弱点、想加的机制）</div>' +
-    '<textarea id="fNotes" rows="2" style="width:100%;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:7px;font-family:inherit;">' + esc(d.notes) + '</textarea>' +
+// 最终面板：固定值 + 四维%（每点 5%）+ 专精换算
+function calc(d) {
+  const T = ORIGIN[d.rare ? "rare" : "normal"];
+  const f = T.fix;
+  const b = d.basic, s = d.spec;
+  const pct = (n) => 1 + (Number(n) || 0) * 5 / 100;
+  const atk = (f.atk + (s.str || 0) * 2 + (s.int || 0) * 2 + (s.tech || 0) * 2) * pct(b.atk);
+  const hp = f.hp * pct(b.hp);
+  const def = f.def * pct(b.def);
+  const res = f.res * pct(b.res);
+  const spd = f.spd + (s.agi || 0) * 0.6;
+  const power = powerOf({ atk, hp, def, res, spd, critRate: f.critRate, critDmg: f.critDmg });
+  return { atk, hp, def, res, spd, critRate: f.critRate, critDmg: f.critDmg, power, T };
+}
+
+function preview(d) {
+  const r = calc(d);
+  const line = (k, v) => '<div class="ostat"><span>' + k + '</span><b>' + v + '</b></div>';
+  return '<div class="card"><div class="card-title" style="color:#ffb347;">最终面板预览</div>' +
+    '<div style="font-size:18px;font-weight:800;margin-bottom:2px;">' + esc(d.name || "（未命名）") +
+      (d.title ? ' <span class="obadge">' + esc(d.title) + '</span>' : '') + '</div>' +
+    '<div class="hint">' + esc(r.T.label) + ' · ' + esc(d.role) + '</div>' +
+    (d.desc ? '<div class="hint" style="margin-top:6px;color:#c9bda3;line-height:1.7;">' + esc(d.desc) + '</div>' : '') +
+    '<div class="ostat" style="margin-top:8px;"><span>战力</span><b style="color:#ffb347;font-size:16px;">' + r.power + '</b></div>' +
+    line("攻击", Math.round(r.atk)) + line("生命", Math.round(r.hp)) + line("防御", Math.round(r.def)) +
+    line("法抗", Math.round(r.res)) + line("速度", Math.round(r.spd * 10) / 10) +
+    line("暴击率", r.critRate + "%") + line("暴击伤害", r.critDmg + "%") +
+    (d.gear ? '<div class="hint" style="margin-top:8px;white-space:pre-wrap;">装备：' + esc(d.gear) + '</div>' : '') +
+    '</div>';
+}
+
+function form(d) {
+  const T = ORIGIN[d.rare ? "rare" : "normal"];
+  const bLeft = T.basicPoints - sum(d.basic);
+  const sLeft = T.specPoints - sum(d.spec);
+  const bNum = (k) => '<input class="onum" type="number" min="0" max="' + T.basicCap + '" value="' + (d.basic[k] || 0) + '" data-basic="' + k + '">';
+  const sNum = (k) => '<input class="onum" type="number" min="0" max="' + T.specCap + '" value="' + (d.spec[k] || 0) + '" data-spec="' + k + '">';
+  return '<div class="card"><div class="card-title" style="color:#ffb347;">原创角色 · 设定</div>' +
+    '<div class="ogrid2">' +
+      '<div><div class="hint">名字</div><input class="ofield" id="fName" maxlength="16" value="' + esc(d.name) + '" placeholder="例如：灰烬"></div>' +
+      '<div><div class="hint">称号</div><input class="ofield" id="fTitle" maxlength="20" value="' + esc(d.title) + '" placeholder="例如：不眠的守夜人"></div>' +
+    '</div>' +
+    '<div class="ogrid2" style="margin-top:10px;">' +
+      '<div><div class="hint">定位</div><select class="ofield" id="fRole">' + ROLES.map((r) => '<option' + (d.role === r ? " selected" : "") + '>' + r + '</option>').join("") + '</select></div>' +
+      '<div><div class="hint">稀有度模板</div><select class="ofield" id="fRare">' +
+        '<option value="0"' + (!d.rare ? " selected" : "") + '>普通原创（固定值较低 / 加点 60+36）</option>' +
+        '<option value="1"' + (d.rare ? " selected" : "") + '>稀有原创（固定值更高 / 加点 80+48）</option>' +
+      '</select></div>' +
+    '</div>' +
+    '<div style="margin-top:10px;"><div class="hint">描述</div><textarea class="ofield" id="fDesc" rows="3" placeholder="性格、来历、战斗风格…">' + esc(d.desc) + '</textarea></div>' +
+
+    '<div class="card-title" style="margin-top:14px;color:#ffb347;">① 固定数值（所有' + esc(T.label) + '统一，比玩家略高）</div>' +
+    '<div class="ostat"><span>攻击</span><b>' + T.fix.atk + '</b></div>' +
+    '<div class="ostat"><span>生命</span><b>' + T.fix.hp + '</b></div>' +
+    '<div class="ostat"><span>防御</span><b>' + T.fix.def + '</b></div>' +
+    '<div class="ostat"><span>法抗</span><b>' + T.fix.res + '</b></div>' +
+    '<div class="ostat"><span>速度</span><b>' + T.fix.spd + '</b></div>' +
+    '<div class="ostat"><span>暴击率 / 暴伤</span><b>' + T.fix.critRate + '% / ' + T.fix.critDmg + '%</b></div>' +
+
+    '<div class="card-title" style="margin-top:14px;color:#ffb347;">② 基础四维（' + sum(d.basic) + '/' + T.basicPoints + '，单项上限 ' + T.basicCap + '）</div>' +
+    '<div class="hint">每点 +5% 对应属性。剩余 <b style="color:' + (bLeft > 0 ? "#ffcf7a" : "#7ee787") + ';">' + bLeft + '</b> 点</div>' +
+    '<div class="ogrid2" style="margin-top:6px;">' +
+      '<div class="ostat"><span>生命</span>' + bNum("hp") + '</div>' +
+      '<div class="ostat"><span>攻击</span>' + bNum("atk") + '</div>' +
+      '<div class="ostat"><span>防御</span>' + bNum("def") + '</div>' +
+      '<div class="ostat"><span>法抗</span>' + bNum("res") + '</div>' +
+    '</div>' +
+
+    '<div class="card-title" style="margin-top:14px;color:#ffb347;">③ 专精四项（' + sum(d.spec) + '/' + T.specPoints + '，单项上限 ' + T.specCap + '）</div>' +
+    '<div class="hint">力量/智力/技巧 每点 +2 攻击，敏捷每点 +0.6 速度。剩余 <b style="color:' + (sLeft > 0 ? "#ffcf7a" : "#7ee787") + ';">' + sLeft + '</b> 点</div>' +
+    '<div class="ogrid2" style="margin-top:6px;">' +
+      '<div class="ostat"><span>力量</span>' + sNum("str") + '</div>' +
+      '<div class="ostat"><span>智力</span>' + sNum("int") + '</div>' +
+      '<div class="ostat"><span>技巧</span>' + sNum("tech") + '</div>' +
+      '<div class="ostat"><span>敏捷</span>' + sNum("agi") + '</div>' +
+    '</div>' +
+
+    '<div class="card-title" style="margin-top:14px;color:#ffb347;">④ 专属装备（自定义，不走预设）</div>' +
+    '<div class="hint">每行一件，写名字 + 效果即可（例如：灰烬之刃 — 攻击 +15%，普攻附带灼烧）</div>' +
+    '<textarea class="ofield" id="fGear" rows="4" placeholder="灰烬之刃 — …&#10;旧斗篷 — …&#10;断链 — …">' + esc(d.gear) + '</textarea>' +
+
+    '<div style="margin-top:12px;"><div class="hint">备注（弱点、想加的机制）</div>' +
+    '<textarea class="ofield" id="fNotes" rows="2">' + esc(d.notes) + '</textarea></div>' +
+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">' +
       '<button id="btnSave" style="border-color:#7ee787;color:#7ee787;">💾 保存设计</button>' +
       '<button id="btnReset">🆕 清空重填</button>' +
@@ -153,63 +179,74 @@ function formHtml(d) {
 }
 
 function listHtml(list) {
-  if (!list.length) return '<div class="card"><div class="card-title">已保存的设计（0）</div><div class="hint">还没有。填好上面的设定，点「保存设计」。</div></div>';
-  return '<div class="card"><div class="card-title">已保存的设计（' + list.length + '）</div>' +
-    list.map((d) => '<div class="row"><span class="k">' + esc(d.name || "未命名") +
-      ' <span class="hint">' + esc(d.role) + (d.title ? " · " + esc(d.title) : "") + '</span>' +
-      '<div class="hint">' + esc((d.desc || "").slice(0, 40)) + '</div></span>' +
-      '<span class="v"><button data-load="' + d.id + '">编辑</button> ' +
-      '<button data-del="' + d.id + '" style="border-color:#ff9b9b;color:#ff9b9b;">删除</button></span></div>').join("") +
-    '</div>';
+  if (!list.length) return '<div class="card"><div class="card-title" style="color:#ffb347;">已保存的设计（0）</div><div class="hint">还没有，填好点「保存设计」。</div></div>';
+  return '<div class="card"><div class="card-title" style="color:#ffb347;">已保存的设计（' + list.length + '）</div>' +
+    list.map((d) => {
+      const T = ORIGIN[d.rare ? "rare" : "normal"];
+      return '<div class="row"><span class="k">' + esc(d.name || "未命名") +
+        ' <span class="hint">' + esc(T.label) + ' · ' + esc(d.role) + (d.title ? " · " + esc(d.title) : "") + '</span>' +
+        '<div class="hint">' + esc((d.desc || d.gear || "").slice(0, 40)) + '</div></span>' +
+        '<span class="v"><button data-load="' + d.id + '">编辑</button> ' +
+        '<button data-del="' + d.id + '" style="border-color:#ff9b9b;color:#ff9b9b;">删除</button></span></div>';
+    }).join("") + '</div>';
 }
 
 function render() {
   const list = loadAll();
   if (!editing) editing = list[0] || blank();
-  $("view").innerHTML = '<div class="hint" style="margin-bottom:8px;">这里设计的原创角色<strong>不会</strong>写进任何玩家存档、位号或排行榜，只存在本机浏览器里，可以导出 JSON 给我转成游戏数据。</div>' +
-    formHtml(editing) + previewHtml(editing) + listHtml(list);
+  $("view").innerHTML =
+    '<div class="hint" style="margin-bottom:8px;">原创角色<strong>不写玩家存档</strong>，只存本机；装备为自由填写，不走预设。导出 JSON 可转成游戏内容。</div>' +
+    form(editing) + preview(editing) + listHtml(list);
   bind();
 }
 
 function bind() {
   const d = editing;
-  $("fName").oninput = () => { d.name = $("fName").value; refreshPreview(); };
-  $("fTitle").oninput = () => { d.title = $("fTitle").value; refreshPreview(); };
-  $("fRole").onchange = () => { d.role = $("fRole").value; render(); };
-  $("fDesc").oninput = () => { d.desc = $("fDesc").value; refreshPreview(); };
+  const T = ORIGIN[d.rare ? "rare" : "normal"];
+  $("fName").oninput = () => { d.name = $("fName").value; };
+  $("fTitle").oninput = () => { d.title = $("fTitle").value; };
+  $("fRole").onchange = () => { d.role = $("fRole").value; };
+  $("fRare").onchange = () => {
+    d.rare = $("fRare").value === "1";
+    // 换档时按新模板重置加点，避免超出新上限
+    d.basic = d.rare ? { hp: 20, atk: 20, def: 20, res: 20 } : { hp: 15, atk: 15, def: 15, res: 15 };
+    d.spec = d.rare ? { str: 12, int: 12, tech: 12, agi: 12 } : { str: 9, int: 9, tech: 9, agi: 9 };
+    render();
+  };
+  $("fDesc").oninput = () => { d.desc = $("fDesc").value; };
+  $("fGear").oninput = () => { d.gear = $("fGear").value; };
   $("fNotes").oninput = () => { d.notes = $("fNotes").value; };
-  document.querySelectorAll("[data-num]").forEach((inp) => {
+  document.querySelectorAll("[data-basic]").forEach((inp) => {
     inp.onchange = () => {
-      const [scope, k] = inp.dataset.num.split(":");
-      const max = scope === "basic" ? 40 : 24;
-      let v = Math.floor(Number(inp.value));
-      if (!Number.isFinite(v)) v = 0;
-      v = Math.max(0, Math.min(max, v));
-      const others = sum(d[scope]) - (d[scope][k] || 0);
-      const cap = scope === "basic" ? 40 : 24;
-      v = Math.min(v, cap - others);
-      d[scope][k] = v;
-      render();
+      const k = inp.dataset.basic;
+      let v = Math.floor(Number(inp.value) || 0);
+      v = Math.max(0, Math.min(T.basicCap, v));
+      v = Math.min(v, T.basicPoints - (sum(d.basic) - d.basic[k]));
+      d.basic[k] = v; render();
     };
   });
-  document.querySelectorAll("[data-sel]").forEach((s) => {
-    s.onchange = () => { d[s.dataset.sel] = s.value; render(); };
+  document.querySelectorAll("[data-spec]").forEach((inp) => {
+    inp.onchange = () => {
+      const k = inp.dataset.spec;
+      let v = Math.floor(Number(inp.value) || 0);
+      v = Math.max(0, Math.min(T.specCap, v));
+      v = Math.min(v, T.specPoints - (sum(d.spec) - d.spec[k]));
+      d.spec[k] = v; render();
+    };
   });
   $("btnSave").onclick = () => {
     if (!d.name.trim()) return alert("先填名字");
     const list = loadAll();
     const i = list.findIndex((x) => x.id === d.id);
     if (i >= 0) list[i] = JSON.parse(JSON.stringify(d)); else list.push(JSON.parse(JSON.stringify(d)));
-    saveAll(list);
-    alert("已保存：" + d.name);
-    render();
+    saveAll(list); alert("已保存：" + d.name); render();
   };
   $("btnReset").onclick = () => { editing = blank(); render(); };
   $("btnExport").onclick = () => {
     const data = JSON.stringify(loadAll(), null, 2);
     const w = window.open("", "_blank");
     if (w) { w.document.write("<pre style='white-space:pre-wrap;font:12px/1.5 monospace;'>" + esc(data) + "</pre>"); return; }
-    prompt("复制下面的 JSON：", data);
+    prompt("复制 JSON：", data);
   };
   $("btnImport").onclick = () => {
     const raw = prompt("粘贴之前导出的 JSON：");
@@ -217,10 +254,7 @@ function bind() {
     try {
       const arr = JSON.parse(raw);
       if (!Array.isArray(arr)) throw new Error("不是数组");
-      saveAll(arr);
-      editing = arr[0] || blank();
-      render();
-      alert("导入成功：" + arr.length + " 个设计");
+      saveAll(arr); editing = arr[0] || blank(); render(); alert("导入成功：" + arr.length + " 个");
     } catch (e) { alert("导入失败：" + e.message); }
   };
   document.querySelectorAll("[data-load]").forEach((b) => b.onclick = () => {
@@ -230,24 +264,13 @@ function bind() {
   document.querySelectorAll("[data-del]").forEach((b) => b.onclick = () => {
     if (!confirm("删除这个设计？")) return;
     saveAll(loadAll().filter((x) => x.id !== b.dataset.del));
-    editing = blank();
-    render();
+    editing = blank(); render();
+  });
+  $("btnLock") && ($("btnLock").onclick = () => {
+    if (!confirm("锁定？下次需要重新输入口令。")) return;
+    localStorage.removeItem("rpg2:designok"); location.reload();
   });
 }
-
-function refreshPreview() {
-  const list = loadAll();
-  const cards = document.querySelectorAll(".card");
-  const last = cards[1];
-  if (last) last.outerHTML = previewHtml(editing);
-  // 列表不变，不整页重绘以免输入框失焦
-}
-
-document.getElementById("btnLock").onclick = () => {
-  if (!confirm("锁定设计器？下次打开需要重新输入口令。")) return;
-  localStorage.removeItem("rpg2:designok");
-  location.reload();
-};
 
 if (await gate()) render();
 </script>
