@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf } from "./data.js?v=57e07650";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=57e07650";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -76,14 +76,17 @@ export function itemBonus(it) {
   const lvMul = 1 + 0.02 * ((Number(d.lv) || 1) - 1);
   const starMul = 1 + 0.12 * ((Number(d.star) || 1) - 1);
   const rm = d.main ? 1 : (RARITY_MULT[d.rarity] || 1);
+  // ⛰ 强化突破节点：每过一个 +5% 主属性/副属性
+  const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
+  const breakMul = 1 + 0.05 * breakN;
   const out = {};
-  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul; });
+  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul; });
   // 🎯 副属性成长：升星 +5%/星、精炼 +8%/级，只作用于随机词条（data.__affix）
   const subMul = (1 + 0.05 * ((Number(d.star) || 1) - 1)) * (1 + 0.08 * ((Number(d.refine) || 1) - 1));
   const affix = Array.isArray(d.__affix) ? d.__affix : [];
   ["dmgCut", "thorns", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"].forEach((k) => {
-    const base = Number(d[k]) || 0;
-    if (base) out[k] = (out[k] || 0) + base * (affix.indexOf(k) >= 0 ? subMul : 1);
+    const v = (Number(d[k]) || 0) * breakMul * (affix.indexOf(k) >= 0 ? subMul : 1);
+    if (v) out[k] = (out[k] || 0) + v;
   });
   return out;
 }
@@ -191,9 +194,10 @@ export function combatTraits(ch) {
     const d = (ch && ch.equip && ch.equip[slot]) || {};
     const affix = Array.isArray(d.__affix) ? d.__affix : [];
     const subMul = (1 + 0.05 * ((Number(d.star) || 1) - 1)) * (1 + 0.08 * ((Number(d.refine) || 1) - 1));
+    const breakMul = 1 + 0.05 * (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
     COMBAT_KEYS.forEach((k) => {
       if (!d[k]) return;
-      out[k] += (Number(d[k]) || 0) * (affix.indexOf(k) >= 0 ? subMul : 1);
+      out[k] += (Number(d[k]) || 0) * breakMul * (affix.indexOf(k) >= 0 ? subMul : 1);
     });
   });
   // 🌳 天赋里带战斗属性的节点
