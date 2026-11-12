@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌 · 设计工作室（主机端）</title>
+<link rel="stylesheet" href="css/app.css?v=d8dee059">
+<style>
+  body{background:#0d0b08;}
+  .studio-bar{display:flex;align-items:center;gap:8px;background:#2a1f10;border:1px solid #6b4a1e;color:#ffcf7a;
+    padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:10px;}
+  .studio-bar .tag{color:#ffcf7a;border-color:#6b4a1e;}
+  .studio-card{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+  .studio-card a{display:block;text-decoration:none;background:#151109;border:1px solid #3a2c14;border-radius:12px;padding:14px;color:#f3e6cf;transition:.15s;}
+  .studio-card a:hover{border-color:#ffb347;background:#1c150a;transform:translateY(-1px);}
+  .studio-card .t{font-size:15px;font-weight:800;color:#ffb347;margin-top:4px;}
+  .studio-card .hint{color:#b6a382;}
+  .studio-note{font-size:10.5px;color:#8a7a5f;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="index.html">← 玩家端</a><span class="tag">主机端</span></div>
+  <div id="view"></div>
+</div>
+
+<script type="module">
+const PWKEY = "rpg2:designpw";
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+async function sha(s) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("xd2|" + s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function deny(msg) {
+  document.getElementById("view").innerHTML =
+    '<div class="card"><div class="card-title">🔒 主机端 · 需要设计师口令</div><div class="hint">' + esc(msg) + '</div>' +
+    '<div style="margin-top:10px;"><a href="index.html"><button>← 回玩家端</button></a></div></div>';
+}
+async function gate() {
+  const stored = localStorage.getItem(PWKEY);
+  if (stored && localStorage.getItem("rpg2:designok") === stored) return true;
+  if (!stored) {
+    const p1 = prompt("首次使用：设置设计师口令（4 位以上）");
+    if (!p1 || p1.length < 4) { deny("口令太短。"); return false; }
+    const h = await sha(p1);
+    localStorage.setItem(PWKEY, h);
+    localStorage.setItem("rpg2:designok", h);
+    alert("口令已设置，这台设备已记住。");
+    return true;
+  }
+  for (let i = 0; i < 3; i++) {
+    const p = prompt("请输入设计师口令（第 " + (i + 1) + " 次）");
+    if (p == null) { deny("已取消。"); return false; }
+    if ((await sha(p)) === stored) { localStorage.setItem("rpg2:designok", stored); return true; }
+  }
+  deny("口令错误 3 次。");
+  return false;
+}
+function render() {
+  document.getElementById("view").innerHTML =
+    '<div class="studio-bar">🧑‍💻 <b>主机端 · 设计工作室</b>　这里的东西只改设计数据，不写任何玩家存档 / 排行榜</div>' +
+    '<div class="card"><div class="card-title" style="color:#ffb347;">工作台</div>' +
+      '<div class="studio-card">' +
+        '<a href="design.html"><div style="font-size:22px;">🎨</div><div class="t">原创角色</div><div class="hint">设计 NPC / 角色设定，导出 JSON</div></a>' +
+        '<a href="equip.html"><div style="font-size:22px;">📚</div><div class="t">装备图鉴</div><div class="hint">全部武器 / 防具 / 饰品预览</div></a>' +
+        '<a href="affixes.html"><div style="font-size:22px;">📖</div><div class="t">词条库</div><div class="hint">词条效果说明</div></a>' +
+        '<a href="index.html"><div style="font-size:22px;">🎮</div><div class="t">玩家端</div><div class="hint">回到游戏首页（朋友看到的样子）</div></a>' +
+      '</div>' +
+      '<div class="studio-note">提示：设计器里点「导出 JSON」可以把设计发给我，转成游戏内容。</div>' +
+      '<div style="margin-top:12px;"><button id="btnLock" style="font-size:11px;border-color:#6b4a1e;color:#ffcf7a;">🔒 锁定主机端</button></div>' +
+    '</div>';
+  document.getElementById("btnLock").onclick = () => {
+    if (!confirm("锁定？下次进入需要重新输入口令。")) return;
+    localStorage.removeItem("rpg2:designok");
+    location.reload();
+  };
+}
+if (await gate()) render();
+</script>
+</body>
+</html>
