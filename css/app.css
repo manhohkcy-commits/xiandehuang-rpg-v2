@@ -24,64 +24,63 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
 .log .act{border-left:2px solid #3a3a5c;padding:3px 8px;margin:3px 0;background:rgba(255,255,255,.02);border-radius:6px}
 .log .sub{margin-left:10px;color:#9aa4b8;font-size:10.5px}
 
-/* 📜 冒险者协会 · 入会登记表（建角） */
-.gform{background:#f3ecda;color:#2e2a22;border-radius:4px;padding:20px 22px;margin:10px 0;
-  box-shadow:0 10px 30px rgba(0,0,0,.55);font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif;
-  background-image:linear-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:100% 26px}
-.gform .g-org{font-size:11px;letter-spacing:4px;color:#8a7a55;text-align:center}
-.gform h1{font-size:21px;letter-spacing:10px;text-align:center;margin:6px 0 4px;font-weight:700;color:#33291a}
-.gform .g-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:11px;color:#7a6b4d;
-  border-top:1px solid #c9bb98;border-bottom:1px solid #c9bb98;padding:5px 2px;margin:8px 0 12px}
-.gform .g-sec{font-size:12.5px;font-weight:700;color:#4a3d26;margin:14px 0 4px;padding-left:8px;
-  border-left:3px solid #a8443a;letter-spacing:2px}
-.gform .g-row{display:flex;align-items:center;gap:8px;border-bottom:1px dotted #b7a883;padding:6px 2px;font-size:13px}
-.gform .g-k{flex:0 0 84px;color:#6b5c3d;font-size:12.5px}
-.gform .g-v{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.gform input.g-in{background:transparent;border:none;border-bottom:1px dashed #9a885f;color:#2e2a22;
-  font-family:inherit;font-size:14px;flex:1;padding:2px 4px;border-radius:0}
-.gform input.g-in:focus{outline:none;border-bottom-color:#a8443a}
+/* 📜 冒险者协会 · 入会登记表（建角）— 深色版 */
+.gform{background:#0f121c;color:#e6e9f2;border:1px solid #23233a;border-radius:12px;padding:20px 22px;margin:10px 0;
+  box-shadow:0 12px 34px rgba(0,0,0,.55)}
+.gform .g-org{font-size:11px;letter-spacing:4px;color:#8a8ab0;text-align:center}
+.gform h1{font-size:21px;letter-spacing:10px;text-align:center;margin:6px 0 4px;font-weight:700;color:#f2f4fa}
+.gform .g-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:11px;color:#9aa4b8;
+  border-top:1px solid #23233a;border-bottom:1px solid #23233a;padding:5px 2px;margin:8px 0 12px}
+.gform .g-sec{font-size:12.5px;font-weight:700;color:#ffd666;margin:14px 0 4px;padding-left:8px;
+  border-left:3px solid #c0392b;letter-spacing:2px}
+.gform .g-row{display:flex;align-items:center;gap:8px;border-bottom:1px dotted #2a2a44;padding:6px 2px;font-size:13px;color:#e6e9f2}
+.gform .g-k{flex:0 0 84px;color:#9aa4b8;font-size:12.5px}
+.gform .g-v{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:#e6e9f2}
+.gform input.g-in{background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#fff;
+  font-family:inherit;font-size:14px;flex:1;padding:7px 9px}
+.gform input.g-in:focus{outline:none;border-color:#6ea8fe}
 .gform .g-picks{display:flex;flex-wrap:wrap;gap:6px}
-.gform button.g-pick{background:#efe6cf;border:1px solid #c0b089;color:#3a3122;border-radius:3px;
-  padding:6px 9px;font-size:12px;text-align:left;font-family:inherit}
-.gform button.g-pick:hover{border-color:#a8443a;color:#7d2a22}
-.gform button.g-pick.on{border-color:#a8443a;background:#f6e8d8;color:#7d2a22;box-shadow:inset 0 0 0 1px #a8443a}
-.gform button.g-pick .g-sub{display:block;font-size:10px;color:#8a7a55;margin-top:2px}
+.gform button.g-pick{background:#141a2a;border:1px solid #2a3350;color:#cfe6ff;border-radius:6px;
+  padding:6px 9px;font-size:12px;text-align:left;font-family:inherit;cursor:pointer}
+.gform button.g-pick:hover{border-color:#6ea8fe;color:#fff}
+.gform button.g-pick.on{border-color:#6ea8fe;background:#1b2740;color:#fff;box-shadow:inset 0 0 0 1px #6ea8fe}
+.gform button.g-pick .g-sub{display:block;font-size:10px;color:#8a8ab0;margin-top:2px}
 .gform .g-num{display:inline-flex;align-items:center;gap:6px}
-.gform button.g-step{width:22px;height:22px;padding:0;border-radius:3px;background:#e8dcc0;
-  border:1px solid #b7a883;color:#4a3d26;font-size:13px;line-height:1;font-family:inherit}
-.gform button.g-step:hover:not(:disabled){border-color:#a8443a;color:#7d2a22}
-.gform button.g-step:disabled{opacity:.35}
-.gform .g-val{min-width:24px;text-align:center;font-size:14px;font-weight:700;color:#7d2a22}
-.gform .g-hint{font-size:10.5px;color:#8a7a55}
-.gform .g-rest{font-size:11.5px;color:#7a6b4d;margin-top:6px}
-.gform .g-rest b{color:#a8443a}
+.gform button.g-step{width:26px;height:26px;padding:0;border-radius:6px;background:#1a2136;
+  border:1px solid #2a3350;color:#e6e9f2;font-size:14px;line-height:1;font-family:inherit;cursor:pointer}
+.gform button.g-step:hover:not(:disabled){border-color:#6ea8fe;color:#fff}
+.gform button.g-step:disabled{opacity:.3}
+.gform .g-val{min-width:24px;text-align:center;font-size:14px;font-weight:700;color:#ffd666}
+.gform .g-hint{font-size:10.5px;color:#8a8ab0}
+.gform .g-rest{font-size:11.5px;color:#9aa4b8;margin-top:6px}
+.gform .g-rest b{color:#ffd666}
 /* 🧾 装备志愿卡片网格 */
 .gform .g-gear-block{margin:8px 0 10px}
-.gform .g-gear-label{font-size:12px;color:#6b5c3d;font-weight:700;letter-spacing:2px;margin:0 0 5px}
+.gform .g-gear-label{font-size:12px;color:#9aa4b8;font-weight:700;letter-spacing:2px;margin:0 0 5px}
 .gform .g-gear-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px}
-.gform button.g-gear{background:#f3ead6;border:1px solid #c9bb98;border-radius:4px;padding:7px 8px;
-  display:flex;flex-direction:column;gap:2px;font-family:inherit;text-align:left;cursor:pointer;transition:.12s}
-.gform button.g-gear:hover{border-color:#a8443a;background:#f8f0df}
-.gform button.g-gear.on{background:#fbf3e4}
+.gform button.g-gear{background:#121828;border:1px solid #2a3350;border-radius:8px;padding:8px;
+  display:flex;flex-direction:column;gap:2px;font-family:inherit;text-align:left;cursor:pointer;transition:.12s;color:#e6e9f2}
+.gform button.g-gear:hover{border-color:#6ea8fe;background:#16203a}
+.gform button.g-gear.on{background:#1b2740}
 .gform .g-gear-name{font-size:13px;font-weight:700;line-height:1.2}
-.gform .g-gear-tag{font-size:9px;letter-spacing:2px;color:#9a885f}
-.gform .g-gear-sub{font-size:10px;color:#6b5c3d;line-height:1.3}
+.gform .g-gear-tag{font-size:9px;letter-spacing:2px;color:#7a86a8}
+.gform .g-gear-sub{font-size:10px;color:#9aa4b8;line-height:1.35}
 /* 🔢 属性行 */
-.gform .g-attr{display:flex;align-items:center;gap:10px;border-bottom:1px dotted #b7a883;padding:7px 2px}
-.gform .g-attr .g-k{flex:0 0 64px;font-size:13px}
+.gform .g-attr{display:flex;align-items:center;gap:10px;border-bottom:1px dotted #2a2a44;padding:7px 2px}
+.gform .g-attr .g-k{flex:0 0 64px;font-size:13px;color:#c9d0e0}
 .gform .g-ctrl{display:flex;align-items:center;gap:9px}
-.gform .g-attr .g-val{min-width:30px;font-size:16px;font-weight:700;color:#7d2a22;text-align:center}
-.gform .g-attr .g-hint{margin-left:auto;font-size:10.5px;color:#8a7a55}
+.gform .g-attr .g-val{min-width:30px;font-size:16px;font-weight:700;color:#ffd666;text-align:center}
+.gform .g-attr .g-hint{margin-left:auto;font-size:10.5px;color:#8a8ab0}
 .gform .g-attr button.g-step{width:26px;height:26px;font-size:15px;font-weight:700}
-.gform .g-note{font-size:10.5px;color:#8a7a55;line-height:1.8;margin-top:6px;text-indent:2em}
+.gform .g-note{font-size:10.5px;color:#8a8ab0;line-height:1.8;margin-top:6px;text-indent:2em}
 .gform .g-actions{display:flex;gap:8px;margin-top:18px}
-.gform button.g-submit{flex:1;height:42px;background:#a8443a;border:1px solid #8a2f27;color:#fbeee0;
-  font-size:15px;letter-spacing:8px;border-radius:3px;font-weight:700;font-family:inherit}
-.gform button.g-submit:hover:not(:disabled){background:#b94c40;color:#fff}
-.gform button.g-cancel{background:#e8dcc0;border:1px solid #b7a883;color:#4a3d26;font-family:inherit}
-.gform button.g-preset{background:#efe6cf;border:1px solid #b7a883;color:#4a3d26;border-radius:3px;
-  padding:4px 8px;font-size:11.5px;font-family:inherit}
-.gform button.g-preset:hover{border-color:#a8443a;color:#7d2a22}
+.gform button.g-submit{flex:1;height:44px;background:#c0392b;border:1px solid #a3362c;color:#fff;
+  font-size:15px;letter-spacing:8px;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer}
+.gform button.g-submit:hover:not(:disabled){background:#d14637;color:#fff}
+.gform button.g-cancel{background:#1a2136;border:1px solid #2a3350;color:#cfe6ff;border-radius:8px;font-family:inherit;cursor:pointer}
+.gform button.g-preset{background:#141a2a;border:1px solid #2a3350;color:#cfe6ff;border-radius:6px;
+  padding:4px 8px;font-size:11.5px;font-family:inherit;cursor:pointer}
+.gform button.g-preset:hover{border-color:#6ea8fe;color:#fff}
 
 /* 盖章 */
 .g-stamp-wrap{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;
