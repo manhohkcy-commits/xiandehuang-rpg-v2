@@ -1,11 +1,11 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=ad6938d2";
+import { CULT, RARITY_MULT } from "./data.js?v=ad6938d2";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
 export const isEquip = (it) => !!(it && (it.cat === "weapon" || it.cat === "armor" || it.cat === "accessory"));
 export function makeItem(cat, def) {
-  const data = Object.assign({}, def, { lv: 1, star: 1 });
+  const data = Object.assign({}, def, { lv: 1, star: 1, born: def.rarity });
   try { applyAffixes(data, cat, data.rarity || "R"); } catch (e) {}
   return { id: uid("it"), cat, lock: false, data };
 }
@@ -105,12 +105,19 @@ export function promoteApply(store, it) {
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
   store.gold = (Number(store.gold) || 0) - c.gold;
+  const curRarity = it.data.rarity;
+  if (c.action === "promote") {
+    // 🏷 升阶重铸：基础值按稀有度比例抬高；记录出生品质（本源）
+    if (!it.data.born) it.data.born = curRarity;
+    const ratio = (RARITY_MULT[c.next] || 1) / (RARITY_MULT[curRarity] || 1);
+    if (it.data.main) Object.keys(it.data.main).forEach((k) => {
+      it.data.main[k] = Math.round(it.data.main[k] * ratio * 10) / 10;
+    });
+  }
   it.data.rarity = c.next;
   it.data.star = 5;
   if (c.next === "UR" && c.fire) it.data.fire = c.fire;
-  // 只有「升阶」才加印记；觉醒走火数加成，避免重复
-  if (c.action === "promote") it.data.ups = (Number(it.data.ups) || 0) + 1;
-  return { ok: true, next: c.next, fire: c.fire, action: c.action, ups: it.data.ups };
+  return { ok: true, next: c.next, fire: c.fire, action: c.action };
 }
 
 export function cultCheck(it, kind, store) {

@@ -75,16 +75,19 @@ export function itemBonus(it) {
   const base = d.main || SLOT_BASE[it.cat] || {};
   const lvMul = 1 + 0.02 * ((Number(d.lv) || 1) - 1);
   const starMul = 1 + 0.12 * ((Number(d.star) || 1) - 1);
-  const rm = RARITY_MULT[d.rarity] || 1;
+  // 写了 main 的装备：基础值已是绝对数（升阶时重铸），不再乘稀有度
+  const rm = d.main ? 1 : (RARITY_MULT[d.rarity] || 1);
   // 🔥 UR 觉醒火数：1🔥 = SSR5★ 强度，之后每 🔥 +8%
   const fireMul = d.rarity === "UR" ? 1 + 0.08 * ((Number(d.fire) || 1) - 1) : 1;
-  // ⬆️ 升阶印记：每升阶/觉醒一次 +8%（按实际次数，不设上限）
-  const upMul = 1 + 0.08 * (Number(d.ups) || 0);
+  // 🏷 本源：天生品质越高越完整（升阶来的会留一点缺口）
+  const ORIGIN_MUL = { R: 0.90, SR: 0.92, SSR: 0.95, UR: 1.00 };
+  const born = d.born || d.rarity;
+  const originMul = born === d.rarity ? 1 : (ORIGIN_MUL[born] || 1);
   // ⛰ 强化突破节点：每过一个 +5% 主属性/副属性
   const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
   const breakMul = 1 + 0.05 * breakN;
   const out = {};
-  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul * fireMul * upMul; });
+  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul * fireMul * originMul; });
   // 🎯 副属性成长：升星 +5%/星、精炼 +8%/级，只作用于随机词条（data.__affix）
   const subMul = (1 + 0.05 * ((Number(d.star) || 1) - 1)) * (1 + 0.08 * ((Number(d.refine) || 1) - 1));
   const affix = Array.isArray(d.__affix) ? d.__affix : [];
