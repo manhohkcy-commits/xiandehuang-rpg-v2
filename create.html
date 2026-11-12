@@ -660,10 +660,10 @@ function renderTalent() {
       const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
       const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
       return '<td style="padding:2px;">' +
-        '<button ' + (can ? 'data-tp="' + n.id + '"' : 'data-prev="' + n.id + '"') + ' style="width:100%;height:44px;padding:1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
-        (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';cursor:pointer;" title="点击预览">' +
-        '<span style="font-size:12px;line-height:1;">' + mark + '</span>' +
-        '<span style="font-size:8.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + n.name + '</span></button></td>';
+        '<button ' + (can ? 'data-tp="' + n.id + '"' : 'data-prev="' + n.id + '"') + ' style="width:100%;height:58px;padding:2px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
+        (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';cursor:pointer;" title="点击看完整效果">' +
+        '<span style="font-size:10.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + mark + ' ' + n.name + '</span>' +
+        '<span style="font-size:7.5px;line-height:1.15;color:' + (has ? "#cfe6ff" : "#7a86a8") + ';max-height:18px;overflow:hidden;text-align:center;">' + effText(n.eff) + '</span></button></td>';
     }).join("");
     rows.push('<tr><th style="padding:2px 4px;font-size:10px;color:#8a8ab0;font-weight:400;border-bottom:1px dotted #23233a;white-space:nowrap;text-align:left;">' +
       (i + 1) + '阶<div class="hint" style="font-size:8px;">Lv' + TALENT_TIER_LV[i] + '</div></th>' + cells + '</tr>');
