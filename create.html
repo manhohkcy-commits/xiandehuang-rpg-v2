@@ -160,12 +160,13 @@ function eqCard(ch, kind, label) {
 
 function attrRow(label, key, ch) {
   const free = Number(ch.free) || 0;
-  const cap = (Number(BIRTH.specCap) || 24) + (Number(BIRTH.specLevelCap) || 70);
-  const cur = Number(ch[key]) || 0;
-  return '<div class="row"><span class="k">' + label + '</span><span class="v">' + cur +
-    ' <span class="hint">/ ' + cap + '</span>' +
+  const growthCap = Number(BIRTH.specLevelCap) || 70;
+  const base = (ch.specBase && Number(ch.specBase[key])) || 0;
+  const growth = Math.max(0, (Number(ch[key]) || 0) - base);
+  return '<div class="row"><span class="k">' + label + '</span><span class="v">' + growth +
+    ' <span class="hint">/ ' + growthCap + '</span>' +
     ' <button class="mini" style="height:22px;padding:0 8px;font-size:11px;margin-left:6px;" data-attr="' + key + '" ' +
-    (free > 0 && cur < cap ? '' : 'disabled') + '>＋</button></span></div>';
+    (free > 0 && growth < growthCap ? '' : 'disabled') + '>＋</button></span></div>';
 }
 
 function receiptsHtml() {
@@ -271,6 +272,8 @@ function createCharacter(name, weaponId, armorId, accId, attrs, basic) {
     def: Math.min(BC, Math.max(0, basic.def || 0)),
     res: Math.min(BC, Math.max(0, basic.res || 0))
   };
+  // 记录建角时的专精基线，用来区分「建角点」和「升级成长点」
+  ch.specBase = { str: ch.str, intel: ch.intel, tech: ch.tech, agi: ch.agi };
   ch.grade = "D"; ch.apt = 1; ch.breaks = 0; ch.free = 0;
   const w = WEAPONS.find((x) => x.id === weaponId) || WEAPONS[0];
   const ar = ARMORS.find((x) => x.id === armorId) || ARMORS[0];
@@ -527,6 +530,16 @@ function renderChar() {
     buildCreateScreen();
     return;
   }
+  // 老存档没有基线：按建角上限估算，保证成长显示不爆
+  if (!ch.specBase) {
+    const cap = Number(BIRTH.specCap) || 24;
+    ch.specBase = {
+      str: Math.min(Number(ch.str) || 0, cap),
+      intel: Math.min(Number(ch.intel) || 0, cap),
+      tech: Math.min(Number(ch.tech) || 0, cap),
+      agi: Math.min(Number(ch.agi) || 0, cap)
+    };
+  }
   const f = charFinal(ch), pw = charPower(ch);
   const need = CHAR.expNeed(ch.lv);
   const pct = Math.min(100, Math.round(((store.exp || 0) / need) * 100));
@@ -639,8 +652,9 @@ function renderChar() {
     const free = Number(ch.free) || 0;
     if (free <= 0) return toast("没有可分配点数", true);
     const key = b.dataset.attr;
-    const cap = (Number(BIRTH.specCap) || 24) + (Number(BIRTH.specLevelCap) || 70);
-    if ((Number(ch[key]) || 0) >= cap) return toast("这一项已经到上限 " + cap + " 了", true);
+    const base = (ch.specBase && Number(ch.specBase[key])) || 0;
+    const growthCap = Number(BIRTH.specLevelCap) || 70;
+    if ((Number(ch[key]) || 0) - base >= growthCap) return toast("这一项成长加点已到上限 " + growthCap, true);
     ch[key] = (Number(ch[key]) || 0) + 1;
     ch.free = free - 1;
     await save(); render();
