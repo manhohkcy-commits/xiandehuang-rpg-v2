@@ -421,7 +421,7 @@ async function pullIntents() {
         const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
         const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
         if (it.act === "ult") who.rage = 0;
-        else who.rage = Math.min(100, (Number(who.rage) || 0) + 25 * (1 + (Number(tr.rageOnSkill) || 0) / 100));
+        else who.rage = Math.min(100, (Number(who.rage) || 0) + 25 * (1 + (Number(tr.rageOnSkill) || 0) / 100 + (Number(tr.ragePct) || 0) / 100));
         if (it.act === "skill" && wp.hitStatus) {
           applyStatus(st, who.id, other.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
         }
@@ -669,7 +669,7 @@ function doAct(kind) {
 
   if (st.finished) { finish(); renderBattle(); return; }
   if (kind !== "ult") {
-    const gain = 25 * (1 + (Number((m.traits || {}).rageOnSkill) || 0) / 100);
+    const gain = 25 * (1 + (Number((m.traits || {}).rageOnSkill) || 0) / 100 + (Number((m.traits || {}).ragePct) || 0) / 100);
     m.rage = Math.min(100, (Number(m.rage) || 0) + gain);
   }
   renderBattle();

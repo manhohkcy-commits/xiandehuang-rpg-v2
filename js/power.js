@@ -64,7 +64,7 @@ export function itemBonus(it) {
   const rm = RARITY_MULT[d.rarity] || 1;
   const out = {};
   Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul; });
-  ["dmgCut", "thorns", "atkPct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi"].forEach((k) => {
+  ["dmgCut", "thorns", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi"].forEach((k) => {
     const v = Number(d[k]) || 0;
     if (v) out[k] = (out[k] || 0) + v;
   });
@@ -114,6 +114,10 @@ export function charFinal(ch) {
       else f[kk] = (f[kk] || 0) + b[kk];
     });
   });
+  // 🎯 百分比词条：生命/防御/法抗加成（攻击加成在下面单独乘）
+  ["hp", "def", "res"].forEach((k) => {
+    f[k] = f[k] * (1 + (Number(f[k + "Pct"]) || 0) / 100);
+  });
   // 🎯 装备的「专精」词条：力量/智力/技巧/敏捷
   let gearSpec = 0;
   ["weapon", "armor", "accessory"].forEach((k) => {
@@ -142,7 +146,7 @@ export const charPower = (ch) => powerOf(charFinal(ch));
 // ⚔️ 战斗词条汇总（第二批）：三件装备的数据字段相加
 //   引擎里只认这几个键：cdReduce / rageOnSkill / rageOnKill / rageStart /
 //   sunderBoost / statusPower / statusHit / statusResist / block / tenacity / lowHpCut
-const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "sunderBoost",
+const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "ragePct", "sunderBoost",
   "statusPower", "statusHit", "statusResist", "block", "tenacity", "lowHpCut",
   // 第三批：控制 / 机制类也一起汇总（武器、防具、饰品都能出）
   "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash",
