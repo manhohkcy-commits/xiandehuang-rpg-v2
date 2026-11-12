@@ -63,14 +63,23 @@ async function load() {
       exists = true;
       const pw = row.store.__pw || "";
       if (pw) {
-        const tip = "这个位号设了口令，请输入口令（忘记就无法取回）";
-        for (let i = 0; i < 3; i++) {
-          const input = prompt(tip);
-          if (input == null) { store = null; return; }
-          if ((await hashPw(input)) === pw) { store = row.store; updatedAt = row.updated_at || ""; break; }
-          toast("口令不对（还有 " + (2 - i) + " 次）", true);
+        // 同一次浏览里记住已通过的口令
+        let memo = "";
+        try { memo = sessionStorage.getItem("rpg2:pw:" + box) || ""; } catch (e) {}
+        if (memo && memo === pw) { store = row.store; updatedAt = row.updated_at || ""; }
+        else {
+          const tip = "这个位号设了口令，请输入口令（忘记就无法取回）";
+          for (let i = 0; i < 3; i++) {
+            const input = prompt(tip);
+            if (input == null) { store = null; return; }
+            if ((await hashPw(input)) === pw) {
+              try { sessionStorage.setItem("rpg2:pw:" + box, pw); } catch (e) {}
+              store = row.store; updatedAt = row.updated_at || ""; break;
+            }
+            toast("口令不对（还有 " + (2 - i) + " 次）", true);
+          }
+          if (!store) { view().innerHTML = '<div class="card"><div class="hint">口令验证失败，无法进入这个位号。</div></div>'; return; }
         }
-        if (!store) { view().innerHTML = '<div class="card"><div class="hint">口令验证失败，无法进入这个位号。</div></div>'; return; }
       } else {
         store = row.store;
         updatedAt = row.updated_at || "";

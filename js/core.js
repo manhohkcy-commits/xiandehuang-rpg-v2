@@ -100,10 +100,18 @@ export async function gateLoad(box, opts = {}) {
   if (Number(st.v) !== 2) return { ok: false, reason: "旧版存档" };
   const pw = st.__pw || "";
   if (pw) {
+    // 同一次浏览里记住已通过的口令，翻页不再重复问
+    const k = "rpg2:pw:" + box;
+    let memo = "";
+    try { memo = sessionStorage.getItem(k) || ""; } catch (e) {}
+    if (memo && memo === pw) return { ok: true, store: st, updatedAt: row.updated_at || "" };
     for (let i = 0; i < 3; i++) {
       const input = prompt("「" + box + "」已设口令，请输入（错 3 次会锁）");
       if (input == null) return { ok: false, reason: "已取消" };
-      if ((await hashPw(input)) === pw) return { ok: true, store: st, updatedAt: row.updated_at || "" };
+      if ((await hashPw(input)) === pw) {
+        try { sessionStorage.setItem(k, pw); } catch (e) {}
+        return { ok: true, store: st, updatedAt: row.updated_at || "" };
+      }
       alert("口令不对，还有 " + (2 - i) + " 次");
     }
     return { ok: false, reason: "口令错误" };
@@ -112,6 +120,7 @@ export async function gateLoad(box, opts = {}) {
     const p1 = prompt("设置口令（4~20 位）");
     if (p1 && p1.length >= 4) {
       st.__pw = await hashPw(p1);
+      try { sessionStorage.setItem("rpg2:pw:" + box, st.__pw); } catch (e) {}
       try { await cloudSave(box, st, row.updated_at || null); } catch (e) {}
       alert("口令已设置，请记牢（忘记无法找回）");
     }
