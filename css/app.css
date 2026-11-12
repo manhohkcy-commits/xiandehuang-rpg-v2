@@ -55,6 +55,24 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
 .gform .g-hint{font-size:10.5px;color:#8a7a55}
 .gform .g-rest{font-size:11.5px;color:#7a6b4d;margin-top:6px}
 .gform .g-rest b{color:#a8443a}
+/* 🧾 装备志愿卡片网格 */
+.gform .g-gear-block{margin:8px 0 10px}
+.gform .g-gear-label{font-size:12px;color:#6b5c3d;font-weight:700;letter-spacing:2px;margin:0 0 5px}
+.gform .g-gear-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px}
+.gform button.g-gear{background:#f3ead6;border:1px solid #c9bb98;border-radius:4px;padding:7px 8px;
+  display:flex;flex-direction:column;gap:2px;font-family:inherit;text-align:left;cursor:pointer;transition:.12s}
+.gform button.g-gear:hover{border-color:#a8443a;background:#f8f0df}
+.gform button.g-gear.on{background:#fbf3e4}
+.gform .g-gear-name{font-size:13px;font-weight:700;line-height:1.2}
+.gform .g-gear-tag{font-size:9px;letter-spacing:2px;color:#9a885f}
+.gform .g-gear-sub{font-size:10px;color:#6b5c3d;line-height:1.3}
+/* 🔢 属性行 */
+.gform .g-attr{display:flex;align-items:center;gap:10px;border-bottom:1px dotted #b7a883;padding:7px 2px}
+.gform .g-attr .g-k{flex:0 0 64px;font-size:13px}
+.gform .g-ctrl{display:flex;align-items:center;gap:9px}
+.gform .g-attr .g-val{min-width:30px;font-size:16px;font-weight:700;color:#7d2a22;text-align:center}
+.gform .g-attr .g-hint{margin-left:auto;font-size:10.5px;color:#8a7a55}
+.gform .g-attr button.g-step{width:26px;height:26px;font-size:15px;font-weight:700}
 .gform .g-note{font-size:10.5px;color:#8a7a55;line-height:1.8;margin-top:6px;text-indent:2em}
 .gform .g-actions{display:flex;gap:8px;margin-top:18px}
 .gform button.g-submit{flex:1;height:42px;background:#a8443a;border:1px solid #8a2f27;color:#fbeee0;
@@ -91,6 +109,12 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
   .gform .g-row{padding:5px 0}
   .gform button.g-pick{font-size:11px;padding:5px 7px}
   .gform button.g-pick .g-sub{font-size:9.5px}
+  .gform .g-gear-grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:5px}
+  .gform button.g-gear{padding:6px}
+  .gform .g-gear-name{font-size:12px}
+  .gform .g-attr{gap:6px}
+  .gform .g-attr .g-k{flex-basis:56px;font-size:12px}
+  .gform .g-attr .g-hint{font-size:9.5px}
   .gform .g-actions{flex-wrap:wrap}
   .gform button.g-cancel{flex:0 0 100%}
   .gform button.g-submit{letter-spacing:4px}

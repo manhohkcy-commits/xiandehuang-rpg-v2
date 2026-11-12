@@ -283,24 +283,30 @@ function buildCreateScreen() {
   const dd = new Date();
   const dateStr = dd.getFullYear() + " 年 " + (dd.getMonth() + 1) + " 月 " + dd.getDate() + " 日";
 
-  const pickRow = (k, label, list, cur, sub) => '<div class="g-row"><span class="g-k">' + label + '</span><div class="g-v g-picks">' +
+  const pickRow = (k, label, list, cur, sub) => '<div class="g-gear-block">' +
+    '<div class="g-gear-label">' + label + '</div>' +
+    '<div class="g-gear-grid">' +
     list.map((x) => {
       const on = cur === x.id;
-      return '<button class="g-pick' + (on ? " on" : "") + '" data-pick="' + k + ':' + x.id + '">' +
-        (on ? "● " : "○ ") + esc(x.name) + '<span class="g-sub">' + sub(x) + '</span></button>';
+      const rc = RARITY_COLOR[x.rarity] || "#8a7a55";
+      return '<button class="g-gear' + (on ? " on" : "") + '" data-pick="' + k + ':' + x.id + '"' +
+        (on ? ' style="border-color:' + rc + ';box-shadow:inset 0 0 0 2px ' + rc + ';"' : '') + '>' +
+        '<span class="g-gear-name" style="color:' + rc + ';">' + esc(x.name) + '</span>' +
+        '<span class="g-gear-tag">' + (x.rarity || "") + '</span>' +
+        '<span class="g-gear-sub">' + sub(x) + '</span></button>';
     }).join("") + '</div></div>';
 
-  const basicLine = (k, label) => '<div class="g-row"><span class="g-k">' + label + '</span><div class="g-v g-num">' +
+  const basicLine = (k, label) => '<div class="g-attr"><span class="g-k">' + label + '</span><div class="g-ctrl">' +
     '<button class="g-step" data-basic="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
     '<span class="g-val">' + state[k] + '</span>' +
     '<button class="g-step" data-basic="' + k + ':1"' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? " disabled" : "") + '>＋</button>' +
-    '<span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%</span></div></div>';
+    '</div><span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%　/ 上限 ' + (BIRTH.basicCap * BIRTH.basicPct) + '%</span></div>';
 
-  const specLine = (k, label) => '<div class="g-row"><span class="g-k">' + label + '</span><div class="g-v g-num">' +
+  const specLine = (k, label) => '<div class="g-attr"><span class="g-k">' + label + '</span><div class="g-ctrl">' +
     '<button class="g-step" data-attr="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
     '<span class="g-val">' + state[k] + '</span>' +
     '<button class="g-step" data-attr="' + k + ':1"' + (free() <= 0 || state[k] >= BIRTH.specCap ? " disabled" : "") + '>＋</button>' +
-    '<span class="g-hint">' + (BIRTH.specEffect[k] ? "每点 +" + BIRTH.specEffect[k] : "") + '</span></div></div>';
+    '</div><span class="g-hint">' + (BIRTH.specEffect[k] ? "每点 +" + BIRTH.specEffect[k] : "") + '　/ 上限 ' + BIRTH.specCap + '</span></div>';
 
   view().innerHTML = '<div class="gform">' +
     '<div class="g-org">闲得慌 · 冒险者协会</div>' +
