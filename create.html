@@ -229,6 +229,7 @@ function showItemDetail(it) {
     '<div class="card-title" style="color:' + rc + ';font-size:15px;">' + esc(d.name || "装备") +
       ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
     '<div class="hint">' + meta + (cur ? '　|　对比：' + esc(cur.name || "当前装备") : '　|　未装备同类') + '</div>' +
+    (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + esc(d.desc) + '</div>' : '') +
     (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
     skill +
     '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +

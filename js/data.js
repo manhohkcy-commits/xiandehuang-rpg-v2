@@ -10,10 +10,14 @@ export const SLOT_BASE = {
 };
 export const WEAPONS = [
   // ── R 阶（新手档）────────────────────────────
-  { id: "w_iron", name: "铁剑", rarity: "R", sName: "斩击", sMult: 150, sCd: 2, sRage: 10, style: "melee" },
-  { id: "w_bow", name: "短弓", rarity: "R", sName: "连射", sMult: 180, sCd: 3, sRage: 10, style: "ranged" },
-  { id: "w_wood", name: "木法杖", rarity: "R", sName: "木灵弹", sMult: 145, sCd: 2, sRage: 10, dmgType: "spell", style: "focus" },
-  { id: "w_dagger", name: "短匕", rarity: "R", sName: "快刺", sMult: 120, sCd: 1, sRage: 8, style: "melee" },
+  { id: "w_iron", name: "铁剑", rarity: "R", sName: "斩击", sMult: 150, sCd: 2, sRage: 10, style: "melee", atk: 5,
+    desc: "协会统一配发的制式长剑，没有花哨的机关，胜在称手耐造。" },
+  { id: "w_bow", name: "短弓", rarity: "R", sName: "连射", sMult: 180, sCd: 3, sRage: 10, style: "ranged", critRate: 2,
+    desc: "轻便的猎弓，拉满一箭能扎穿皮甲，出手比近战慢半拍。" },
+  { id: "w_wood", name: "木法杖", rarity: "R", sName: "木灵弹", sMult: 145, sCd: 2, sRage: 10, dmgType: "spell", style: "focus", res: 5,
+    desc: "学徒用的橡木杖，能引出一小团木灵之力，法术伤害但不算高。" },
+  { id: "w_dagger", name: "短匕", rarity: "R", sName: "快刺", sMult: 120, sCd: 1, sRage: 8, style: "melee", spd: 2,
+    desc: "贴身短刀，伤害不高，但出手极快，适合抢节奏。" },
   // ── SR / SSR / UR ───────────────────────────
   { id: "w_fire", name: "火石长刀", rarity: "SSR", sName: "火斩", sMult: 180, sCd: 3, sRage: 30, hitStatus: "burn", hitStatusV: 3, hitStatusTurns: 2, hitStatusName: "灼烧", dmgType: "spell", style: "melee" },
   { id: "w_cross", name: "复合十字弩", rarity: "SR", sName: "穿甲箭", sMult: 165, sCd: 3, sRage: 15, style: "ranged" },
