@@ -71,7 +71,22 @@ export const ARMORS = [
   { id: "a_lava", name: "熔岩护甲", rarity: "SR", dmgCut: 6, thorns: 10, desc: "嵌了火山岩的厚甲，打上去会烫手。" },
   { id: "a_mitril", name: "秘银轻甲", rarity: "SR", dmgCut: 5, spd: 2, desc: "轻得出奇，挨打时却比铁甲还硬。" },
   { id: "a_vine", name: "藤蔓重甲", rarity: "SR", hp: 80, def: 10, desc: "层层老藤缠成的重甲，笨重但耐打。" },
-  { id: "a_guard", name: "铁卫护心镜", rarity: "SR", res: 12, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" }
+  { id: "a_guard", name: "铁卫护心镜", rarity: "SR", res: 12, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" },
+  // 守护
+  { id: "a_bulwark", name: "铁壁重甲", rarity: "SR", dmgCut: 7, hp: 60, desc: "厚得能当墙用，走两步就喘。" },
+  { id: "a_rock", name: "磐石护心镜", rarity: "SR", def: 14, dmgCut: 4, desc: "整块石料磨的护心镜，硬得离谱。" },
+  // 先锋
+  { id: "a_berserk", name: "狂战皮甲", rarity: "SR", atkPct: 4, hp: 50, desc: "划痕越多，穿的人越兴奋。" },
+  { id: "a_rift", name: "裂痕战衣", rarity: "SR", hp: 40, thorns: 8, desc: "布面全是旧裂口，却没人补。" },
+  // 游侠
+  { id: "a_wind", name: "追风轻衣", rarity: "SR", spd: 3, dmgCut: 3, desc: "薄得像一层风，跑起来几乎没声音。" },
+  { id: "a_shadow", name: "影行斗篷", rarity: "SR", spd: 2, critRate: 2, desc: "披上之后，脚步声会自己消失。" },
+  // 术士
+  { id: "a_rune", name: "法纹长袍", rarity: "SR", res: 12, hp: 40, desc: "袍角绣着细密法纹，碰一下会发麻。" },
+  { id: "a_aura", name: "灵能罩衣", rarity: "SR", res: 10, dmgCut: 4, desc: "表面浮着一层看不见的薄膜。" },
+  // 辅佐
+  { id: "a_pray", name: "祷言圣袍", rarity: "SR", res: 14, hp: 50, desc: "袖口磨得发白，显然常被攥紧。" },
+  { id: "a_watch", name: "守望轻甲", rarity: "SR", def: 8, hp: 60, desc: "巡逻队制式，轻便又耐站。" }
 ];
 export const ACCESSORIES = [
   { id: "c_rope", name: "布绳", rarity: "R", atkPct: 2, desc: "随手系在手腕上的布绳，图个心安。" },
@@ -84,7 +99,22 @@ export const ACCESSORIES = [
   { id: "c_ring", name: "承山戒", rarity: "SR", atkPct: 6, desc: "戒指内圈刻着山纹，握拳时像压着一座山。" },
   { id: "c_lavastone", name: "熔岩护石", rarity: "SR", atkPct: 4, critDmg: 12, desc: "温热的黑石，擦出的火花特别亮。" },
   { id: "c_feather", name: "疾风羽", rarity: "SR", spd: 3, desc: "一片轻得几乎没有重量的羽毛。" },
-  { id: "c_mitril", name: "秘银坠", rarity: "SR", atkPct: 6, spd: 2, desc: "细链坠着一小块秘银，凉丝丝的。" }
+  { id: "c_mitril", name: "秘银坠", rarity: "SR", atkPct: 6, spd: 2, desc: "细链坠着一小块秘银，凉丝丝的。" },
+  // 守护
+  { id: "c_bulwark", name: "磐石护符", rarity: "SR", def: 8, dmgCut: 3, desc: "厚石片打的护符，沉甸甸地压手。" },
+  { id: "c_ironheart", name: "铁心吊坠", rarity: "SR", hp: 70, desc: "一小块铁心嵌在坠子里，据说能定神。" },
+  // 先锋
+  { id: "c_badge", name: "战意徽章", rarity: "SR", atkPct: 5, critRate: 2, desc: "旧徽章上的数字已经磨掉了。" },
+  { id: "c_fury", name: "狂怒指环", rarity: "SR", atkPct: 7, critDmg: 10, desc: "戴上之后，握拳会微微发烫。" },
+  // 游侠
+  { id: "c_goggle", name: "猎手目镜", rarity: "SR", critRate: 3, spd: 2, desc: "镜片有划痕，但看远处依然清楚。" },
+  { id: "c_windcharm", name: "追风羽饰", rarity: "SR", spd: 3, desc: "两片羽毛串成的饰物，风一吹就抖。" },
+  // 术士
+  { id: "c_arcanestone", name: "秘能石", rarity: "SR", res: 8, atkPct: 4, desc: "石头内部像有光在慢慢流动。" },
+  { id: "c_runering", name: "咒文戒", rarity: "SR", atkPct: 5, critDmg: 12, desc: "戒面刻着看不懂的细字。" },
+  // 辅佐
+  { id: "c_bell", name: "祈愿铃", rarity: "SR", res: 10, hp: 50, desc: "铃舌很轻，摇起来只有自己听得见。" },
+  { id: "c_mercy", name: "慈心吊坠", rarity: "SR", hp: 60, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
 ];
 export const STAGES = [
   { id: "k1", name: "训练木桩", tier: 1, gold: 120, exp: 40,
