@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=8b89ef2b";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=d20acaec";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=2756895b";
 import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2bad05a4";
-import { GRADE, APTITUDE } from "./js/data.js?v=d20acaec";
+import { GRADE, APTITUDE } from "./js/data.js?v=2756895b";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
@@ -384,9 +384,9 @@ function buildCreateScreen() {
 
     (CONTENT_READY
       ? '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
-        pickRow("weapon", "武　器", WEAPONS, state.weapon, weaponSub) +
-        pickRow("armor", "防　具", ARMORS, state.armor, gearSub) +
-        pickRow("acc", "饰　品", ACCESSORIES, state.acc, gearSub)
+        pickRow("weapon", "武　器", WEAPONS.filter((x) => x.rarity === "R"), state.weapon, weaponSub) +
+        pickRow("armor", "防　具", ARMORS.filter((x) => x.rarity === "R"), state.armor, gearSub) +
+        pickRow("acc", "饰　品", ACCESSORIES.filter((x) => x.rarity === "R"), state.acc, gearSub)
       : '<div class="g-sec">二、初始装备</div>' +
         '<div class="g-row"><span class="g-k">装　备</span><div class="g-v">内容待定，先由协会配发默认装备</div></div>') +
 

@@ -29,8 +29,35 @@ export const WEAPONS = [
   { id: "w_torch", name: "火把", rarity: "R", dmgType: "spell", style: "melee", res: 3, aMult: 90, aHits: 1, uMult: 260,
     desc: "烧着的木棒，谈不上法器，但火苗确实是法术伤害。" },
   { id: "w_shield", name: "木盾", rarity: "R", style: "melee", dmgCut: 2, aMult: 90, aHits: 1, uMult: 240,
-    desc: "厚木板钉成的圆盾，砸人比砍人更顺手。" }
-  // ── SR / SSR / UR 尚未设计：旧占位武器已移除，等正式设计后再加 ──
+    desc: "厚木板钉成的圆盾，砸人比砍人更顺手。" },
+  // ── SR 阶：普攻 / 技能 / 必杀 三招齐全 ─────────────
+  { id: "w_twin", name: "双刃短刀", rarity: "SR", style: "melee", aMult: 90, aHits: 2, uMult: 280,
+    sName: "连斩", sMult: 160, sHits: 2, sCd: 2, sRage: 15,
+    desc: "两把短刀交替出手，收招快，适合贴身缠斗。" },
+  { id: "w_axe", name: "裂地战斧", rarity: "SR", style: "melee", aMult: 110, aHits: 1, uMult: 300,
+    sName: "裂地", sMult: 210, sCd: 3, sRage: 20, sunderBoost: 30,
+    desc: "斧刃砸地，一击能把护甲震裂。" },
+  { id: "w_spear2", name: "穿云长枪", rarity: "SR", style: "melee", aMult: 105, aHits: 1, uMult: 270,
+    sName: "穿刺", sMult: 185, sCd: 3, sRage: 18, penetrate: 15,
+    desc: "枪尖专找甲缝，正面很难挡。" },
+  { id: "w_cross", name: "复合十字弩", rarity: "SR", style: "ranged", aMult: 100, aHits: 1, uMult: 260,
+    sName: "穿甲箭", sMult: 170, sCd: 3, sRage: 18, penetrate: 20,
+    desc: "军械坊改的连发弩，弩箭能咬进甲缝里。" },
+  { id: "w_longbow", name: "猎风长弓", rarity: "SR", style: "ranged", aMult: 90, aHits: 2, uMult: 270,
+    sName: "三连射", sMult: 150, sHits: 3, sCd: 4, sRage: 20,
+    desc: "长弓拉满一次能连放三箭。" },
+  { id: "w_firestaff", name: "火石法杖", rarity: "SR", dmgType: "spell", style: "focus", aMult: 95, aHits: 1, uMult: 280,
+    sName: "火球", sMult: 185, sCd: 3, sRage: 22, hitStatus: "burn", hitStatusV: 4, hitStatusTurns: 2, hitStatusName: "灼烧",
+    desc: "杖头镶着火石，挥出去就是一团火。" },
+  { id: "w_thunder", name: "雷鸣短杖", rarity: "SR", dmgType: "spell", style: "focus", aMult: 95, aHits: 1, uMult: 270,
+    sName: "雷击", sMult: 175, sCd: 3, sRage: 20, stun: 25,
+    desc: "短杖一敲，雷声比人先到。" },
+  { id: "w_aegis", name: "守护权杖", rarity: "SR", style: "focus", aMult: 95, aHits: 1, uMult: 250,
+    sName: "圣盾", sSupport: "shield", sShieldPct: 25, sCd: 3, sRage: 20,
+    desc: "祈礼用的权杖，能把信仰凝成一面盾。" },
+  { id: "w_purify", name: "净化铃", rarity: "SR", style: "focus", aMult: 95, aHits: 1, uMult: 250,
+    sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 2, sRage: 15,
+    desc: "摇一摇就能把身上的晦气抖落。" }
 ];
 // ── SR / SSR / UR 尚未设计：旧占位装备已移除，等正式设计后再加 ─────
 export const ARMORS = [
@@ -39,7 +66,12 @@ export const ARMORS = [
   { id: "a_rattan", name: "藤甲", rarity: "R", hp: 40, desc: "藤条编的护身甲，轻，但挨打时会吱呀响。" },
   { id: "a_cloak", name: "轻便斗篷", rarity: "R", spd: 2, desc: "薄布斗篷，不挡刀，胜在不拖脚步。" },
   { id: "a_mirror", name: "护心镜", rarity: "R", res: 8, desc: "一块磨亮的铜镜挂在胸口，图个心安。" },
-  { id: "a_spike", name: "钉刺背心", rarity: "R", thorns: 5, desc: "内衬钉了铁刺，谁抱上来谁疼。" }
+  { id: "a_spike", name: "钉刺背心", rarity: "R", thorns: 5, desc: "内衬钉了铁刺，谁抱上来谁疼。" },
+  // ── SR ─────────────────────────────
+  { id: "a_lava", name: "熔岩护甲", rarity: "SR", dmgCut: 6, thorns: 10, desc: "嵌了火山岩的厚甲，打上去会烫手。" },
+  { id: "a_mitril", name: "秘银轻甲", rarity: "SR", dmgCut: 5, spd: 2, desc: "轻得出奇，挨打时却比铁甲还硬。" },
+  { id: "a_vine", name: "藤蔓重甲", rarity: "SR", hp: 80, def: 10, desc: "层层老藤缠成的重甲，笨重但耐打。" },
+  { id: "a_guard", name: "铁卫护心镜", rarity: "SR", res: 12, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" }
 ];
 export const ACCESSORIES = [
   { id: "c_rope", name: "布绳", rarity: "R", atkPct: 2, desc: "随手系在手腕上的布绳，图个心安。" },
@@ -47,7 +79,12 @@ export const ACCESSORIES = [
   { id: "c_charm", name: "铜护符", rarity: "R", def: 5, desc: "小铜片打的护符，边角已经磨圆了。" },
   { id: "c_glove", name: "皮质手套", rarity: "R", spd: 1, desc: "旧皮手套，握东西更稳，动作也利索一点。" },
   { id: "c_luck", name: "幸运石", rarity: "R", critRate: 2, desc: "路边捡的白色小石头，据说能带来好运。" },
-  { id: "c_band", name: "麻布护腕", rarity: "R", res: 5, desc: "缠在手腕上的麻布，挡不住什么，但心里有底。" }
+  { id: "c_band", name: "麻布护腕", rarity: "R", res: 5, desc: "缠在手腕上的麻布，挡不住什么，但心里有底。" },
+  // ── SR ─────────────────────────────
+  { id: "c_ring", name: "承山戒", rarity: "SR", atkPct: 6, desc: "戒指内圈刻着山纹，握拳时像压着一座山。" },
+  { id: "c_lavastone", name: "熔岩护石", rarity: "SR", atkPct: 4, critDmg: 12, desc: "温热的黑石，擦出的火花特别亮。" },
+  { id: "c_feather", name: "疾风羽", rarity: "SR", spd: 3, desc: "一片轻得几乎没有重量的羽毛。" },
+  { id: "c_mitril", name: "秘银坠", rarity: "SR", atkPct: 6, spd: 2, desc: "细链坠着一小块秘银，凉丝丝的。" }
 ];
 export const STAGES = [
   { id: "k1", name: "训练木桩", tier: 1, gold: 120, exp: 40,
