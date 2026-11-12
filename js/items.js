@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=ad6938d2";
+import { CULT } from "./data.js?v=bf981037";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -105,6 +105,12 @@ export function promoteApply(store, it) {
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
   store.gold = (Number(store.gold) || 0) - c.gold;
+  // ⬜ 升阶/觉醒白值
+  const g = ((CULT.flatGain || {})[c.action === "promote" ? "promote" : "awaken"] || {})[it.cat] || {};
+  if (Object.keys(g).length) {
+    it.data.flat = it.data.flat || {};
+    Object.keys(g).forEach((k) => { it.data.flat[k] = (Number(it.data.flat[k]) || 0) + g[k]; });
+  }
   it.data.rarity = c.next;
   it.data.star = 5;
   if (c.next === "UR" && c.fire) it.data.fire = c.fire;

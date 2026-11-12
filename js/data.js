@@ -191,6 +191,11 @@ export const CULT = {
     3: { shards: 700, gold: 10000 },
     4: { shards: 1000, gold: 15000 },
     5: { shards: 1500, gold: 22000 }
+  },
+  // ⬜ 升阶/觉醒加的白值（不进倍率，直接加）
+  flatGain: {
+    promote: { weapon: { atk: 5 }, armor: { hp: 25 }, accessory: { atk: 1 } },
+    awaken: { weapon: { atk: 3 }, armor: { hp: 15 }, accessory: { atk: 1 } }
   }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS

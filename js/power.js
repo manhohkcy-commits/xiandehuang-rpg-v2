@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=ad6938d2";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=bf981037";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -91,6 +91,9 @@ export function itemBonus(it) {
     const v = (Number(d[k]) || 0) * breakMul * (affix.indexOf(k) >= 0 ? subMul : 1);
     if (v) out[k] = (out[k] || 0) + v;
   });
+  // ⬜ 升阶/觉醒累加的白值：直接加，不进任何倍率
+  const flat = d.flat || {};
+  Object.keys(flat).forEach((k) => { out[k] = (out[k] || 0) + (Number(flat[k]) || 0); });
   return out;
 }
 
