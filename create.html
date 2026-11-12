@@ -1409,11 +1409,7 @@ function renderShop() {
           '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button>' +
           (p.meal && own > 0 ? ' <button data-eat="' + p.id + '" style="border-color:#7ee787;color:#7ee787;">食用</button>' : '') +
           '</span></div>';
-      }).join("")) +
-    card("📜 杂货 · 资历材料",
-      '<div class="row"><span class="k">资历手稿<div class="hint">资历晋升用</div></span><span class="v"><span style="color:#ffd666;">350 金</span> <button data-buy="material:manuscript">购买</button></span></div>' +
-      '<div class="row"><span class="k">资质鉴定勋章<div class="hint">资质评估用</div></span><span class="v"><span style="color:#ffd666;">600 金</span> <button data-buy="material:medal">购买</button></span></div>' +
-      '<div class="hint">持有：手稿 ' + Number((store.flags || {}).manuscript || 0) + ' · 勋章 ' + Number((store.flags || {}).medal || 0) + '</div>');
+      }).join(""));
 
   const gearHtml = tabBar +
     '<div class="card" style="padding:10px 12px;"><div style="display:flex;justify-content:space-between;align-items:center;">' +
