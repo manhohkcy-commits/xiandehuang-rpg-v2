@@ -21,6 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=8b89ef2b";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY } from "./js/data.js?v=142a4767";
+import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=22282a49";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2bad05a4";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=c4ed415b";
@@ -92,9 +93,26 @@ function renderPick() {
             '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>').join("")
         : '<div class="hint">关卡内容待定，先用默认训练场试功能。</div>' +
           '<div class="row"><span class="k">默认训练场</span><span class="v"><button data-stage="' + STAGES[0].id + '">开战</button></span></div>') +
-    '</div>';
+    '</div>' +
+    (ORIGINALS.length
+      ? '<div class="card"><div class="card-title">原创角色</div>' +
+        ORIGINALS.filter((o) => o.camp !== "ally").map((o) =>
+          '<div class="row"><span class="k">' + esc(o.name) + (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') +
+          '<div class="hint">' + esc(o.role || "") + ' · 攻击 ' + (o.stats && o.stats.atk) + ' · 生命 ' + (o.stats && o.stats.hp) + '</div></span>' +
+          '<span class="v"><button data-orig="' + o.id + '">挑战</button></span></div>').join("") +
+        ORIGINALS.filter((o) => o.camp === "ally").map((o) =>
+          '<div class="row"><span class="k">' + esc(o.name) + ' <span class="hint">友方</span></span>' +
+          '<span class="v"><button data-ally="' + o.id + '">' + (window.__allyId === o.id ? "✅ 已同行" : "邀请同行") + '</button></span></div>').join("") +
+        '</div>'
+      : "");
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => startBattle(b.dataset.stage);
+  });
+  view().querySelectorAll("[data-orig]").forEach((b) => {
+    b.onclick = () => startOriginal(b.dataset.orig);
+  });
+  view().querySelectorAll("[data-ally]").forEach((b) => {
+    b.onclick = () => { window.__allyId = b.dataset.ally; toast("已邀请同行"); renderPick(); };
   });
 }
 
@@ -187,6 +205,29 @@ async function tryRestore() {
   return true;
 }
 
+function startOriginal(id) {
+  const o = ORIGINALS.find((x) => x.id === id);
+  if (!o) return;
+  const ch = activeChar();
+  if (!ch) return;
+  const f = charFinal(ch);
+  const traits = combatTraits(ch);
+  const foe = originalToUnits(o, "B");
+  st = createBattle([
+    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits },
+    foe
+  ]);
+  st.__stage = STAGES[0].id;   // 奖励沿用训练场
+  st.__weapon = ch.equip.weapon || null;
+  st.__talent = talentActive(ch);
+  log = [];
+  lastRound = 1;
+  pushLog("— 回合 1 —", "hdr");
+  pushLog("⚔️ 挑战原创角色：" + o.name + (o.title ? "（" + o.title + "）" : ""), "line");
+  renderBattle();
+  aiTurnIfNeeded();
+}
+
 function startBattle(stageId) {
   if (roomId && amHost) { buildMultiBattle(stageId); return; }
   const ch = activeChar();
@@ -194,10 +235,20 @@ function startBattle(stageId) {
   const traits = combatTraits(ch);
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
-  st = createBattle([
+  const units = [
     { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits },
     { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
-  ]);
+  ];
+  st = createBattle(units);
+  // 🤝 友方原创角色同行：作为不出现在行动条上的助战单位
+  const ally = window.__allyId ? ORIGINALS.find((o) => o.id === window.__allyId && o.camp === "ally") : null;
+  if (ally) {
+    const u = originalToUnits(ally, "A");
+    u.allowed = 0;
+    st.units.push(u);
+    st.__ally = u;
+    pushLog("🤝 " + ally.name + " 与你同行", "line");
+  }
   st.__stage = s.id;
   st.__weapon = ch.equip.weapon || null;
   st.__talent = talentActive(ch);
@@ -680,6 +731,13 @@ function doAct(kind) {
       pushLog("🗡️ 连击追加 " + r2.dmg, "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
+  }
+
+  // 🤝 同行助战：每回合自动出手一次（不占行动条）
+  if (st.__ally && st.__allyRound !== lastRound && !st.finished && f2.hp > 0) {
+    st.__allyRound = lastRound;
+    const ar = damage(st, "ally", "foe", { atk: st.__ally.atk, mult: 100, critRate: st.__ally.critRate, critDmg: st.__ally.critDmg, kind: "normal", dmgType: "phys", style: "melee" });
+    pushLog("🤝 " + st.__ally.name + " 助战 → " + f2.name + " " + ar.dmg, "line");
   }
 
   if (st.finished) { finish(); renderBattle(); return; }
