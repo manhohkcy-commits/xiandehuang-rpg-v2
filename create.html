@@ -364,10 +364,10 @@ function gradeCard(ch) {
   const canG = nextG && ms >= nextG.cost;
   const canA = nextA && md >= nextA.cost;
   return card("资历与资质",
-    '<div class="row"><span class="k">资历评级</span><span class="v" style="color:' + g.color + ';">' + g.name + ' ' + g.key +
+    '<div class="row"><span class="k">资历评级</span><span class="v" style="color:' + g.color + ';font-weight:800;letter-spacing:1px;">' + g.key +
       ' <span class="hint">（全属性 ×' + g.mult.toFixed(2) + '）</span></span></div>' +
     (nextG
-      ? '<div class="row"><span class="k">升资历 → ' + nextG.name + ' ' + nextG.key + '</span><span class="v">' +
+      ? '<div class="row"><span class="k">升资历 → <b style="color:' + nextG.color + ';">' + nextG.key + '</b></span><span class="v">' +
         '<span style="color:#ffd666;">📜 ' + nextG.cost + '/有 ' + ms + '</span> ' +
         '<button data-grade="1" ' + (canG ? '' : 'disabled') + '>晋升</button></span></div>'
       : '<div class="hint">已到最高资历（红 SS）</div>') +
