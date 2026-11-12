@@ -13,6 +13,7 @@
   <div class="nav">
     <button data-tab="char" class="on">🧑 我的角色</button>
     <button data-tab="talent">🌳 天赋</button>
+    <button data-tab="rank">🏆 排行榜</button>
     <button data-tab="store">🎒 仓库</button>
     <button data-tab="shop">🏪 商店</button>
   </div>
@@ -21,7 +22,7 @@
 </div>
 
 <script type="module">
-import { newStore, newChar, cloudGet, cloudSave, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
+import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY } from "./js/data.js";
 import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
@@ -689,6 +690,44 @@ function renderTalent() {
   };
 }
 
+// 🏆 排行榜：读云端存档，按战力排序（前 20）
+async function renderRank() {
+  view().innerHTML = '<div class="card"><div class="card-title">🏆 排行榜</div><div class="hint">读取云端存档中…</div></div>';
+  let rows = [];
+  try { rows = await cloudList(200); } catch (e) { rows = []; }
+  const list = rows
+    .filter((r) => r && r.store && Number(r.store.v) === 2 && String(r.box).indexOf("__") !== 0)
+    .map((r) => {
+      const st = r.store;
+      const chars = st.chars || [];
+      const ch = chars.find((c) => c.id === st.activeChar) || chars[0];
+      return ch ? {
+        box: String(r.box), name: ch.name || "无名", lv: Number(ch.lv) || 1,
+        power: charPower(ch), grade: gradeOf(ch).key, color: gradeOf(ch).color
+      } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.power - a.power)
+    .slice(0, 20);
+
+  const meBox = box;
+  view().innerHTML =
+    card("🏆 排行榜 · 战力前 20",
+      '<div class="hint" style="margin-bottom:6px;">数据来自云端存档，按综合战力排序（仅供参考）。</div>' +
+      (list.length
+        ? '<table style="width:100%;border-collapse:collapse;">' +
+          '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>角色</th><th>位号</th><th style="text-align:right;">Lv</th><th style="text-align:right;">战力</th></tr>' +
+          list.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === meBox ? 'background:#1b2740;' : '') + '">' +
+            '<td style="padding:5px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
+            '<td style="font-size:12px;"><b style="color:' + r.color + ';">' + esc(r.grade) + '</b> ' + esc(r.name) + '</td>' +
+            '<td style="font-size:10px;color:#6a6a86;">' + esc(r.box) + '</td>' +
+            '<td style="text-align:right;font-size:11px;">' + r.lv + '</td>' +
+            '<td style="text-align:right;font-size:11.5px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") +
+          '</table>'
+        : '<div class="hint">还没有可排行的存档（或云端暂时不可用）。</div>') +
+      '<div class="hint" style="margin-top:8px;">只统计最近更新的 200 个位号；同分按先后。</div>');
+}
+
 function renderStore() {
   const ch = activeChar(), all = store.items || [];
   const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
@@ -999,6 +1038,7 @@ function render() {
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
   if (tab === "char") renderChar();
   else if (tab === "talent") renderTalent();
+  else if (tab === "rank") renderRank();
   else if (tab === "store") renderStore();
   else renderShop();
 }

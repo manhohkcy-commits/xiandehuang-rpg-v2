@@ -35,6 +35,13 @@ export async function cloudGet(box) {
   return (Array.isArray(j) && j[0]) || null;
 }
 
+// 🏆 排行榜用：拉一批位号（按更新时间倒序），客户端再排序
+export async function cloudList(limit = 200) {
+  const r = await fetch(CLOUD.url + "/rest/v1/slots?select=box,name,store,updated_at&order=updated_at.desc&limit=" + Number(limit || 200), { headers: H() });
+  const j = await r.json();
+  return Array.isArray(j) ? j : [];
+}
+
 export async function cloudSave(box, store, updatedAt, name) {
   const bad = validateStore(store);
   if (bad.length) throw new Error("存档结构不合法：" + bad.join("；"));
