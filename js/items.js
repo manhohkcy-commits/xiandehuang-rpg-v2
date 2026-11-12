@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=bf981037";
+import { CULT, RARITY_MULT } from "./data.js?v=bf981037";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -111,7 +111,17 @@ export function promoteApply(store, it) {
     it.data.flat = it.data.flat || {};
     Object.keys(g).forEach((k) => { it.data.flat[k] = (Number(it.data.flat[k]) || 0) + g[k]; });
   }
+  const oldRarity = it.data.rarity;
   it.data.rarity = c.next;
+  // ⬆️ 升阶缩放：底子 = 当前基础 ÷ 旧系数，升阶后 = 底子 × 新系数
+  if (c.action === "promote" && it.data.main) {
+    const oldRm = RARITY_MULT[oldRarity] || 1;
+    const newRm = RARITY_MULT[c.next] || 1;
+    Object.keys(it.data.main).forEach((k) => {
+      const base0 = (Number(it.data.main[k]) || 0) / oldRm;
+      it.data.main[k] = Math.round(base0 * newRm * 10) / 10;
+    });
+  }
   it.data.star = 5;
   if (c.next === "UR" && c.fire) it.data.fire = c.fire;
   return { ok: true, next: c.next, fire: c.fire, action: c.action };
