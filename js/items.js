@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=8ac29ba8";
+import { CULT } from "./data.js?v=f206471a";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -80,8 +80,9 @@ export function promoteCheck(it, store) {
   if (d.rarity === "UR") {
     const fire = Number(d.fire) || 1;
     if (fire >= (CULT.maxFire || 5)) return { ok: false, why: "已达 UR5🔥" };
-    const cost = (CULT.awaken || {}).ur5 || { shards: 0, gold: 0 };
-    return check(cost, { action: "awakenUR5", next: "UR", fire: 5, label: "觉醒 → UR5🔥" });
+    const nextFire = fire + 1;
+    const cost = (CULT.awakenFire || {})[nextFire] || { shards: 0, gold: 0 };
+    return check(cost, { action: "awakenFire", next: "UR", fire: nextFire, label: "觉醒 → UR" + nextFire + "🔥" });
   }
 
   if ((Number(d.star) || 1) < 5) return { ok: false, why: "先升到 5★ 才能升阶" };
@@ -105,7 +106,7 @@ export function promoteApply(store, it) {
   store.gold = (Number(store.gold) || 0) - c.gold;
   it.data.rarity = c.next;
   it.data.star = 5;
-  if (c.action === "awakenUR1" || c.action === "awakenUR5") it.data.fire = c.fire;
+  if (c.action === "awakenUR1" || c.action === "awakenFire") it.data.fire = c.fire;
   it.data.ups = (Number(it.data.ups) || 0) + 1;
   return { ok: true, next: c.next, fire: c.fire, action: c.action, ups: it.data.ups };
 }

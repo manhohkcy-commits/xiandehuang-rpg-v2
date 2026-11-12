@@ -182,8 +182,14 @@ export const CULT = {
     SSR: { shards: 500, gold: 6000 }
   },
   awaken: {
-    ur1: { shards: 1000, gold: 15000 },
-    ur5: { shards: 2000, gold: 30000 }
+    ur1: { shards: 1000, gold: 15000 }
+  },
+  // 火数逐级觉醒：1🔥→2🔥→3🔥→4🔥→5🔥
+  awakenFire: {
+    2: { shards: 400, gold: 6000 },
+    3: { shards: 700, gold: 10000 },
+    4: { shards: 1000, gold: 15000 },
+    5: { shards: 1500, gold: 22000 }
   }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
