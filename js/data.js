@@ -64,8 +64,8 @@ export const WEAPONS = [
 const WEAPON_ATK = {
   w_iron: 40, w_bow: 38, w_wood: 36, w_dagger: 34, w_fist: 36,
   w_spear: 42, w_sling: 34, w_hunt: 38, w_torch: 36, w_shield: 38,
-  w_twin: 50, w_axe: 56, w_spear2: 52, w_cross: 50, w_longbow: 48,
-  w_firestaff: 54, w_thunder: 52, w_aegis: 46, w_purify: 44
+  w_twin: 50, w_axe: 50, w_spear2: 50, w_cross: 50, w_longbow: 48,
+  w_firestaff: 50, w_thunder: 50, w_aegis: 46, w_purify: 44
 };
 WEAPONS.forEach((w) => { if (WEAPON_ATK[w.id]) w.main = { atk: WEAPON_ATK[w.id] }; });
 
@@ -192,10 +192,9 @@ export const CULT = {
     4: { shards: 1000, gold: 15000 },
     5: { shards: 1500, gold: 22000 }
   },
-  // ⬜ 升阶/觉醒加的白值（不进倍率，直接加）
+  // ⬜ 升阶白值：让低阶多次升阶后能在终局反超高阶
   flatGain: {
-    promote: { weapon: { atk: 5 }, armor: { hp: 25 }, accessory: { atk: 1 } },
-    awaken: { weapon: { atk: 3 }, armor: { hp: 15 }, accessory: { atk: 1 } }
+    promote: { weapon: { atk: 8 }, armor: { hp: 40 }, accessory: { atk: 2 } }
   }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
