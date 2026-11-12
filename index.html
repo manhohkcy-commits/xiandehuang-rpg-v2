@@ -16,7 +16,7 @@
   <div class="card">
     <div class="row"><span class="k">我的位号（box）</span>
       <span class="v"><input id="box" placeholder="例如 gct6kdvygp" style="width:210px;"></span></div>
-    <div class="hint" style="margin-top:6px;">第一次玩可以留空，点进去会自动发一个位号并建新档。</div>
+    <div class="hint" style="margin-top:6px;">第一次玩可以留空，点进去会自动发一个位号并建新档。分享给朋友用这个网址即可（不要带 <code>?box=</code>，否则会进同一个档）。</div>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;">
@@ -104,9 +104,9 @@ document.querySelectorAll("[data-go]").forEach((b) => {
       box.value = b0;
     }
     if (b0) localStorage.setItem("rpg2:box", b0);
+    // 位号只记在本机，不写进 URL（避免把带 ?box= 的链接分享出去串号）
     const qs = [];
     if (b.dataset.tab) qs.push("tab=" + encodeURIComponent(b.dataset.tab));
-    if (b0) qs.push("box=" + encodeURIComponent(b0));
     location.href = page + (qs.length ? "?" + qs.join("&") : "");
   };
 });

@@ -9,6 +9,7 @@
 <body>
 <div class="wrap">
   <div class="nav"><a href="index.html">← 返回</a><span class="tag" id="boxTag">—</span><span class="tag">v2.0.0</span>
+    <button id="btnSwitchBox" style="font-size:11px;">🔁 换位号</button>
     <button id="btnSave" style="margin-left:auto;">💾 保存</button></div>
   <div class="nav">
     <button data-tab="char" class="on">🧑 我的角色</button>
@@ -43,8 +44,17 @@ function readBox() {
   const q = new URLSearchParams(location.search);
   if (q.get("box")) return q.get("box");
   const m = /box=([^&]+)/.exec(location.hash || "");
-  return m ? decodeURIComponent(m[1]) : "";
+  if (m) return decodeURIComponent(m[1]);
+  return localStorage.getItem("rpg2:box") || "";
 }
+
+// 🔁 换位号：清掉本机记忆，回首页重新填
+$("btnSwitchBox").onclick = () => {
+  if (!confirm("换位号？当前位号会从这台设备上退出（存档在云端不会丢），回首页填新位号。")) return;
+  localStorage.removeItem("rpg2:box");
+  try { sessionStorage.removeItem("rpg2:pw:" + box); } catch (e) {}
+  location.href = "index.html";
+};
 
 async function load() {
   box = readBox();
@@ -52,7 +62,6 @@ async function load() {
     // 没带位号：自动发一个，别把新人卡在「缺少 box」
     box = "p" + Math.random().toString(36).slice(2, 8);
     localStorage.setItem("rpg2:box", box);
-    try { history.replaceState(null, "", "create.html?box=" + encodeURIComponent(box)); } catch (e) {}
   }
   $("boxTag").textContent = box;
   const cached = cacheLoad(box);
