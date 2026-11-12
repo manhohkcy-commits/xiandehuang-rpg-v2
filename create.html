@@ -570,7 +570,6 @@ function renderChar() {
       attrRow("力量", "str", ch) + attrRow("敏捷", "agi", ch) + attrRow("智力", "intel", ch) + attrRow("技巧", "tech", ch) +
       '<div class="hint" style="margin-top:6px;">剩余可分配点数：<b style="color:' + ((ch.free || 0) > 0 ? "#7ee787" : "#6a6a86") + ';">' + (ch.free || 0) + '</b>（每次升级 +2）</div>') +
     card("装备栏", '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + eqCard(ch, "weapon", "⚔️ 武器") + eqCard(ch, "armor", "🛡️ 防具") + eqCard(ch, "accessory", "💍 饰品") + '</div>') +
-    card("资源", row("金币", fmt(store.gold || 0)) + row("强化石", fmt(store.flags.stone || 0)) + row("碎片", fmt(store.flags.shards || 0)) + row("突破石", fmt(store.flags.bstone || 0)) + row("资历手稿", fmt(store.flags.manuscript || 0)) + row("资质鉴定勋章", fmt(store.flags.medal || 0))) +
     card("操作", '<button id="btnRename">✏️ 改名字</button>') +
     card("最近收据", receiptsHtml());
 
@@ -1158,7 +1157,8 @@ function renderStore() {
 
   const mat = (k, n) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + fmt(Number((store.flags || {})[n]) || 0) + '</span></div>';
   view().innerHTML = tool +
-    '<div class="card"><div class="card-title">素材</div>' +
+    '<div class="card"><div class="card-title">资源</div>' +
+      '<div class="row"><span class="k">金币</span><span class="v">' + fmt(Number(store.gold) || 0) + '</span></div>' +
       mat("碎片", "shards") + mat("强化石", "stone") + mat("突破石", "bstone") +
       mat("资历手稿", "manuscript") + mat("资质鉴定勋章", "medal") + '</div>' +
     '<div class="card"><div class="card-title">仓库（' + filtered.length + ' / ' + all.length + ' 件）</div>' + rows + '</div>';
