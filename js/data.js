@@ -113,8 +113,8 @@ export const APTITUDE = [
 // 🎲 建角：基础四项（百分比）与专精四项（绝对值）共用点数
 //    上限拉高，允许「全攻 / 全防 / 全血」这种极限流派；单项吃满 = 40 点
 export const BIRTH = {
-  basicPoints: 40, basicPct: 5, basicCap: 30,     // 生命/攻击/防御/法抗（单项最高 +150%）
-  specPoints: 24, specCap: 20,                    // 力量/智力/技巧/敏捷（单项最高 20）
+  basicPoints: 40, basicPct: 5, basicCap: 40,     // 生命/攻击/防御/法抗（上限 = 总点数，可全堆一项 +200%）
+  specPoints: 24, specCap: 24,                    // 力量/智力/技巧/敏捷（上限 = 总点数，可全堆一项）
   specEffect: { str: 2, int: 2, tech: 2, agi: 0.6 }  // 力=近战伤、智=法术伤、技=远程伤、敏=速度
 };
 
