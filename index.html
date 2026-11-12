@@ -128,7 +128,8 @@ document.getElementById("dataTag").textContent =
 document.getElementById("affixTag").textContent =
   "扩展 " + AFFIX_LIB_EXT.length + " · 二批 " + AFFIX_LIB_2.length + " · 三批 " + AFFIX_LIB_3.length;
 document.getElementById("talentTag").textContent =
-  TALENT_TREES.length + " 棵 · " + TALENT_TREES.reduce((n, t) => n + t.nodes.length, 0) + " 节点";
+  TALENT_TREES.length + " 棵 · " +
+  TALENT_TREES.reduce((n, t) => n + (t.branches || []).reduce((m, b) => m + b.nodes.length, 0), 0) + " 节点";
 </script>
 </body>
 </html>
