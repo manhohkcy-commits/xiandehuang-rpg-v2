@@ -308,6 +308,20 @@ function buildCreateScreen() {
     '<button class="g-step" data-attr="' + k + ':1"' + (free() <= 0 || state[k] >= BIRTH.specCap ? " disabled" : "") + '>＋</button>' +
     '</div><span class="g-hint">' + (BIRTH.specEffect[k] ? "每点 +" + BIRTH.specEffect[k] : "") + '　/ 上限 ' + BIRTH.specCap + '</span></div>';
 
+  const gearSub = (x) => {
+    const p = [];
+    if (x.def) p.push("防御 +" + x.def);
+    if (x.res) p.push("法抗 +" + x.res);
+    if (x.hp) p.push("生命 +" + x.hp);
+    if (x.spd) p.push("速度 +" + x.spd);
+    if (x.atkPct) p.push("攻击 +" + x.atkPct + "%");
+    if (x.critRate) p.push("暴击 +" + x.critRate + "%");
+    if (x.critDmg) p.push("暴伤 +" + x.critDmg + "%");
+    if (x.dmgCut) p.push("减伤 " + x.dmgCut + "%");
+    if (x.thorns) p.push("反伤 " + x.thorns + "%");
+    return p.join(" · ") || "无加成";
+  };
+
   view().innerHTML = '<div class="gform">' +
     '<div class="g-org">闲得慌 · 冒险者协会</div>' +
     '<h1>入会登记表</h1>' +
@@ -320,8 +334,8 @@ function buildCreateScreen() {
     (CONTENT_READY
       ? '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
         pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => x.sMult ? "「" + (x.sName || "—") + "」" + x.sMult + "%" : "无技能 · 普攻/必杀") +
-        pickRow("armor", "防　具", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
-        pickRow("acc", "饰　品", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : ""))
+        pickRow("armor", "防　具", ARMORS, state.armor, gearSub) +
+        pickRow("acc", "饰　品", ACCESSORIES, state.acc, gearSub)
       : '<div class="g-sec">二、初始装备</div>' +
         '<div class="g-row"><span class="g-k">装　备</span><div class="g-v">内容待定，先由协会配发默认装备</div></div>') +
 

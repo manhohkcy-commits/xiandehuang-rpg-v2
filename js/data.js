@@ -34,10 +34,20 @@ export const WEAPONS = [
 ];
 // ── SR / SSR / UR 尚未设计：旧占位装备已移除，等正式设计后再加 ─────
 export const ARMORS = [
-  { id: "a_cloth", name: "粗布衣", rarity: "R", dmgCut: 2, desc: "最普通的粗布衣服，挡不住刀，但聊胜于无。" }
+  { id: "a_cloth", name: "粗布衣", rarity: "R", dmgCut: 2, desc: "最普通的粗布衣服，挡不住刀，但聊胜于无。" },
+  { id: "a_leather", name: "皮甲", rarity: "R", def: 8, desc: "鞣过的兽皮缝成的背心，硬邦邦的，挡钝器还行。" },
+  { id: "a_rattan", name: "藤甲", rarity: "R", hp: 40, desc: "藤条编的护身甲，轻，但挨打时会吱呀响。" },
+  { id: "a_cloak", name: "轻便斗篷", rarity: "R", spd: 2, desc: "薄布斗篷，不挡刀，胜在不拖脚步。" },
+  { id: "a_mirror", name: "护心镜", rarity: "R", res: 8, desc: "一块磨亮的铜镜挂在胸口，图个心安。" },
+  { id: "a_spike", name: "钉刺背心", rarity: "R", thorns: 5, desc: "内衬钉了铁刺，谁抱上来谁疼。" }
 ];
 export const ACCESSORIES = [
-  { id: "c_rope", name: "布绳", rarity: "R", atkPct: 2, desc: "随手系在手腕上的布绳，图个心安。" }
+  { id: "c_rope", name: "布绳", rarity: "R", atkPct: 2, desc: "随手系在手腕上的布绳，图个心安。" },
+  { id: "c_beads", name: "木珠串", rarity: "R", hp: 30, desc: "几颗木珠串成的手串，据说能压惊。" },
+  { id: "c_charm", name: "铜护符", rarity: "R", def: 5, desc: "小铜片打的护符，边角已经磨圆了。" },
+  { id: "c_glove", name: "皮质手套", rarity: "R", spd: 1, desc: "旧皮手套，握东西更稳，动作也利索一点。" },
+  { id: "c_luck", name: "幸运石", rarity: "R", critRate: 2, desc: "路边捡的白色小石头，据说能带来好运。" },
+  { id: "c_band", name: "麻布护腕", rarity: "R", res: 5, desc: "缠在手腕上的麻布，挡不住什么，但心里有底。" }
 ];
 export const STAGES = [
   { id: "k1", name: "训练木桩", tier: 1, gold: 120, exp: 40,
