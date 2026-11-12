@@ -419,7 +419,7 @@ async function pullIntents() {
           continue;
         }
         const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
-        const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
+        const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg, kind: (it.act === "ult" ? "ult" : it.act === "skill" ? "skill" : "normal"), dmgType: (wp.dmgType || "phys") });
         if (it.act === "ult") who.rage = 0;
         else who.rage = Math.min(100, (Number(who.rage) || 0) + 25 * (1 + (Number(tr.rageOnSkill) || 0) / 100 + (Number(tr.ragePct) || 0) / 100));
         if (it.act === "skill" && wp.hitStatus) {
@@ -432,7 +432,7 @@ async function pullIntents() {
         // 💥 溅射：招式命中后打相邻敌人
         if (it.act === "skill" && Number(tr.splash) > 0) {
           st.units.filter((u) => u.alive !== false && u.side !== who.side && u.id !== other.id).forEach((u) => {
-            const sr = damage(st, who.id, u.id, { atk: who.atk, mult: Number(tr.splash) || 30, critRate: 0, critDmg: who.critDmg });
+            const sr = damage(st, who.id, u.id, { atk: who.atk, mult: Number(tr.splash) || 30, critRate: 0, critDmg: who.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys") });
             pushLog("💥 溅射 → " + u.name + " " + sr.dmg, "line");
           });
         }
@@ -453,7 +453,7 @@ async function pullIntents() {
 }
 
 // 🧩 战斗词条展示（第二批）
-const TRAIT_NAMES = { cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", sunderBoost: "破防强度", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤" };
+const TRAIT_NAMES = { cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", sunderBoost: "破防强度", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤", physPct: "物理伤害", spellPct: "法术伤害", normalPct: "普攻伤害", skillPct: "技能伤害", ultPct: "必杀伤害" };
 const STATUS_NAMES = { stun: "眩晕", freeze: "冰冻", silence: "沉默", disarm: "缴械", taunt: "嘲讽", noheal: "禁疗", immune: "免疫", burn: "灼烧", sunder: "破防", mark: "标记", stack: "层数", atkUp: "增益", tcd: "天赋技CD", scd: "辅助技CD" };
 const statusName = (k) => STATUS_NAMES[k] || k;
 function traitsLine(tr) {
@@ -577,7 +577,7 @@ function doAct(kind) {
     else if (t.key === "frenzy") { addStatus(st, "me", "atkUp", 40, 2, "狂战"); subs.push("攻击 +40%（2 回合）"); }
     else if (t.key === "gale") { m.allowed = (Number(m.allowed) || 1) + 1; subs.push("本回合多行动一次"); }
     else if (t.key === "arcane") {
-      const r = damage(st, "me", "foe", { atk: m.atk, mult: 200, critRate: m.critRate, critDmg: m.critDmg });
+      const r = damage(st, "me", "foe", { atk: m.atk, mult: 200, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: "spell" });
       subs.push("奥术冲击 " + r.dmg + (r.crit ? " 暴击💥" : ""));
     } else if (t.key === "bless") { const h = healUnit(st, "me", m.maxHp * 0.3); subs.push("恢复 " + h); }
     addStatus(st, "me", "tcd", 0, t.cd, "天赋技CD");
@@ -598,7 +598,7 @@ function doAct(kind) {
     }
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "ult") {
-    const r = damage(st, "me", "foe", { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg });
+    const r = damage(st, "me", "foe", { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wpOf(st.__weapon).dmgType || "phys") });
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     if (!tryDualborn(m)) commit(st, "me");
@@ -629,7 +629,7 @@ function doAct(kind) {
     const tr = m.traits || {};
     const baseCd = Number(wp.sCd) || 3;
     const cd = Math.max(1, baseCd - (Number(tr.cdReduce) || 0));
-    const r = damage(st, "me", "foe", { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
+    const r = damage(st, "me", "foe", { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys") });
     const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "") +
       (cd !== baseCd ? " · 冷却缩减 → " + cd + " 回合" : "")];
     if (wp.hitStatus && r.dmg > 0) {
@@ -651,17 +651,17 @@ function doAct(kind) {
     setCooldown(st, "me", baseCd);
     // 🏃 追击：招式命中后概率追加 50% 普攻
     if (Number(tr.chase) > 0 && f2.hp > 0 && Math.random() * 100 < Number(tr.chase)) {
-      const r3 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg });
+      const r3 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys") });
       pushLog("🏃 追击追加 " + r3.dmg, "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
   } else {
-    const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
+    const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: "phys" });
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     // 🗡️ 连击：普攻概率再打一次（半伤）
     if (Number((m.traits || {}).doubleStrike) > 0 && f2.hp > 0 && Math.random() * 100 < Number(m.traits.doubleStrike)) {
-      const r2 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg });
+      const r2 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: "phys" });
       pushLog("🗡️ 连击追加 " + r2.dmg, "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
@@ -705,12 +705,12 @@ function aiTurnIfNeeded() {
     }
     const useSkill = Math.random() < 0.3;
     const mult = useSkill ? 150 : 100;
-    const r = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg });
+    const r = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg, kind: "normal", dmgType: "phys" });
     pushLog((useSkill ? "🥋 " : "⚔️ ") + f2.name + (useSkill ? " 技能" : " 普攻") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     // 🔁 反击：被击后概率反打 60%
     const cb = Number((m.traits || {}).counter) || 0;
     if (cb > 0 && m.alive !== false && f2.alive !== false && Math.random() * 100 < cb) {
-      const rc = damage(st, "me", "foe", { atk: m.atk, mult: 60, critRate: m.critRate, critDmg: m.critDmg });
+      const rc = damage(st, "me", "foe", { atk: m.atk, mult: 60, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: "phys" });
       pushLog("🔁 " + m.name + " 反击 " + rc.dmg, "line");
     }
     // 🛡️ 防具反制：缴械 / 嘲讽

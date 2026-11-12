@@ -162,6 +162,7 @@ export const charPower = (ch) => powerOf(charFinal(ch));
 //   sunderBoost / statusPower / statusHit / statusResist / block / tenacity / lowHpCut
 const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "ragePct", "sunderBoost",
   "statusPower", "statusHit", "statusResist", "block", "tenacity", "lowHpCut",
+  "physPct", "spellPct", "normalPct", "skillPct", "ultPct",
   // 第三批：控制 / 机制类也一起汇总（武器、防具、饰品都能出）
   "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash",
   "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"];

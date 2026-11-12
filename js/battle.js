@@ -93,6 +93,10 @@ export function damage(st, atkId, defId, opts = {}) {
   // ✨ 增益：攻击提升（辅佐）
   const up = (atk.statuses || []).find((s) => s.key === "atkUp");
   if (up) raw *= 1 + (Number(up.v) || 0) / 100;
+  // 🎯 伤害类型加成（普攻/技能/必杀 × 物理/法术）
+  const kindPct = opts.kind === "normal" ? at.normalPct : opts.kind === "skill" ? at.skillPct : opts.kind === "ult" ? at.ultPct : 0;
+  const typePct = opts.dmgType === "spell" ? at.spellPct : at.physPct;
+  raw *= 1 + ((Number(kindPct) || 0) + (Number(typePct) || 0)) / 100;
   // 🗡️ 穿透：无视目标一部分减伤/格挡
   const reduce = (Number(def.dmgCut) || 0) + (Number(dt.block) || 0);
   const block = Math.max(0, Math.min(60, reduce - (Number(at.penetrate) || 0)));
