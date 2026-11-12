@@ -19,29 +19,24 @@ import { AFFIX_LIB, AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
 const chips = (names) => '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' +
   [...new Set(names)].map((n) => '<span class="tag" style="font-size:11.5px;padding:3px 9px;">' + n + '</span>').join("") + '</div>';
-const catName = { weapon: "⚔️ 武器", armor: "🛡️ 防具", accessory: "💍 饰品" };
 
-// 第一批：按「基础 / 百分比」与部位分组，只列名字
+// 通用词条：按类别列出（所有装备共用同一套池）
 let first = "";
-for (const kind of ["基础数值", "百分比", "专精", "伤害类型"]) {
-  const byCat = AFFIX_LIB[kind] || {};
+for (const kind of Object.keys(AFFIX_LIB)) {
   first += '<div class="hint" style="margin-top:10px;color:#8fd8ff;font-weight:700;">' + kind + '</div>';
-  for (const cat of Object.keys(byCat)) {
-    first += '<div class="hint" style="margin-top:6px;color:#6a6a86;">' + (catName[cat] || cat) + '</div>';
-    first += chips(byCat[cat].map((a) => a[0]));
-  }
+  first += chips(AFFIX_LIB[kind]);
 }
 
+const extOnly = chips(AFFIX_LIB_EXT.map((a) => a[0]));
 const secondOnly = chips(AFFIX_LIB_2.map((a) => a[0]));
 const thirdOnly = chips(AFFIX_LIB_3.map((a) => a[0]));
-const extOnly = chips(AFFIX_LIB_EXT.map((a) => a[0]));
 
 document.getElementById("view").innerHTML =
   card("📖 词条库",
-    '<div class="hint">这里只列出词条种类。具体数值随装备稀有度、强化与星级变化，以装备详情为准。</div>' +
+    '<div class="hint">所有装备共用同一套词条池，不按部位限制。具体数值随稀有度、强化与星级变化，以装备详情为准。</div>' +
     '<div style="margin-top:8px;"><span class="tag">R = 2 条</span><span class="tag">SR = 3 条</span>' +
     '<span class="tag">SSR = 4 条</span><span class="tag">UR = 5 条</span></div>') +
-  card("第一批 · 纯数值", first) +
+  card("通用词条", first) +
   card("数值扩展 · 乘区类（" + AFFIX_LIB_EXT.length + " 种）", extOnly) +
   card("第二批 · 战斗词条（" + AFFIX_LIB_2.length + " 种）", secondOnly) +
   card("第三批 · 机制词条（" + AFFIX_LIB_3.length + " 种）", thirdOnly);
