@@ -1328,12 +1328,12 @@ function shelfOf(store) {
   }
   return f.shop;
 }
-// 💹 装备每日物价浮动（±15%，按日期+装备 id 稳定）
+// 💹 装备每日物价浮动（±25%，按日期+装备 id 稳定）
 function priceFactor(day, id) {
   let h = 0;
   const s = day + "|" + id;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000;
-  return 0.85 + (h % 31) / 100;   // 0.85 ~ 1.15
+  return 0.75 + (h % 51) / 100;   // 0.75 ~ 1.25
 }
 function shopPrice(cat, d) {
   const base = (SHOP_PRICE[cat] || {})[d.rarity] || 500;
