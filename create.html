@@ -141,11 +141,12 @@ function eqCard(ch, kind, label) {
   const d = ch.equip[kind];
   if (!d) return '<div style="flex:1;min-width:150px;padding:9px 10px;border-radius:9px;background:#101020;border:1px dashed #3a3a5c;">' +
     '<div style="font-size:11px;color:#6a6a86;">' + label + '</div><div style="font-size:12px;color:#5a5a78;margin-top:4px;">未装备</div></div>';
-  return '<div style="flex:1;min-width:150px;padding:9px 10px;border-radius:9px;background:#12182a;border:1px solid #2f4a6a;">' +
+  return '<div style="flex:1;min-width:150px;padding:9px 10px;border-radius:9px;background:#12182a;border:1px solid ' + ((RARITY_COLOR[d.rarity] || "#2f4a6a") + "88") + ';">' +
     '<div style="font-size:11px;color:#6a6a86;">' + label + '</div>' +
-    '<div style="font-size:12.5px;font-weight:600;margin-top:3px;">' + esc(d.name) + '</div>' +
+    '<div style="font-size:12.5px;font-weight:600;margin-top:3px;color:' + (RARITY_COLOR[d.rarity] || "#eaeaea") + ';">' + esc(d.name) + '</div>' +
     '<div style="font-size:10.5px;color:#8a8ab0;margin-top:2px;">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</div>' +
-    '<div style="margin-top:6px;"><button data-unequip="' + kind + '">脱下</button></div></div>';
+    '<div style="margin-top:6px;display:flex;gap:6px;"><button data-eqdetail="' + kind + '" style="height:24px;font-size:11px;">详情</button>' +
+    '<button data-unequip="' + kind + '" style="height:24px;font-size:11px;">脱下</button></div></div>';
 }
 
 function attrRow(label, key, ch) {
@@ -170,24 +171,64 @@ function receiptsHtml() {
 }
 
 // 📋 装备详情弹窗（v2）：把一件装备的「基础 + 词条 + 招式」全列出来
+// 稀有度配色：R 蓝 / SR 紫 / SSR 金 / UR 红
+const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
+const ITEM_NAMES = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", atkPct: "攻击加成", hpPct: "生命加成", defPct: "防御加成", resPct: "法抗加成", ragePct: "怒气获取", dmgCut: "减伤", thorns: "反伤", str: "力量", intel: "智力", tech: "技巧", agi: "敏捷", strPct: "力量加成", intelPct: "智力加成", techPct: "技巧加成", agiPct: "敏捷加成", physPct: "物理伤害", spellPct: "法术伤害", normalPct: "普攻伤害", skillPct: "技能伤害", ultPct: "必杀伤害", physPen: "物理穿透", spellPen: "法术穿透", meleePct: "近战伤害", rangedPct: "远程伤害", focusPct: "法器伤害", cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", penetrate: "穿透", doubleStrike: "连击", chase: "追击", counter: "反击", dualborn: "双生", charge: "蓄势", reverse: "逆流", fate: "天命", splash: "溅射", stun: "眩晕", silence: "沉默", freeze: "冰冻", noheal: "禁疗", disarm: "缴械", taunt: "嘲讽", purify: "净化" };
+const ITEM_UNITS = { critRate: "%", critDmg: "%", atkPct: "%", hpPct: "%", defPct: "%", resPct: "%", ragePct: "%", dmgCut: "%", thorns: "%", strPct: "%", intelPct: "%", techPct: "%", agiPct: "%", physPct: "%", spellPct: "%", normalPct: "%", skillPct: "%", ultPct: "%", physPen: "%", spellPen: "%", meleePct: "%", rangedPct: "%", focusPct: "%", block: "%", tenacity: "%", lowHpCut: "%", statusPower: "%", statusHit: "%", statusResist: "%", penetrate: "%", doubleStrike: "%", chase: "%", counter: "%", dualborn: "%", splash: "%" };
+
+// 🔍 装备详情（只读）：基础 + 词条分组 + 对比当前装备
 function showItemDetail(it) {
   if (!it || !it.data) return;
   const d = it.data;
+  const ch = activeChar();
+  const cur = ch && ch.equip && ch.equip[it.cat];
   const b = itemBonus(it);
-  const names = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", atkPct: "攻击加成", hpPct: "生命加成", defPct: "防御加成", resPct: "法抗加成", ragePct: "怒气获取", dmgCut: "减伤", thorns: "反伤", str: "力量", intel: "智力", tech: "技巧", agi: "敏捷", strPct: "力量加成", intelPct: "智力加成", techPct: "技巧加成", agiPct: "敏捷加成", physPct: "物理伤害", spellPct: "法术伤害", normalPct: "普攻伤害", skillPct: "技能伤害", ultPct: "必杀伤害", physPen: "物理穿透", spellPen: "法术穿透", meleePct: "近战伤害", rangedPct: "远程伤害", focusPct: "法器伤害" };
-  const unit = { critRate: "%", critDmg: "%", atkPct: "%", hpPct: "%", defPct: "%", resPct: "%", ragePct: "%", dmgCut: "%", thorns: "%", strPct: "%", intelPct: "%", techPct: "%", agiPct: "%", physPct: "%", spellPct: "%", normalPct: "%", skillPct: "%", ultPct: "%", physPen: "%", spellPen: "%", meleePct: "%", rangedPct: "%", focusPct: "%" };
-  const rows = Object.keys(names).filter((k) => Number(b[k]) > 0).map((k) =>
-    '<div class="row"><span class="k">' + names[k] + '</span><span class="v">+' + (Math.round((Number(b[k]) || 0) * 10) / 10) + (unit[k] || "") + '</span></div>').join("");
-  const skill = d.sMult
-    ? '<div class="row"><span class="k">招式</span><span class="v">「' + esc(d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits : '') + '</span></div>' +
-      '<div class="row"><span class="k">冷却 / 回怒</span><span class="v">' + (d.sCd || 2) + ' 回合 / ' + (d.sRage || 0) + '%</span></div>' +
-      (d.hitStatus ? '<div class="row"><span class="k">附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
-    : "";
+  const cb = cur ? itemBonus({ cat: it.cat, data: cur }) : null;
+  const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
+
+  const GROUPS = [
+    { title: "基础与加成", keys: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },
+    { title: "专精", keys: ["str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"] },
+    { title: "伤害类型", keys: ["physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"] },
+    { title: "战斗词条", keys: ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "block", "tenacity", "lowHpCut", "statusPower", "statusHit", "statusResist", "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash", "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"] }
+  ];
+  const val = (k, v) => (Math.round((Number(v) || 0) * 10) / 10) + (ITEM_UNITS[k] || "");
+  const groupsHtml = GROUPS.map((g) => {
+    const rows = g.keys.filter((k) => Number(b[k]) > 0).map((k) => {
+      const mine = Number(b[k]) || 0;
+      let cmp = "";
+      if (cb) {
+        const other = Number(cb[k]) || 0;
+        const diff = mine - other;
+        if (Math.abs(diff) > 1e-9) cmp = ' <span class="hint" style="color:' + (diff > 0 ? "#7ee787" : "#ff9b9b") + ';">（现有 ' + val(k, other) + (diff > 0 ? " ↑" : " ↓") + '）</span>';
+        else if (other > 0) cmp = ' <span class="hint">（现有 ' + val(k, other) + '）</span>';
+      }
+      return '<div class="row"><span class="k">' + (ITEM_NAMES[k] || k) + '</span><span class="v" style="color:' + rc + ';">+' + val(k, mine) + cmp + '</span></div>';
+    }).join("");
+    return rows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">' + g.title + '</div>' + rows : "";
+  }).join("");
+
+  const skill = d.sSupport
+    ? '<div class="row"><span class="k">辅助技</span><span class="v">「' + esc(d.sName || "—") + '」</span></div>' +
+      '<div class="row"><span class="k">冷却 / 回怒</span><span class="v">' + (d.sCd || 3) + ' 回合 / ' + (d.sRage || 0) + '%</span></div>'
+    : (d.sMult
+      ? '<div class="row"><span class="k">招式</span><span class="v">「' + esc(d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits : '') + '</span></div>' +
+        '<div class="row"><span class="k">冷却 / 回怒</span><span class="v">' + (d.sCd || 2) + ' 回合 / ' + (d.sRage || 0) + '%</span></div>' +
+        (d.hitStatus ? '<div class="row"><span class="k">附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
+      : "");
+
+  const meta = (d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "—") +
+    " · " + (d.dmgType === "spell" ? "法术" : "物理");
+
   const ov = document.createElement("div");
-  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;";
-  ov.innerHTML = '<div class="card" style="width:min(460px,92vw);max-height:80vh;overflow:auto;margin:0;">' +
-    '<div class="card-title">' + esc(d.name || "装备") + '　<span class="tag">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
-    (rows || '<div class="hint">没有属性加成</div>') + skill +
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  ov.innerHTML = '<div class="card" style="width:min(480px,92vw);max-height:82vh;overflow:auto;margin:0;border-color:' + rc + ';box-shadow:0 0 22px ' + rc + '55;">' +
+    '<div class="card-title" style="color:' + rc + ';font-size:15px;">' + esc(d.name || "装备") +
+      ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
+    '<div class="hint">' + meta + (cur ? '　|　对比：' + esc(cur.name || "当前装备") : '　|　未装备同类') + '</div>' +
+    (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
+    (skill ? '<div class="hint" style="margin-top:10px;font-weight:700;color:#8fd8ff;">招式</div>' + skill : '') +
+    '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +
     '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
   ov.querySelector("#dpClose").onclick = () => ov.remove();
@@ -510,6 +551,10 @@ function renderChar() {
     ch[b.dataset.attr] = (Number(ch[b.dataset.attr]) || 0) + 1;
     ch.free = free - 1;
     await save(); render();
+  });
+  view().querySelectorAll("[data-eqdetail]").forEach((b) => b.onclick = () => {
+    const k = b.dataset.eqdetail, dd = ch.equip && ch.equip[k];
+    if (dd) showItemDetail({ cat: k, data: dd });
   });
   view().querySelectorAll("[data-unequip]").forEach((b) => b.onclick = async () => {
     const r = unequip(store, ch.id, b.dataset.unequip);
@@ -881,9 +926,10 @@ function renderCult() {
     if (!it || !it.data) return "";
     const chk = cultCheck(it, "level", store);
     const star = cultCheck(it, "star", store);
-    return '<div style="border:1px solid #23233a;border-radius:10px;padding:10px;margin:8px 0;">' +
+    const rc = RARITY_COLOR[e.d.rarity] || "#23233a";
+    return '<div style="border:1px solid ' + rc + '66;border-radius:10px;padding:10px;margin:8px 0;">' +
       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
-        '<span style="font-weight:600;">' + esc(e.d.name || "装备") + '</span>' +
+        '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;color:' + rc + ';" data-cultdetail="' + e.key + '">' + esc(e.d.name || "装备") + '</span>' +
         '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.star || 1) + '★ · Lv' + (e.d.lv || 1) + '</span>' +
         '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
@@ -917,6 +963,16 @@ function renderCult() {
     await save(); render();
   });
   view().querySelectorAll("[data-inh]").forEach((b) => b.onclick = () => openInherit(b.dataset.inh));
+  view().querySelectorAll("[data-cultdetail]").forEach((b) => b.onclick = () => {
+    const key = b.dataset.cultdetail;
+    if (key.indexOf("eq:") === 0) {
+      const k = key.slice(3);
+      if (ch.equip[k]) showItemDetail({ cat: k, data: ch.equip[k] });
+    } else {
+      const it = findItem(store, key.slice(3));
+      if (it) showItemDetail(it);
+    }
+  });
 }
 
 function renderStore() {
@@ -956,13 +1012,14 @@ function renderStore() {
   }
 
   const rows = filtered.map((it) => {
-    const d = it.data || {}, chk = cultCheck(it, "level", store);
+    const d = it.data || {};
+    const rc = RARITY_COLOR[d.rarity] || "#eaeaea";
     const picked = !!batch.sel[it.id];
-    return '<div style="border:1px solid ' + (picked ? "#ff9b9b" : "#23233a") + ';border-radius:10px;padding:10px;margin:8px 0;">' +
+    return '<div style="border:1px solid ' + (picked ? "#ff9b9b" : rc + "55") + ';border-radius:10px;padding:10px;margin:8px 0;">' +
       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
         (batch.on ? '<input type="checkbox" data-pick="' + it.id + '" ' + (picked ? 'checked' : '') + '>' : '') +
-        '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;" data-detail="' + it.id + '">' + (it.lock ? "🔒 " : "") + esc(d.name) + '</span>' +
-        '<span class="tag">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span>' +
+        '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;color:' + rc + ';" data-detail="' + it.id + '">' + (it.lock ? "🔒 " : "") + esc(d.name) + '</span>' +
+        '<span class="tag" style="border-color:' + rc + '55;color:' + rc + ';">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span>' +
         '<span style="margin-left:auto;color:#ffd666;font-size:11.5px;">售价 ' + sellPrice(it) + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
         (ch && isEquip(it) ? '<button data-equip="' + it.id + '">穿上</button>' : '') +
