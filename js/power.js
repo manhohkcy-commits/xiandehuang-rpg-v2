@@ -8,12 +8,12 @@ export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && c
 export function talentBonus(ch) {
   const pts = (ch && ch.talent && ch.talent.points) || {};
   const out = {};
-  TALENT_TREES.forEach((t) => t.nodes.forEach((n) => {
+  TALENT_TREES.forEach((t) => (t.branches || []).forEach((b) => b.nodes.forEach((n) => {
     if (!pts[n.id]) return;
     Object.keys(n.eff).forEach((k) => { out[k] = (out[k] || 0) + (Number(n.eff[k]) || 0); });
-  }));
+  })));
   // 🔁 溢出点：节点点满后，多出来的天赋点按每点 +0.3% 攻击/生命（上限 +30%）
-  const totalNodes = TALENT_TREES.reduce((n, t) => n + t.nodes.length, 0);
+  const totalNodes = talentNodeCount();
   const overflow = Math.max(0, talentPointsOf(ch) - totalNodes);
   if (overflow > 0) {
     const add = Math.min(30, overflow * 0.3);
@@ -22,18 +22,45 @@ export function talentBonus(ch) {
   }
   return out;
 }
-export function talentSpent(ch) {
-  const pts = (ch && ch.talent && ch.talent.points) || {};
-  return TALENT_TREES.reduce((n, t) => n + t.nodes.filter((x) => pts[x.id]).length, 0);
+
+export function talentNodeCount() {
+  let n = 0;
+  TALENT_TREES.forEach((t) => {
+    (t.branches || []).forEach((b) => { n += b.nodes.length; });
+    if (t.active) n += 1;
+  });
+  return n;
 }
 
-// ⚡ 天赋主动技：已点亮的第 6 节点自带的一个主动技（每棵树一个）
+export function talentSpent(ch) {
+  const pts = (ch && ch.talent && ch.talent.points) || {};
+  return Object.keys(pts).filter((k) => pts[k]).length;
+}
+
+// ⚡ 天赋主动技：本职业点满 10 点后，投入 1 点点亮职业主动技
 export function talentActive(ch) {
   const pts = (ch && ch.talent && ch.talent.points) || {};
   for (const t of TALENT_TREES) {
-    for (const n of t.nodes) if (n.active && pts[n.id]) return Object.assign({ tree: t.id }, n.active);
+    if (t.active && pts[t.active.id]) return Object.assign({ tree: t.id }, t.active);
   }
   return null;
+}
+
+// 🎯 本职业已投入点数（主动技解锁门槛用）
+export function talentSpentInTree(ch, treeId) {
+  const pts = (ch && ch.talent && ch.talent.points) || {};
+  const t = TALENT_TREES.find((x) => x.id === treeId);
+  if (!t) return 0;
+  let n = 0;
+  (t.branches || []).forEach((b) => b.nodes.forEach((x) => { if (pts[x.id]) n++; }));
+  return n;
+}
+
+export function talentSpentInBranch(ch, treeId, branchId) {
+  const pts = (ch && ch.talent && ch.talent.points) || {};
+  const t = TALENT_TREES.find((x) => x.id === treeId);
+  const b = t && (t.branches || []).find((x) => x.id === branchId);
+  return b ? b.nodes.filter((x) => pts[x.id]).length : 0;
 }
 
 export function itemBonus(it) {
@@ -130,6 +157,6 @@ export function combatTraits(ch) {
   });
   // 🌳 天赋里带战斗属性的节点
   const tb = talentBonus(ch);
-  ["cdReduce", "rageStart", "block", "tenacity", "lowHpCut"].forEach((k) => { out[k] += Number(tb[k]) || 0; });
+  COMBAT_KEYS.forEach((k) => { out[k] += Number(tb[k]) || 0; });
   return out;
 }

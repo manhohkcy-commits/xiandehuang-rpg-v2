@@ -496,13 +496,17 @@ function renderBattle() {
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 || isStunned(m) || isSilenced(m) ? 'disabled' : '') + '>' +
             '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' 250%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
           '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || isStunned(m) ? 'disabled' : '') + '>🛡️ 防御</button>' +
+        '</div>' +
+        ((wpOf(st.__weapon).sSupport || st.__talent) ? '<div style="margin-top:10px;">' +
+          '<div class="hint" style="margin-bottom:4px;">✨ 特殊行动（消耗回合，独立冷却）</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
           (wpOf(st.__weapon).sSupport ? '<button data-act="support" style="flex:1;min-width:110px;height:38px;border-color:#8fd8ff;color:#8fd8ff;" ' +
             (busy || !a || a.id !== "me" || hasStatus(m, "scd") ? 'disabled' : '') + '>✨ ' + esc(wpOf(st.__weapon).sName || "辅助") +
             (hasStatus(m, "scd") ? " 冷却" : "") + '</button>' : '') +
           (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' +
             (busy || !a || a.id !== "me" || hasStatus(m, "tcd") ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) +
             (hasStatus(m, "tcd") ? " 冷却" : "") + '</button>' : '') +
-        '</div>' +
+          '</div></div>' : '') +
         (isStunned(m) ? '<div class="hint" style="color:#ffd666;">💫 你被控住了，本回合跳过</div>' : '') +
         (isSilenced(m) ? '<div class="hint" style="color:#ffd666;">🤐 被沉默：不能使用招式和必杀</div>' : '') +
         (isDisarmed(m) ? '<div class="hint" style="color:#ffd666;">🚫 被缴械：本回合只能防御</div>' : '') +

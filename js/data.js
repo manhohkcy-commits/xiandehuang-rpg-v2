@@ -117,52 +117,141 @@ export const SHOP_PRICE = {
 
 // 🌳 天赋树（5 定位）：每升 1 级 +1 点，每次突破 +2 点
 //    节点 need = 需要本树已投入的点数；eff 由 power.js 的 talentBonus() 汇总
+// 🌳 天赋树（职业定位版）：5 个定位 × 3 条分支（各 5 节点）+ 1 个职业主动技
+//    分支按角色等级解锁：1 / 25 / 50；节点按「本分支已点」依次解锁；主动技需本职业 10 点
+const TN = (id, name, eff) => ({ id, name, eff });
+const TB = (id, name, unlockLv, desc, nodes) => ({ id, name, unlockLv, desc, nodes });
+
 export const TALENT_TREES = [
-  { id: "guard", name: "🛡️ 守护", role: "坦克 · 减伤", color: "#8fd8ff", nodes: [
-    { id: "g1", name: "坚壁", desc: "生命 +5%", need: 0, eff: { hpPct: 5 } },
-    { id: "g2", name: "铁壁", desc: "防御 +8%", need: 1, eff: { defPct: 8 } },
-    { id: "g3", name: "格挡", desc: "格挡 +6%", need: 2, eff: { block: 6 } },
-    { id: "g4", name: "厚甲", desc: "减伤 +5%", need: 3, eff: { dmgCut: 5 } },
-    { id: "g5", name: "不屈", desc: "残血减伤 +10%", need: 4, eff: { lowHpCut: 10 } },
-    { id: "g6", name: "守护者", desc: "生命 +8% · 韧性 +10%", need: 5, eff: { hpPct: 8, tenacity: 10 },
-      active: { key: "wall", name: "盾墙", cd: 4, desc: "获得 30% 生命的护盾" } }
-  ] },
-  { id: "vanguard", name: "⚔️ 先锋", role: "爆发 · 暴击", color: "#ffb86b", nodes: [
-    { id: "v1", name: "劈砍", desc: "攻击 +6%", need: 0, eff: { atkPct: 6 } },
-    { id: "v2", name: "锐眼", desc: "暴击率 +3%", need: 1, eff: { critRate: 3 } },
-    { id: "v3", name: "重击", desc: "暴击伤害 +10%", need: 2, eff: { critDmg: 10 } },
-    { id: "v4", name: "狂怒", desc: "攻击 +8%", need: 3, eff: { atkPct: 8 } },
-    { id: "v5", name: "战意", desc: "初始怒气 +20", need: 4, eff: { rageStart: 20 } },
-    { id: "v6", name: "破军", desc: "攻击 +10% · 暴伤 +15%", need: 5, eff: { atkPct: 10, critDmg: 15 },
-      active: { key: "frenzy", name: "狂战", cd: 4, desc: "攻击 +40%，持续 2 回合" } }
-  ] },
-  { id: "ranger", name: "🏹 游侠", role: "速度 · 技巧", color: "#7ee787", nodes: [
-    { id: "r1", name: "疾行", desc: "速度 +4%", need: 0, eff: { spdPct: 4 } },
-    { id: "r2", name: "巧手", desc: "攻击 +5%", need: 1, eff: { atkPct: 5 } },
-    { id: "r3", name: "精准", desc: "暴击率 +2%", need: 2, eff: { critRate: 2 } },
-    { id: "r4", name: "猎风", desc: "速度 +6%", need: 3, eff: { spdPct: 6 } },
-    { id: "r5", name: "连环", desc: "冷却缩减 1 回合", need: 4, eff: { cdReduce: 1 } },
-    { id: "r6", name: "风行者", desc: "攻击 +6% · 速度 +8%", need: 5, eff: { atkPct: 6, spdPct: 8 },
-      active: { key: "gale", name: "疾风", cd: 4, desc: "本回合多行动一次" } }
-  ] },
-  { id: "mage", name: "🔮 术士", role: "法系 · 法抗", color: "#c9a0ff", nodes: [
-    { id: "m1", name: "冥想", desc: "法抗 +8%", need: 0, eff: { resPct: 8 } },
-    { id: "m2", name: "奥术", desc: "攻击 +6%", need: 1, eff: { atkPct: 6 } },
-    { id: "m3", name: "灼魂", desc: "暴击伤害 +8%", need: 2, eff: { critDmg: 8 } },
-    { id: "m4", name: "护盾", desc: "生命 +6%", need: 3, eff: { hpPct: 6 } },
-    { id: "m5", name: "抗性", desc: "韧性 +10%", need: 4, eff: { tenacity: 10 } },
-    { id: "m6", name: "大法师", desc: "攻击 +10% · 法抗 +10%", need: 5, eff: { atkPct: 10, resPct: 10 },
-      active: { key: "arcane", name: "奥术冲击", cd: 4, desc: "200% 攻击，无视部分减伤" } }
-  ] },
-  { id: "support", name: "✨ 辅佐", role: "治疗 · 护盾（机制待上线）", color: "#8fd8ff", nodes: [
-    { id: "s1", name: "关怀", desc: "生命 +6%", need: 0, eff: { hpPct: 6 } },
-    { id: "s2", name: "庇护", desc: "减伤 +4%", need: 1, eff: { dmgCut: 4 } },
-    { id: "s3", name: "祈祷", desc: "法抗 +6%", need: 2, eff: { resPct: 6 } },
-    { id: "s4", name: "坚忍", desc: "残血减伤 +8%", need: 3, eff: { lowHpCut: 8 } },
-    { id: "s5", name: "守望", desc: "格挡 +5%", need: 4, eff: { block: 5 } },
-    { id: "s6", name: "圣者", desc: "生命 +8% · 法抗 +8%", need: 5, eff: { hpPct: 8, resPct: 8 },
-      active: { key: "bless", name: "祝福", cd: 4, desc: "恢复 30% 生命" } }
-  ] }
+  { id: "guard", name: "🛡️ 守护", role: "坦克 · 减伤", color: "#8fd8ff",
+    active: { id: "g_act", key: "wall", name: "盾墙", cd: 4, need: 10, desc: "获得 30% 生命护盾" },
+    branches: [
+      TB("g1", "铁壁", 1, "防御 · 格挡", [
+        TN("g1a", "坚壁", { hpPct: 6 }),
+        TN("g1b", "铁壁", { defPct: 8 }),
+        TN("g1c", "盾墙", { block: 6 }),
+        TN("g1d", "厚甲", { dmgCut: 5 }),
+        TN("g1e", "不动如山", { tenacity: 10 })
+      ]),
+      TB("g2", "不屈", 25, "生命 · 韧性", [
+        TN("g2a", "强韧", { hpPct: 8 }),
+        TN("g2b", "回春", { hpPct: 6 }),
+        TN("g2c", "残血壁垒", { lowHpCut: 8 }),
+        TN("g2d", "生命洪流", { hpPct: 10 }),
+        TN("g2e", "不屈之躯", { hpPct: 12, tenacity: 8 })
+      ]),
+      TB("g3", "荆棘", 50, "反制 · 控制", [
+        TN("g3a", "尖刺", { dmgCut: 4 }),
+        TN("g3b", "反震甲", { block: 5 }),
+        TN("g3c", "荆棘甲", { tenacity: 8 }),
+        TN("g3d", "重装", { hpPct: 8 }),
+        TN("g3e", "荆棘之王", { dmgCut: 8, block: 8 })
+      ])
+    ] },
+
+  { id: "vanguard", name: "⚔️ 先锋", role: "爆发 · 暴击", color: "#ffb86b",
+    active: { id: "v_act", key: "frenzy", name: "狂战", cd: 4, need: 10, desc: "攻击 +40%，持续 2 回合" },
+    branches: [
+      TB("v1", "突袭", 1, "攻击 · 暴击", [
+        TN("v1a", "劈砍", { atkPct: 6 }),
+        TN("v1b", "锐眼", { critRate: 3 }),
+        TN("v1c", "重击", { critDmg: 10 }),
+        TN("v1d", "狂怒", { atkPct: 8 }),
+        TN("v1e", "破军", { atkPct: 10, critDmg: 12 })
+      ]),
+      TB("v2", "战意", 25, "怒气 · 收割", [
+        TN("v2a", "战吼", { rageStart: 15 }),
+        TN("v2b", "嗜血", { rageOnKill: 10 }),
+        TN("v2c", "怒潮", { rageOnSkill: 15 }),
+        TN("v2d", "血战", { atkPct: 8 }),
+        TN("v2e", "杀意", { atkPct: 12 })
+      ]),
+      TB("v3", "狂暴", 50, "连击 · 追击", [
+        TN("v3a", "暴击强化", { critRate: 4 }),
+        TN("v3b", "暴伤强化", { critDmg: 12 }),
+        TN("v3c", "连斩", { doubleStrike: 10 }),
+        TN("v3d", "追击", { chase: 10 }),
+        TN("v3e", "无双", { atkPct: 10, critRate: 5 })
+      ])
+    ] },
+
+  { id: "ranger", name: "🏹 游侠", role: "速度 · 技巧", color: "#7ee787",
+    active: { id: "r_act", key: "gale", name: "疾风", cd: 4, need: 10, desc: "本回合多行动一次" },
+    branches: [
+      TB("r1", "疾风", 1, "速度 · 出手", [
+        TN("r1a", "疾行", { spdPct: 4 }),
+        TN("r1b", "巧手", { atkPct: 5 }),
+        TN("r1c", "精准", { critRate: 2 }),
+        TN("r1d", "猎风", { spdPct: 6 }),
+        TN("r1e", "风行者", { atkPct: 6, spdPct: 8 })
+      ]),
+      TB("r2", "猎手", 25, "穿透 · 暴击", [
+        TN("r2a", "瞄准", { critRate: 3 }),
+        TN("r2b", "穿透箭", { penetrate: 10 }),
+        TN("r2c", "连射", { doubleStrike: 8 }),
+        TN("r2d", "速射", { atkPct: 8 }),
+        TN("r2e", "猎杀", { critDmg: 12 })
+      ]),
+      TB("r3", "影袭", 50, "双生 · 机动", [
+        TN("r3a", "双生", { dualborn: 8 }),
+        TN("r3b", "疾风步", { spdPct: 10 }),
+        TN("r3c", "追击", { chase: 12 }),
+        TN("r3d", "影舞", { atkPct: 10 }),
+        TN("r3e", "无双影", { atkPct: 12, spdPct: 6 })
+      ])
+    ] },
+
+  { id: "mage", name: "🔮 术士", role: "法系 · 法抗", color: "#c9a0ff",
+    active: { id: "m_act", key: "arcane", name: "奥术冲击", cd: 4, need: 10, desc: "200% 攻击的无视部分减伤伤害" },
+    branches: [
+      TB("m1", "冥想", 1, "法抗 · 输出", [
+        TN("m1a", "法抗", { resPct: 8 }),
+        TN("m1b", "奥术", { atkPct: 6 }),
+        TN("m1c", "灼魂", { critDmg: 8 }),
+        TN("m1d", "护盾", { hpPct: 6 }),
+        TN("m1e", "大法师", { atkPct: 10, resPct: 10 })
+      ]),
+      TB("m2", "元素", 25, "状态 · 强度", [
+        TN("m2a", "火焰", { statusPower: 15 }),
+        TN("m2b", "冰霜", { statusHit: 10 }),
+        TN("m2c", "雷击", { critDmg: 10 }),
+        TN("m2d", "元素掌握", { atkPct: 8 }),
+        TN("m2e", "元素领主", { statusPower: 20, atkPct: 8 })
+      ]),
+      TB("m3", "奥术", 50, "穿透 · 禁咒", [
+        TN("m3a", "秘法穿透", { penetrate: 10 }),
+        TN("m3b", "专注", { critRate: 4 }),
+        TN("m3c", "秘法", { atkPct: 10 }),
+        TN("m3d", "禁咒", { statusResist: 15 }),
+        TN("m3e", "奥术至尊", { atkPct: 12, critDmg: 15 })
+      ])
+    ] },
+
+  { id: "support", name: "✨ 辅佐", role: "治疗 · 防护", color: "#8fd8ff",
+    active: { id: "s_act", key: "bless", name: "祝福", cd: 4, need: 10, desc: "恢复 30% 生命" },
+    branches: [
+      TB("s1", "守护", 1, "生命 · 减伤", [
+        TN("s1a", "关怀", { hpPct: 6 }),
+        TN("s1b", "庇护", { dmgCut: 4 }),
+        TN("s1c", "祈祷", { resPct: 6 }),
+        TN("s1d", "坚忍", { lowHpCut: 8 }),
+        TN("s1e", "圣者", { hpPct: 8, resPct: 8 })
+      ]),
+      TB("s2", "治愈", 25, "生命 · 回复", [
+        TN("s2a", "愈疗", { hpPct: 8 }),
+        TN("s2b", "圣光", { resPct: 8 }),
+        TN("s2c", "安抚", { dmgCut: 5 }),
+        TN("s2d", "生命之泉", { hpPct: 10 }),
+        TN("s2e", "生命之树", { hpPct: 12, lowHpCut: 6 })
+      ]),
+      TB("s3", "净化", 50, "抗性 · 免疫", [
+        TN("s3a", "抗性", { statusResist: 15 }),
+        TN("s3b", "免疫", { tenacity: 12 }),
+        TN("s3c", "圣盾", { block: 6 }),
+        TN("s3d", "圣辉", { resPct: 10 }),
+        TN("s3e", "净化之光", { statusResist: 20, hpPct: 8 })
+      ])
+    ] }
 ];
 
 // 天赋点获取：每级 1 点，每次突破 +2
