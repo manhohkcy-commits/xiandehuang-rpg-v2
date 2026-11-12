@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 数据（纯数据，无逻辑）
-export const RARITY_MULT = { R: 1, SR: 1.6, SSR: 2.4, UR: 3.4 };
+export const RARITY_MULT = { R: 1, SR: 1.15, SSR: 1.3, UR: 1.5 };
 // 🚧 内容开关：装备选择已开放；关卡内容仍待定（数据保留）
 export const CONTENT_READY = true;
 export const STAGE_READY = false;
@@ -60,6 +60,15 @@ export const WEAPONS = [
     desc: "摇一摇就能把身上的晦气抖落。" }
 ];
 // ── SR / SSR / UR 尚未设计：旧占位装备已移除，等正式设计后再加 ─────
+// 🔧 武器主属性（逐件绝对值，不吃稀有度乘数）——R 与 SR 差距控制在 1.2~1.4 倍
+const WEAPON_ATK = {
+  w_iron: 40, w_bow: 38, w_wood: 36, w_dagger: 34, w_fist: 36,
+  w_spear: 42, w_sling: 34, w_hunt: 38, w_torch: 36, w_shield: 38,
+  w_twin: 50, w_axe: 56, w_spear2: 52, w_cross: 50, w_longbow: 48,
+  w_firestaff: 54, w_thunder: 52, w_aegis: 46, w_purify: 44
+};
+WEAPONS.forEach((w) => { if (WEAPON_ATK[w.id]) w.main = { atk: WEAPON_ATK[w.id] }; });
+
 export const ARMORS = [
   // ── 上装（part: top）─────────────────
   { id: "a_cloth", name: "粗布衣", part: "top", rarity: "R", main: { hp: 100 }, dmgCut: 2, desc: "最普通的粗布上衣，挡不住刀，但聊胜于无。" },

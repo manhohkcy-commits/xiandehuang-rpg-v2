@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=2111effa";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=2345f7f0";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=789e90d1";
-import { GRADE, APTITUDE } from "./js/data.js?v=2111effa";
+import { GRADE, APTITUDE } from "./js/data.js?v=2345f7f0";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a07fdd52";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
@@ -368,6 +368,7 @@ function buildCreateScreen() {
     const st = x.style === "ranged" ? "远程" : x.style === "focus" ? "法器" : "近战";
     const tp = x.dmgType === "spell" ? "法术" : "物理";
     const bonus = [];
+    if (x.main && x.main.atk) bonus.push("攻击 +" + x.main.atk);
     if (x.atk) bonus.push("攻击 +" + x.atk);
     if (x.critRate) bonus.push("暴击 +" + x.critRate + "%");
     if (x.spd) bonus.push("速度 +" + x.spd);
