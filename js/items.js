@@ -106,7 +106,7 @@ export function promoteApply(store, it) {
   it.data.rarity = c.next;
   it.data.star = 5;
   if (c.action === "awakenUR1" || c.action === "awakenUR5") it.data.fire = c.fire;
-  it.data.ups = Math.min(3, (Number(it.data.ups) || 0) + 1);
+  it.data.ups = (Number(it.data.ups) || 0) + 1;
   return { ok: true, next: c.next, fire: c.fire, action: c.action, ups: it.data.ups };
 }
 
