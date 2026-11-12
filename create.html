@@ -210,7 +210,7 @@ function showItemDetail(it) {
 
   // 招式组：普攻 / 技能（R 以上有）/ 必杀
   const skill = '<div class="hint" style="margin-top:10px;font-weight:700;color:#8fd8ff;">招式</div>' +
-    '<div class="row"><span class="k">普攻</span><span class="v">100% · ' + (d.dmgType === "spell" ? "法术" : "物理") + '</span></div>' +
+    '<div class="row"><span class="k">普攻</span><span class="v">' + (Number(d.aMult) || 100) + '%' + ((Number(d.aHits) || 1) > 1 ? ' ×' + (Number(d.aHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + '</span></div>' +
     (d.sSupport
       ? '<div class="row"><span class="k">技能（辅助）</span><span class="v">「' + esc(d.sName || "—") + '」· CD ' + (d.sCd || 3) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>'
       : (d.sMult
@@ -218,7 +218,7 @@ function showItemDetail(it) {
           ' · CD ' + (d.sCd || 2) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>' +
           (d.hitStatus ? '<div class="row"><span class="k">　└ 附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
         : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶没有技能（SR 起才有）</span></div>')) +
-    '<div class="row"><span class="k">必杀</span><span class="v">250% · ' + (d.dmgType === "spell" ? "法术" : "物理") + ' · 怒气满 100 时可用</span></div>';
+    '<div class="row"><span class="k">必杀</span><span class="v">' + (Number(d.uMult) || 250) + '%' + ((Number(d.uHits) || 1) > 1 ? ' ×' + (Number(d.uHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + ' · 怒气满 100 时可用</span></div>';
 
   const meta = (d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "—") +
     " · " + (d.dmgType === "spell" ? "法术" : "物理");
