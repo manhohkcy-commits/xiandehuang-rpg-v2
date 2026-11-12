@@ -22,8 +22,8 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR } from "./js/data.js?v=8ac29ba8";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
-import { makeItem } from "./js/items.js?v=93b40a59";
-import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=a4de8ad8";
+import { makeItem } from "./js/items.js?v=78797a6c";
+import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=a2916d12";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=c4ed415b";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;

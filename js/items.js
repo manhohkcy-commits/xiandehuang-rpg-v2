@@ -106,7 +106,8 @@ export function promoteApply(store, it) {
   it.data.rarity = c.next;
   it.data.star = 5;
   if (c.action === "awakenUR1" || c.action === "awakenUR5") it.data.fire = c.fire;
-  return { ok: true, next: c.next, fire: c.fire, action: c.action };
+  it.data.ups = Math.min(3, (Number(it.data.ups) || 0) + 1);
+  return { ok: true, next: c.next, fire: c.fire, action: c.action, ups: it.data.ups };
 }
 
 export function cultCheck(it, kind, store) {

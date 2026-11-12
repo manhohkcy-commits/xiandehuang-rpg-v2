@@ -78,11 +78,13 @@ export function itemBonus(it) {
   const rm = RARITY_MULT[d.rarity] || 1;
   // 🔥 UR 觉醒火数：1🔥 = SSR5★ 强度，之后每 🔥 +8%
   const fireMul = d.rarity === "UR" ? 1 + 0.08 * ((Number(d.fire) || 1) - 1) : 1;
+  // ⬆️ 升阶印记：每升阶/觉醒一次 +5%，最多 +15%
+  const upMul = 1 + 0.05 * Math.min(3, Number(d.ups) || 0);
   // ⛰ 强化突破节点：每过一个 +5% 主属性/副属性
   const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
   const breakMul = 1 + 0.05 * breakN;
   const out = {};
-  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul * fireMul; });
+  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul * fireMul * upMul; });
   // 🎯 副属性成长：升星 +5%/星、精炼 +8%/级，只作用于随机词条（data.__affix）
   const subMul = (1 + 0.05 * ((Number(d.star) || 1) - 1)) * (1 + 0.08 * ((Number(d.refine) || 1) - 1));
   const affix = Array.isArray(d.__affix) ? d.__affix : [];
