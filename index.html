@@ -25,6 +25,16 @@
       <div class="t">我的角色</div>
       <div class="hint">建角 / 属性 / 装备 / 商店 / 背包</div>
     </button>
+    <button class="entry" data-go="create.html" data-tab="daily">
+      <div style="font-size:22px;">📅</div>
+      <div class="t">任务 / 成就 / 邮件</div>
+      <div class="hint">日常、成就奖励、系统邮件</div>
+    </button>
+    <button class="entry" data-go="create.html" data-tab="rank">
+      <div style="font-size:22px;">🏆</div>
+      <div class="t">排行榜</div>
+      <div class="hint">战力排行 / 周榜奖励</div>
+    </button>
     <button class="entry" data-go="battle.html">
       <div style="font-size:22px;">⚔️</div>
       <div class="t">单人战斗</div>
@@ -84,7 +94,10 @@ document.querySelectorAll("[data-go]").forEach((b) => {
       box.value = b0;
     }
     if (b0) localStorage.setItem("rpg2:box", b0);
-    location.href = page + (b0 ? ("?box=" + encodeURIComponent(b0)) : "");
+    const qs = [];
+    if (b.dataset.tab) qs.push("tab=" + encodeURIComponent(b.dataset.tab));
+    if (b0) qs.push("box=" + encodeURIComponent(b0));
+    location.href = page + (qs.length ? "?" + qs.join("&") : "");
   };
 });
 

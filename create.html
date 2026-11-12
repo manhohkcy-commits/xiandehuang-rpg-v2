@@ -13,8 +13,6 @@
   <div class="nav">
     <button data-tab="char" class="on">🧑 我的角色</button>
     <button data-tab="talent">🌳 天赋</button>
-    <button data-tab="rank">🏆 排行榜</button>
-    <button data-tab="daily">📅 任务</button>
     <button data-tab="store">🎒 仓库</button>
     <button data-tab="shop">🏪 商店</button>
   </div>
@@ -919,7 +917,12 @@ function renderStore() {
       '</div></div>';
   }).join("");
 
-  view().innerHTML = tool + '<div class="card"><div class="card-title">仓库（' + filtered.length + ' / ' + all.length + ' 件）</div>' + rows + '</div>';
+  const mat = (k, n) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + fmt(Number((store.flags || {})[n]) || 0) + '</span></div>';
+  view().innerHTML = tool +
+    '<div class="card"><div class="card-title">素材</div>' +
+      mat("碎片", "shards") + mat("强化石", "stone") + mat("突破石", "bstone") +
+      mat("资历手稿", "manuscript") + mat("资质鉴定勋章", "medal") + '</div>' +
+    '<div class="card"><div class="card-title">仓库（' + filtered.length + ' / ' + all.length + ' 件）</div>' + rows + '</div>';
   bindStoreTool(filtered);
 }
 
@@ -1185,6 +1188,10 @@ document.querySelectorAll("[data-tab]").forEach((b) => {
   b.onclick = () => { tab = b.dataset.tab; render(); };
 });
 $("btnSave").onclick = () => save();
+
+// 从首页带 tab 参数进来（任务 / 排行榜）
+const bootTab = new URLSearchParams(location.search).get("tab");
+if (bootTab && ["char", "talent", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
 
 (async () => { await load(); render(); })();
 </script>
