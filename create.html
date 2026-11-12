@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=8b89ef2b";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=cfcf255e";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=d20acaec";
 import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2bad05a4";
-import { GRADE, APTITUDE } from "./js/data.js?v=cfcf255e";
+import { GRADE, APTITUDE } from "./js/data.js?v=d20acaec";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
@@ -1369,6 +1369,15 @@ function openInherit(fromId) {
   });
 }
 
+// 🏪 每日限购计数（按本地日期重置）
+function shopDay() {
+  store.flags = store.flags || {};
+  const k = dayKey();
+  const d = store.flags.shopDay;
+  if (!d || d.day !== k) store.flags.shopDay = { day: k, count: {} };
+  return store.flags.shopDay;
+}
+
 // 🍱 战前准备文案
 function buffText(meal) {
   const b = (meal && meal.buff) || {};
@@ -1404,9 +1413,14 @@ function renderShop() {
     card("🏪 便利店 · 日常补给",
       CONSUMABLES.map((p) => {
         const own = Number((store.flags || {})[p.id]) || 0;
-        return '<div class="row"><span class="k">' + esc(p.name) + ' <span class="hint">持有 ' + own + '</span>' +
+        const bought = Number(shopDay().count[p.id]) || 0;
+        const left = p.limit ? Math.max(0, p.limit - bought) : null;
+        const soldOut = left !== null && left <= 0;
+        return '<div class="row"><span class="k">' + esc(p.name) +
+          ' <span class="hint">持有 ' + own + (left !== null ? ' · 今日剩 ' + left + '/' + p.limit : '') + '</span>' +
           '<div class="hint">' + esc(p.desc) + '</div></span>' +
-          '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> <button data-buy="prop:' + p.id + '">购买</button>' +
+          '<span class="v"><span style="color:#ffd666;">' + p.price + ' 金</span> ' +
+          (soldOut ? '<span class="hint">今日售罄</span>' : '<button data-buy="prop:' + p.id + '">购买</button>') +
           (p.meal && own > 0 ? ' <button data-eat="' + p.id + '" style="border-color:#7ee787;color:#7ee787;">食用</button>' : '') +
           '</span></div>';
       }).join(""));
@@ -1476,9 +1490,18 @@ function renderShop() {
     }
     if (cat === "prop") {
       def = CONSUMABLES.find((x) => x.id === id); price = def.price;
+      if (def.limit) {
+        const sd = shopDay();
+        const bought = Number(sd.count[id]) || 0;
+        if (bought >= def.limit) return toast("今日限购已满（" + def.limit + " 件），明天再来", true);
+      }
       if ((store.gold || 0) < price) return toast("金币不够", true);
       store.gold -= price;
       store.flags[id] = (store.flags[id] || 0) + 1;
+      if (def.limit) {
+        const sd = shopDay();
+        sd.count[id] = (Number(sd.count[id]) || 0) + 1;
+      }
       addReceipt(store, "购买", def.name, { gold: -price });
       await save(); render(); return;
     }

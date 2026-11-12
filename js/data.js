@@ -76,13 +76,18 @@ export const STAGES = [
     drop: { shards: [120, 160], stone: [48, 66], gearChance: 100, manuscript: 15, medal: 4, medalChance: 100 } }
 ];
 export const CONSUMABLES = [
-  { id: "p_hp", name: "伤药", desc: "战前吃：生命 +8%", price: 120, meal: { hpPct: 8 } },
-  { id: "p_stone", name: "强化石", desc: "装备强化材料", price: 60 },
-  // 🏪 便利店日常货（战前准备：下一场战斗生效）
-  { id: "p_rice", name: "饭团", desc: "战前吃：生命 +5%", price: 30, meal: { hpPct: 5 } },
-  { id: "p_bento", name: "便当", desc: "战前吃：生命 +10% · 攻击 +5%", price: 90, meal: { hpPct: 10, atkPct: 5 } },
-  { id: "p_coffee", name: "罐装咖啡", desc: "战前喝：攻击 +8% · 速度 +1", price: 60, meal: { atkPct: 8, spd: 1 } },
-  { id: "p_bandage", name: "绷带", desc: "战前缠：防御 +6%", price: 40, meal: { defPct: 6 } }
+  // 🏪 便利店日常货（战前准备：下一场战斗生效；limit = 每日限购）
+  { id: "p_rice", name: "饭团", desc: "战前吃：生命 +5%", price: 30, meal: { hpPct: 5 }, limit: 5 },
+  { id: "p_teaegg", name: "茶叶蛋", desc: "战前吃：生命 +4%", price: 25, meal: { hpPct: 4 }, limit: 5 },
+  { id: "p_milk", name: "牛奶", desc: "战前喝：生命 +6%", price: 40, meal: { hpPct: 6 }, limit: 3 },
+  { id: "p_noodle", name: "泡面", desc: "战前吃：生命 +4% · 攻击 +4%", price: 50, meal: { hpPct: 4, atkPct: 4 }, limit: 3 },
+  { id: "p_bento", name: "便当", desc: "战前吃：生命 +10% · 攻击 +5%", price: 90, meal: { hpPct: 10, atkPct: 5 }, limit: 2 },
+  { id: "p_oden", name: "关东煮", desc: "战前吃：生命 +8% · 防御 +4%", price: 70, meal: { hpPct: 8, defPct: 4 }, limit: 3 },
+  { id: "p_coffee", name: "罐装咖啡", desc: "战前喝：攻击 +8% · 速度 +1", price: 60, meal: { atkPct: 8, spd: 1 }, limit: 3 },
+  { id: "p_energy", name: "能量饮料", desc: "战前喝：攻击 +12% · 速度 +2", price: 150, meal: { atkPct: 12, spd: 2 }, limit: 1 },
+  { id: "p_bandage", name: "绷带", desc: "战前缠：防御 +6%", price: 40, meal: { defPct: 6 }, limit: 3 },
+  { id: "p_hp", name: "伤药", desc: "战前吃：生命 +8%", price: 120, meal: { hpPct: 8 }, limit: 2 },
+  { id: "p_stone", name: "强化石", desc: "装备强化材料", price: 60, limit: 10 }
 ];
 export const tier = (lv) => (lv <= 50 ? 1 : (lv <= 100 ? 2 : 4));
 export const CULT = {
