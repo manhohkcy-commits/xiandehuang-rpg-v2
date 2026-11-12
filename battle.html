@@ -766,6 +766,7 @@ function finish() {
   }
   addReceipt(store, "战斗", s.name, { gold, items: drops });
   bumpDaily(store, "battles");
+  store.flags.wins = (Number(store.flags.wins) || 0) + 1;
   st.__reward = { gold, exp, stage: s.name, drops };
   pushLog("🏆 胜利：金币 +" + gold + " · 经验 +" + exp + " · " + drops.map((d) => d.name + "×" + d.count).join("、"));
   save();

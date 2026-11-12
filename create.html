@@ -24,7 +24,7 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS } from "./js/data.js";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js";
 import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
@@ -109,6 +109,12 @@ function ensureSeed(withDefaultChar = true) {
   if (!store.flags.__seed) {
     store.gold = 3000; store.flags.stone = 60; store.flags.shards = 20; store.flags.bstone = 5;
     store.flags.__seed = 1;
+  }
+  // 📬 欢迎邮件（每个存档一封）
+  if (!Array.isArray(store.mail)) store.mail = [];
+  if (!store.flags.__mailSeed) {
+    store.mail.push({ id: "m_welcome", title: "欢迎加入冒险者协会", body: "这是你的第一封信：协会先给你一笔启动金，去登记表捏个角色吧。", gold: 1000, claimed: false, at: Date.now() });
+    store.flags.__mailSeed = 1;
   }
   if (withDefaultChar && !store.chars.length) {
     store.chars.push(newChar("Zyn"));
@@ -713,6 +719,23 @@ async function renderRank() {
     .slice(0, 20);
 
   const meBox = box;
+  const myRank = list.findIndex((r) => r.box === meBox) + 1;
+  const wk = (() => {
+    const d = new Date();
+    const one = new Date(d.getFullYear(), 0, 1);
+    const days = Math.floor((d - one) / 86400000);
+    const w = Math.ceil((days + one.getDay() + 1) / 7);
+    return d.getFullYear() + "-W" + String(w).padStart(2, "0");
+  })();
+  const reward = WEEK_REWARD.find((x) => myRank > 0 && myRank <= x.maxRank);
+  const wf = (store.flags && store.flags.week && store.flags.week.key === wk) ? store.flags.week : { key: wk, claimed: false };
+
+  const weekHtml = '<div class="row" style="margin-top:8px;"><span class="k">本周排名</span><span class="v">' + (myRank ? "#" + myRank : "未上榜") + '</span></div>' +
+    (reward
+      ? '<div class="row"><span class="k">周榜奖励</span><span class="v"><span style="color:#ffd666;">' + reward.gold + ' 金</span> ' +
+        (wf.claimed ? '<span class="hint">本周已领</span>' : '<button data-week="1">领取</button>') + '</span></div>'
+      : '<div class="hint">进前 10 名可领周榜奖励（每周一次）</div>');
+
   view().innerHTML =
     card("🏆 排行榜 · 战力前 20",
       '<div class="hint" style="margin-bottom:6px;">数据来自云端存档，按综合战力排序（仅供参考）。</div>' +
@@ -725,10 +748,38 @@ async function renderRank() {
             '<td style="text-align:right;font-size:12px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") +
           '</table>'
         : '<div class="hint">还没有可排行的存档（或云端暂时不可用）。</div>') +
+      weekHtml +
       '<div class="hint" style="margin-top:8px;">只统计最近更新的 200 个位号；同分按先后。</div>');
+
+  view().querySelectorAll("[data-week]").forEach((b) => b.onclick = async () => {
+    if (!reward || wf.claimed) return;
+    store.flags = store.flags || {};
+    store.flags.week = { key: wk, claimed: true };
+    store.gold = (Number(store.gold) || 0) + reward.gold;
+    addReceipt(store, "排行", "周榜奖励", { gold: reward.gold });
+    await save(); render(); toast("周榜奖励 +" + reward.gold + " 金");
+  });
 }
 
 // 📅 日常任务：每天 3 个，完成领金币，全勤额外奖励
+// 成就进度（kind 对应 data.js 的 ACHIEVEMENTS）
+function achProgress(a, ch) {
+  const st = store, f = (st.flags || {});
+  if (!ch) return 0;
+  switch (a.kind) {
+    case "lv": return Number(ch.lv) || 1;
+    case "wins": return Number(f.wins) || 0;
+    case "gold": return Number(st.gold) || 0;
+    case "gearLv": return (st.items || []).reduce((m, it) => Math.max(m, Number((it.data || {}).lv) || 1), 1);
+    case "gearStar": return (st.items || []).reduce((m, it) => Math.max(m, Number((it.data || {}).star) || 1), 1);
+    case "items": return (st.items || []).length;
+    case "breaks": return Number(ch.breaks) || 0;
+    case "grade": return Math.max(0, GRADE.findIndex((g) => g.key === (ch.grade || "D")));
+    case "apt": return Number(ch.apt) || 1;
+  }
+  return 0;
+}
+
 function renderDaily() {
   const d = dailyOf(store);
   const claimed = d.claimed || [];
@@ -746,8 +797,49 @@ function renderDaily() {
     ? (d.bonus ? '<div class="hint" style="color:#7ee787;">全勤奖励已领取</div>'
                : '<div class="row"><span class="k">🏅 全勤奖励</span><span class="v"><span style="color:#ffd666;">' + DAILY_BONUS + ' 金</span> <button data-claim="bonus">领取</button></span></div>')
     : '<div class="hint">三个任务都完成后可领全勤奖励 ' + DAILY_BONUS + ' 金</div>';
+  const ch = activeChar();
+  const f = store.flags || {};
+  const claimedAch = f.achClaimed || [];
+  const mails = store.mail || [];
+  const mailHtml = mails.length
+    ? mails.map((m, i) => '<div class="row"><span class="k">📬 ' + esc(m.title) + '<div class="hint">' + esc(m.body) + '</div></span><span class="v">' +
+        (m.claimed ? '<span class="hint">已领取</span>'
+                   : '<span style="color:#ffd666;">' + (Number(m.gold) || 0) + ' 金</span> <button data-mail="' + i + '">领取</button>') + '</span></div>').join("")
+    : '<div class="hint">没有邮件</div>';
+  const achHtml = ACHIEVEMENTS.map((a) => {
+    const cur = achProgress(a, ch);
+    const done = cur >= a.value;
+    const got = claimedAch.indexOf(a.id) >= 0;
+    return '<div class="row"><span class="k">' + a.name + '<div class="hint">' + a.desc + '（' + Math.min(cur, a.value) + '/' + a.value + '）</div></span>' +
+      '<span class="v"><span style="color:#ffd666;">' + a.gold + ' 金</span> ' +
+      (got ? '<span class="hint">已领取</span>' : '<button data-ach="' + a.id + '" ' + (done ? '' : 'disabled') + '>领取</button>') + '</span></div>';
+  }).join("");
+
   view().innerHTML = card("📅 日常任务 · " + d.day,
-    '<div class="hint">每天 0 点重置（按本机日期）。</div>' + rows + bonusHtml);
+    '<div class="hint">每天 0 点重置（按本机日期）。</div>' + rows + bonusHtml) +
+    card("📬 邮件", mailHtml) +
+    card("🏅 成就（" + claimedAch.length + '/' + ACHIEVEMENTS.length + "）", achHtml);
+
+  view().querySelectorAll("[data-mail]").forEach((b) => b.onclick = async () => {
+    const m = mails[Number(b.dataset.mail)];
+    if (!m || m.claimed) return;
+    m.claimed = true;
+    store.gold = (Number(store.gold) || 0) + (Number(m.gold) || 0);
+    addReceipt(store, "邮件", m.title, { gold: Number(m.gold) || 0 });
+    await save(); render(); toast("领取成功");
+  });
+
+  view().querySelectorAll("[data-ach]").forEach((b) => b.onclick = async () => {
+    const a = ACHIEVEMENTS.find((x) => x.id === b.dataset.ach);
+    if (!a) return;
+    if (achProgress(a, ch) < a.value) return toast("还没达成", true);
+    const cl = (store.flags.achClaimed = store.flags.achClaimed || []);
+    if (cl.indexOf(a.id) >= 0) return;
+    cl.push(a.id);
+    store.gold = (Number(store.gold) || 0) + a.gold;
+    addReceipt(store, "成就", a.name, { gold: a.gold });
+    await save(); render(); toast("🏅 " + a.name + " +" + a.gold + " 金");
+  });
 
   view().querySelectorAll("[data-claim]").forEach((b) => b.onclick = async () => {
     const id = b.dataset.claim;

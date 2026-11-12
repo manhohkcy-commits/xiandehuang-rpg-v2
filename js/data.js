@@ -132,6 +132,29 @@ export const DAILY_QUESTS = [
 ];
 export const DAILY_BONUS = 800;
 
+// 🏅 成就：kind 决定进度怎么算（在 create.html 里实现）
+export const ACHIEVEMENTS = [
+  { id: "a_lv10", name: "初出茅庐", desc: "角色达到 Lv10", kind: "lv", value: 10, gold: 500 },
+  { id: "a_lv50", name: "小有所成", desc: "角色达到 Lv50", kind: "lv", value: 50, gold: 1500 },
+  { id: "a_lv100", name: "登峰造极", desc: "角色达到 Lv100", kind: "lv", value: 100, gold: 4000 },
+  { id: "a_win10", name: "初战告捷", desc: "累计胜利 10 场", kind: "wins", value: 10, gold: 800 },
+  { id: "a_win100", name: "百战老兵", desc: "累计胜利 100 场", kind: "wins", value: 100, gold: 3000 },
+  { id: "a_gold", name: "腰缠万贯", desc: "持有 10000 金币", kind: "gold", value: 10000, gold: 1000 },
+  { id: "a_gear50", name: "锻造达人", desc: "任意装备强化到 Lv50", kind: "gearLv", value: 50, gold: 1200 },
+  { id: "a_star5", name: "星光璀璨", desc: "任意装备升到 5★", kind: "gearStar", value: 5, gold: 1500 },
+  { id: "a_items30", name: "收藏家", desc: "仓库有 30 件装备", kind: "items", value: 30, gold: 800 },
+  { id: "a_break5", name: "突破极限", desc: "完成全部 5 次突破", kind: "breaks", value: 5, gold: 2500 },
+  { id: "a_grade", name: "红色传说", desc: "资历达到 SS", kind: "grade", value: 5, gold: 3000 },
+  { id: "a_apt", name: "完美资质", desc: "资质达到 7★", kind: "apt", value: 7, gold: 3000 }
+];
+
+// 🏆 周榜奖励：按名次档位发金币（每周可领一次）
+export const WEEK_REWARD = [
+  { maxRank: 1, gold: 3000 },
+  { maxRank: 3, gold: 1500 },
+  { maxRank: 10, gold: 800 }
+];
+
 export const SHOP_PRICE = {
   weapon: { R: 400, SR: 1000, SSR: 2200, UR: 5400 },
   armor: { R: 350, SR: 850, SSR: 1900, UR: 4400 },
