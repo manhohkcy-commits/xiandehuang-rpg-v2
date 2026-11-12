@@ -22,9 +22,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=773297ab";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=1541fe7e";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=142a4767";
 import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js?v=2bad05a4";
-import { GRADE, APTITUDE } from "./js/data.js?v=1541fe7e";
+import { GRADE, APTITUDE } from "./js/data.js?v=142a4767";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -160,9 +160,12 @@ function eqCard(ch, kind, label) {
 
 function attrRow(label, key, ch) {
   const free = Number(ch.free) || 0;
-  return '<div class="row"><span class="k">' + label + '</span><span class="v">' + (ch[key] || 0) +
+  const cap = (Number(BIRTH.specCap) || 24) + (Number(BIRTH.specLevelCap) || 70);
+  const cur = Number(ch[key]) || 0;
+  return '<div class="row"><span class="k">' + label + '</span><span class="v">' + cur +
+    ' <span class="hint">/ ' + cap + '</span>' +
     ' <button class="mini" style="height:22px;padding:0 8px;font-size:11px;margin-left:6px;" data-attr="' + key + '" ' +
-    (free > 0 ? '' : 'disabled') + '>＋</button></span></div>';
+    (free > 0 && cur < cap ? '' : 'disabled') + '>＋</button></span></div>';
 }
 
 function receiptsHtml() {
@@ -635,7 +638,10 @@ function renderChar() {
   view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = async () => {
     const free = Number(ch.free) || 0;
     if (free <= 0) return toast("没有可分配点数", true);
-    ch[b.dataset.attr] = (Number(ch[b.dataset.attr]) || 0) + 1;
+    const key = b.dataset.attr;
+    const cap = (Number(BIRTH.specCap) || 24) + (Number(BIRTH.specLevelCap) || 70);
+    if ((Number(ch[key]) || 0) >= cap) return toast("这一项已经到上限 " + cap + " 了", true);
+    ch[key] = (Number(ch[key]) || 0) + 1;
     ch.free = free - 1;
     await save(); render();
   });
