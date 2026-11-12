@@ -104,7 +104,9 @@ export function damage(st, atkId, defId, opts = {}) {
   if (atk.__charged) { raw *= 1.6; atk.__charged = 0; }
   // 🩸 残血减伤：生命 <30% 时再乘一次
   if (def.hp <= (Number(def.maxHp) || 0) * 0.3) raw *= 1 - Math.min(60, Number(dt.lowHpCut) || 0) / 100;
-  raw *= 1 - Math.min(0.8, (Number(def.def) || 0) / ((Number(def.def) || 0) + 150));
+  // 🛡️ 防御 + 法抗共同减伤（法抗按 1.5 倍折算，避免纯法抗没收益）
+  const guard = (Number(def.def) || 0) + (Number(def.res) || 0) * 1.5;
+  raw *= 1 - Math.min(0.8, guard / (guard + 150));
   let dmg = Math.max(1, Math.round(raw));
   // 🛡️ 护盾先吸伤
   const sh = Number(def.shield) || 0;
@@ -123,6 +125,12 @@ export function damage(st, atkId, defId, opts = {}) {
   }
   def.hp = Math.max(0, def.hp - dmg);
   if (def.hp === 0) def.alive = false;
+  // 🌵 反伤：按受到伤害的百分比回敬攻击者
+  if (Number(dt.thorns) > 0 && dmg > 0 && atk.alive !== false) {
+    const back = Math.max(1, Math.round(dmg * Number(dt.thorns) / 100));
+    atk.hp = Math.max(0, atk.hp - back);
+    if (atk.hp === 0) atk.alive = false;
+  }
   // 😤 击杀回怒
   if (def.hp === 0 && Number(at.rageOnKill) > 0) {
     atk.rage = Math.min(100, (Number(atk.rage) || 0) + Number(at.rageOnKill));

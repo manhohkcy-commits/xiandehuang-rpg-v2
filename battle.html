@@ -401,6 +401,20 @@ async function pullIntents() {
         // 每个单位用自己的武器判定招式（联机时不再是房主武器）
         const wp = wpOf(who.weapon || st.__weapon);
         const tr = who.traits || {};
+        // ✨ 辅佐武器：招式位变成辅助（自动选血量最低的队友）
+        if (it.act === "skill" && wp.sSupport) {
+          const allies = st.units.filter((u) => u.alive !== false && u.side === who.side);
+          const tgt = allies.slice().sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0] || who;
+          const subs = [];
+          if (wp.sSupport === "heal") subs.push("治疗 " + tgt.name + " +" + healUnit(st, tgt.id, tgt.maxHp * (Number(wp.sHealPct) || 25) / 100));
+          else if (wp.sSupport === "shield") subs.push("护盾 → " + tgt.name + "（" + addShield(st, tgt.id, tgt.maxHp * (Number(wp.sShieldPct) || 20) / 100) + "）");
+          else if (wp.sSupport === "buff") { addStatus(st, tgt.id, "atkUp", Number(wp.sBuffPct) || 25, 3, "增益"); subs.push(tgt.name + " 攻击 +" + (Number(wp.sBuffPct) || 25) + "%"); }
+          else if (wp.sSupport === "dispel") subs.push("驱散 " + tgt.name + " 的 " + dispel(st, tgt.id, Number(wp.sDispelN) || 2) + " 个减益");
+          pushLog("✨ " + who.name + "「" + (wp.sName || "辅佐") + "」→ " + tgt.name, "act", subs);
+          addStatus(st, who.id, "scd", 0, Number(wp.sCd) || 3, "辅助技CD");
+          commit(st, who.id);
+          continue;
+        }
         const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
         const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
         if (it.act === "ult") who.rage = 0;
@@ -586,22 +600,25 @@ function doAct(kind) {
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "support") {
-    // ✨ 辅佐招式：治疗 / 护盾 / 增益 / 驱散
+    // ✨ 辅佐招式：自动选「血量比例最低的队友」（单人就自己）
+    const allies = st.units.filter((u) => u.alive !== false && u.side === m.side);
+    const tgt = allies.slice().sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0] || m;
+    const tid = tgt.id;
     const subs = [];
     if (wp.sSupport === "heal") {
-      const h = healUnit(st, "me", m.maxHp * (Number(wp.sHealPct) || 25) / 100);
-      subs.push(h > 0 ? "治疗 +" + h : "被禁疗，治疗无效");
+      const h = healUnit(st, tid, tgt.maxHp * (Number(wp.sHealPct) || 25) / 100);
+      subs.push(h > 0 ? "治疗 " + tgt.name + " +" + h : tgt.name + " 被禁疗，治疗无效");
     } else if (wp.sSupport === "shield") {
-      const sv = addShield(st, "me", m.maxHp * (Number(wp.sShieldPct) || 20) / 100);
-      subs.push("护盾 → " + sv);
+      const sv = addShield(st, tid, tgt.maxHp * (Number(wp.sShieldPct) || 20) / 100);
+      subs.push("护盾 → " + tgt.name + "（" + sv + "）");
     } else if (wp.sSupport === "buff") {
-      addStatus(st, "me", "atkUp", Number(wp.sBuffPct) || 25, 3, "增益");
-      subs.push("攻击 +" + (Number(wp.sBuffPct) || 25) + "%（3 回合）");
+      addStatus(st, tid, "atkUp", Number(wp.sBuffPct) || 25, 3, "增益");
+      subs.push(tgt.name + " 攻击 +" + (Number(wp.sBuffPct) || 25) + "%（3 回合）");
     } else if (wp.sSupport === "dispel") {
-      const n = dispel(st, "me", Number(wp.sDispelN) || 2);
-      subs.push("驱散 " + n + " 个减益");
+      const n = dispel(st, tid, Number(wp.sDispelN) || 2);
+      subs.push("驱散 " + tgt.name + " 的 " + n + " 个减益");
     }
-    pushLog("✨ " + m.name + "「" + (wp.sName || "辅佐") + "」", "act", subs);
+    pushLog("✨ " + m.name + "「" + (wp.sName || "辅佐") + "」→ " + tgt.name, "act", subs);
     addStatus(st, "me", "scd", 0, Number(wp.sCd) || 3, "辅助技CD");
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "skill") {
