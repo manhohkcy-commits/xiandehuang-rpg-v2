@@ -13,7 +13,8 @@ export function newChar(name) {
     id: uid("char"), name: String(name || "无名"), lv: 1, exp: 0,
     str: 10, agi: 5, intel: 0, tech: 0,
     equip: { weapon: null, armor: null, accessory: null },
-    talent: { path: "", points: {} }
+    talent: { path: "", points: {} },
+    tp: 0
   };
 }
 export function validateStore(st) {

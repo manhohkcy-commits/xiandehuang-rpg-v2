@@ -96,6 +96,15 @@ const COMBAT_BY_CAT = {
 // 稀有度 → 该装备「带一条战斗词条」的概率（会替换掉一条百分比词条）
 const COMBAT_CHANCE = { R: 0.08, SR: 0.18, SSR: 0.32, UR: 0.5 };
 
+// 🥉 第三批：控制类（只在 SSR / UR 上小概率出现，走 applyStatus 的 70% 基础命中）
+const CONTROL_BY_CAT = {
+  weapon:    [["stun", 1, 1], ["silence", 2, 2], ["freeze", 1, 1], ["noheal", 50, 100],
+              ["penetrate", 10, 40], ["doubleStrike", 15, 30], ["chase", 15, 30]],
+  armor:     [["disarm", 1, 2], ["taunt", 1, 2], ["counter", 15, 30], ["reverse", 1, 1]],
+  accessory: [["purify", 1, 2], ["dualborn", 10, 20], ["charge", 1, 1], ["fate", 1, 1], ["splash", 20, 35]]
+};
+const CONTROL_CHANCE = { R: 0, SR: 0, SSR: 0.04, UR: 0.12 };
+
 // 稀有度 → 词条条数
 const COUNT = { R: 2, SR: 3, SSR: 4, UR: 5 };
 
@@ -125,6 +134,18 @@ export function rollAffixes(cat, rarity) {
       const [k, lo, hi] = cpool[Math.floor(Math.random() * cpool.length)];
       const pctKeys = Object.keys(out).filter((key) => (PCT_BY_CAT[cat] || []).some(([kk]) => kk === key));
       if (out[k] === undefined) {
+        if (pctKeys.length) delete out[pctKeys[pctKeys.length - 1]];
+        out[k] = R(lo, hi);
+      }
+    }
+  }
+  // 🥉 控制类：极低概率再换一条（眩晕/沉默/冰冻/缴械…）
+  if (Math.random() < (CONTROL_CHANCE[rarity] || 0)) {
+    const ctrl = (CONTROL_BY_CAT[cat] || []).slice();
+    if (ctrl.length) {
+      const [k, lo, hi] = ctrl[Math.floor(Math.random() * ctrl.length)];
+      if (out[k] === undefined) {
+        const pctKeys = Object.keys(out).filter((key) => (PCT_BY_CAT[cat] || []).some(([kk]) => kk === key));
         if (pctKeys.length) delete out[pctKeys[pctKeys.length - 1]];
         out[k] = R(lo, hi);
       }

@@ -10,7 +10,12 @@ export const WEAPONS = [
   { id: "w_bow", name: "短弓", rarity: "R", sName: "连射", sMult: 180, sCd: 3, sRage: 10, sHits: 2 },
   { id: "w_fire", name: "火石长刀", rarity: "SSR", sName: "火斩", sMult: 180, sCd: 3, sRage: 30, hitStatus: "burn", hitStatusV: 3, hitStatusTurns: 2, hitStatusName: "灼烧" },
   { id: "w_cross", name: "复合十字弩", rarity: "SR", sName: "穿甲箭", sMult: 165, sCd: 3, sRage: 15 },
-  { id: "w_kusanagi", name: "草薙京", rarity: "UR", sName: "百式·鬼烧", sMult: 180, sCd: 2, sRage: 20, sHits: 3 }
+  { id: "w_kusanagi", name: "草薙京", rarity: "UR", sName: "百式·鬼烧", sMult: 180, sCd: 2, sRage: 20, sHits: 3 },
+  // ✨ 辅佐系武器：招式不是伤害，而是治疗/护盾/增益/驱散
+  { id: "w_holy", name: "圣光法典", rarity: "SSR", sName: "治愈之光", sSupport: "heal", sHealPct: 25, sCd: 3, sRage: 25 },
+  { id: "w_aegis", name: "守护权杖", rarity: "SR", sName: "圣盾", sSupport: "shield", sShieldPct: 20, sCd: 3, sRage: 20 },
+  { id: "w_hymn", name: "战歌琴", rarity: "SSR", sName: "战歌", sSupport: "buff", sBuffPct: 25, sCd: 3, sRage: 20 },
+  { id: "w_purify", name: "净化铃", rarity: "SR", sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 2, sRage: 15 }
 ];
 export const ARMORS = [
   { id: "a_cloth", name: "粗布衣", rarity: "R", dmgCut: 2 },
@@ -26,16 +31,16 @@ export const ACCESSORIES = [
 export const STAGES = [
   { id: "k1", name: "训练木桩", tier: 1, gold: 120, exp: 40,
     foe: { name: "木桩", lv: 5, hp: 800, atk: 60, def: 20, res: 10, spd: 8 },
-    drop: { shards: [8, 12], stone: [2, 4], gearChance: 10 } },
+    drop: { shards: [8, 12], stone: [2, 4], gearChance: 10, manuscript: 1, medal: 0, medalChance: 0 } },
   { id: "k2", name: "街头混混", tier: 2, gold: 260, exp: 90,
     foe: { name: "混混", lv: 15, hp: 1800, atk: 120, def: 40, res: 20, spd: 11 },
-    drop: { shards: [14, 22], stone: [5, 9], gearChance: 25 } },
+    drop: { shards: [14, 22], stone: [5, 9], gearChance: 25, manuscript: 2, medal: 1, medalChance: 30 } },
   { id: "k3", name: "草薙京·试炼", tier: 3, gold: 520, exp: 180,
     foe: { name: "草薙京", lv: 34, hp: 2398, atk: 170, def: 60, res: 40, spd: 13 },
-    drop: { shards: [26, 40], stone: [10, 16], gearChance: 45 } },
+    drop: { shards: [26, 40], stone: [10, 16], gearChance: 45, manuscript: 4, medal: 1, medalChance: 60 } },
   { id: "k4", name: "无尽·第一层", tier: 4, gold: 900, exp: 320,
     foe: { name: "影武者", lv: 50, hp: 5200, atk: 260, def: 90, res: 60, spd: 15 },
-    drop: { shards: [40, 60], stone: [18, 28], gearChance: 70 } }
+    drop: { shards: [40, 60], stone: [18, 28], gearChance: 70, manuscript: 6, medal: 2, medalChance: 80 } }
 ];
 export const CONSUMABLES = [
   { id: "p_hp", name: "伤药", desc: "战斗外回 300 生命", price: 120 },
@@ -108,4 +113,55 @@ export const SHOP_PRICE = {
   weapon: { R: 400, SR: 1000, SSR: 2200, UR: 5400 },
   armor: { R: 350, SR: 850, SSR: 1900, UR: 4400 },
   accessory: { R: 300, SR: 750, SSR: 1700, UR: 4100 }
+};
+
+// 🌳 天赋树（5 定位）：每升 1 级 +1 点，每次突破 +2 点
+//    节点 need = 需要本树已投入的点数；eff 由 power.js 的 talentBonus() 汇总
+export const TALENT_TREES = [
+  { id: "guard", name: "🛡️ 守护", role: "坦克 · 减伤", color: "#8fd8ff", nodes: [
+    { id: "g1", name: "坚壁", desc: "生命 +5%", need: 0, eff: { hpPct: 5 } },
+    { id: "g2", name: "铁壁", desc: "防御 +8%", need: 1, eff: { defPct: 8 } },
+    { id: "g3", name: "格挡", desc: "格挡 +6%", need: 2, eff: { block: 6 } },
+    { id: "g4", name: "厚甲", desc: "减伤 +5%", need: 3, eff: { dmgCut: 5 } },
+    { id: "g5", name: "不屈", desc: "残血减伤 +10%", need: 4, eff: { lowHpCut: 10 } },
+    { id: "g6", name: "守护者", desc: "生命 +8% · 韧性 +10%", need: 5, eff: { hpPct: 8, tenacity: 10 } }
+  ] },
+  { id: "vanguard", name: "⚔️ 先锋", role: "爆发 · 暴击", color: "#ffb86b", nodes: [
+    { id: "v1", name: "劈砍", desc: "攻击 +6%", need: 0, eff: { atkPct: 6 } },
+    { id: "v2", name: "锐眼", desc: "暴击率 +3%", need: 1, eff: { critRate: 3 } },
+    { id: "v3", name: "重击", desc: "暴击伤害 +10%", need: 2, eff: { critDmg: 10 } },
+    { id: "v4", name: "狂怒", desc: "攻击 +8%", need: 3, eff: { atkPct: 8 } },
+    { id: "v5", name: "战意", desc: "初始怒气 +20", need: 4, eff: { rageStart: 20 } },
+    { id: "v6", name: "破军", desc: "攻击 +10% · 暴伤 +15%", need: 5, eff: { atkPct: 10, critDmg: 15 } }
+  ] },
+  { id: "ranger", name: "🏹 游侠", role: "速度 · 技巧", color: "#7ee787", nodes: [
+    { id: "r1", name: "疾行", desc: "速度 +4%", need: 0, eff: { spdPct: 4 } },
+    { id: "r2", name: "巧手", desc: "攻击 +5%", need: 1, eff: { atkPct: 5 } },
+    { id: "r3", name: "精准", desc: "暴击率 +2%", need: 2, eff: { critRate: 2 } },
+    { id: "r4", name: "猎风", desc: "速度 +6%", need: 3, eff: { spdPct: 6 } },
+    { id: "r5", name: "连环", desc: "冷却缩减 1 回合", need: 4, eff: { cdReduce: 1 } },
+    { id: "r6", name: "风行者", desc: "攻击 +6% · 速度 +8%", need: 5, eff: { atkPct: 6, spdPct: 8 } }
+  ] },
+  { id: "mage", name: "🔮 术士", role: "法系 · 法抗", color: "#c9a0ff", nodes: [
+    { id: "m1", name: "冥想", desc: "法抗 +8%", need: 0, eff: { resPct: 8 } },
+    { id: "m2", name: "奥术", desc: "攻击 +6%", need: 1, eff: { atkPct: 6 } },
+    { id: "m3", name: "灼魂", desc: "暴击伤害 +8%", need: 2, eff: { critDmg: 8 } },
+    { id: "m4", name: "护盾", desc: "生命 +6%", need: 3, eff: { hpPct: 6 } },
+    { id: "m5", name: "抗性", desc: "韧性 +10%", need: 4, eff: { tenacity: 10 } },
+    { id: "m6", name: "大法师", desc: "攻击 +10% · 法抗 +10%", need: 5, eff: { atkPct: 10, resPct: 10 } }
+  ] },
+  { id: "support", name: "✨ 辅佐", role: "治疗 · 护盾（机制待上线）", color: "#8fd8ff", nodes: [
+    { id: "s1", name: "关怀", desc: "生命 +6%", need: 0, eff: { hpPct: 6 } },
+    { id: "s2", name: "庇护", desc: "减伤 +4%", need: 1, eff: { dmgCut: 4 } },
+    { id: "s3", name: "祈祷", desc: "法抗 +6%", need: 2, eff: { resPct: 6 } },
+    { id: "s4", name: "坚忍", desc: "残血减伤 +8%", need: 3, eff: { lowHpCut: 8 } },
+    { id: "s5", name: "守望", desc: "格挡 +5%", need: 4, eff: { block: 5 } },
+    { id: "s6", name: "圣者", desc: "生命 +8% · 法抗 +8%", need: 5, eff: { hpPct: 8, resPct: 8 } }
+  ] }
+];
+
+// 天赋点获取：每级 1 点，每次突破 +2
+export const talentPointsOf = (ch) => {
+  if (!ch) return 0;
+  return Math.max(0, (Number(ch.lv) || 1) - 1) + 2 * Math.max(0, Number(ch.breaks) || 0);
 };

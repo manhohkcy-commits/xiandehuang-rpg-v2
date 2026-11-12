@@ -12,6 +12,7 @@
     <button id="btnSave" style="margin-left:auto;">💾 保存</button></div>
   <div class="nav">
     <button data-tab="char" class="on">🧑 我的角色</button>
+    <button data-tab="talent">🌳 天赋</button>
     <button data-tab="store">🎒 仓库</button>
     <button data-tab="shop">🏪 商店</button>
   </div>
@@ -21,8 +22,8 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS } from "./js/data.js";
-import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf } from "./js/power.js";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf } from "./js/data.js";
+import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
 
@@ -476,6 +477,7 @@ function renderChar() {
     store.flags.stone = stone - next.stone;
     store.gold -= next.gold;
     ch.breaks = done + 1;
+    ch.tp = (Number(ch.tp) || 0) + 2;
     ch.free = (Number(ch.free) || 0) + next.points;
     addReceipt(store, "突破", ch.name + " 第 " + ch.breaks + " 突", { gold: -next.gold, items: [{ name: "突破石", count: -next.stone }], note: "全属性 +" + next.bonus + "% · 属性点 +" + next.points });
     await save(); render();
@@ -487,6 +489,7 @@ function renderChar() {
     const next = BREAKS[done];
     if (next && (Number(ch.lv) || 1) >= next.at) return toast("先突破才能继续升级（Lv" + next.at + "）", true);
     store.exp -= need; ch.lv += 1;
+    ch.tp = (Number(ch.tp) || 0) + 1;
     ch.free = (Number(ch.free) || 0) + 2;
     addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: "获得 2 点属性点" });
     await save(); render();
@@ -503,6 +506,64 @@ function renderChar() {
     if (!r.ok) return toast(r.why, true);
     await save(); render();
   });
+}
+
+// 🌳 天赋树页面：5 棵定位树，按树内已投点数解锁
+function renderTalent() {
+  const ch = activeChar();
+  if (!ch) { window.__creating = 1; buildCreateScreen(); return; }
+  ch.talent = ch.talent || { path: "", points: {} };
+  if (!ch.talent.points) ch.talent.points = {};
+  if (ch.tp == null) ch.tp = talentPointsOf(ch);
+  const spent = Object.keys(ch.talent.points).length;
+  const left = Math.max(0, Number(ch.tp) - spent);
+  const tb = talentBonus(ch);
+  const TN = { atkPct: "攻击", hpPct: "生命", defPct: "防御", resPct: "法抗", spdPct: "速度", critRate: "暴击率", critDmg: "暴击伤害", dmgCut: "减伤", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤", cdReduce: "冷却缩减", rageStart: "初始怒气" };
+  const tbParts = Object.keys(TN).filter((k) => Number(tb[k]) > 0)
+    .map((k) => TN[k] + " +" + tb[k] + (k === "cdReduce" ? " 回合" : k === "rageStart" ? "" : "%"));
+
+  const treeHtml = (t) => {
+    const owned = t.nodes.filter((n) => ch.talent.points[n.id]).length;
+    return '<div class="card"><div class="card-title" style="color:' + t.color + ';">' + t.name + ' · ' + t.role +
+      ' <span class="tag">' + owned + ' / ' + t.nodes.length + '</span></div>' +
+      t.nodes.map((n) => {
+        const has = !!ch.talent.points[n.id];
+        const can = !has && left > 0 && owned >= n.need;
+        return '<div class="row"><span class="k">' + (has ? "✅ " : "○ ") + n.name +
+          (n.need ? ' <span class="hint">（本树需 ' + n.need + ' 点）</span>' : '') + '</span>' +
+          '<span class="v"><span class="hint">' + n.desc + '</span> ' +
+          (has ? '<span class="tag" style="color:' + t.color + ';">已学</span>'
+               : '<button data-tp="' + n.id + '" ' + (can ? '' : 'disabled') + '>学习</button>') + '</span></div>';
+      }).join("") + '</div>';
+  };
+
+  view().innerHTML =
+    card("🌳 天赋点",
+      row("可用点数", '<b style="color:' + (left > 0 ? "#7ee787" : "#8a8ab0") + ';">' + left + '</b>') +
+      row("总点数 / 已投入", Number(ch.tp) + " / " + spent) +
+      row("当前天赋加成", tbParts.length ? tbParts.join(" · ") : "还没点") +
+      '<div class="hint" style="margin-top:6px;">升级 +1 点、突破 +2 点；节点要先把同一棵树前面的点出来。</div>' +
+      (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 重置全部天赋（免费）</button></div>' : '')) +
+    TALENT_TREES.map(treeHtml).join("");
+
+  view().querySelectorAll("[data-tp]").forEach((b) => b.onclick = async () => {
+    const node = TALENT_TREES.reduce((acc, t) => acc.concat(t.nodes), []).find((n) => n.id === b.dataset.tp);
+    if (!node) return;
+    const sp = Object.keys(ch.talent.points).length;
+    if (sp >= Number(ch.tp)) return toast("天赋点不够", true);
+    ch.talent.points[node.id] = 1;
+    addReceipt(store, "天赋", node.name, { note: "学习天赋节点" });
+    await save();
+    render();
+    toast("🌳 学会：" + node.name);
+  });
+  if ($("btnTpReset")) $("btnTpReset").onclick = async () => {
+    if (!confirm("把已点的天赋全部退回？（点数不会丢）")) return;
+    ch.talent.points = {};
+    await save();
+    render();
+    toast("已重置天赋，点数已退回");
+  };
 }
 
 function renderStore() {
@@ -798,7 +859,9 @@ function render() {
     return;
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
+  (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
   if (tab === "char") renderChar();
+  else if (tab === "talent") renderTalent();
   else if (tab === "store") renderStore();
   else renderShop();
 }

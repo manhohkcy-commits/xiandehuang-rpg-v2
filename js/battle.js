@@ -30,6 +30,8 @@ export function createBattle(units) {
       critRate: Number(u.critRate) || 0, critDmg: Number(u.critDmg) || 150,
       dmgCut: Number(u.dmgCut) || 0,
       traits,
+      weapon: u.weapon || null,
+      shield: Number(u.shield) || 0,
       rage: u.rage != null ? (Number(u.rage) || 0) : (Number(traits.rageStart) || 0),
       alive: true, acted: 0, allowed: 1, cd: 0, statuses: [], seq: i
     });
@@ -88,13 +90,37 @@ export function damage(st, atkId, defId, opts = {}) {
     ? 1 + ((Number(opts.critDmg) || 150) / 100 - 1) * (1 - Math.min(80, Number(dt.tenacity) || 0) / 100)
     : 1;
   let raw = (Number(opts.atk) || 0) * (mult / 100) * critMul;
-  // 🛡️ 格挡：和减伤叠加，总上限 60%
-  const block = Math.min(60, (Number(def.dmgCut) || 0) + (Number(dt.block) || 0));
+  // ✨ 增益：攻击提升（辅佐）
+  const up = (atk.statuses || []).find((s) => s.key === "atkUp");
+  if (up) raw *= 1 + (Number(up.v) || 0) / 100;
+  // 🗡️ 穿透：无视目标一部分减伤/格挡
+  const reduce = (Number(def.dmgCut) || 0) + (Number(dt.block) || 0);
+  const block = Math.max(0, Math.min(60, reduce - (Number(at.penetrate) || 0)));
   raw *= 1 - block / 100;
+  // 🌊 逆流：攻方残血攻击 +40%，守方残血再减伤 20%
+  if (Number(at.reverse) && atk.hp <= (Number(atk.maxHp) || 0) * 0.25) raw *= 1.4;
+  if (Number(dt.reverse) && def.hp <= (Number(def.maxHp) || 0) * 0.25) raw *= 0.8;
+  // 🏹 蓄势：防御后下一次攻击 +60%（打出即消耗）
+  if (atk.__charged) { raw *= 1.6; atk.__charged = 0; }
   // 🩸 残血减伤：生命 <30% 时再乘一次
   if (def.hp <= (Number(def.maxHp) || 0) * 0.3) raw *= 1 - Math.min(60, Number(dt.lowHpCut) || 0) / 100;
   raw *= 1 - Math.min(0.8, (Number(def.def) || 0) / ((Number(def.def) || 0) + 150));
-  const dmg = Math.max(1, Math.round(raw));
+  let dmg = Math.max(1, Math.round(raw));
+  // 🛡️ 护盾先吸伤
+  const sh = Number(def.shield) || 0;
+  let absorbed = 0;
+  if (sh > 0) {
+    absorbed = Math.min(sh, dmg);
+    def.shield = sh - absorbed;
+    dmg -= absorbed;
+    if (dmg <= 0) return { dmg: absorbed, crit, killed: false, abs: absorbed };
+  }
+  // 🎴 天命：每场第一次致死伤害无效
+  if (def.hp - dmg <= 0 && Number(dt.fate) && !def.__fateUsed) {
+    def.__fateUsed = 1;
+    def.hp = 1;
+    return { dmg, crit, killed: false, fate: true };
+  }
   def.hp = Math.max(0, def.hp - dmg);
   if (def.hp === 0) def.alive = false;
   // 😤 击杀回怒
@@ -133,11 +159,61 @@ export function applyStatus(st, atkId, defId, key, value, turns, label) {
   if (!atk || !def) return false;
   const at = atk.traits || {};
   const dt = def.traits || {};
-  const chance = Math.max(5, Math.min(100, 100 + (Number(at.statusHit) || 0) - (Number(dt.statusResist) || 0)));
+  const CONTROL = ["stun", "freeze", "silence", "disarm", "taunt", "noheal"];
+  let chance;
+  if (CONTROL.includes(key)) {
+    // 控制类：基础 70%，吃状态命中/抗性；可被「免疫」拦下；眩晕/冰冻每场每目标限一次
+    if (hasStatus(def, "immune")) return false;
+    if ((key === "stun" || key === "freeze") && def.__ctrl && def.__ctrl[key]) return false;
+    chance = 70 + (Number(at.statusHit) || 0) - (Number(dt.statusResist) || 0);
+  } else {
+    chance = 100 + (Number(at.statusHit) || 0) - (Number(dt.statusResist) || 0);
+  }
+  chance = Math.max(5, Math.min(100, chance));
   if (Math.random() * 100 >= chance) return false;
   let v = Number(value) || 0;
   v *= 1 + (Number(at.statusPower) || 0) / 100;
   if (key === "sunder") v *= 1 + (Number(at.sunderBoost) || 0) / 100;
+  if (key === "stun" || key === "freeze") {
+    def.__ctrl = def.__ctrl || {};
+    def.__ctrl[key] = 1;
+  }
   addStatus(st, defId, key, v, turns, label);
   return true;
+}
+
+// 🧷 状态查询（战斗流程用）
+export const hasStatus = (u, key) => !!(u && (u.statuses || []).some((s) => s.key === key));
+export const isStunned = (u) => hasStatus(u, "stun") || hasStatus(u, "freeze");
+export const isSilenced = (u) => hasStatus(u, "silence");
+export const isDisarmed = (u) => hasStatus(u, "disarm");
+export const canUseSkill = (u) => !isStunned(u) && !isSilenced(u) && !isDisarmed(u);
+export const canUseNormal = (u) => !isStunned(u) && !isDisarmed(u);
+
+// ✨ 辅佐：治疗 / 护盾 / 驱散
+export function healUnit(st, unitId, amount) {
+  const u = st.units.find((x) => x.id === String(unitId));
+  if (!u || !ALIVE(u)) return 0;
+  if (hasStatus(u, "noheal")) return 0;
+  const before = u.hp;
+  u.hp = Math.min(u.maxHp, u.hp + Math.max(0, Number(amount) || 0));
+  return Math.round(u.hp - before);
+}
+export function addShield(st, unitId, amount) {
+  const u = st.units.find((x) => x.id === String(unitId));
+  if (!u) return 0;
+  u.shield = (Number(u.shield) || 0) + Math.max(0, Number(amount) || 0);
+  return Math.round(u.shield);
+}
+const DEBUFF_KEYS = ["burn", "sunder", "stun", "silence", "disarm", "freeze", "noheal", "taunt", "atkDown"];
+export function dispel(st, unitId, n) {
+  const u = st.units.find((x) => x.id === String(unitId));
+  if (!u) return 0;
+  let left = Math.max(0, Number(n) || 0);
+  const before = (u.statuses || []).length;
+  u.statuses = (u.statuses || []).filter((s) => {
+    if (left > 0 && DEBUFF_KEYS.includes(s.key)) { left--; return false; }
+    return true;
+  });
+  return before - u.statuses.length;
 }

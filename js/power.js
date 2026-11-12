@@ -1,8 +1,23 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH } from "./data.js";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES } from "./data.js";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
+
+// 🌳 天赋加成汇总（把已点节点的 eff 相加）
+export function talentBonus(ch) {
+  const pts = (ch && ch.talent && ch.talent.points) || {};
+  const out = {};
+  TALENT_TREES.forEach((t) => t.nodes.forEach((n) => {
+    if (!pts[n.id]) return;
+    Object.keys(n.eff).forEach((k) => { out[k] = (out[k] || 0) + (Number(n.eff[k]) || 0); });
+  }));
+  return out;
+}
+export function talentSpent(ch) {
+  const pts = (ch && ch.talent && ch.talent.points) || {};
+  return TALENT_TREES.reduce((n, t) => n + t.nodes.filter((x) => pts[x.id]).length, 0);
+}
 
 export function itemBonus(it) {
   if (!it || !it.data) return {};
@@ -44,6 +59,15 @@ export function charFinal(ch) {
   f.def *= 1 + (Number(b.def) || 0) * bp / 100;
   f.res *= 1 + (Number(b.res) || 0) * bp / 100;
   // 🎖️ 资历评级 × 🎯 资质评估：乘在「本体」上（装备之后再叠）
+  const tb = talentBonus(ch);
+  f.hp *= 1 + (Number(tb.hpPct) || 0) / 100;
+  f.atk *= 1 + (Number(tb.atkPct) || 0) / 100;
+  f.def *= 1 + (Number(tb.defPct) || 0) / 100;
+  f.res *= 1 + (Number(tb.resPct) || 0) / 100;
+  f.spd *= 1 + (Number(tb.spdPct) || 0) / 100;
+  f.critRate += Number(tb.critRate) || 0;
+  f.critDmg += Number(tb.critDmg) || 0;
+  f.dmgCut += Number(tb.dmgCut) || 0;
   const gm = gradeOf(ch).mult, am = aptitudeOf(ch).mult;
   ["atk", "hp", "def", "res", "spd"].forEach((k) => { f[k] = f[k] * gm * am; });
   // 装备之后不再乘（装备是外物，不随资质长大）
@@ -75,7 +99,10 @@ export const charPower = (ch) => powerOf(charFinal(ch));
 //   引擎里只认这几个键：cdReduce / rageOnSkill / rageOnKill / rageStart /
 //   sunderBoost / statusPower / statusHit / statusResist / block / tenacity / lowHpCut
 const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "sunderBoost",
-  "statusPower", "statusHit", "statusResist", "block", "tenacity", "lowHpCut"];
+  "statusPower", "statusHit", "statusResist", "block", "tenacity", "lowHpCut",
+  // 第三批：控制 / 机制类也一起汇总（武器、防具、饰品都能出）
+  "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash",
+  "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"];
 
 export function combatTraits(ch) {
   const out = {};
@@ -84,5 +111,8 @@ export function combatTraits(ch) {
     const d = (ch && ch.equip && ch.equip[slot]) || {};
     COMBAT_KEYS.forEach((k) => { if (d[k]) out[k] += Number(d[k]) || 0; });
   });
+  // 🌳 天赋里带战斗属性的节点
+  const tb = talentBonus(ch);
+  ["cdReduce", "rageStart", "block", "tenacity", "lowHpCut"].forEach((k) => { out[k] += Number(tb[k]) || 0; });
   return out;
 }

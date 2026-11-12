@@ -23,12 +23,14 @@ import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } f
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES } from "./js/data.js";
 import { makeItem } from "./js/items.js";
 import { charFinal, charPower, combatTraits } from "./js/power.js";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus } from "./js/battle.js";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
 const activeChar = () => (store && store.chars || []).find((c) => c.id === store.activeChar) || (store && store.chars || [])[0] || null;
+// 武器数据兼容两种存法：装备里直接存 data，或存 {cat,data} 包装
+const wpOf = (w) => (w && (w.data || (w.sMult != null || w.sName || w.hitStatus ? w : null))) || {};
 
 function readBox() {
   const q = new URLSearchParams(location.search);
@@ -144,7 +146,7 @@ async function tryRestore() {
     id: u.id, name: u.name, side: u.side, spd: u.spd, power: 0,
     hp: u.hp, maxHp: u.maxHp, atk: u.atk || 60, def: u.def || 20,
     critRate: u.critRate || 5, critDmg: u.critDmg || 150, dmgCut: u.dmgCut || 0,
-    traits: u.traits || {}, rage: u.rage || 0
+    traits: u.traits || {}, weapon: u.weapon || null, rage: u.rage || 0
   })));
   // 把当时的血量/冷却/怒气/状态/回合贴回去
   st.round = Number(s.round) || 1;
@@ -156,6 +158,7 @@ async function tryRestore() {
     const src = s.units.find((x) => x.id === u.id);
     if (!src) return;
     u.hp = src.hp; u.maxHp = src.maxHp; u.cd = src.cd || 0; u.rage = src.rage || 0;
+    u.shield = src.shield || 0;
     u.statuses = src.statuses || [];
     if (u.hp <= 0) u.alive = false;
   });
@@ -307,7 +310,7 @@ function me() { return st.units.find((u) => u.id === "me"); }
 function foe() { return st.units.find((u) => u.id === "foe"); }
 
 function skillBtnHtml(m) {
-  const wp = (st.__weapon && st.__weapon.data) || {};
+  const wp = wpOf(st.__weapon);
   const name = wp.sName || "招式";
   const mult = Number(wp.sMult) || 150;
   const hits = Number(wp.sHits) || 1;
@@ -348,7 +351,7 @@ async function publishState() {
         id: u.id, name: u.name, side: u.side, hp: Math.round(u.hp), maxHp: Math.round(u.maxHp),
         spd: u.spd, cd: u.cd || 0, rage: Math.round(u.rage || 0),
         atk: u.atk, def: u.def, critRate: u.critRate, critDmg: u.critDmg, dmgCut: u.dmgCut,
-        traits: u.traits || {},
+        traits: u.traits || {}, weapon: u.weapon || null, shield: Math.round(u.shield || 0),
         statuses: (u.statuses || []).map((s) => ({ key: s.key, v: s.v, turns: s.turns, label: s.label }))
       })),
       log: log.slice(-40),
@@ -377,13 +380,24 @@ async function pullIntents() {
       if (!who || !cur || cur.id !== who.id) continue;
       if (it.act === "skill" && who.cd > 0) continue;
       if (it.act === "ult" && (Number(who.rage) || 0) < 100) continue;
-      const other = st.units.find((u) => u.id !== who.id);
+      if (isStunned(who)) {
+        pushLog("💫 " + who.name + " 被控住，跳过本回合");
+        commit(st, who.id);
+        continue;
+      }
+      if (it.act === "skill" && !canUseSkill(who)) continue;
+      // 😤 目标选择：优先被嘲讽的敌人
+      const enemies = st.units.filter((u) => u.alive !== false && u.id !== who.id && u.side !== who.side);
+      const taunter = enemies.find((u) => hasStatus(u, "taunt"));
+      const other = taunter || enemies[0];
+      if (!other) { commit(st, who.id); continue; }
       if (it.act === "defend") {
         who.dmgCut = (Number(who.dmgCut) || 0) + 30;
         who.__defBonus = 1;
         pushLog("🛡️ " + who.name + " 进入防御", "act");
       } else {
-        const wp = (st.__weapon && st.__weapon.data) || {};
+        // 每个单位用自己的武器判定招式（联机时不再是房主武器）
+        const wp = wpOf(who.weapon || st.__weapon);
         const tr = who.traits || {};
         const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
         const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
@@ -396,6 +410,21 @@ async function pullIntents() {
           setCooldown(st, who.id, Number(wp.sCd) || 2);
         }
         pushLog((it.act === "ult" ? "💥 " : it.act === "skill" ? "🥋 " : "⚔️ ") + who.name + " → " + other.name + " " + res.dmg + (res.crit ? " 暴击💥" : ""), "act");
+        // 💥 溅射：招式命中后打相邻敌人
+        if (it.act === "skill" && Number(tr.splash) > 0) {
+          st.units.filter((u) => u.alive !== false && u.side !== who.side && u.id !== other.id).forEach((u) => {
+            const sr = damage(st, who.id, u.id, { atk: who.atk, mult: Number(tr.splash) || 30, critRate: 0, critDmg: who.critDmg });
+            pushLog("💥 溅射 → " + u.name + " " + sr.dmg, "line");
+          });
+        }
+        // 🛡️ 防具反制：被击时缴械 / 嘲讽攻击者
+        const dt2 = other.traits || {};
+        if (Number(dt2.disarm) > 0 && who.alive !== false && Math.random() * 100 < 30) {
+          applyStatus(st, other.id, who.id, "disarm", 1, Number(dt2.disarm) || 1, "缴械");
+        }
+        if (Number(dt2.taunt) > 0 && who.alive !== false) {
+          applyStatus(st, other.id, who.id, "taunt", 0, 1, "嘲讽");
+        }
       }
       commit(st, who.id);
     }
@@ -406,11 +435,24 @@ async function pullIntents() {
 
 // 🧩 战斗词条展示（第二批）
 const TRAIT_NAMES = { cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", sunderBoost: "破防强度", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤" };
+const STATUS_NAMES = { stun: "眩晕", freeze: "冰冻", silence: "沉默", disarm: "缴械", taunt: "嘲讽", noheal: "禁疗", immune: "免疫", burn: "灼烧", sunder: "破防", mark: "标记", stack: "层数" };
+const statusName = (k) => STATUS_NAMES[k] || k;
 function traitsLine(tr) {
   const keys = Object.keys(TRAIT_NAMES).filter((k) => Number(tr && tr[k]) > 0);
   if (!keys.length) return "";
   return '<div class="hint" style="margin-top:4px;color:#8fd8ff;">🧩 战斗词条：' +
     keys.map((k) => TRAIT_NAMES[k] + (k === "cdReduce" ? " " + tr[k] + " 回合" : " " + tr[k] + "%")).join(" · ") + '</div>';
+}
+
+// ♊ 双生：概率不消耗回合（每场限一次，防无限连）
+function tryDualborn(u) {
+  const p = Number((u.traits || {}).dualborn) || 0;
+  if (p > 0 && !u.__dualUsed && Math.random() * 100 < p) {
+    u.__dualUsed = true;
+    pushLog("♊ 双生：这次行动不消耗回合", "line");
+    return true;
+  }
+  return false;
 }
 
 function renderBattle() {
@@ -422,8 +464,12 @@ function renderBattle() {
 
   const hpBar = (u) => {
     const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));
+    const stt = (u.statuses || []).map((s) => statusName(s.key) + (s.turns ? "(" + s.turns + ")" : "")).join("、");
     return '<div class="bar' + (pct <= 25 ? '' : ' full') + '"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) + (u.cd > 0 ? ' · 招式冷却 ' + u.cd : '') + '</div>';
+      '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) +
+      (Number(u.shield) > 0 ? ' · 🛡 护盾 ' + fmt(Math.round(u.shield)) : '') +
+      (u.cd > 0 ? ' · 招式冷却 ' + u.cd : '') +
+      (stt ? ' · ' + stt : '') + '</div>';
   };
 
   view().innerHTML =
@@ -442,17 +488,20 @@ function renderBattle() {
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button id="btnAgain">🔁 再来一场</button><button id="btnBack">← 返回选关</button></div></div>'
       : '<div class="card"><div class="card-title">行动</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
-          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>⚔️ 普攻</button>' +
-          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
-            '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "招式") + ' ' + (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '%')) + '</button>' +
-          '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 ? 'disabled' : '') + '>' +
+          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || !canUseNormal(m) ? 'disabled' : '') + '>⚔️ 普攻</button>' +
+          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 || !canUseSkill(m) ? 'disabled' : '') + '>' +
+            '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (wpOf(st.__weapon).sSupport ? (esc(wpOf(st.__weapon).sName || "辅佐")) : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%'))) + '</button>' +
+          '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 || isStunned(m) || isSilenced(m) ? 'disabled' : '') + '>' +
             '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' 250%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
-          '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>🛡️ 防御</button>' +
+          '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || isStunned(m) ? 'disabled' : '') + '>🛡️ 防御</button>' +
         '</div>' +
+        (isStunned(m) ? '<div class="hint" style="color:#ffd666;">💫 你被控住了，本回合跳过</div>' : '') +
+        (isSilenced(m) ? '<div class="hint" style="color:#ffd666;">🤐 被沉默：不能使用招式和必杀</div>' : '') +
+        (isDisarmed(m) ? '<div class="hint" style="color:#ffd666;">🚫 被缴械：本回合只能防御</div>' : '') +
         '<div class="hint" style="margin-top:8px;line-height:1.8;">' +
-          '招式：' + esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "—") + ' · ' +
-          (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '% · 冷却 ' +
-          (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sCd) || 2)) + ' 回合 　|　 ' +
+          '招式：' + esc(wpOf(st.__weapon).sName || "—") + ' · ' +
+          (Number(wpOf(st.__weapon).sMult) || 150) + '% · 冷却 ' +
+          (Number(wpOf(st.__weapon).sCd) || 2) + ' 回合 　|　 ' +
           '必杀 250%，每次行动 +25 怒气 　|　 防御：本回合减伤 +30%，持续到你下次行动' +
         '</div>' + traitsLine(m.traits) + '</div></div>') +
     '<div class="card"><div class="card-title">战斗日志</div><div class="log">' +
@@ -479,19 +528,51 @@ function doAct(kind) {
   if (!a || a.id !== "me") return;
   const m = me(), f2 = foe();
   clearDefend(m);
-  const wp = (st.__weapon && st.__weapon.data) || {};
+  const wp = wpOf(st.__weapon);
+  if (isStunned(m)) {
+    pushLog("💫 " + m.name + " 被控住，跳过本回合");
+    commit(st, "me");
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 380);
+    return;
+  }
+  if (kind === "skill" && !canUseSkill(m)) return;
+  if (kind === "normal" && !canUseNormal(m)) return;
   const rounds = [];
 
   if (kind === "defend") {
     pushLog("🛡️ " + m.name + " 进入防御（本回合减伤 +30%）");
     m.dmgCut = (m.dmgCut || 0) + 30;
     m.__defBonus = 1;
-    commit(st, "me");
+    if (Number((m.traits || {}).charge) > 0) {
+      m.__charged = 1;
+      pushLog("🏹 蓄势：下一次攻击 +60%", "line");
+    }
+    if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "ult") {
     const r = damage(st, "me", "foe", { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg });
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
-    commit(st, "me");
+    if (!tryDualborn(m)) commit(st, "me");
+  } else if (kind === "skill" && wp.sSupport) {
+    // ✨ 辅佐招式：治疗 / 护盾 / 增益 / 驱散
+    const subs = [];
+    if (wp.sSupport === "heal") {
+      const h = healUnit(st, "me", m.maxHp * (Number(wp.sHealPct) || 25) / 100);
+      subs.push(h > 0 ? "治疗 +" + h : "被禁疗，治疗无效");
+    } else if (wp.sSupport === "shield") {
+      const sv = addShield(st, "me", m.maxHp * (Number(wp.sShieldPct) || 20) / 100);
+      subs.push("护盾 → " + sv);
+    } else if (wp.sSupport === "buff") {
+      addStatus(st, "me", "atkUp", Number(wp.sBuffPct) || 25, 3, "增益");
+      subs.push("攻击 +" + (Number(wp.sBuffPct) || 25) + "%（3 回合）");
+    } else if (wp.sSupport === "dispel") {
+      const n = dispel(st, "me", Number(wp.sDispelN) || 2);
+      subs.push("驱散 " + n + " 个减益");
+    }
+    pushLog("✨ " + m.name + "「" + (wp.sName || "辅佐") + "」", "act", subs);
+    setCooldown(st, "me", Number(wp.sCd) || 3);
+    if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "skill") {
     const mult = Number(wp.sMult) || 150;
     const tr = m.traits || {};
@@ -507,14 +588,32 @@ function doAct(kind) {
       const ok = applyStatus(st, "me", "foe", wp.hitStatus, v, turns, nm);
       subs.push(ok ? "对 " + f2.name + " 施加「" + nm + "」" : "「" + nm + "」被 " + f2.name + " 抗掉了");
     }
+    // 🥉 控制类词条：招式命中后逐个判定（70% 基础命中，吃状态命中/抗性）
+    ["stun", "silence", "freeze", "noheal"].forEach((ck) => {
+      if (Number(wp[ck]) > 0) {
+        const turns = (ck === "stun" || ck === "freeze") ? 1 : 2;
+        const ok2 = applyStatus(st, "me", "foe", ck, Number(wp[ck]) || 0, turns, statusName(ck));
+        subs.push(ok2 ? "附加「" + statusName(ck) + "」" : "「" + statusName(ck) + "」被抗掉了");
+      }
+    });
     pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act", subs);
     setCooldown(st, "me", baseCd);
-    commit(st, "me");
+    // 🏃 追击：招式命中后概率追加 50% 普攻
+    if (Number(tr.chase) > 0 && f2.hp > 0 && Math.random() * 100 < Number(tr.chase)) {
+      const r3 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg });
+      pushLog("🏃 追击追加 " + r3.dmg, "line");
+    }
+    if (!tryDualborn(m)) commit(st, "me");
   } else {
     const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
-    commit(st, "me");
+    // 🗡️ 连击：普攻概率再打一次（半伤）
+    if (Number((m.traits || {}).doubleStrike) > 0 && f2.hp > 0 && Math.random() * 100 < Number(m.traits.doubleStrike)) {
+      const r2 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg });
+      pushLog("🗡️ 连击追加 " + r2.dmg, "line");
+    }
+    if (!tryDualborn(m)) commit(st, "me");
   }
 
   if (st.finished) { finish(); renderBattle(); return; }
@@ -545,10 +644,33 @@ function aiTurnIfNeeded() {
   setTimeout(() => {
     const f2 = foe(), m = me();
     clearDefend(f2);
+    if (isStunned(f2)) {
+      pushLog("💫 " + f2.name + " 被控住，跳过本回合");
+      commit(st, "foe");
+      busy = false;
+      renderBattle();
+      setTimeout(aiTurnIfNeeded, 300);
+      return;
+    }
     const useSkill = Math.random() < 0.3;
     const mult = useSkill ? 150 : 100;
     const r = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg });
     pushLog((useSkill ? "🥋 " : "⚔️ ") + f2.name + (useSkill ? " 技能" : " 普攻") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    // 🔁 反击：被击后概率反打 60%
+    const cb = Number((m.traits || {}).counter) || 0;
+    if (cb > 0 && m.alive !== false && f2.alive !== false && Math.random() * 100 < cb) {
+      const rc = damage(st, "me", "foe", { atk: m.atk, mult: 60, critRate: m.critRate, critDmg: m.critDmg });
+      pushLog("🔁 " + m.name + " 反击 " + rc.dmg, "line");
+    }
+    // 🛡️ 防具反制：缴械 / 嘲讽
+    const dt3 = m.traits || {};
+    if (Number(dt3.disarm) > 0 && f2.alive !== false && Math.random() * 100 < 30) {
+      applyStatus(st, "me", "foe", "disarm", 1, Number(dt3.disarm) || 1, "缴械");
+      pushLog("🚫 " + f2.name + " 被缴械", "line");
+    }
+    if (Number(dt3.taunt) > 0 && f2.alive !== false) {
+      applyStatus(st, "me", "foe", "taunt", 0, 1, "嘲讽");
+    }
     commit(st, "foe");
     busy = false;
     if (st.finished) finish();
@@ -574,7 +696,15 @@ function finish() {
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
+  // 🎖️ 资历手稿 / 资质勋章：通关掉落（勋章按概率）
+  const ms = Math.max(0, Number(dp.manuscript) || 0);
+  if (ms) store.flags.manuscript = (Number(store.flags.manuscript) || 0) + ms;
+  const mdBase = Math.max(0, Number(dp.medal) || 0);
+  const md = (mdBase && Math.random() * 100 < (Number(dp.medalChance) || 0)) ? mdBase : 0;
+  if (md) store.flags.medal = (Number(store.flags.medal) || 0) + md;
   const drops = [{ name: "碎片", count: shards }, { name: "强化石", count: stone }];
+  if (ms) drops.push({ name: "资历手稿", count: ms });
+  if (md) drops.push({ name: "资质鉴定勋章", count: md });
   if (Math.random() * 100 < (dp.gearChance || 0)) {
     const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
     const list = pool[Math.floor(Math.random() * pool.length)];

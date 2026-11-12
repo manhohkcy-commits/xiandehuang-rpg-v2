@@ -47,6 +47,7 @@
     <div class="row"><span class="k">战斗引擎</span><span class="v" id="engineTag">检查中…</span></div>
     <div class="row"><span class="k">数据表</span><span class="v" id="dataTag">检查中…</span></div>
     <div class="row"><span class="k">词条库</span><span class="v" id="affixTag">检查中…</span></div>
+    <div class="row"><span class="k">天赋树</span><span class="v" id="talentTag">检查中…</span></div>
   </div>
 
   <div class="card">
@@ -64,7 +65,7 @@
 </style>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, PRESETS } from "./js/data.js";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, PRESETS, TALENT_TREES } from "./js/data.js";
 import { createBattle, nextActor, commit } from "./js/battle.js";
 import { AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes.js";
 
@@ -103,6 +104,8 @@ document.getElementById("dataTag").textContent =
   " 饰品 · " + STAGES.length + " 关卡 · " + PRESETS.length + " 预设";
 document.getElementById("affixTag").textContent =
   "扩展 " + AFFIX_LIB_EXT.length + " · 二批 " + AFFIX_LIB_2.length + " · 三批 " + AFFIX_LIB_3.length;
+document.getElementById("talentTag").textContent =
+  TALENT_TREES.length + " 棵 · " + TALENT_TREES.reduce((n, t) => n + t.nodes.length, 0) + " 节点";
 </script>
 </body>
 </html>
