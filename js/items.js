@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=ad6938d2";
+import { CULT } from "./data.js?v=ad6938d2";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -105,15 +105,6 @@ export function promoteApply(store, it) {
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
   store.gold = (Number(store.gold) || 0) - c.gold;
-  const curRarity = it.data.rarity;
-  if (c.action === "promote") {
-    // 🏷 升阶重铸：基础值按稀有度比例抬高；记录出生品质（本源）
-    if (!it.data.born) it.data.born = curRarity;
-    const ratio = (RARITY_MULT[c.next] || 1) / (RARITY_MULT[curRarity] || 1);
-    if (it.data.main) Object.keys(it.data.main).forEach((k) => {
-      it.data.main[k] = Math.round(it.data.main[k] * ratio * 10) / 10;
-    });
-  }
   it.data.rarity = c.next;
   it.data.star = 5;
   if (c.next === "UR" && c.fire) it.data.fire = c.fire;

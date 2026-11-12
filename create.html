@@ -25,9 +25,9 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=ad6938d2";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=98d984d5";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=c0ad13c9";
 import { GRADE, APTITUDE } from "./js/data.js?v=ad6938d2";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=46a16e00";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=5865d1dd";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -1075,8 +1075,7 @@ function renderCult() {
         '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;color:' + rc + ';" data-cultdetail="' + e.key + '">' + esc(e.d.name || "装备") + '</span>' +
         '<span class="tag">' + (e.d.rarity || "") + ' · ' +
         (e.d.rarity === "UR" ? "🔥" + (Number(e.d.fire) || 1) : (e.d.star || 1) + "★") +
-        ' · Lv' + (e.d.lv || 1) + ' · 精炼 ' + (Number(e.d.refine) || 1) +
-        (e.d.born && e.d.born !== e.d.rarity ? ' · 本源 ' + e.d.born : '') + '</span>' +
+        ' · Lv' + (e.d.lv || 1) + ' · 精炼 ' + (Number(e.d.refine) || 1) + '</span>' +
         '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
         '<button data-cult2="' + e.key + '" ' + (chk.ok ? '' : 'disabled') + '>强化 +1' +
