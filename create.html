@@ -15,6 +15,7 @@
     <button data-tab="char" class="on">🧑 我的角色</button>
     <button data-tab="talent">🌳 天赋</button>
     <button data-tab="cult">⚒ 培养</button>
+    <button data-tab="orig">🧬 原创</button>
     <button data-tab="store">🎒 仓库</button>
   </div>
   <div id="view"></div>
@@ -24,9 +25,10 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=8b89ef2b";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=142a4767";
-import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js?v=2bad05a4";
+import { charFinal, charPower, itemBonus, baseBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2bad05a4";
 import { GRADE, APTITUDE } from "./js/data.js?v=142a4767";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=22282a49";
+import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1111,6 +1113,50 @@ function renderCult() {
   });
 }
 
+// 🧬 原创角色面板（独立进度：各自等级/经验；专属装备只读）
+function renderOrig() {
+  if (!ORIGINALS.length) {
+    view().innerHTML = card("🧬 原创角色", '<div class="hint">还没有原创角色。等主机端设计并加入游戏后，这里会出现他们的面板。</div>');
+    return;
+  }
+  const selId = (window.__origSel && ORIGINALS.some((o) => o.id === window.__origSel)) ? window.__origSel : ORIGINALS[0].id;
+  window.__origSel = selId;
+  const o = ORIGINALS.find((x) => x.id === selId);
+  const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
+  const lv = Number(prog.lv) || 1;
+  const k = 1 + 0.05 * (lv - 1);
+  const s = o.stats || {};
+  const need = CHAR.expNeed(lv);
+  const pct = Math.min(100, Math.round(((Number(prog.exp) || 0) / need) * 100));
+  const atk = (Number(s.atk) || 60) * k, hp = (Number(s.hp) || 500) * k;
+  const def = (Number(s.def) || 20) * k, res = (Number(s.res) || 15) * k;
+  const spd = (Number(s.spd) || 10) + 0.1 * (lv - 1);
+  const pw = powerOf({ atk, hp, def, res, spd, critRate: Number(s.critRate) || 5, critDmg: Number(s.critDmg) || 150 });
+  const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
+  const gear = (o.gear || "").split("\n").map((g) => g.trim()).filter(Boolean)
+    .map((g) => '<div class="row"><span class="k" style="font-size:12px;">' + esc(g) + '</span><span class="v"><span class="hint">专属 · 只读</span></span></div>').join("");
+
+  view().innerHTML =
+    '<div class="tree-tabs">' + tabs + '</div>' +
+    card("🧬 " + esc(o.name) + (o.title ? ' · ' + esc(o.title) : ''),
+      '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + ' · ' + esc(o.role || "") + (o.desc ? '　|　' + esc(o.desc) : '') + '</div>' +
+      '<div class="row" style="margin-top:8px;"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + '</span></div>' +
+      '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
+      '<div class="hint" style="margin-top:8px;">用这名原创角色打一场战斗可以给他涨经验（每胜 +120）。</div>') +
+    card("战斗面板",
+      '<div style="font-size:24px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>' +
+      '<div class="hint" style="margin-bottom:6px;">综合战力</div>' +
+      row("攻击", Math.round(atk)) + row("生命", Math.round(hp)) + row("防御", Math.round(def)) +
+      row("法抗", Math.round(res)) + row("速度", Math.round(spd * 10) / 10) +
+      row("暴击率", (Number(s.critRate) || 5) + "%") + row("暴击伤害", (Number(s.critDmg) || 150) + "%")) +
+    card("专属装备（" + ((o.gear || "").split("\n").filter((x) => x.trim()).length) + "）",
+      gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
+    (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
+
+  view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+}
+
 function renderStore() {
   const ch = activeChar(), all = store.items || [];
   const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
@@ -1427,6 +1473,7 @@ function render() {
   if (tab === "char") renderChar();
   else if (tab === "talent") renderTalent();
   else if (tab === "cult") renderCult();
+  else if (tab === "orig") renderOrig();
   else if (tab === "rank") renderRank();
   else if (tab === "daily") renderDaily();
   else if (tab === "store") renderStore();
@@ -1440,7 +1487,7 @@ $("btnSave").onclick = () => save();
 
 // 从首页带 tab 参数进来（任务 / 排行榜）
 const bootTab = new URLSearchParams(location.search).get("tab");
-if (bootTab && ["char", "talent", "cult", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
+if (bootTab && ["char", "talent", "cult", "orig", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
 
 (async () => { await load(); render(); })();
 </script>
