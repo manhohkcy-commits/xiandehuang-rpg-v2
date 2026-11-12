@@ -25,6 +25,7 @@
 </div>
 
 <script type="module">
+import { cloudGet, cloudDelete } from "./js/core.js?v=8b89ef2b";
 const PWKEY = "rpg2:designpw";
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 async function sha(s) {
@@ -68,11 +69,45 @@ function render() {
       '</div>' +
       '<div class="studio-note">提示：设计器里点「导出 JSON」可以把设计发给我，转成游戏内容。</div>' +
       '<div style="margin-top:12px;"><button id="btnLock" style="font-size:11px;border-color:#6b4a1e;color:#ffcf7a;">🔒 锁定主机端</button></div>' +
+    '</div>' +
+    '<div class="card"><div class="card-title" style="color:#ffb347;">🗑 删除位号（云端存档）</div>' +
+      '<div class="row"><span class="k">位号</span><span class="v"><input id="delBox" placeholder="要查询/删除的位号" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;"></span></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' +
+        '<button id="btnLookup" style="border-color:#6b4a1e;color:#ffcf7a;">🔍 查询</button>' +
+        '<button id="btnDelBox" style="border-color:#ff6b6b;color:#ff6b6b;">🗑 删除</button>' +
+      '</div>' +
+      '<div id="delMsg" class="hint" style="margin-top:8px;">输入位号先查询，确认后再删；删除不可恢复。</div>' +
     '</div>';
   document.getElementById("btnLock").onclick = () => {
     if (!confirm("锁定？下次进入需要重新输入口令。")) return;
     localStorage.removeItem("rpg2:designok");
     location.reload();
+  };
+  const msg = (t, bad) => { const el = document.getElementById("delMsg"); el.textContent = t; el.style.color = bad ? "#ff9b9b" : "#9ee7a0"; };
+  document.getElementById("btnLookup").onclick = async () => {
+    const b = document.getElementById("delBox").value.trim();
+    if (!b) return msg("先填位号", true);
+    msg("查询中…");
+    try {
+      const row = await cloudGet(b);
+      if (!row) return msg("云端没有这个位号：" + b, true);
+      const chars = (row.store && row.store.chars) || [];
+      msg("存在：" + b + "　角色 " + chars.length + " 个　更新于 " + (row.updated_at || "?"));
+    } catch (e) { msg("查询失败：" + e.message, true); }
+  };
+  document.getElementById("btnDelBox").onclick = async () => {
+    const b = document.getElementById("delBox").value.trim();
+    if (!b) return msg("先填位号", true);
+    const typed = prompt("删除不可恢复。请再输入一次位号确认：");
+    if (typed !== b) return msg("位号不一致，已取消", true);
+    if (!confirm("真的删除云端存档「" + b + "」？角色、装备、金币都会没。")) return;
+    msg("删除中…");
+    try {
+      const r = await cloudDelete(b);
+      const chk = await cloudGet(b);
+      if (chk) return msg("删除失败：云端仍有记录", true);
+      msg("✅ 已删除 " + b + "（HTTP " + r.status + "）。记得在本机清缓存，否则可能被离线缓存恢复。");
+    } catch (e) { msg("删除失败：" + e.message, true); }
   };
 }
 if (await gate()) render();

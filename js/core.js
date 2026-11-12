@@ -42,6 +42,15 @@ export async function cloudList(limit = 200) {
   return Array.isArray(j) ? j : [];
 }
 
+// 🗑 删除云端存档（主机端用，谨慎）
+export async function cloudDelete(box) {
+  const r = await fetch(CLOUD.url + "/rest/v1/slots?box=eq." + encodeURIComponent(box), {
+    method: "DELETE",
+    headers: Object.assign({ Prefer: "return=minimal" }, H())
+  });
+  return { ok: r.status >= 200 && r.status < 300, status: r.status };
+}
+
 export async function cloudSave(box, store, updatedAt, name) {
   const bad = validateStore(store);
   if (bad.length) throw new Error("存档结构不合法：" + bad.join("；"));
