@@ -76,6 +76,12 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
   60%{transform:rotate(-14deg) scale(.95);opacity:1}100%{transform:rotate(-14deg) scale(1)}}
 .g-stamp-tip{color:#f3ecda;margin-top:14px;font-size:13px;letter-spacing:2px}
 
+/* 🌳 天赋定位按钮：等宽网格，5 个一排 */
+.tree-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tree-tabs button{min-height:34px;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;padding:4px 6px}
+.tree-tabs .tag{flex:0 0 auto}
+@media (max-width:560px){.tree-tabs{grid-template-columns:repeat(3,1fr)}}
+
 /* 📱 窄屏（手机）：登记表 / 战斗按钮收一收 */
 @media (max-width:560px){
   .wrap{padding:10px}

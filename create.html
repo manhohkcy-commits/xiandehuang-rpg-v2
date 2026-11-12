@@ -559,10 +559,10 @@ function renderTalent() {
   // ① 定位选项
   const tabs = '<div class="card" style="padding:12px 14px;">' +
     '<div class="card-title" style="margin-bottom:8px;">🌳 天赋 · 先选定位</div>' +
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+    '<div class="tree-tabs">' +
     TALENT_TREES.map((t) => {
       const on = t.id === cur;
-      return '<button data-tree="' + t.id + '" class="' + (on ? "on" : "") + '" style="flex:1 1 42%;min-height:34px;border-color:' + (on ? t.color : "#3a3a5c") + ';color:' + (on ? t.color : "#eaeaea") + ';">' +
+      return '<button data-tree="' + t.id + '" class="' + (on ? "on" : "") + '" style="border-color:' + (on ? t.color : "#3a3a5c") + ';color:' + (on ? t.color : "#eaeaea") + ';">' +
         t.name + ' <span class="tag">' + counts[t.id] + '</span></button>';
     }).join("") +
     '</div>' +
