@@ -1131,8 +1131,14 @@ function renderStore() {
         : '<button id="bOn" style="font-size:11px;">🧹 批量分解</button>') +
     '</div></div>';
 
+  const mat = (k, n) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + fmt(Number((store.flags || {})[n]) || 0) + '</span></div>';
+  const resCard = '<div class="card"><div class="card-title">资源</div>' +
+    '<div class="row"><span class="k">金币</span><span class="v">' + fmt(Number(store.gold) || 0) + '</span></div>' +
+    mat("碎片", "shards") + mat("强化石", "stone") + mat("突破石", "bstone") +
+    mat("资历手稿", "manuscript") + mat("资质鉴定勋章", "medal") + '</div>';
+
   if (!filtered.length) {
-    view().innerHTML = tool + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
+    view().innerHTML = tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
     bindStoreTool(filtered);
     return;
   }
@@ -1155,12 +1161,7 @@ function renderStore() {
       '</div></div>';
   }).join("");
 
-  const mat = (k, n) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + fmt(Number((store.flags || {})[n]) || 0) + '</span></div>';
-  view().innerHTML = tool +
-    '<div class="card"><div class="card-title">资源</div>' +
-      '<div class="row"><span class="k">金币</span><span class="v">' + fmt(Number(store.gold) || 0) + '</span></div>' +
-      mat("碎片", "shards") + mat("强化石", "stone") + mat("突破石", "bstone") +
-      mat("资历手稿", "manuscript") + mat("资质鉴定勋章", "medal") + '</div>' +
+  view().innerHTML = tool + resCard +
     '<div class="card"><div class="card-title">仓库（' + filtered.length + ' / ' + all.length + ' 件）</div>' + rows + '</div>';
   bindStoreTool(filtered);
 }
