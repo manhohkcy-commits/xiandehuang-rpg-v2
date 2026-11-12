@@ -1328,6 +1328,20 @@ function shelfOf(store) {
   }
   return f.shop;
 }
+// 💹 装备每日物价浮动（±15%，按日期+装备 id 稳定）
+function priceFactor(day, id) {
+  let h = 0;
+  const s = day + "|" + id;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000;
+  return 0.85 + (h % 31) / 100;   // 0.85 ~ 1.15
+}
+function shopPrice(cat, d) {
+  const base = (SHOP_PRICE[cat] || {})[d.rarity] || 500;
+  const f = priceFactor(dayKey(), d.id);
+  const price = Math.max(5, Math.round(base * f / 5) * 5);
+  return { base, price, pct: Math.round((f - 1) * 100) };
+}
+
 function shelfItems(store) {
   const sh = shelfOf(store);
   const pick = (list, ids) => list.filter((x) => ids.indexOf(x.id) >= 0);
@@ -1395,10 +1409,14 @@ function renderShop() {
   const tab = window.__shopTab || "gear";
   const shelf = shelfItems(store);
   const grp = (title, cat, list) => card(title, list.map((d) => {
-    const price = SHOP_PRICE[cat][d.rarity] || 500;
+    const sp = shopPrice(cat, d);
     const sold = shelf.bought.indexOf(d.id) >= 0;
+    const trend = sp.pct === 0 ? '' : (sp.pct > 0
+      ? ' <span class="hint" style="color:#ff9b9b;">↑' + sp.pct + '%</span>'
+      : ' <span class="hint" style="color:#7ee787;">↓' + Math.abs(sp.pct) + '%</span>');
     return '<div class="row"><span class="k">' + esc(d.name) + ' <span class="tag">' + d.rarity + '</span></span>' +
-      '<span class="v"><span style="color:#ffd666;">' + price + ' 金</span> ' +
+      '<span class="v"><span style="color:#ffd666;">' + sp.price + ' 金</span>' + trend +
+      ' <span class="hint" style="text-decoration:line-through;">' + sp.base + '</span> ' +
       (sold ? '<span class="hint">已售罄</span>' : '<button data-buy="' + cat + ':' + d.id + '">购买</button>') +
       '</span></div>';
   }).join("") || '<div class="hint">今天的货架空了</div>');
@@ -1477,9 +1495,9 @@ function renderShop() {
   view().querySelectorAll("[data-buy]").forEach((b) => b.onclick = async () => {
     const [cat, id] = b.dataset.buy.split(":");
     let def = null, price = 0;
-    if (cat === "weapon") { def = WEAPONS.find((x) => x.id === id); price = SHOP_PRICE.weapon[def.rarity]; }
-    if (cat === "armor") { def = ARMORS.find((x) => x.id === id); price = SHOP_PRICE.armor[def.rarity]; }
-    if (cat === "accessory") { def = ACCESSORIES.find((x) => x.id === id); price = SHOP_PRICE.accessory[def.rarity]; }
+    if (cat === "weapon") { def = WEAPONS.find((x) => x.id === id); price = shopPrice("weapon", def).price; }
+    if (cat === "armor") { def = ARMORS.find((x) => x.id === id); price = shopPrice("armor", def).price; }
+    if (cat === "accessory") { def = ACCESSORIES.find((x) => x.id === id); price = shopPrice("accessory", def).price; }
     if (cat === "material") {
       const mp = id === "manuscript" ? 350 : 600;
       const nm = id === "manuscript" ? "资历手稿" : "资质鉴定勋章";
