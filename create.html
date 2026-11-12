@@ -341,6 +341,23 @@ function buildCreateScreen() {
     return p.join(" · ") || "无加成";
   };
 
+  // 武器卡片：方式·类型 / 普攻·必杀倍率 / 自带加成
+  const weaponSub = (x) => {
+    const st = x.style === "ranged" ? "远程" : x.style === "focus" ? "法器" : "近战";
+    const tp = x.dmgType === "spell" ? "法术" : "物理";
+    const bonus = [];
+    if (x.atk) bonus.push("攻击 +" + x.atk);
+    if (x.critRate) bonus.push("暴击 +" + x.critRate + "%");
+    if (x.spd) bonus.push("速度 +" + x.spd);
+    if (x.res) bonus.push("法抗 +" + x.res);
+    if (x.dmgCut) bonus.push("减伤 " + x.dmgCut + "%");
+    if (x.thorns) bonus.push("反伤 " + x.thorns + "%");
+    return st + " · " + tp +
+      "<br>普攻 " + (Number(x.aMult) || 100) + "%" + ((Number(x.aHits) || 1) > 1 ? " ×" + x.aHits : "") +
+      " ／ 必杀 " + (Number(x.uMult) || 250) + "%" +
+      (bonus.length ? "<br>" + bonus.join(" · ") : "");
+  };
+
   view().innerHTML = '<div class="gform">' +
     '<div class="g-org">闲得慌 · 冒险者协会</div>' +
     '<h1>入会登记表</h1>' +
@@ -352,7 +369,7 @@ function buildCreateScreen() {
 
     (CONTENT_READY
       ? '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
-        pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => x.sMult ? "「" + (x.sName || "—") + "」" + x.sMult + "%" : "无技能 · 普攻/必杀") +
+        pickRow("weapon", "武　器", WEAPONS, state.weapon, weaponSub) +
         pickRow("armor", "防　具", ARMORS, state.armor, gearSub) +
         pickRow("acc", "饰　品", ACCESSORIES, state.acc, gearSub)
       : '<div class="g-sec">二、初始装备</div>' +
