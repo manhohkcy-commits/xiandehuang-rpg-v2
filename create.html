@@ -307,11 +307,14 @@ function buildCreateScreen() {
     '<button class="g-step" data-basic="' + k + ':1"' + (basicFree() <= 0 || state[k] >= BIRTH.basicCap ? " disabled" : "") + '>＋</button>' +
     '</div><span class="g-hint">+' + (state[k] * BIRTH.basicPct) + '%　/ 上限 ' + (BIRTH.basicCap * BIRTH.basicPct) + '%</span></div>';
 
-  const specLine = (k, label) => '<div class="g-attr"><span class="g-k">' + label + '</span><div class="g-ctrl">' +
+  const specLine = (k, label) => {
+    const eff = BIRTH.specEffect[k === "intel" ? "int" : k];
+    return '<div class="g-attr"><span class="g-k">' + label + '</span><div class="g-ctrl">' +
     '<button class="g-step" data-attr="' + k + ':-1"' + (state[k] <= 0 ? " disabled" : "") + '>－</button>' +
     '<span class="g-val">' + state[k] + '</span>' +
     '<button class="g-step" data-attr="' + k + ':1"' + (free() <= 0 || state[k] >= BIRTH.specCap ? " disabled" : "") + '>＋</button>' +
-    '</div><span class="g-hint">' + (BIRTH.specEffect[k] ? "每点 +" + BIRTH.specEffect[k] : "") + '　/ 上限 ' + BIRTH.specCap + '</span></div>';
+    '</div><span class="g-hint">' + (eff ? "每点 +" + eff : "") + '　/ 上限 ' + BIRTH.specCap + '</span></div>';
+  };
 
   const gearSub = (x) => {
     const p = [];
@@ -387,7 +390,9 @@ function buildCreateScreen() {
   view().querySelectorAll("[data-preset]").forEach((b) => b.onclick = () => {
     const p = PRESETS.find((x) => x.id === b.dataset.preset);
     if (!p) return;
-    Object.assign(state, p.basic, p.spec);
+    const spec = Object.assign({}, p.spec);
+    if (spec.int != null) { spec.intel = spec.int; delete spec.int; }  // 模板用 int，存档用 intel
+    Object.assign(state, p.basic, spec);
     render();
     toast("已套用：" + p.name);
   });
