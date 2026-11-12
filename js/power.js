@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=dee6fcbc";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=8ac29ba8";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -76,11 +76,13 @@ export function itemBonus(it) {
   const lvMul = 1 + 0.02 * ((Number(d.lv) || 1) - 1);
   const starMul = 1 + 0.12 * ((Number(d.star) || 1) - 1);
   const rm = RARITY_MULT[d.rarity] || 1;
+  // 🔥 UR 觉醒火数：1🔥 = SSR5★ 强度，之后每 🔥 +8%
+  const fireMul = d.rarity === "UR" ? 1 + 0.08 * ((Number(d.fire) || 1) - 1) : 1;
   // ⛰ 强化突破节点：每过一个 +5% 主属性/副属性
   const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
   const breakMul = 1 + 0.05 * breakN;
   const out = {};
-  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul; });
+  Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul * breakMul * fireMul; });
   // 🎯 副属性成长：升星 +5%/星、精炼 +8%/级，只作用于随机词条（data.__affix）
   const subMul = (1 + 0.05 * ((Number(d.star) || 1) - 1)) * (1 + 0.08 * ((Number(d.refine) || 1) - 1));
   const affix = Array.isArray(d.__affix) ? d.__affix : [];

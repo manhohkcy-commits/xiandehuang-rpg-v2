@@ -24,10 +24,10 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=dee6fcbc";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=21d063a6";
-import { GRADE, APTITUDE } from "./js/data.js?v=dee6fcbc";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=bb29e9b2";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=8ac29ba8";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=a4de8ad8";
+import { GRADE, APTITUDE } from "./js/data.js?v=8ac29ba8";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=93b40a59";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -1073,8 +1073,9 @@ function renderCult() {
     return '<div style="border:1px solid ' + rc + '66;border-radius:10px;padding:10px;margin:8px 0;">' +
       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
         '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;color:' + rc + ';" data-cultdetail="' + e.key + '">' + esc(e.d.name || "装备") + '</span>' +
-        '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.star || 1) + '★ · Lv' + (e.d.lv || 1) +
-        ' · 精炼 ' + (Number(e.d.refine) || 1) + '</span>' +
+        '<span class="tag">' + (e.d.rarity || "") + ' · ' +
+        (e.d.rarity === "UR" ? "🔥" + (Number(e.d.fire) || 1) : (e.d.star || 1) + "★") +
+        ' · Lv' + (e.d.lv || 1) + ' · 精炼 ' + (Number(e.d.refine) || 1) + '</span>' +
         '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
         '<button data-cult2="' + e.key + '" ' + (chk.ok ? '' : 'disabled') + '>强化 +1' +
@@ -1088,11 +1089,19 @@ function renderCult() {
         })() +
         (() => {
           const pm = promoteCheck(it, store);
-          if (Number(e.d.star) >= 5 && e.d.rarity !== "UR") {
+          const order = ["R", "SR", "SSR", "UR"];
+          const i = order.indexOf(e.d.rarity);
+          const canStar = (Number(e.d.star) || 1) >= 5;
+          if (e.d.rarity === "UR") {
+            if ((Number(e.d.fire) || 1) >= 5) return '';
             return '<button data-promote="' + e.key + '" ' + (pm.ok ? '' : 'disabled') + ' style="border-color:#ffb347;color:#ffb347;">' +
-              '升阶 → ' + (pm.next || "?") + (pm.ok ? '（碎片 ' + pm.shards + ' / ' + pm.gold + ' 金）' : '') + '</button>';
+              '⚡ 觉醒 → UR5🔥' + (pm.ok ? '（碎片 ' + pm.shards + ' / ' + pm.gold + ' 金）' : '') + '</button>';
           }
-          return '';
+          if (!canStar || i < 0) return '';
+          const next = order[i + 1];
+          const label = next === "UR" ? "⚡ 觉醒 → UR1🔥" : "⬆️ 升阶 → " + next;
+          return '<button data-promote="' + e.key + '" ' + (pm.ok ? '' : 'disabled') + ' style="border-color:#ffb347;color:#ffb347;">' +
+            label + (pm.ok ? '（碎片 ' + pm.shards + ' / ' + pm.gold + ' 金）' : '') + '</button>';
         })() +
         (e.id && !e.lock ? '<button data-inh="' + e.id + '">🔁 继承到…</button>' : '') +
       '</div></div>';

@@ -174,12 +174,16 @@ export const CULT = {
   maxRefine: 10,
   refineGold: (r) => Math.round(120 * r),
   refineShards: (r) => Math.round(20 * r),
-  // ⬆️ 升阶：5★ 后可升到下一品质，星级保持
+  // ⬆️ 升阶：R/SR 5★ 可升下一品质；SSR5★ 需「觉醒」到 UR1🔥，UR1🔥 再觉醒到 UR5🔥
   rarityOrder: ["R", "SR", "SSR", "UR"],
+  maxFire: 5,
   promote: {
     SR: { shards: 200, gold: 2000 },
-    SSR: { shards: 500, gold: 6000 },
-    UR: { shards: 1000, gold: 15000 }
+    SSR: { shards: 500, gold: 6000 }
+  },
+  awaken: {
+    ur1: { shards: 1000, gold: 15000 },
+    ur5: { shards: 2000, gold: 30000 }
   }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
