@@ -531,7 +531,8 @@ function renderTalent() {
         const can = !has && left > 0 && owned >= n.need;
         return '<div class="row"><span class="k">' + (has ? "✅ " : "○ ") + n.name +
           (n.need ? ' <span class="hint">（本树需 ' + n.need + ' 点）</span>' : '') + '</span>' +
-          '<span class="v"><span class="hint">' + n.desc + '</span> ' +
+          '<span class="v"><span class="hint">' + n.desc + '</span>' +
+          (n.active ? ' <span class="tag" style="color:#c9a0ff;border-color:#c9a0ff;">主动：' + n.active.name + '</span>' : '') + ' ' +
           (has ? '<span class="tag" style="color:' + t.color + ';">已学</span>'
                : '<button data-tp="' + n.id + '" ' + (can ? '' : 'disabled') + '>学习</button>') + '</span></div>';
       }).join("") + '</div>';

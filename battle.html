@@ -22,8 +22,8 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES } from "./js/data.js";
 import { makeItem } from "./js/items.js";
-import { charFinal, charPower, combatTraits } from "./js/power.js";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js";
+import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
@@ -125,6 +125,7 @@ async function buildMultiBattle(stageId) {
   const myUnit = unitOfPlayer(room, box);
   st.__myUnit = myUnit;
   st.__weapon = (myUnit && built.units.find((u) => u.id === myUnit) || {}).weapon || null;
+  st.__talent = talentActive(activeChar());
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
@@ -185,6 +186,7 @@ function startBattle(stageId) {
   ]);
   st.__stage = s.id;
   st.__weapon = ch.equip.weapon || null;
+  st.__talent = talentActive(ch);
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
@@ -435,7 +437,7 @@ async function pullIntents() {
 
 // 🧩 战斗词条展示（第二批）
 const TRAIT_NAMES = { cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", sunderBoost: "破防强度", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤" };
-const STATUS_NAMES = { stun: "眩晕", freeze: "冰冻", silence: "沉默", disarm: "缴械", taunt: "嘲讽", noheal: "禁疗", immune: "免疫", burn: "灼烧", sunder: "破防", mark: "标记", stack: "层数" };
+const STATUS_NAMES = { stun: "眩晕", freeze: "冰冻", silence: "沉默", disarm: "缴械", taunt: "嘲讽", noheal: "禁疗", immune: "免疫", burn: "灼烧", sunder: "破防", mark: "标记", stack: "层数", atkUp: "增益", tcd: "天赋技CD", scd: "辅助技CD" };
 const statusName = (k) => STATUS_NAMES[k] || k;
 function traitsLine(tr) {
   const keys = Object.keys(TRAIT_NAMES).filter((k) => Number(tr && tr[k]) > 0);
@@ -490,10 +492,16 @@ function renderBattle() {
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
           '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || !canUseNormal(m) ? 'disabled' : '') + '>⚔️ 普攻</button>' +
           '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 || !canUseSkill(m) ? 'disabled' : '') + '>' +
-            '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (wpOf(st.__weapon).sSupport ? (esc(wpOf(st.__weapon).sName || "辅佐")) : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%'))) + '</button>' +
+            '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%')) + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 || isStunned(m) || isSilenced(m) ? 'disabled' : '') + '>' +
             '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' 250%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
           '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || isStunned(m) ? 'disabled' : '') + '>🛡️ 防御</button>' +
+          (wpOf(st.__weapon).sSupport ? '<button data-act="support" style="flex:1;min-width:110px;height:38px;border-color:#8fd8ff;color:#8fd8ff;" ' +
+            (busy || !a || a.id !== "me" || hasStatus(m, "scd") ? 'disabled' : '') + '>✨ ' + esc(wpOf(st.__weapon).sName || "辅助") +
+            (hasStatus(m, "scd") ? " 冷却" : "") + '</button>' : '') +
+          (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' +
+            (busy || !a || a.id !== "me" || hasStatus(m, "tcd") ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) +
+            (hasStatus(m, "tcd") ? " 冷却" : "") + '</button>' : '') +
         '</div>' +
         (isStunned(m) ? '<div class="hint" style="color:#ffd666;">💫 你被控住了，本回合跳过</div>' : '') +
         (isSilenced(m) ? '<div class="hint" style="color:#ffd666;">🤐 被沉默：不能使用招式和必杀</div>' : '') +
@@ -540,6 +548,25 @@ function doAct(kind) {
   if (kind === "normal" && !canUseNormal(m)) return;
   const rounds = [];
 
+  if (kind === "talent") {
+    const t = st.__talent;
+    if (!t || hasStatus(m, "tcd")) return;
+    const subs = [];
+    if (t.key === "wall") { const sv = addShield(st, "me", m.maxHp * 0.3); subs.push("护盾 → " + sv); }
+    else if (t.key === "frenzy") { addStatus(st, "me", "atkUp", 40, 2, "狂战"); subs.push("攻击 +40%（2 回合）"); }
+    else if (t.key === "gale") { m.allowed = (Number(m.allowed) || 1) + 1; subs.push("本回合多行动一次"); }
+    else if (t.key === "arcane") {
+      const r = damage(st, "me", "foe", { atk: m.atk, mult: 200, critRate: m.critRate, critDmg: m.critDmg });
+      subs.push("奥术冲击 " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    } else if (t.key === "bless") { const h = healUnit(st, "me", m.maxHp * 0.3); subs.push("恢复 " + h); }
+    addStatus(st, "me", "tcd", 0, t.cd, "天赋技CD");
+    pushLog("✨ " + m.name + "「" + t.name + "」", "act", subs);
+    if (!tryDualborn(m)) commit(st, "me");
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 380);
+    return;
+  }
+
   if (kind === "defend") {
     pushLog("🛡️ " + m.name + " 进入防御（本回合减伤 +30%）");
     m.dmgCut = (m.dmgCut || 0) + 30;
@@ -554,7 +581,7 @@ function doAct(kind) {
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     if (!tryDualborn(m)) commit(st, "me");
-  } else if (kind === "skill" && wp.sSupport) {
+  } else if (kind === "support") {
     // ✨ 辅佐招式：治疗 / 护盾 / 增益 / 驱散
     const subs = [];
     if (wp.sSupport === "heal") {
@@ -571,7 +598,7 @@ function doAct(kind) {
       subs.push("驱散 " + n + " 个减益");
     }
     pushLog("✨ " + m.name + "「" + (wp.sName || "辅佐") + "」", "act", subs);
-    setCooldown(st, "me", Number(wp.sCd) || 3);
+    addStatus(st, "me", "scd", 0, Number(wp.sCd) || 3, "辅助技CD");
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "skill") {
     const mult = Number(wp.sMult) || 150;

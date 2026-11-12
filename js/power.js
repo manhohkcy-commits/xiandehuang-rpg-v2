@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES } from "./data.js";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf } from "./data.js";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -12,11 +12,28 @@ export function talentBonus(ch) {
     if (!pts[n.id]) return;
     Object.keys(n.eff).forEach((k) => { out[k] = (out[k] || 0) + (Number(n.eff[k]) || 0); });
   }));
+  // 🔁 溢出点：节点点满后，多出来的天赋点按每点 +0.3% 攻击/生命（上限 +30%）
+  const totalNodes = TALENT_TREES.reduce((n, t) => n + t.nodes.length, 0);
+  const overflow = Math.max(0, talentPointsOf(ch) - totalNodes);
+  if (overflow > 0) {
+    const add = Math.min(30, overflow * 0.3);
+    out.atkPct = (out.atkPct || 0) + add;
+    out.hpPct = (out.hpPct || 0) + add;
+  }
   return out;
 }
 export function talentSpent(ch) {
   const pts = (ch && ch.talent && ch.talent.points) || {};
   return TALENT_TREES.reduce((n, t) => n + t.nodes.filter((x) => pts[x.id]).length, 0);
+}
+
+// ⚡ 天赋主动技：已点亮的第 6 节点自带的一个主动技（每棵树一个）
+export function talentActive(ch) {
+  const pts = (ch && ch.talent && ch.talent.points) || {};
+  for (const t of TALENT_TREES) {
+    for (const n of t.nodes) if (n.active && pts[n.id]) return Object.assign({ tree: t.id }, n.active);
+  }
+  return null;
 }
 
 export function itemBonus(it) {

@@ -124,7 +124,8 @@ export const TALENT_TREES = [
     { id: "g3", name: "格挡", desc: "格挡 +6%", need: 2, eff: { block: 6 } },
     { id: "g4", name: "厚甲", desc: "减伤 +5%", need: 3, eff: { dmgCut: 5 } },
     { id: "g5", name: "不屈", desc: "残血减伤 +10%", need: 4, eff: { lowHpCut: 10 } },
-    { id: "g6", name: "守护者", desc: "生命 +8% · 韧性 +10%", need: 5, eff: { hpPct: 8, tenacity: 10 } }
+    { id: "g6", name: "守护者", desc: "生命 +8% · 韧性 +10%", need: 5, eff: { hpPct: 8, tenacity: 10 },
+      active: { key: "wall", name: "盾墙", cd: 4, desc: "获得 30% 生命的护盾" } }
   ] },
   { id: "vanguard", name: "⚔️ 先锋", role: "爆发 · 暴击", color: "#ffb86b", nodes: [
     { id: "v1", name: "劈砍", desc: "攻击 +6%", need: 0, eff: { atkPct: 6 } },
@@ -132,7 +133,8 @@ export const TALENT_TREES = [
     { id: "v3", name: "重击", desc: "暴击伤害 +10%", need: 2, eff: { critDmg: 10 } },
     { id: "v4", name: "狂怒", desc: "攻击 +8%", need: 3, eff: { atkPct: 8 } },
     { id: "v5", name: "战意", desc: "初始怒气 +20", need: 4, eff: { rageStart: 20 } },
-    { id: "v6", name: "破军", desc: "攻击 +10% · 暴伤 +15%", need: 5, eff: { atkPct: 10, critDmg: 15 } }
+    { id: "v6", name: "破军", desc: "攻击 +10% · 暴伤 +15%", need: 5, eff: { atkPct: 10, critDmg: 15 },
+      active: { key: "frenzy", name: "狂战", cd: 4, desc: "攻击 +40%，持续 2 回合" } }
   ] },
   { id: "ranger", name: "🏹 游侠", role: "速度 · 技巧", color: "#7ee787", nodes: [
     { id: "r1", name: "疾行", desc: "速度 +4%", need: 0, eff: { spdPct: 4 } },
@@ -140,7 +142,8 @@ export const TALENT_TREES = [
     { id: "r3", name: "精准", desc: "暴击率 +2%", need: 2, eff: { critRate: 2 } },
     { id: "r4", name: "猎风", desc: "速度 +6%", need: 3, eff: { spdPct: 6 } },
     { id: "r5", name: "连环", desc: "冷却缩减 1 回合", need: 4, eff: { cdReduce: 1 } },
-    { id: "r6", name: "风行者", desc: "攻击 +6% · 速度 +8%", need: 5, eff: { atkPct: 6, spdPct: 8 } }
+    { id: "r6", name: "风行者", desc: "攻击 +6% · 速度 +8%", need: 5, eff: { atkPct: 6, spdPct: 8 },
+      active: { key: "gale", name: "疾风", cd: 4, desc: "本回合多行动一次" } }
   ] },
   { id: "mage", name: "🔮 术士", role: "法系 · 法抗", color: "#c9a0ff", nodes: [
     { id: "m1", name: "冥想", desc: "法抗 +8%", need: 0, eff: { resPct: 8 } },
@@ -148,7 +151,8 @@ export const TALENT_TREES = [
     { id: "m3", name: "灼魂", desc: "暴击伤害 +8%", need: 2, eff: { critDmg: 8 } },
     { id: "m4", name: "护盾", desc: "生命 +6%", need: 3, eff: { hpPct: 6 } },
     { id: "m5", name: "抗性", desc: "韧性 +10%", need: 4, eff: { tenacity: 10 } },
-    { id: "m6", name: "大法师", desc: "攻击 +10% · 法抗 +10%", need: 5, eff: { atkPct: 10, resPct: 10 } }
+    { id: "m6", name: "大法师", desc: "攻击 +10% · 法抗 +10%", need: 5, eff: { atkPct: 10, resPct: 10 },
+      active: { key: "arcane", name: "奥术冲击", cd: 4, desc: "200% 攻击，无视部分减伤" } }
   ] },
   { id: "support", name: "✨ 辅佐", role: "治疗 · 护盾（机制待上线）", color: "#8fd8ff", nodes: [
     { id: "s1", name: "关怀", desc: "生命 +6%", need: 0, eff: { hpPct: 6 } },
@@ -156,7 +160,8 @@ export const TALENT_TREES = [
     { id: "s3", name: "祈祷", desc: "法抗 +6%", need: 2, eff: { resPct: 6 } },
     { id: "s4", name: "坚忍", desc: "残血减伤 +8%", need: 3, eff: { lowHpCut: 8 } },
     { id: "s5", name: "守望", desc: "格挡 +5%", need: 4, eff: { block: 5 } },
-    { id: "s6", name: "圣者", desc: "生命 +8% · 法抗 +8%", need: 5, eff: { hpPct: 8, resPct: 8 } }
+    { id: "s6", name: "圣者", desc: "生命 +8% · 法抗 +8%", need: 5, eff: { hpPct: 8, resPct: 8 },
+      active: { key: "bless", name: "祝福", cd: 4, desc: "恢复 30% 生命" } }
   ] }
 ];
 

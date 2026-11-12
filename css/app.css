@@ -90,4 +90,8 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
   .gform button.g-submit{letter-spacing:4px}
   .g-stamp{width:120px;height:120px;font-size:24px}
   button[data-act],button[data-intent]{min-width:calc(50% - 6px) !important;flex:1 1 45%}
+  .nav button{flex:1 1 45%;min-height:34px}
+  .row{flex-wrap:wrap}
+  .wrap{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  button[data-tp]{min-height:34px}
 }
