@@ -286,9 +286,9 @@ TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   }
 }));
 
-// ⏳ 天赋成长节奏：分支解锁等级 / 每一阶的等级门槛（14 阶，每 5 级一阶）
-//    分支：基础 Lv5 → 进阶 Lv30 → 终极 Lv60；阶：Lv5 → Lv70
-export const TALENT_BRANCH_LV = [5, 30, 60];
+// ⏳ 天赋成长节奏：三条分支都在天赋开放（Lv5）时一起可用；阶每 5 级开放一阶
+//    分支：Lv5 全开；阶：Lv5 → Lv70
+export const TALENT_BRANCH_LV = [5, 5, 5];
 export const TALENT_TIER_LV = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
 TALENT_TREES.forEach((t) => (t.branches || []).forEach((b, i) => { b.unlockLv = TALENT_BRANCH_LV[i] || b.unlockLv; }));
 

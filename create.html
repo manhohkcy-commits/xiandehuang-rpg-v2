@@ -673,28 +673,6 @@ function renderTalent() {
     '<thead><tr><th></th>' + branches.map(headCell).join("") + '</tr></thead>' +
     '<tbody>' + rows.join("") + '</tbody></table>';
 
-  // ③ 天赋链详情
-  const detail = branches.map((b) => {
-    const bSpent = talentSpentInBranch(ch, tree.id, b.id);
-    const lvLock = lv < b.unlockLv;
-    return '<details style="margin-top:8px;">' +
-      '<summary style="cursor:pointer;font-size:12px;color:' + (lvLock ? "#8a8ab0" : tree.color) + ';font-weight:700;">▍' + b.name + ' · ' + b.desc +
-      ' <span class="tag">' + bSpent + '/' + b.nodes.length + '</span>' +
-      (b.style ? ' <span class="hint">（' + b.style + '）</span>' : '') +
-      (lvLock ? ' <span class="tag" style="color:#ff9b9b;">Lv' + b.unlockLv + ' 解锁</span>' : '') + '</summary>' +
-      b.nodes.map((n, i) => {
-        const has = !!ch.talent.points[n.id];
-        const tierLock = lv < (TALENT_TIER_LV[i] || 1);
-        const can = !has && !lvLock && !tierLock && left > 0;
-        return '<div class="row"><span class="k">' + CN_NUM[i] + ' ' + n.name +
-          (n.mech ? ' <span class="tag" style="color:#ffd666;border-color:#ffd666;">⚙ 机制</span>' : '') +
-          (tierLock ? ' <span class="hint">Lv' + TALENT_TIER_LV[i] + ' 解锁</span>' : '') + '</span><span class="v" style="text-align:right;">' +
-          '<span class="hint">' + effText(n.eff) + '</span> ' +
-          (has ? '<span class="tag" style="color:' + tree.color + ';">已学</span>'
-               : '<button data-tp="' + n.id + '" ' + (can ? '' : 'disabled') + '>学习</button>') + '</span></div>';
-      }).join("") + '</details>';
-  }).join("");
-
   // ④ 职业主动技
   const act = tree.active;
   const actHas = !!(act && ch.talent.points[act.id]);
@@ -707,10 +685,9 @@ function renderTalent() {
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
     ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span></div>' +
-    '<div class="hint">天赋 Lv5 开放；分支 Lv5 / 30 / 60 解锁，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
+    '<div class="hint">天赋 Lv5 开放；三条分支都从 Lv5 起可用，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
-    (actRow ? actRow : '') + '</div>' +
-    '<div class="card"><div class="card-title">📜 天赋链详情</div>' + detail + '</div>';
+    (actRow ? actRow : '') + '</div>';
 
   const allNodes = [];
   TALENT_TREES.forEach((t) => {
