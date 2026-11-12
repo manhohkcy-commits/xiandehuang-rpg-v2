@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌RPG v2 · 原创角色设计器</title>
+<link rel="stylesheet" href="css/app.css?v=d8dee059">
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="index.html">← 返回</a><span class="tag">原创角色设计器</span>
+    <span class="tag">与玩家存档无关</span></div>
+  <div id="view"></div>
+</div>
+
+<script type="module">
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=142a4767";
+import { charFinal, powerOf } from "./js/power.js?v=2bad05a4";
+
+const KEY = "rpg2:designs";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const ROLES = ["通用", "守护", "先锋", "游侠", "术士", "辅佐"];
+const DUTY = { 守护: "坦克 / 减伤", 先锋: "近战爆发", 游侠: "远程 / 速度", 术士: "法术 / 持续", 辅佐: "治疗 / 护盾", 通用: "自由定位" };
+
+function loadAll() {
+  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
+}
+function saveAll(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+
+// 当前编辑中的设计
+let editing = null;   // 设计对象
+function blank() {
+  return {
+    id: "d" + Date.now().toString(36),
+    name: "", title: "", role: "通用", desc: "",
+    basic: { hp: 10, atk: 10, def: 10, res: 10 },
+    spec: { str: 6, int: 6, tech: 6, agi: 6 },
+    weapon: WEAPONS[0].id, armor: ARMORS[0].id, acc: ACCESSORIES[0].id,
+    notes: ""
+  };
+}
+
+function toChar(d) {
+  const w = WEAPONS.find((x) => x.id === d.weapon) || WEAPONS[0];
+  const ar = ARMORS.find((x) => x.id === d.armor) || ARMORS[0];
+  const ac = ACCESSORIES.find((x) => x.id === d.acc) || ACCESSORIES[0];
+  return {
+    name: d.name || "未命名", lv: 1, grade: "D", apt: 1, breaks: 0,
+    str: d.spec.str, intel: d.spec.int, tech: d.spec.tech, agi: d.spec.agi,
+    basic: d.basic,
+    equip: {
+      weapon: Object.assign({}, w, { lv: 1, star: 1 }),
+      armor: Object.assign({}, ar, { lv: 1, star: 1 }),
+      accessory: Object.assign({}, ac, { lv: 1, star: 1 })
+    },
+    talent: { points: {} }
+  };
+}
+
+function previewHtml(d) {
+  const ch = toChar(d);
+  const f = charFinal(ch);
+  const pw = powerOf(f);
+  const w = WEAPONS.find((x) => x.id === d.weapon);
+  const ar = ARMORS.find((x) => x.id === d.armor);
+  const ac = ACCESSORIES.find((x) => x.id === d.acc);
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const equip = [w && ("⚔️ " + w.name), ar && ("🛡️ " + ar.name), ac && ("💍 " + ac.name)].filter(Boolean).join("　");
+  return '<div class="card"><div class="card-title">预览</div>' +
+    '<div style="font-size:18px;font-weight:800;">' + esc(d.name || "（未命名）") +
+      (d.title ? ' <span class="tag">' + esc(d.title) + '</span>' : '') + '</div>' +
+    '<div class="hint">' + esc(d.role) + ' · ' + esc(DUTY[d.role] || "") + '</div>' +
+    (d.desc ? '<div class="hint" style="margin-top:6px;color:#c9d0e0;line-height:1.7;">' + esc(d.desc) + '</div>' : '') +
+    '<div class="row" style="margin-top:8px;"><span class="k">战力</span><span class="v" style="color:#6ea8fe;font-weight:700;">' + pw + '</span></div>' +
+    row("攻击", Math.round(f.atk)) + row("生命", Math.round(f.hp)) + row("防御", Math.round(f.def)) +
+    row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
+    row("暴击率 / 暴伤", Math.round(f.critRate) + "% / " + Math.round(f.critDmg) + "%") +
+    '<div class="hint" style="margin-top:8px;">' + equip + '</div>' +
+    '<div class="hint" style="margin-top:4px;">基础 ' + sum(d.basic) + '/40　专精 ' + sum(d.spec) + '/24</div></div>';
+}
+const sum = (o) => Object.values(o).reduce((a, b) => a + (Number(b) || 0), 0);
+
+function formHtml(d) {
+  const num = (scope, k, max) => '<input class="g-num-in" type="number" min="0" max="' + max + '" value="' + (d[scope][k] || 0) + '" data-num="' + scope + ':' + k + '" style="width:58px;height:28px;text-align:center;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#ffd666;font-weight:700;">';
+  const sel = (scope, list, cur) => '<select data-sel="' + scope + '" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:6px;">' +
+    list.map((x) => '<option value="' + x.id + '"' + (cur === x.id ? ' selected' : '') + '>' + esc(x.name) + '（' + (x.rarity || "") + '）</option>').join("") + '</select>';
+  return '<div class="card"><div class="card-title">原创角色 · 设定</div>' +
+    '<div class="row"><span class="k">名字</span><input id="fName" maxlength="16" placeholder="例如：灰烬" value="' + esc(d.name) + '" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#fff;padding:7px;"></div>' +
+    '<div class="row"><span class="k">称号</span><input id="fTitle" maxlength="20" placeholder="例如：不眠的守夜人" value="' + esc(d.title) + '" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#fff;padding:7px;"></div>' +
+    '<div class="row"><span class="k">定位</span><select id="fRole" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:6px;">' +
+      ROLES.map((r) => '<option' + (d.role === r ? ' selected' : '') + '>' + r + '</option>').join("") + '</select></div>' +
+    '<div class="row"><span class="k">描述</span><textarea id="fDesc" rows="3" placeholder="性格、来历、战斗风格…" style="flex:1;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:7px;font-family:inherit;">' + esc(d.desc) + '</textarea></div>' +
+    '<div class="hint" style="margin-top:10px;">基础四项（共 40）</div>' +
+    '<div class="row"><span class="k">生命</span>' + num("basic", "hp", 40) + '<span class="k">攻击</span>' + num("basic", "atk", 40) + '</div>' +
+    '<div class="row"><span class="k">防御</span>' + num("basic", "def", 40) + '<span class="k">法抗</span>' + num("basic", "res", 40) + '</div>' +
+    '<div class="hint" style="margin-top:10px;">专精四项（共 24）</div>' +
+    '<div class="row"><span class="k">力量</span>' + num("spec", "str", 24) + '<span class="k">敏捷</span>' + num("spec", "agi", 24) + '</div>' +
+    '<div class="row"><span class="k">智力</span>' + num("spec", "int", 24) + '<span class="k">技巧</span>' + num("spec", "tech", 24) + '</div>' +
+    '<div class="hint" style="margin-top:10px;">装备</div>' +
+    '<div class="row"><span class="k">武器</span>' + sel("weapon", WEAPONS, d.weapon) + '</div>' +
+    '<div class="row"><span class="k">防具</span>' + sel("armor", ARMORS, d.armor) + '</div>' +
+    '<div class="row"><span class="k">饰品</span>' + sel("acc", ACCESSORIES, d.acc) + '</div>' +
+    '<div class="hint" style="margin-top:10px;">备注（设计意图、弱点、想加的机制）</div>' +
+    '<textarea id="fNotes" rows="2" style="width:100%;background:#0b0e17;border:1px solid #2a3350;border-radius:6px;color:#e6e9f2;padding:7px;font-family:inherit;">' + esc(d.notes) + '</textarea>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">' +
+      '<button id="btnSave" style="border-color:#7ee787;color:#7ee787;">💾 保存设计</button>' +
+      '<button id="btnReset">🆕 清空重填</button>' +
+      '<button id="btnExport">📤 导出 JSON</button>' +
+      '<button id="btnImport">📥 导入 JSON</button>' +
+    '</div></div>';
+}
+
+function listHtml(list) {
+  if (!list.length) return '<div class="card"><div class="card-title">已保存的设计（0）</div><div class="hint">还没有。填好上面的设定，点「保存设计」。</div></div>';
+  return '<div class="card"><div class="card-title">已保存的设计（' + list.length + '）</div>' +
+    list.map((d) => '<div class="row"><span class="k">' + esc(d.name || "未命名") +
+      ' <span class="hint">' + esc(d.role) + (d.title ? " · " + esc(d.title) : "") + '</span>' +
+      '<div class="hint">' + esc((d.desc || "").slice(0, 40)) + '</div></span>' +
+      '<span class="v"><button data-load="' + d.id + '">编辑</button> ' +
+      '<button data-del="' + d.id + '" style="border-color:#ff9b9b;color:#ff9b9b;">删除</button></span></div>').join("") +
+    '</div>';
+}
+
+function render() {
+  const list = loadAll();
+  if (!editing) editing = list[0] || blank();
+  $("view").innerHTML = '<div class="hint" style="margin-bottom:8px;">这里设计的原创角色<strong>不会</strong>写进任何玩家存档、位号或排行榜，只存在本机浏览器里，可以导出 JSON 给我转成游戏数据。</div>' +
+    formHtml(editing) + previewHtml(editing) + listHtml(list);
+  bind();
+}
+
+function bind() {
+  const d = editing;
+  $("fName").oninput = () => { d.name = $("fName").value; refreshPreview(); };
+  $("fTitle").oninput = () => { d.title = $("fTitle").value; refreshPreview(); };
+  $("fRole").onchange = () => { d.role = $("fRole").value; render(); };
+  $("fDesc").oninput = () => { d.desc = $("fDesc").value; refreshPreview(); };
+  $("fNotes").oninput = () => { d.notes = $("fNotes").value; };
+  document.querySelectorAll("[data-num]").forEach((inp) => {
+    inp.onchange = () => {
+      const [scope, k] = inp.dataset.num.split(":");
+      const max = scope === "basic" ? 40 : 24;
+      let v = Math.floor(Number(inp.value));
+      if (!Number.isFinite(v)) v = 0;
+      v = Math.max(0, Math.min(max, v));
+      const others = sum(d[scope]) - (d[scope][k] || 0);
+      const cap = scope === "basic" ? 40 : 24;
+      v = Math.min(v, cap - others);
+      d[scope][k] = v;
+      render();
+    };
+  });
+  document.querySelectorAll("[data-sel]").forEach((s) => {
+    s.onchange = () => { d[s.dataset.sel] = s.value; render(); };
+  });
+  $("btnSave").onclick = () => {
+    if (!d.name.trim()) return alert("先填名字");
+    const list = loadAll();
+    const i = list.findIndex((x) => x.id === d.id);
+    if (i >= 0) list[i] = JSON.parse(JSON.stringify(d)); else list.push(JSON.parse(JSON.stringify(d)));
+    saveAll(list);
+    alert("已保存：" + d.name);
+    render();
+  };
+  $("btnReset").onclick = () => { editing = blank(); render(); };
+  $("btnExport").onclick = () => {
+    const data = JSON.stringify(loadAll(), null, 2);
+    const w = window.open("", "_blank");
+    if (w) { w.document.write("<pre style='white-space:pre-wrap;font:12px/1.5 monospace;'>" + esc(data) + "</pre>"); return; }
+    prompt("复制下面的 JSON：", data);
+  };
+  $("btnImport").onclick = () => {
+    const raw = prompt("粘贴之前导出的 JSON：");
+    if (!raw) return;
+    try {
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) throw new Error("不是数组");
+      saveAll(arr);
+      editing = arr[0] || blank();
+      render();
+      alert("导入成功：" + arr.length + " 个设计");
+    } catch (e) { alert("导入失败：" + e.message); }
+  };
+  document.querySelectorAll("[data-load]").forEach((b) => b.onclick = () => {
+    const d2 = loadAll().find((x) => x.id === b.dataset.load);
+    if (d2) { editing = JSON.parse(JSON.stringify(d2)); render(); }
+  });
+  document.querySelectorAll("[data-del]").forEach((b) => b.onclick = () => {
+    if (!confirm("删除这个设计？")) return;
+    saveAll(loadAll().filter((x) => x.id !== b.dataset.del));
+    editing = blank();
+    render();
+  });
+}
+
+function refreshPreview() {
+  const list = loadAll();
+  const cards = document.querySelectorAll(".card");
+  const last = cards[1];
+  if (last) last.outerHTML = previewHtml(editing);
+  // 列表不变，不整页重绘以免输入框失焦
+}
+
+render();
+</script>
+</body>
+</html>
