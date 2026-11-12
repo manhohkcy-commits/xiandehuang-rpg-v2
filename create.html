@@ -579,15 +579,19 @@ function renderChar() {
 // 🌳 天赋树（职业分支版）：上方定位 → 分支链列 → 阶×分支矩阵 → 详情
 const EFF_LABELS = {
   atkPct: "攻击", hpPct: "生命", defPct: "防御", resPct: "法抗", spdPct: "速度",
+  atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度",
   critRate: "暴击率", critDmg: "暴击伤害", dmgCut: "减伤", block: "格挡", tenacity: "韧性",
   lowHpCut: "残血减伤", cdReduce: "冷却缩减", rageStart: "初始怒气",
   statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性",
-  penetrate: "穿透", doubleStrike: "连击", chase: "追击", dualborn: "双生"
+  penetrate: "穿透", doubleStrike: "连击", chase: "追击", dualborn: "双生",
+  counter: "反击", reverse: "逆流", taunt: "嘲讽", fate: "天命", splash: "溅射",
+  charge: "蓄势", sunderBoost: "破防强度", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", ragePct: "怒气获取"
 };
+const EFF_NOPCT = new Set(["cdReduce", "rageStart", "rageOnKill", "atk", "hp", "def", "res", "spd"]);
 const CN_NUM = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭"];
 function effText(eff) {
   return Object.keys(eff).map((k) => {
-    const u = k === "cdReduce" ? " 回合" : (k === "rageStart" ? "" : "%");
+    const u = k === "cdReduce" ? " 回合" : (EFF_NOPCT.has(k) ? "" : "%");
     return (EFF_LABELS[k] || k) + " +" + eff[k] + u;
   }).join(" · ");
 }
