@@ -22,7 +22,7 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw } from "./js/core.js";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf } from "./js/data.js";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV } from "./js/data.js";
 import { charFinal, charPower, itemBonus, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch } from "./js/power.js";
 import { GRADE, APTITUDE } from "./js/data.js";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js";
@@ -508,8 +508,7 @@ function renderChar() {
   });
 }
 
-// 🌳 天赋树页面：5 棵定位树，按树内已投点数解锁
-// 🌳 天赋树（职业分支版）：5 职业 × 3 条分支链 × 5 节点 + 职业主动技
+// 🌳 天赋树（职业分支版）：上方定位 → 分支链列 → 阶×分支矩阵 → 详情
 const EFF_LABELS = {
   atkPct: "攻击", hpPct: "生命", defPct: "防御", resPct: "法抗", spdPct: "速度",
   critRate: "暴击率", critDmg: "暴击伤害", dmgCut: "减伤", block: "格挡", tenacity: "韧性",
@@ -517,6 +516,7 @@ const EFF_LABELS = {
   statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性",
   penetrate: "穿透", doubleStrike: "连击", chase: "追击", dualborn: "双生"
 };
+const CN_NUM = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭"];
 function effText(eff) {
   return Object.keys(eff).map((k) => {
     const u = k === "cdReduce" ? " 回合" : (k === "rageStart" ? "" : "%");
@@ -531,7 +531,6 @@ function renderTalent() {
   if (!ch.talent.points) ch.talent.points = {};
   if (ch.tp == null) ch.tp = talentPointsOf(ch);
 
-  // 旧版天赋节点迁移：清空旧节点（点数不会丢，只是重点）
   const valid = new Set();
   TALENT_TREES.forEach((t) => {
     (t.branches || []).forEach((b) => b.nodes.forEach((n) => valid.add(n.id)));
@@ -545,45 +544,103 @@ function renderTalent() {
   const tbParts = Object.keys(EFF_LABELS).filter((k) => Number(tb[k]) > 0)
     .map((k) => EFF_LABELS[k] + " +" + (Math.round(tb[k] * 10) / 10) + (k === "cdReduce" ? " 回合" : k === "rageStart" ? "" : "%"));
 
-  const treeHtml = (t) => {
-    const treeSpent = talentSpentInTree(ch, t.id);
-    const branches = (t.branches || []).map((b) => {
-      const bSpent = talentSpentInBranch(ch, t.id, b.id);
-      const locked = (Number(ch.lv) || 1) < b.unlockLv;
-      const nodes = b.nodes.map((n, i) => {
-        const has = !!ch.talent.points[n.id];
-        const can = !has && !locked && left > 0 && bSpent >= i;
-        return '<div class="row"><span class="k">' + (has ? "✅ " : "○ ") + n.name + '</span><span class="v">' +
-          '<span class="hint">' + effText(n.eff) + '</span> ' +
-          (has ? '<span class="tag" style="color:' + t.color + ';">已学</span>'
-               : '<button data-tp="' + n.id + '" ' + (can ? '' : 'disabled') + '>学习</button>') + '</span></div>';
-      }).join("");
-      return '<div style="margin:8px 0;padding:10px 12px;border:1px solid ' + (locked ? "#2f2f4a" : "#2f4a6a") + ';border-radius:10px;background:#101020;">' +
-        '<div class="card-title" style="color:' + (locked ? "#6a6a86" : t.color) + ';margin-bottom:4px;">' + b.name + ' · ' + b.desc +
-        ' <span class="tag">' + bSpent + '/' + b.nodes.length + '</span>' +
-        (locked ? ' <span class="tag" style="color:#ff9b9b;">Lv' + b.unlockLv + ' 解锁</span>' : '') + '</div>' + nodes + '</div>';
+  const counts = {};
+  TALENT_TREES.forEach((t) => { counts[t.id] = talentSpentInTree(ch, t.id); });
+  let cur = window.__talentTree || ch.talent.path;
+  if (!TALENT_TREES.some((t) => t.id === cur)) {
+    cur = TALENT_TREES.slice().sort((a, b) => counts[b.id] - counts[a.id])[0].id;
+  }
+  window.__talentTree = cur;
+  ch.talent.path = cur;
+  const tree = TALENT_TREES.find((t) => t.id === cur);
+  const branches = tree.branches || [];
+  const lv = Number(ch.lv) || 1;
+
+  // ① 定位选项
+  const tabs = '<div class="card" style="padding:12px 14px;">' +
+    '<div class="card-title" style="margin-bottom:8px;">🌳 天赋 · 先选定位</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+    TALENT_TREES.map((t) => {
+      const on = t.id === cur;
+      return '<button data-tree="' + t.id + '" class="' + (on ? "on" : "") + '" style="flex:1 1 42%;min-height:34px;border-color:' + (on ? t.color : "#3a3a5c") + ';color:' + (on ? t.color : "#eaeaea") + ';">' +
+        t.name + ' <span class="tag">' + counts[t.id] + '</span></button>';
+    }).join("") +
+    '</div>' +
+    '<div class="hint" style="margin-top:6px;">可用 <b style="color:' + (left > 0 ? "#7ee787" : "#8a8ab0") + ';">' + left + '</b> / 共 ' + Number(ch.tp) + ' 点（升级 +1、突破 +2）</div>' +
+    (tbParts.length ? '<div class="hint">当前加成：' + tbParts.join(" · ") + '</div>' : '') +
+    (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 重置全部天赋（免费）</button></div>' : '') +
+    '</div>';
+
+  // ② 分支链（表头）+ 阶 × 分支 矩阵
+  const head = '<div style="display:grid;grid-template-columns:44px repeat(' + branches.length + ',1fr);gap:4px;align-items:stretch;">' +
+    '<div></div>' +
+    branches.map((b) => {
+      const lock = lv < b.unlockLv;
+      return '<div style="text-align:center;padding:6px 2px;border-radius:8px;background:#101020;border:1px solid ' + (lock ? "#2f2f4a" : tree.color + "66") + ';">' +
+        '<div style="font-size:12.5px;font-weight:700;color:' + (lock ? "#6a6a86" : tree.color) + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.name + '</div>' +
+        '<div class="hint" style="font-size:9.5px;">' + (lock ? "Lv" + b.unlockLv : b.desc) + '</div></div>';
     }).join("");
+  const rows = [];
+  for (let i = 0; i < TALENT_TIER_LV.length; i++) {
+    rows.push('<div style="display:grid;grid-template-columns:44px repeat(' + branches.length + ',1fr);gap:4px;align-items:stretch;">' +
+      '<div style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#8a8ab0;">' + (i + 1) + '阶</div>' +
+      branches.map((b) => {
+        const n = b.nodes[i];
+        if (!n) return '<div></div>';
+        const bSpent = talentSpentInBranch(ch, tree.id, b.id);
+        const has = !!ch.talent.points[n.id];
+        const lvLock = lv < b.unlockLv;
+        const tierLock = lv < (TALENT_TIER_LV[i] || 1);
+        const lock = lvLock || tierLock;
+        const can = !has && !lock && left > 0 && bSpent >= i;
+        const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
+        const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
+        return '<button data-tp="' + n.id + '" style="height:46px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px solid ' +
+          (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';" ' + (can ? '' : 'disabled') + '>' +
+          '<span style="font-size:13px;line-height:1;">' + mark + '</span>' +
+          '<span style="font-size:9.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + n.name + '</span></button>';
+      }).join("") +
+      '</div>');
+  }
+  const grid = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">' + head + rows.join("") + '</div>';
 
-    const act = t.active;
-    const actHas = !!(act && ch.talent.points[act.id]);
-    const actCan = act && !actHas && left > 0 && treeSpent >= act.need;
-    const actHtml = act ? '<div class="row" style="margin-top:6px;"><span class="k">⚡ 主动技 · ' + act.name + '</span><span class="v">' +
-      '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + (actHas ? '' : ' · 需本职业 ' + act.need + ' 点') + '</span> ' +
-      (actHas ? '<span class="tag" style="color:' + t.color + ';">已解锁</span>'
-              : '<button data-tp="' + act.id + '" ' + (actCan ? '' : 'disabled') + '>解锁</button>') + '</span></div>' : '';
+  // ③ 天赋链详情
+  const detail = branches.map((b) => {
+    const bSpent = talentSpentInBranch(ch, tree.id, b.id);
+    const lvLock = lv < b.unlockLv;
+    return '<details style="margin-top:8px;">' +
+      '<summary style="cursor:pointer;font-size:12px;color:' + (lvLock ? "#8a8ab0" : tree.color) + ';font-weight:700;">▍' + b.name + ' · ' + b.desc +
+      ' <span class="tag">' + bSpent + '/' + b.nodes.length + '</span>' +
+      (b.style ? ' <span class="hint">（' + b.style + '）</span>' : '') +
+      (lvLock ? ' <span class="tag" style="color:#ff9b9b;">Lv' + b.unlockLv + ' 解锁</span>' : '') + '</summary>' +
+      b.nodes.map((n, i) => {
+        const has = !!ch.talent.points[n.id];
+        const tierLock = lv < (TALENT_TIER_LV[i] || 1);
+        const can = !has && !lvLock && !tierLock && left > 0 && bSpent >= i;
+        return '<div class="row"><span class="k">' + CN_NUM[i] + ' ' + n.name +
+          (n.mech ? ' <span class="tag" style="color:#ffd666;border-color:#ffd666;">⚙ 机制</span>' : '') +
+          (tierLock ? ' <span class="hint">Lv' + TALENT_TIER_LV[i] + ' 解锁</span>' : '') + '</span><span class="v" style="text-align:right;">' +
+          '<span class="hint">' + effText(n.eff) + '</span> ' +
+          (has ? '<span class="tag" style="color:' + tree.color + ';">已学</span>'
+               : '<button data-tp="' + n.id + '" ' + (can ? '' : 'disabled') + '>学习</button>') + '</span></div>';
+      }).join("") + '</details>';
+  }).join("");
 
-    return '<div class="card"><div class="card-title" style="color:' + t.color + ';">' + t.name + ' · ' + t.role +
-      ' <span class="tag">本职业 ' + treeSpent + ' 点</span></div>' + branches + actHtml + '</div>';
-  };
+  // ④ 职业主动技
+  const act = tree.active;
+  const actHas = !!(act && ch.talent.points[act.id]);
+  const actCan = act && !actHas && left > 0 && counts[tree.id] >= act.need;
+  const actRow = act ? '<div class="row" style="margin-top:12px;"><span class="k">⚡ 主动技 · ' + act.name + '</span><span class="v">' +
+    '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + (actHas ? '' : ' · 需本定位 ' + act.need + ' 点') + '</span> ' +
+    (actHas ? '<span class="tag" style="color:' + tree.color + ';">已解锁</span>'
+            : '<button data-tp="' + act.id + '" ' + (actCan ? '' : 'disabled') + '>解锁</button>') + '</span></div>' : '';
 
-  view().innerHTML =
-    card("🌳 天赋点",
-      row("可用点数", '<b style="color:' + (left > 0 ? "#7ee787" : "#8a8ab0") + ';">' + left + '</b>') +
-      row("总点数 / 已投入", Number(ch.tp) + " / " + spent) +
-      row("当前天赋加成", tbParts.length ? tbParts.join(" · ") : "还没点") +
-      (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 重置全部天赋（免费）</button></div>' : '') +
-      '<div class="hint" style="margin-top:6px;">升级 +1 点、突破 +2 点；每条分支按等级解锁（Lv1 / 25 / 50），节点要顺着链往下点；职业主动技需本职业 10 点。</div>') +
-    TALENT_TREES.map(treeHtml).join("");
+  view().innerHTML = tabs +
+    '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
+    ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span></div>' +
+    '<div class="hint">天赋 Lv5 开放；分支 Lv5 / 30 / 60 解锁，14 阶按 Lv5→97 逐级开放；每条链要顺着点。</div>' + grid +
+    (actRow ? actRow : '') + '</div>' +
+    '<div class="card"><div class="card-title">📜 天赋链详情</div>' + detail + '</div>';
 
   const allNodes = [];
   TALENT_TREES.forEach((t) => {
@@ -591,16 +648,21 @@ function renderTalent() {
     if (t.active) allNodes.push(Object.assign({ tree: t.id }, t.active));
   });
 
+  view().querySelectorAll("[data-tree]").forEach((b) => b.onclick = () => {
+    window.__talentTree = b.dataset.tree;
+    render();
+  });
+
   view().querySelectorAll("[data-tp]").forEach((b) => b.onclick = async () => {
     const node = allNodes.find((n) => n.id === b.dataset.tp);
     if (!node) return;
     if (spent >= Number(ch.tp)) return toast("天赋点不够", true);
-    if (node.need != null && talentSpentInTree(ch, node.tree) < node.need) return toast("本职业点数不够（需 " + node.need + "）", true);
+    if (node.need != null && talentSpentInTree(ch, node.tree) < node.need) return toast("本定位点数不够（需 " + node.need + "）", true);
     if (node.unlockLv == null) {
-      // 普通节点：检查是否顺着链点（前一个节点已点）
       const t = TALENT_TREES.find((x) => x.id === node.tree);
       const br = (t.branches || []).find((x) => x.nodes.some((n) => n.id === node.id));
       const idx = br.nodes.findIndex((n) => n.id === node.id);
+      if (idx >= 0 && (Number(ch.lv) || 1) < (TALENT_TIER_LV[idx] || 1)) return toast("到 Lv" + TALENT_TIER_LV[idx] + " 才能点这一阶", true);
       if (idx > 0 && !ch.talent.points[br.nodes[idx - 1].id]) return toast("先点前一个节点", true);
     }
     ch.talent.points[node.id] = 1;
@@ -610,7 +672,7 @@ function renderTalent() {
     toast("🌳 学会：" + node.name);
   });
   if ($("btnTpReset")) $("btnTpReset").onclick = async () => {
-    if (!confirm("把已点的天赋全部退回？（点数不会丢）")) return;
+    if (!confirm("已点的天赋全部退回？（点数不会丢）")) return;
     ch.talent.points = {};
     await save();
     render();

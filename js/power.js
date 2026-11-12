@@ -12,14 +12,6 @@ export function talentBonus(ch) {
     if (!pts[n.id]) return;
     Object.keys(n.eff).forEach((k) => { out[k] = (out[k] || 0) + (Number(n.eff[k]) || 0); });
   })));
-  // 🔁 溢出点：节点点满后，多出来的天赋点按每点 +0.3% 攻击/生命（上限 +30%）
-  const totalNodes = talentNodeCount();
-  const overflow = Math.max(0, talentPointsOf(ch) - totalNodes);
-  if (overflow > 0) {
-    const add = Math.min(30, overflow * 0.3);
-    out.atkPct = (out.atkPct || 0) + add;
-    out.hpPct = (out.hpPct || 0) + add;
-  }
   return out;
 }
 
