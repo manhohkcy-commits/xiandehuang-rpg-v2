@@ -303,19 +303,19 @@ function buildCreateScreen() {
     '<span class="g-hint">' + (BIRTH.specEffect[k] ? "每点 +" + BIRTH.specEffect[k] : "") + '</span></div></div>';
 
   view().innerHTML = '<div class="gform">' +
-    '<div class="g-org">闲得慌 · 邻里生活站</div>' +
-    '<h1>住户登记表</h1>' +
-    '<div class="g-meta"><span>登记编号：' + esc(box) + '</span><span>登记日期：' + dateStr + '</span></div>' +
+    '<div class="g-org">闲得慌 · 冒险者协会</div>' +
+    '<h1>入会登记表</h1>' +
+    '<div class="g-meta"><span>受理编号：' + esc(box) + '</span><span>登记日期：' + dateStr + '</span></div>' +
 
-    '<div class="g-sec">一、住户信息</div>' +
-    '<div class="g-row"><span class="g-k">称　呼</span><div class="g-v"><input class="g-in" id="cName" maxlength="16" placeholder="请填写（最多 16 字）" value="' + esc(state.name) + '"></div></div>' +
-    '<div class="g-row"><span class="g-k">住户类型</span><div class="g-v">新住户 · 生活行头三件 · 属性自行申报</div></div>' +
+    '<div class="g-sec">一、申请人信息</div>' +
+    '<div class="g-row"><span class="g-k">姓　　名</span><div class="g-v"><input class="g-in" id="cName" maxlength="16" placeholder="请填写（最多 16 字）" value="' + esc(state.name) + '"></div></div>' +
+    '<div class="g-row"><span class="g-k">申请类别</span><div class="g-v">新入会 · 初始装备三件 · 属性自行申报</div></div>' +
 
     (CONTENT_READY
-      ? '<div class="g-sec">二、行头志愿（每类选一件）</div>' +
-        pickRow("weapon", "工　具", WEAPONS, state.weapon, (x) => x.sMult ? "「" + (x.sName || "—") + "」" + x.sMult + "%" : "无技能 · 普攻/必杀") +
-        pickRow("armor", "衣　物", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
-        pickRow("acc", "配　饰", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : ""))
+      ? '<div class="g-sec">二、装备志愿（每类选一件）</div>' +
+        pickRow("weapon", "武　器", WEAPONS, state.weapon, (x) => x.sMult ? "「" + (x.sName || "—") + "」" + x.sMult + "%" : "无技能 · 普攻/必杀") +
+        pickRow("armor", "防　具", ARMORS, state.armor, (x) => "减伤 " + (x.dmgCut || 0) + "%") +
+        pickRow("acc", "饰　品", ACCESSORIES, state.acc, (x) => (x.atkPct ? "攻 +" + x.atkPct + "%" : "") + (x.critDmg ? " 暴伤 +" + x.critDmg + "%" : ""))
       : '<div class="g-sec">二、初始装备</div>' +
         '<div class="g-row"><span class="g-k">装　备</span><div class="g-v">内容待定，先由协会配发默认装备</div></div>') +
 
@@ -328,12 +328,12 @@ function buildCreateScreen() {
     '<div class="g-rest">基础剩余 <b>' + basicFree() + '</b> 点　·　专精剩余 <b>' + free() + '</b> 点' +
       ((free() > 0 || basicFree() > 0) ? '（点「参考模板」可一键填满）' : '') + '</div>' +
 
-    '<div class="g-sec">四、住户承诺</div>' +
-    '<div class="g-note">本人自愿登记入住闲得慌生活站，遵守生活站公约，如实申报属性。所填资料经生活站盖章登记后生效；称呼与行头日后仍可更改，属性点可凭熟练度提升与进阶继续追加。</div>' +
+    '<div class="g-sec">四、申请人承诺</div>' +
+    '<div class="g-note">本人自愿加入闲得慌冒险者协会，遵守协会章程，如实申报属性。所填资料经协会盖章受理后生效；姓名与装备日后仍可更改，属性点可凭升级与突破继续追加。</div>' +
 
     '<div class="g-actions">' +
       (hasChars ? '<button class="g-cancel" id="ccCancel">取消</button>' : '') +
-      '<button class="g-submit" id="btnCreate">提交登记</button>' +
+      '<button class="g-submit" id="btnCreate">提交申请</button>' +
     '</div>' +
   '</div>';
 
@@ -379,7 +379,7 @@ function buildCreateScreen() {
     // 盖章 → 归档
     const wrap = document.createElement("div");
     wrap.className = "g-stamp-wrap";
-    wrap.innerHTML = '<div class="g-stamp">已登记</div><div class="g-stamp-tip">登记编号 ' + esc(box) + ' · 正在归档…</div>';
+    wrap.innerHTML = '<div class="g-stamp">已受理</div><div class="g-stamp-tip">受理编号 ' + esc(box) + ' · 正在归档…</div>';
     document.body.appendChild(wrap);
     setTimeout(async () => {
       createCharacter(name, w, ar, ac, attrs, basic);
@@ -388,7 +388,7 @@ function buildCreateScreen() {
       await save();
       wrap.remove();
       render();
-      toast("🎉 「" + name + "」登记成功，欢迎入住生活站");
+      toast("🎉 「" + name + "」登记成功，欢迎加入协会");
     }, 1000);
   };
 }
