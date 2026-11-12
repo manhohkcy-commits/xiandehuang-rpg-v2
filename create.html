@@ -24,10 +24,10 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=2345f7f0";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=789e90d1";
-import { GRADE, APTITUDE } from "./js/data.js?v=2345f7f0";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a07fdd52";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=57e07650";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=04c4e5e4";
+import { GRADE, APTITUDE } from "./js/data.js?v=57e07650";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=53b0c6b8";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -1073,13 +1073,19 @@ function renderCult() {
     return '<div style="border:1px solid ' + rc + '66;border-radius:10px;padding:10px;margin:8px 0;">' +
       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
         '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;color:' + rc + ';" data-cultdetail="' + e.key + '">' + esc(e.d.name || "装备") + '</span>' +
-        '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.star || 1) + '★ · Lv' + (e.d.lv || 1) + '</span>' +
+        '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.star || 1) + '★ · Lv' + (e.d.lv || 1) +
+        ' · 精炼 ' + (Number(e.d.refine) || 1) + '</span>' +
         '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
         '<button data-cult2="' + e.key + '" ' + (chk.ok ? '' : 'disabled') + '>强化 +1' +
           (chk.ok ? '（' + chk.gold + ' 金 / ' + chk.stone + ' 石' + (chk.breakStone ? ' / 突破石 ' + chk.breakStone : '') + '）' : '') + '</button>' +
         '<button data-star2="' + e.key + '" ' + (star.ok ? '' : 'disabled') + '>' +
           (star.ok ? '升星 → ' + star.to + '★（碎片 ' + star.shards + '）' : '已满星') + '</button>' +
+        (() => {
+          const rf = refineCheck(it, store);
+          return '<button data-refine2="' + e.key + '" ' + (rf.ok ? '' : 'disabled') + '>精炼 +1' +
+            (rf.ok ? '（' + rf.gold + ' 金 / 碎片 ' + rf.shards + '）' : (Number(e.d.refine) >= 10 ? '（已满）' : '')) + '</button>';
+        })() +
         (e.id && !e.lock ? '<button data-inh="' + e.id + '">🔁 继承到…</button>' : '') +
       '</div></div>';
   };
@@ -1106,6 +1112,15 @@ function renderCult() {
     await save(); render();
   });
   view().querySelectorAll("[data-inh]").forEach((b) => b.onclick = () => openInherit(b.dataset.inh));
+  view().querySelectorAll("[data-refine2]").forEach((b) => b.onclick = async () => {
+    const it = resolve(b.dataset.refine2);
+    if (!it) return toast("找不到装备", true);
+    const r = refineApply(store, it);
+    if (!r.ok) return toast(r.why, true);
+    addReceipt(store, "精炼", it.data.name + " → 精炼 " + r.refine);
+    await save(); render();
+    toast("🔧 精炼成功：Lv" + r.refine);
+  });
   view().querySelectorAll("[data-cultdetail]").forEach((b) => b.onclick = () => {
     const key = b.dataset.cultdetail;
     if (key.indexOf("eq:") === 0) {

@@ -169,7 +169,11 @@ export const CULT = {
   gold: (lv) => Math.round(2 * lv * tier(lv)),
   stone: (lv) => Math.ceil((lv / 4) * tier(lv)),
   maxStar: 5,
-  starShards: (star) => Math.round(10 * Math.pow(2, star - 1))
+  starShards: (star) => Math.round(10 * Math.pow(2, star - 1)),
+  // 🔧 精炼：只提升随机词条数值（每级 +8%）
+  maxRefine: 10,
+  refineGold: (r) => Math.round(120 * r),
+  refineShards: (r) => Math.round(20 * r)
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
 export const GRADE = [

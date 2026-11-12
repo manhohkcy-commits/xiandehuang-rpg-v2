@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=2345f7f0";
+import { CULT } from "./data.js?v=57e07650";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -39,6 +39,27 @@ export function unequip(store, charId, kind) {
   store.items.push({ id: uid("it"), cat: kind, lock: false, data: ch.equip[kind] });
   ch.equip[kind] = null;
   return { ok: true };
+}
+
+// 🔧 精炼：只提升随机词条（每级 +8%），消耗金币 + 碎片
+export function refineCheck(it, store) {
+  const d = it && it.data;
+  if (!d) return { ok: false, why: "没有装备" };
+  const r = Number(d.refine) || 1;
+  if (r >= CULT.maxRefine) return { ok: false, why: "精炼已满" };
+  const gold = CULT.refineGold(r), shards = CULT.refineShards(r);
+  if ((Number(store.gold) || 0) < gold) return { ok: false, why: "金币不够", gold, shards };
+  if ((Number((store.flags || {}).shards) || 0) < shards) return { ok: false, why: "碎片不够", gold, shards };
+  return { ok: true, gold, shards, next: r + 1 };
+}
+export function refineApply(store, it) {
+  const c = refineCheck(it, store);
+  if (!c.ok) return c;
+  store.gold = (Number(store.gold) || 0) - c.gold;
+  store.flags = store.flags || {};
+  store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
+  it.data.refine = c.next;
+  return { ok: true, refine: c.next };
 }
 
 export function cultCheck(it, kind, store) {
