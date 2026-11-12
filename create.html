@@ -1143,7 +1143,8 @@ function renderOrig() {
       '<div class="row" style="margin-top:8px;"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
       '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
-      '<div class="hint" style="margin-top:8px;">用这名原创角色打一场战斗可以给他涨经验（每胜 +120）。</div>') +
+      '<div class="hint" style="margin-top:8px;">用这名原创角色打一场战斗可以给他涨经验（每胜 +120）。</div>' +
+      '<div style="margin-top:10px;"><button id="btnPlayOrig" style="border-color:#ffb347;color:#ffb347;">⚔️ 用他出战</button></div>') +
     card("战斗面板",
       '<div style="font-size:24px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>' +
       '<div class="hint" style="margin-bottom:6px;">综合战力</div>' +
@@ -1155,6 +1156,10 @@ function renderOrig() {
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+  if ($("btnPlayOrig")) $("btnPlayOrig").onclick = () => {
+    try { localStorage.setItem("rpg2:playAs", o.id); } catch (e) {}
+    location.href = "battle.html";
+  };
 }
 
 function renderStore() {
