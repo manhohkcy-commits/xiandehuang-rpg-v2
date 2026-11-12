@@ -266,9 +266,9 @@ export const WEEK_REWARD = [
 ];
 
 export const SHOP_PRICE = {
-  weapon: { R: 400, SR: 1000, SSR: 2200, UR: 5400 },
-  armor: { R: 350, SR: 850, SSR: 1900, UR: 4400 },
-  accessory: { R: 300, SR: 750, SSR: 1700, UR: 4100 }
+  weapon: { R: 500, SR: 1250, SSR: 2700, UR: 6500 },
+  armor: { R: 450, SR: 1100, SSR: 2300, UR: 5300 },
+  accessory: { R: 400, SR: 950, SSR: 2100, UR: 5000 }
 };
 
 // 🌳 天赋树（5 定位）：每升 1 级 +1 点，每次突破 +2 点
