@@ -41,10 +41,8 @@ function detail(it) {
   const keys = Object.keys(NAMES).filter((k) => Number(b[k]) > 0);
   const mainBlock = mainKeys.length
     ? (() => {
-        const txt = mainKeys.filter((k) => Number(b[k]) > 0)
-          .map((k) => (NAMES[k] || k) + " +" + (Math.round(Number(b[k]) * 10) / 10) + (UNITS[k] || "")).join(" · ");
-        return txt ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' +
-          '<div class="hint" style="color:#ffd666;line-height:1.7;">' + txt + '</div>' : "";
+        const rows = mainKeys.filter((k) => Number(b[k]) > 0).map(row).join("");
+        return rows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' + rows : "";
       })()
     : "";
   const groups = [

@@ -219,9 +219,9 @@ function showItemDetail(it) {
   ];
   const val = (k, v) => (Math.round((Number(v) || 0) * 10) / 10) + (ITEM_UNITS[k] || "");
   const mainKeys = mainKeysOf(it);
-  const mainRows = mainKeys.filter((k) => Number(b[k]) > 0).map((k) => (ITEM_NAMES[k] || k) + " +" + val(k, b[k])).join(" · ");
-  const mainHtml = mainRows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' +
-    '<div class="hint" style="color:#ffd666;line-height:1.7;">' + mainRows + '</div>' : "";
+  const mainRows = mainKeys.filter((k) => Number(b[k]) > 0).map((k) =>
+    '<div class="row"><span class="k">' + (ITEM_NAMES[k] || k) + '</span><span class="v" style="color:#ffd666;">+' + val(k, b[k]) + '</span></div>').join("");
+  const mainHtml = mainRows ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#ffd666;">主属性（部位基础）</div>' + mainRows : "";
   const groupsHtml = GROUPS.map((g) => {
     const rows = g.keys.filter((k) => Number(b[k]) > 0 && mainKeys.indexOf(k) < 0).map((k) => {
       const mine = Number(b[k]) || 0;
