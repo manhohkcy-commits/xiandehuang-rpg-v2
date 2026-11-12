@@ -105,11 +105,13 @@ export function promoteApply(store, it) {
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
   store.gold = (Number(store.gold) || 0) - c.gold;
-  // ⬜ 升阶/觉醒白值
-  const g = ((CULT.flatGain || {})[c.action === "promote" ? "promote" : "awaken"] || {})[it.cat] || {};
-  if (Object.keys(g).length) {
-    it.data.flat = it.data.flat || {};
-    Object.keys(g).forEach((k) => { it.data.flat[k] = (Number(it.data.flat[k]) || 0) + g[k]; });
+  // ⬜ 只有「升阶」给白值；觉醒（火数）不给
+  if (c.action === "promote") {
+    const g = ((CULT.flatGain || {}).promote || {})[it.cat] || {};
+    if (Object.keys(g).length) {
+      it.data.flat = it.data.flat || {};
+      Object.keys(g).forEach((k) => { it.data.flat[k] = (Number(it.data.flat[k]) || 0) + g[k]; });
+    }
   }
   const oldRarity = it.data.rarity;
   it.data.rarity = c.next;
