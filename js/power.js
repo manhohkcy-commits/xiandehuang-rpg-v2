@@ -64,7 +64,7 @@ export function itemBonus(it) {
   const rm = RARITY_MULT[d.rarity] || 1;
   const out = {};
   Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul; });
-  ["dmgCut", "thorns", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi"].forEach((k) => {
+  ["dmgCut", "thorns", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"].forEach((k) => {
     const v = Number(d[k]) || 0;
     if (v) out[k] = (out[k] || 0) + v;
   });
@@ -84,9 +84,14 @@ export function charFinal(ch) {
     critDmg: CHAR.base.critDmg,
     dmgCut: 0, thorns: 0, atkPct: 0
   };
-  const spec = (Number(ch.str) || 0) * CHAR.spec.str + (Number(ch.agi) || 0) * CHAR.spec.agi +
-               (Number(ch.intel) || 0) * CHAR.spec.intel + (Number(ch.tech) || 0) * CHAR.spec.tech;
-  f.atk += spec;
+  // 🎯 专精：力量/智力/技巧 → 攻击，敏捷 → 速度（用 BIRTH.specEffect）
+  const se = BIRTH.specEffect;
+  const sStr = (Number(ch.str) || 0) * se.str;
+  const sInt = (Number(ch.intel) || 0) * se.int;
+  const sTech = (Number(ch.tech) || 0) * se.tech;
+  const sAgi = (Number(ch.agi) || 0) * se.agi;
+  f.atk += sStr + sInt + sTech;
+  f.spd += sAgi;
   // 🎲 建角「基础四项」百分比分配（ch.basic = {hp,atk,def,res} 点数）
   const b = ch.basic || {};
   const bp = Number(BIRTH.basicPct) || 5;
@@ -118,14 +123,23 @@ export function charFinal(ch) {
   ["hp", "def", "res"].forEach((k) => {
     f[k] = f[k] * (1 + (Number(f[k + "Pct"]) || 0) / 100);
   });
-  // 🎯 装备的「专精」词条：力量/智力/技巧/敏捷
-  let gearSpec = 0;
+  // 🎯 装备的「专精」平值 + 专精 % 加成
+  const gs = { str: 0, intel: 0, tech: 0, agi: 0 };
   ["weapon", "armor", "accessory"].forEach((k) => {
     const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
-    gearSpec += (Number(b.str) || 0) * CHAR.spec.str + (Number(b.intel) || 0) * CHAR.spec.intel + (Number(b.tech) || 0) * CHAR.spec.tech;
-    f.spd += (Number(b.agi) || 0) * CHAR.spec.agi;
+    gs.str += Number(b.str) || 0;
+    gs.intel += Number(b.intel) || 0;
+    gs.tech += Number(b.tech) || 0;
+    gs.agi += Number(b.agi) || 0;
   });
-  f.atk += gearSpec;
+  const P = (k) => 1 + (Number(f[k + "Pct"]) || 0) / 100;
+  const scale = gm * am;
+  // 角色自身专精（已吃过资历/资质）再吃装备的专精 %
+  f.atk += sStr * scale * (P("str") - 1) + sInt * scale * (P("intel") - 1) + sTech * scale * (P("tech") - 1);
+  f.spd += sAgi * scale * (P("agi") - 1);
+  // 装备的平值专精（不吃资历，但吃专精 %）
+  f.atk += gs.str * se.str * P("str") + gs.intel * se.int * P("intel") + gs.tech * se.tech * P("tech");
+  f.spd += gs.agi * se.agi * P("agi");
   f.atk = f.atk * (1 + (f.atkPct || 0) / 100);
   // ⚡ 突破加成：每突破一次，全属性 +3%
   const brk = Math.max(0, Math.min(5, Number(ch.breaks) || 0));
