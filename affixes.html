@@ -17,29 +17,88 @@
 import { AFFIX_LIB, AFFIX_LIB_2, AFFIX_LIB_3, AFFIX_LIB_EXT } from "./js/affixes.js";
 
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
-const chips = (names) => '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' +
-  [...new Set(names)].map((n) => '<span class="tag" style="font-size:11.5px;padding:3px 9px;">' + n + '</span>').join("") + '</div>';
 
-// 通用词条：按类别列出（所有装备共用同一套池）
+// 每条词条的说明（基础/百分比/专精/伤害类型）
+const DESC = {
+  攻击: "直接提高攻击力，所有伤害的基础值。",
+  生命: "提高最大生命，血条上限。",
+  防御: "降低受到的物理伤害（与法抗一起折算成减伤）。",
+  法抗: "降低受到的法术伤害，折算时按 1.5 倍计入减伤。",
+  速度: "提高出手顺序；速度差会带来额外行动机会。",
+  攻击加成: "按百分比放大攻击力。",
+  生命加成: "按百分比放大最大生命。",
+  防御加成: "按百分比放大防御。",
+  法抗加成: "按百分比放大法抗。",
+  暴击率: "攻击时触发暴击的概率。",
+  暴击伤害: "暴击时额外增加的伤害倍率。",
+  减伤: "直接按百分比降低受到的伤害。",
+  反伤: "受到攻击时，把一部分伤害反弹给攻击者。",
+  怒气获取: "提高每次行动/招式获得的怒气，必杀来得更快。",
+  力量: "每点提高攻击力（专精换算）。",
+  智力: "每点提高攻击力（专精换算）。",
+  技巧: "每点提高攻击力（专精换算）。",
+  敏捷: "每点提高速度（专精换算）。",
+  力量加成: "按百分比放大力量带来的收益。",
+  智力加成: "按百分比放大智力带来的收益。",
+  技巧加成: "按百分比放大技巧带来的收益。",
+  敏捷加成: "按百分比放大敏捷带来的收益。",
+  物理伤害加成: "提高所有物理来源的伤害（普攻/物理招式/必杀）。",
+  法术伤害加成: "提高所有法术来源的伤害。",
+  普攻伤害加成: "只提高普攻（含连击）造成的伤害。",
+  技能伤害加成: "只提高招式（含追击/溅射）造成的伤害。",
+  必杀伤害加成: "只提高必杀造成的伤害。",
+  物理穿透: "无视目标一部分防御带来的减伤（上限 80%）。",
+  法术穿透: "无视目标一部分法抗带来的减伤（上限 80%）。",
+  近战伤害加成: "使用近战武器时，提高造成的伤害。",
+  远程伤害加成: "使用远程武器时，提高造成的伤害。",
+  法器伤害加成: "使用法器武器时，提高造成的伤害。"
+};
+
+const items = [];
+const add = (name, desc, group) => items.push({ name, desc, group });
+for (const g of Object.keys(AFFIX_LIB)) AFFIX_LIB[g].forEach((n) => add(n, DESC[n] || g + "类词条。", g));
+AFFIX_LIB_EXT.forEach((a) => add(a[0], a[1], "数值扩展"));
+AFFIX_LIB_2.forEach((a) => add(a[0], a[1], "第二批 · 战斗词条"));
+AFFIX_LIB_3.forEach((a) => add(a[0], a[1], "第三批 · 机制词条"));
+
+const chip = (it) => {
+  const i = items.indexOf(it);
+  return '<span class="tag" data-affix="' + i + '" style="font-size:11.5px;padding:3px 9px;cursor:pointer;border-color:#3a5a8a;">' + it.name + '</span>';
+};
+const chipsOf = (group) => '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' +
+  items.filter((x) => x.group === group).map(chip).join("") + '</div>';
+
 let first = "";
-for (const kind of Object.keys(AFFIX_LIB)) {
-  first += '<div class="hint" style="margin-top:10px;color:#8fd8ff;font-weight:700;">' + kind + '</div>';
-  first += chips(AFFIX_LIB[kind]);
+for (const g of Object.keys(AFFIX_LIB)) {
+  first += '<div class="hint" style="margin-top:10px;color:#8fd8ff;font-weight:700;">' + g + '</div>' + chipsOf(g);
 }
-
-const extOnly = chips(AFFIX_LIB_EXT.map((a) => a[0]));
-const secondOnly = chips(AFFIX_LIB_2.map((a) => a[0]));
-const thirdOnly = chips(AFFIX_LIB_3.map((a) => a[0]));
 
 document.getElementById("view").innerHTML =
   card("📖 词条库",
-    '<div class="hint">所有装备共用同一套词条池，不按部位限制。具体数值随稀有度、强化与星级变化，以装备详情为准。</div>' +
+    '<div class="hint">所有装备共用同一套词条池，不按部位限制。点任意词条可以看说明；具体数值随稀有度、强化与星级变化，以装备详情为准。</div>' +
     '<div style="margin-top:8px;"><span class="tag">R = 2 条</span><span class="tag">SR = 3 条</span>' +
     '<span class="tag">SSR = 4 条</span><span class="tag">UR = 5 条</span></div>') +
   card("通用词条", first) +
-  card("数值扩展 · 乘区类（" + AFFIX_LIB_EXT.length + " 种）", extOnly) +
-  card("第二批 · 战斗词条（" + AFFIX_LIB_2.length + " 种）", secondOnly) +
-  card("第三批 · 机制词条（" + AFFIX_LIB_3.length + " 种）", thirdOnly);
+  card("数值扩展 · 乘区类（" + AFFIX_LIB_EXT.length + " 种）", chipsOf("数值扩展")) +
+  card("第二批 · 战斗词条（" + AFFIX_LIB_2.length + " 种）", chipsOf("第二批 · 战斗词条")) +
+  card("第三批 · 机制词条（" + AFFIX_LIB_3.length + " 种）", chipsOf("第三批 · 机制词条"));
+
+// 点击查看说明
+document.getElementById("view").addEventListener("click", (e) => {
+  const el = e.target.closest("[data-affix]");
+  if (!el) return;
+  const it = items[Number(el.dataset.affix)];
+  if (!it) return;
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  ov.innerHTML = '<div class="card" style="width:min(420px,92vw);margin:0;border-color:#3a5a8a;">' +
+    '<div class="card-title" style="font-size:15px;">' + it.name + ' <span class="tag" style="color:#8fd8ff;border-color:#3a5a8a;">' + it.group + '</span></div>' +
+    '<div class="hint" style="margin-top:6px;color:#eaeaea;line-height:1.7;">' + it.desc + '</div>' +
+    '<div style="margin-top:12px;"><button id="afClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#afClose").onclick = () => ov.remove();
+  ov.onclick = (ev) => { if (ev.target === ov) ov.remove(); };
+});
 </script>
 </body>
 </html>
