@@ -120,11 +120,24 @@ export const BIRTH = {
 
 // 🧬 建角预设模型（一键套用，可再微调）
 export const PRESETS = [
-  { id: "balance", name: "⚖️ 均衡", basic: { hp: 10, atk: 10, def: 10, res: 10 }, spec: { str: 6, int: 6, tech: 6, agi: 6 }, role: "守护" },
-  { id: "power",   name: "🔥 力量型", basic: { hp: 10, atk: 10, def: 10, res: 10 }, spec: { str: 8, int: 5, tech: 6, agi: 5 }, role: "先锋" },
-  { id: "agile",   name: "🏹 敏攻型", basic: { hp: 10, atk: 10, def: 10, res: 10 }, spec: { str: 4, int: 4, tech: 8, agi: 8 }, role: "游侠" },
-  { id: "magic",   name: "🔮 法系型", basic: { hp: 10, atk: 10, def: 10, res: 10 }, spec: { str: 4, int: 8, tech: 4, agi: 8 }, role: "术士" },
-  { id: "tank",    name: "🛡️ 坦克型", basic: { hp: 10, atk: 10, def: 10, res: 10 }, spec: { str: 6, int: 4, tech: 8, agi: 6 }, role: "守护" }
+  { id: "balance", name: "⚖️ 均衡", role: "通用",
+    basic: { hp: 10, atk: 10, def: 10, res: 10 },
+    spec: { str: 6, int: 6, tech: 6, agi: 6 } },
+  { id: "tank", name: "🛡️ 守护", role: "守护",
+    basic: { hp: 16, atk: 6, def: 12, res: 6 },
+    spec: { str: 8, int: 4, tech: 6, agi: 6 } },
+  { id: "power", name: "🔥 先锋", role: "先锋",
+    basic: { hp: 6, atk: 18, def: 8, res: 8 },
+    spec: { str: 12, int: 2, tech: 4, agi: 6 } },
+  { id: "agile", name: "🏹 游侠", role: "游侠",
+    basic: { hp: 8, atk: 14, def: 8, res: 10 },
+    spec: { str: 2, int: 2, tech: 12, agi: 8 } },
+  { id: "magic", name: "🔮 术士", role: "术士",
+    basic: { hp: 8, atk: 14, def: 8, res: 10 },
+    spec: { str: 2, int: 12, tech: 4, agi: 6 } },
+  { id: "support", name: "✨ 辅佐", role: "辅佐",
+    basic: { hp: 12, atk: 8, def: 10, res: 10 },
+    spec: { str: 4, int: 10, tech: 6, agi: 4 } }
 ];
 
 export const CHAR = {
