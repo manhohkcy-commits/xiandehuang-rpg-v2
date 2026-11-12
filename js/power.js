@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=57e07650";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=dee6fcbc";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -75,7 +75,7 @@ export function itemBonus(it) {
   const base = d.main || SLOT_BASE[it.cat] || {};
   const lvMul = 1 + 0.02 * ((Number(d.lv) || 1) - 1);
   const starMul = 1 + 0.12 * ((Number(d.star) || 1) - 1);
-  const rm = d.main ? 1 : (RARITY_MULT[d.rarity] || 1);
+  const rm = RARITY_MULT[d.rarity] || 1;
   // ⛰ 强化突破节点：每过一个 +5% 主属性/副属性
   const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
   const breakMul = 1 + 0.05 * breakN;

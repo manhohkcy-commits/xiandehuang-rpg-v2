@@ -173,7 +173,14 @@ export const CULT = {
   // 🔧 精炼：只提升随机词条数值（每级 +8%）
   maxRefine: 10,
   refineGold: (r) => Math.round(120 * r),
-  refineShards: (r) => Math.round(20 * r)
+  refineShards: (r) => Math.round(20 * r),
+  // ⬆️ 升阶：5★ 后可升到下一品质，星级保持
+  rarityOrder: ["R", "SR", "SSR", "UR"],
+  promote: {
+    SR: { shards: 200, gold: 2000 },
+    SSR: { shards: 500, gold: 6000 },
+    UR: { shards: 1000, gold: 15000 }
+  }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
 export const GRADE = [

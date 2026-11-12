@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT } from "./data.js?v=57e07650";
+import { CULT } from "./data.js?v=dee6fcbc";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -60,6 +60,31 @@ export function refineApply(store, it) {
   store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
   it.data.refine = c.next;
   return { ok: true, refine: c.next };
+}
+
+// ⬆️ 升阶：5★ 后可升到下一品质（星级保持 5）
+export function promoteCheck(it, store) {
+  const d = it && it.data;
+  if (!d) return { ok: false, why: "没有装备" };
+  if ((Number(d.star) || 1) < 5) return { ok: false, why: "先升到 5★ 才能升阶" };
+  const order = CULT.rarityOrder || ["R", "SR", "SSR", "UR"];
+  const i = order.indexOf(d.rarity);
+  if (i < 0 || i >= order.length - 1) return { ok: false, why: "已是最高品质" };
+  const next = order[i + 1];
+  const c = (CULT.promote || {})[next] || { shards: 0, gold: 0 };
+  if ((Number((store.flags || {}).shards) || 0) < c.shards) return { ok: false, why: "碎片不够", next, shards: c.shards, gold: c.gold };
+  if ((Number(store.gold) || 0) < c.gold) return { ok: false, why: "金币不够", next, shards: c.shards, gold: c.gold };
+  return { ok: true, next, shards: c.shards, gold: c.gold };
+}
+export function promoteApply(store, it) {
+  const c = promoteCheck(it, store);
+  if (!c.ok) return c;
+  store.flags = store.flags || {};
+  store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
+  store.gold = (Number(store.gold) || 0) - c.gold;
+  it.data.rarity = c.next;
+  it.data.star = 5;
+  return { ok: true, next: c.next };
 }
 
 export function cultCheck(it, kind, store) {
