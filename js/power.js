@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf } from "./data.js?v=81454047";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf } from "./data.js?v=0763b9ef";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -55,7 +55,12 @@ export function talentSpentInBranch(ch, treeId, branchId) {
   return b ? b.nodes.filter((x) => pts[x.id]).length : 0;
 }
 
-// 🧱 部位基础属性（主属性）：每件装备天生自带，随稀有度放大
+// 🧱 部位基础属性（主属性）：装备可自带 main 覆盖，否则按部位默认
+export function mainKeysOf(it) {
+  const d = (it && it.data) || {};
+  return Object.keys(d.main || SLOT_BASE[it && it.cat] || {});
+}
+
 export function baseBonus(cat, rarity) {
   const base = SLOT_BASE[cat] || {};
   const rm = RARITY_MULT[rarity] || 1;
@@ -67,10 +72,10 @@ export function baseBonus(cat, rarity) {
 export function itemBonus(it) {
   if (!it || !it.data) return {};
   const d = it.data;
-  const base = SLOT_BASE[it.cat] || {};
+  const base = d.main || SLOT_BASE[it.cat] || {};
   const lvMul = 1 + 0.02 * ((Number(d.lv) || 1) - 1);
   const starMul = 1 + 0.12 * ((Number(d.star) || 1) - 1);
-  const rm = RARITY_MULT[d.rarity] || 1;
+  const rm = d.main ? 1 : (RARITY_MULT[d.rarity] || 1);
   const out = {};
   Object.keys(base).forEach((k) => { out[k] = (out[k] || 0) + (Number(base[k]) || 0) * rm * lvMul * starMul; });
   ["dmgCut", "thorns", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"].forEach((k) => {

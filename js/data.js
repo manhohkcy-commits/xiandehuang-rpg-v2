@@ -61,60 +61,60 @@ export const WEAPONS = [
 ];
 // ── SR / SSR / UR 尚未设计：旧占位装备已移除，等正式设计后再加 ─────
 export const ARMORS = [
-  { id: "a_cloth", name: "粗布衣", rarity: "R", dmgCut: 2, desc: "最普通的粗布衣服，挡不住刀，但聊胜于无。" },
-  { id: "a_leather", name: "皮甲", rarity: "R", def: 8, desc: "鞣过的兽皮缝成的背心，硬邦邦的，挡钝器还行。" },
-  { id: "a_rattan", name: "藤甲", rarity: "R", hp: 40, desc: "藤条编的护身甲，轻，但挨打时会吱呀响。" },
-  { id: "a_cloak", name: "轻便斗篷", rarity: "R", spd: 2, desc: "薄布斗篷，不挡刀，胜在不拖脚步。" },
-  { id: "a_mirror", name: "护心镜", rarity: "R", res: 8, desc: "一块磨亮的铜镜挂在胸口，图个心安。" },
-  { id: "a_spike", name: "钉刺背心", rarity: "R", thorns: 5, desc: "内衬钉了铁刺，谁抱上来谁疼。" },
+  { id: "a_cloth", name: "粗布衣", rarity: "R", main: { hp: 100 }, dmgCut: 2, desc: "最普通的粗布衣服，挡不住刀，但聊胜于无。" },
+  { id: "a_leather", name: "皮甲", rarity: "R", main: { def: 8 }, desc: "鞣过的兽皮缝成的背心，硬邦邦的，挡钝器还行。" },
+  { id: "a_rattan", name: "藤甲", rarity: "R", main: { hp: 160 }, desc: "藤条编的护身甲，轻，但挨打时会吱呀响。" },
+  { id: "a_cloak", name: "轻便斗篷", rarity: "R", main: { spd: 2 }, desc: "薄布斗篷，不挡刀，胜在不拖脚步。" },
+  { id: "a_mirror", name: "护心镜", rarity: "R", main: { res: 10 }, desc: "一块磨亮的铜镜挂在胸口，图个心安。" },
+  { id: "a_spike", name: "钉刺背心", rarity: "R", main: { def: 6 }, thorns: 3, desc: "内衬钉了铁刺，谁抱上来谁疼。" },
   // ── SR ─────────────────────────────
-  { id: "a_lava", name: "熔岩护甲", rarity: "SR", dmgCut: 6, thorns: 10, desc: "嵌了火山岩的厚甲，打上去会烫手。" },
-  { id: "a_mitril", name: "秘银轻甲", rarity: "SR", dmgCut: 5, spd: 2, desc: "轻得出奇，挨打时却比铁甲还硬。" },
-  { id: "a_vine", name: "藤蔓重甲", rarity: "SR", hp: 80, def: 10, desc: "层层老藤缠成的重甲，笨重但耐打。" },
-  { id: "a_guard", name: "铁卫护心镜", rarity: "SR", res: 12, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" },
+  { id: "a_lava", name: "熔岩护甲", rarity: "SR", main: { hp: 220, def: 10 }, dmgCut: 6, thorns: 10, desc: "嵌了火山岩的厚甲，打上去会烫手。" },
+  { id: "a_mitril", name: "秘银轻甲", rarity: "SR", main: { hp: 180, def: 12 }, dmgCut: 5, spd: 2, desc: "轻得出奇，挨打时却比铁甲还硬。" },
+  { id: "a_vine", name: "藤蔓重甲", rarity: "SR", main: { hp: 320 }, def: 10, desc: "层层老藤缠成的重甲，笨重但耐打。" },
+  { id: "a_guard", name: "铁卫护心镜", rarity: "SR", main: { res: 18 }, dmgCut: 3, desc: "卫队制式的护心镜，挡法术也有一手。" },
   // 守护
-  { id: "a_bulwark", name: "铁壁重甲", rarity: "SR", dmgCut: 7, hp: 60, desc: "厚得能当墙用，走两步就喘。" },
-  { id: "a_rock", name: "磐石护心镜", rarity: "SR", def: 14, dmgCut: 4, desc: "整块石料磨的护心镜，硬得离谱。" },
+  { id: "a_bulwark", name: "铁壁重甲", rarity: "SR", main: { hp: 260, def: 14 }, dmgCut: 7, desc: "厚得能当墙用，走两步就喘。" },
+  { id: "a_rock", name: "磐石护心镜", rarity: "SR", main: { def: 20 }, dmgCut: 4, desc: "整块石料磨的护心镜，硬得离谱。" },
   // 先锋
-  { id: "a_berserk", name: "狂战皮甲", rarity: "SR", atkPct: 4, hp: 50, desc: "划痕越多，穿的人越兴奋。" },
-  { id: "a_rift", name: "裂痕战衣", rarity: "SR", hp: 40, thorns: 8, desc: "布面全是旧裂口，却没人补。" },
+  { id: "a_berserk", name: "狂战皮甲", rarity: "SR", main: { hp: 160 }, atkPct: 4, desc: "划痕越多，穿的人越兴奋。" },
+  { id: "a_rift", name: "裂痕战衣", rarity: "SR", main: { hp: 200 }, thorns: 5, desc: "布面全是旧裂口，却没人补。" },
   // 游侠
-  { id: "a_wind", name: "追风轻衣", rarity: "SR", spd: 3, dmgCut: 3, desc: "薄得像一层风，跑起来几乎没声音。" },
-  { id: "a_shadow", name: "影行斗篷", rarity: "SR", spd: 2, critRate: 2, desc: "披上之后，脚步声会自己消失。" },
+  { id: "a_wind", name: "追风轻衣", rarity: "SR", main: { hp: 120, spd: 2 }, dmgCut: 3, desc: "薄得像一层风，跑起来几乎没声音。" },
+  { id: "a_shadow", name: "影行斗篷", rarity: "SR", main: { hp: 100, spd: 3 }, dmgCut: 2, critRate: 1, desc: "披上之后，脚步声会自己消失。" },
   // 术士
-  { id: "a_rune", name: "法纹长袍", rarity: "SR", res: 12, hp: 40, desc: "袍角绣着细密法纹，碰一下会发麻。" },
-  { id: "a_aura", name: "灵能罩衣", rarity: "SR", res: 10, dmgCut: 4, desc: "表面浮着一层看不见的薄膜。" },
+  { id: "a_rune", name: "法纹长袍", rarity: "SR", main: { hp: 180, res: 10 }, dmgCut: 2, desc: "袍角绣着细密法纹，碰一下会发麻。" },
+  { id: "a_aura", name: "灵能罩衣", rarity: "SR", main: { hp: 160, res: 12 }, dmgCut: 4, desc: "表面浮着一层看不见的薄膜。" },
   // 辅佐
-  { id: "a_pray", name: "祷言圣袍", rarity: "SR", res: 14, hp: 50, desc: "袖口磨得发白，显然常被攥紧。" },
-  { id: "a_watch", name: "守望轻甲", rarity: "SR", def: 8, hp: 60, desc: "巡逻队制式，轻便又耐站。" }
+  { id: "a_pray", name: "祷言圣袍", rarity: "SR", main: { hp: 200, res: 12 }, dmgCut: 2, desc: "袖口磨得发白，显然常被攥紧。" },
+  { id: "a_watch", name: "守望轻甲", rarity: "SR", main: { hp: 240, def: 8 }, desc: "巡逻队制式，轻便又耐站。" }
 ];
 export const ACCESSORIES = [
-  { id: "c_rope", name: "布绳", rarity: "R", atkPct: 2, desc: "随手系在手腕上的布绳，图个心安。" },
-  { id: "c_beads", name: "木珠串", rarity: "R", hp: 30, desc: "几颗木珠串成的手串，据说能压惊。" },
-  { id: "c_charm", name: "铜护符", rarity: "R", def: 5, desc: "小铜片打的护符，边角已经磨圆了。" },
-  { id: "c_glove", name: "皮质手套", rarity: "R", spd: 1, desc: "旧皮手套，握东西更稳，动作也利索一点。" },
-  { id: "c_luck", name: "幸运石", rarity: "R", critRate: 2, desc: "路边捡的白色小石头，据说能带来好运。" },
-  { id: "c_band", name: "麻布护腕", rarity: "R", res: 5, desc: "缠在手腕上的麻布，挡不住什么，但心里有底。" },
+  { id: "c_rope", name: "布绳", rarity: "R", main: { atk: 4, spd: 1 }, desc: "随手系在手腕上的布绳，图个心安。" },
+  { id: "c_beads", name: "木珠串", rarity: "R", main: { hp: 70 }, desc: "几颗木珠串成的手串，据说能压惊。" },
+  { id: "c_charm", name: "铜护符", rarity: "R", main: { def: 6 }, desc: "小铜片打的护符，边角已经磨圆了。" },
+  { id: "c_glove", name: "皮质手套", rarity: "R", main: { spd: 2 }, desc: "旧皮手套，握东西更稳，动作也利索一点。" },
+  { id: "c_luck", name: "幸运石", rarity: "R", main: { critRate: 3 }, desc: "路边捡的白色小石头，据说能带来好运。" },
+  { id: "c_band", name: "麻布护腕", rarity: "R", main: { res: 6 }, desc: "缠在手腕上的麻布，挡不住什么，但心里有底。" },
   // ── SR ─────────────────────────────
-  { id: "c_ring", name: "承山戒", rarity: "SR", atkPct: 6, desc: "戒指内圈刻着山纹，握拳时像压着一座山。" },
-  { id: "c_lavastone", name: "熔岩护石", rarity: "SR", atkPct: 4, critDmg: 12, desc: "温热的黑石，擦出的火花特别亮。" },
-  { id: "c_feather", name: "疾风羽", rarity: "SR", spd: 3, desc: "一片轻得几乎没有重量的羽毛。" },
-  { id: "c_mitril", name: "秘银坠", rarity: "SR", atkPct: 6, spd: 2, desc: "细链坠着一小块秘银，凉丝丝的。" },
+  { id: "c_ring", name: "承山戒", rarity: "SR", main: { atk: 6 }, desc: "戒指内圈刻着山纹，握拳时像压着一座山。" },
+  { id: "c_lavastone", name: "熔岩护石", rarity: "SR", main: { atk: 4, critDmg: 6 }, desc: "温热的黑石，擦出的火花特别亮。" },
+  { id: "c_feather", name: "疾风羽", rarity: "SR", main: { spd: 3 }, desc: "一片轻得几乎没有重量的羽毛。" },
+  { id: "c_mitril", name: "秘银坠", rarity: "SR", main: { atk: 5, spd: 1 }, desc: "细链坠着一小块秘银，凉丝丝的。" },
   // 守护
-  { id: "c_bulwark", name: "磐石护符", rarity: "SR", def: 8, dmgCut: 3, desc: "厚石片打的护符，沉甸甸地压手。" },
-  { id: "c_ironheart", name: "铁心吊坠", rarity: "SR", hp: 70, desc: "一小块铁心嵌在坠子里，据说能定神。" },
+  { id: "c_bulwark", name: "磐石护符", rarity: "SR", main: { def: 10 }, desc: "厚石片打的护符，沉甸甸地压手。" },
+  { id: "c_ironheart", name: "铁心吊坠", rarity: "SR", main: { hp: 100 }, desc: "一小块铁心嵌在坠子里，据说能定神。" },
   // 先锋
-  { id: "c_badge", name: "战意徽章", rarity: "SR", atkPct: 5, critRate: 2, desc: "旧徽章上的数字已经磨掉了。" },
-  { id: "c_fury", name: "狂怒指环", rarity: "SR", atkPct: 7, critDmg: 10, desc: "戴上之后，握拳会微微发烫。" },
+  { id: "c_badge", name: "战意徽章", rarity: "SR", main: { atk: 5, critRate: 2 }, desc: "旧徽章上的数字已经磨掉了。" },
+  { id: "c_fury", name: "狂怒指环", rarity: "SR", main: { atk: 6 }, desc: "戴上之后，握拳会微微发烫。" },
   // 游侠
-  { id: "c_goggle", name: "猎手目镜", rarity: "SR", critRate: 3, spd: 2, desc: "镜片有划痕，但看远处依然清楚。" },
-  { id: "c_windcharm", name: "追风羽饰", rarity: "SR", spd: 3, desc: "两片羽毛串成的饰物，风一吹就抖。" },
+  { id: "c_goggle", name: "猎手目镜", rarity: "SR", main: { critRate: 4, spd: 2 }, desc: "镜片有划痕，但看远处依然清楚。" },
+  { id: "c_windcharm", name: "追风羽饰", rarity: "SR", main: { spd: 4 }, desc: "两片羽毛串成的饰物，风一吹就抖。" },
   // 术士
-  { id: "c_arcanestone", name: "秘能石", rarity: "SR", res: 8, atkPct: 4, desc: "石头内部像有光在慢慢流动。" },
-  { id: "c_runering", name: "咒文戒", rarity: "SR", atkPct: 5, critDmg: 12, desc: "戒面刻着看不懂的细字。" },
+  { id: "c_arcanestone", name: "秘能石", rarity: "SR", main: { res: 8, atk: 2 }, desc: "石头内部像有光在慢慢流动。" },
+  { id: "c_runering", name: "咒文戒", rarity: "SR", main: { atk: 4, critDmg: 8 }, desc: "戒面刻着看不懂的细字。" },
   // 辅佐
-  { id: "c_bell", name: "祈愿铃", rarity: "SR", res: 10, hp: 50, desc: "铃舌很轻，摇起来只有自己听得见。" },
-  { id: "c_mercy", name: "慈心吊坠", rarity: "SR", hp: 60, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
+  { id: "c_bell", name: "祈愿铃", rarity: "SR", main: { res: 9, hp: 40 }, desc: "铃舌很轻，摇起来只有自己听得见。" },
+  { id: "c_mercy", name: "慈心吊坠", rarity: "SR", main: { hp: 80 }, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
 ];
 export const STAGES = [
   { id: "k1", name: "训练木桩", tier: 1, gold: 120, exp: 40,
