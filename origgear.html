@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -41,20 +41,32 @@ function statsOf(it) {
 function detail(it, slot) {
   const rc = RARITY_COLOR[it.rarity] || "#8a8ab0";
   const stats = statsOf(it);
+  const row = (k, v) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
+    '<span class="hint">' + k + '</span><span style="font-weight:600;color:#dbe4f3;font-size:13px;">' + v + '</span></div>';
+  const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+  const sk = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
+    '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
+    '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
+    (extra ? '<div class="hint" style="margin-top:2px;">' + esc(extra) + '</div>' : "") + '</div>';
   const skills = it.sName
-    ? '<div class="hint" style="margin:10px 0 4px;color:' + rc + ';font-weight:700;">招式组</div>' +
-      '<div class="row"><span class="k">[普攻] ' + esc(it.aName || "") + '</span><span class="v">' + (it.aMult || 100) + '%</span></div>' +
-      '<div class="row"><span class="k">[技能] ' + esc(it.sName) + '</span><span class="v">' + it.sMult + '% · CD' + it.sCd + '</span></div>' +
-      '<div class="row"><span class="k">[必杀] ' + esc(it.uName || "") + '</span><span class="v">' + it.uMult + '% · 怒气100</span></div>' +
-      (it.skillDesc ? '<div class="hint" style="margin-top:4px;">' + esc(it.skillDesc) + '</div>' : "")
+    ? '<div class="hint" style="margin:12px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">招式组</div>' +
+      sk("普攻", it.aName, (it.aMult || 100) + "%", "") +
+      sk("技能", it.sName, it.sMult + "% · CD" + it.sCd, "回怒 " + (it.sRage || 0)) +
+      sk("必杀", it.uName, it.uMult + "% · 怒气100", it.skillDesc || "")
     : "";
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
-  ov.innerHTML = '<div class="card" style="max-width:400px;width:100%;border:1px solid ' + rc + '66;">' +
-    '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:18px;color:' + rc + ';">' + esc(it.name) + '</b>' +
+  ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;border:1px solid ' + rc + '66;">' +
+    '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:19px;color:' + rc + ';">' + esc(it.name) + '</b>' +
     (it.rarity ? '<span class="tag" style="border-color:' + rc + ';color:' + rc + ';">' + it.rarity + '</span>' : "") +
     '<span class="tag" style="margin-left:auto;">' + SLOT[slot] + '</span></div>' +
-    '<div class="hint" style="margin-top:8px;">' + (stats.join(" · ") || "无属性") + '</div>' + skills +
+    '<div class="hint" style="margin:8px 0 5px;color:#ffd666;font-weight:700;">属性</div>' +
+    panel(stats.length ? stats.map((t) => {
+      const idx = t.lastIndexOf(" ");
+      return row(t.slice(0, idx), t.slice(idx + 1));
+    }).join("") : '<div class="hint" style="padding:8px 9px;">无属性加成</div>') +
+    skills +
     '<div style="margin-top:10px;"><button id="ogClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
   ov.querySelector("#ogClose").onclick = () => ov.remove();
