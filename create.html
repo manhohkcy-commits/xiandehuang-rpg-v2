@@ -1281,6 +1281,7 @@ function renderOrig() {
   const pct = Math.min(100, Math.round(((Number(prog.exp) || 0) / need) * 100));
   const fin = originalFinal(o, prog);
   const atk = fin.atk, hp = fin.hp, def = fin.def, res = fin.res, spd = fin.spd;
+  const s = o.stats || {};
   const pw = fin.power;
   const BRK_COST = [{ b: 20, g: 2000 }, { b: 45, g: 6000 }, { b: 75, g: 15000 }];
   const brkNext = brk < 3 ? BRK_COST[brk] : null;
