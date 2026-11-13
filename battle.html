@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -420,12 +420,16 @@ function buildPlayerUnits() {
 }
 
 // 👹 敌人单位
-function buildFoeUnits(s) {
+function buildFoeUnits(s, playerCount) {
   const backRole = (role, name) => /远程|法术|辅助/.test(role || "") || /弓|弩|术士|医疗|机械|号角|鼓|投掷/.test(name || "");
+  // ⚖️ 人数补偿：我方每多 1 人，敌人属性 +12%（上限 +60%）
+  const dp = Math.min(1.6, 1 + 0.12 * Math.max(0, (playerCount || 1) - 1));
   const list = (s.enemies && s.enemies.length ? s.enemies : [null]).map((eid, i) => {
     const e = eid ? enemyAt(eid, s.lv) : { name: s.foe.name, stats: { hp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, res: s.foe.res, spd: s.foe.spd, critRate: 5, critDmg: 150 }, role: "" };
-    return { id: "f" + i, name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
-      atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg,
+    return { id: "f" + i, name: e.name, side: "B", spd: e.stats.spd, power: 0,
+      hp: Math.round(e.stats.hp * dp), maxHp: Math.round(e.stats.hp * dp),
+      atk: Math.round(e.stats.atk * dp), def: Math.round(e.stats.def * dp), res: Math.round(e.stats.res * dp),
+      critRate: e.stats.critRate, critDmg: e.stats.critDmg,
       __skills: e.skills || [], __back: backRole(e.role, e.name) };
   });
   assignLayout(list);
@@ -456,7 +460,7 @@ function renderPrep(stageId) {
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
   const P = buildPlayerUnits();
-  const F = buildFoeUnits(s);
+  const F = buildFoeUnits(s, P.list.length);
   const foes = F.units;
   window.__prep.stageId = stageId;
   const posOf = (u) => window.__prep.pos[u.id] || { r: u.__row, c: u.__col };
@@ -531,7 +535,7 @@ function startBattle(stageId, prepPos) {
   const ch = P.ch, playOrig = P.playOrig;
   const pos = prepPos || (window.__prep && window.__prep.stageId === stageId ? window.__prep.pos : null);
   if (pos) P.list.forEach((u) => { const p = pos[u.id]; if (p) { u.__row = p.r; u.__col = p.c; } });
-  const F = buildFoeUnits(s);
+  const F = buildFoeUnits(s, P.list.length);
   const foes = F.units;
   st = createBattle(P.list.concat(foes));
   st.__party = P.partyArr.slice(0, 5);
