@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=25ae840b";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=4b1aaa5e";
 import { itemBonus, mainKeysOf } from "./js/power.js?v=2318bcc3";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
@@ -83,7 +83,7 @@ function detail(it) {
   const distTxt = d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "近战";
   const skill = it.cat !== "weapon" ? "" :
     '<div class="hint" style="margin:12px 0 5px;font-weight:700;color:#8fd8ff;letter-spacing:1px;">招式组</div>' +
-    skCard("普攻", "", (Number(d.aMult) || 100) + "%" + ((Number(d.aHits) || 1) > 1 ? " ×" + d.aHits : ""),
+    skCard("普攻", d.aName || "", (Number(d.aMult) || 100) + "%" + ((Number(d.aHits) || 1) > 1 ? " ×" + d.aHits : ""),
       ["单体", distTxt, dmgTypeTxt], "回怒 25", []) +
     (d.sSupport
       ? skCard("技能", d.sName || "—", "辅助", ["辅助", "CD " + (d.sCd || 3)], "",
@@ -103,7 +103,7 @@ function detail(it) {
             return e;
           })())
         : skCard("技能", "", "—", ["R 阶没有技能"], "", []))) +
-    skCard("必杀", "", (Number(d.uMult) || 250) + "%" + ((Number(d.uHits) || 1) > 1 ? " ×" + d.uHits : ""),
+    skCard("必杀", d.uName || "", (Number(d.uMult) || 250) + "%" + ((Number(d.uHits) || 1) > 1 ? " ×" + d.uHits : ""),
       [SHAPE[d.uShape] || "单体", distTxt, dmgTypeTxt], "怒气 100",
       (() => {
         const e = [];

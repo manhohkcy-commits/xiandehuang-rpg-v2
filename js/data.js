@@ -145,6 +145,35 @@ const WEAPON_FINAL = {
     aMult: 90, sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 3,
     uMult: 220, uShape: "single", desc: "铃声清亮，能驱散不干净的东西。" }
 };
+// 📛 招式名（普攻 / 技能 / 必杀）
+const WEAPON_SKILL_NAMES = {
+  w_iron: { aName: "直斩", uName: "铁锋一闪" },
+  w_bow: { aName: "速射", uName: "穿叶" },
+  w_wood: { aName: "敲击", uName: "木灵一击" },
+  w_dagger: { aName: "双划", uName: "匿影刺" },
+  w_fist: { aName: "连拳", uName: "崩山拳" },
+  w_spear: { aName: "突刺", uName: "长驱直入" },
+  w_sling: { aName: "抛石", uName: "破空石" },
+  w_hunt: { aName: "上弦", uName: "猎杀" },
+  w_torch: { aName: "挥火", uName: "燎原" },
+  w_shield: { aName: "盾撞", uName: "铁壁反冲" },
+  w_twin: { aName: "交错", sName: "追影", uName: "双影绝杀" },
+  w_axe: { aName: "劈砍", sName: "裂地", uName: "山河俱裂" },
+  w_spear2: { aName: "点刺", sName: "穿云", uName: "一枪贯日" },
+  w_cross: { aName: "瞄准", sName: "破甲弩", uName: "万矢横排" },
+  w_longbow: { aName: "连射", sName: "猎风", uName: "箭落如雨" },
+  w_firestaff: { aName: "火星", sName: "火石", uName: "焚野" },
+  w_thunder: { aName: "电击", sName: "雷鸣", uName: "十方雷狱" },
+  w_aegis: { aName: "杖击", sName: "守护", uName: "圣光壁垒" },
+  w_purify: { aName: "铃响", sName: "净化", uName: "清心普照" }
+};
+WEAPONS.forEach((w) => {
+  const n = WEAPON_SKILL_NAMES[w.id];
+  if (!n) return;
+  if (n.aName) w.aName = n.aName;
+  if (n.sName) w.sName = n.sName;
+  if (n.uName) w.uName = n.uName;
+});
 WEAPONS.forEach((w) => {
   const f = WEAPON_FINAL[w.id];
   if (!f) return;
