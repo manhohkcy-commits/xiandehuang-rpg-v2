@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -23,6 +23,7 @@ const UNITS = { critRate: "%", critDmg: "%", atkPct: "%", hpPct: "%", defPct: "%
 const FLAGS = new Set(["reverse", "fate", "charge", "taunt"]);
 
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const statText = (b, only) => Object.keys(b).filter((k) => only.indexOf(k) >= 0 && Number(b[k]) > 0)
   .map((k) => (NAMES[k] || k) + " +" + (Math.round(Number(b[k]) * 10) / 10) + (UNITS[k] || "")).join(" · ");
 
