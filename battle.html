@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=07fa2916";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits, pullOriginals, originalFinal } from "./js/originals.js?v=18b62d34";
+import { ORIGINALS, originalToUnits, pullOriginals, originalFinal } from "./js/originals.js?v=7decc393";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -628,6 +628,7 @@ function startBattle(stageId, prepPos) {
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   applyEnv(st, s.weather || "clear", s.sceneMods);
   st.__origId = playOrig ? playOrig.id : null;
+  st.__frost = 0;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
   const meal = store.flags && store.flags.meal;
@@ -979,7 +980,7 @@ function renderBattle() {
   afterCommit();
   const a = nextActor(st);
   const m = me(), f2 = foe();
-  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—") + (st.__waveNo ? " · 第 " + st.__waveNo + " 波" : "") + (st.__envName ? " · " + st.__envName : ""));
+  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—") + (st.__waveNo ? " · 第 " + st.__waveNo + " 波" : "") + (st.__envName ? " · " + st.__envName : "") + (st.__origId ? " · ❄️ " + (Number(st.__frost) || 0) + "/5" : ""));
 
   const hpBar = (u) => {
     const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));
@@ -1145,13 +1146,17 @@ function doAct(kind) {
     const wp2 = wpOf(st.__weapon);
     const t0 = st.units.find((u) => u.id === targetId());
     const targets = t0 ? shapeUnits(wp2.uShape || "single", t0) : [];
+    const frost = st.__origId ? (Number(st.__frost) || 0) : 0;
+    const ultMult = (Number(wp2.uMult) || 250) * (1 + 0.15 * frost);
     let total = 0, anyCrit = false;
     targets.filter(Boolean).forEach((t) => {
-      const rr = strike(st, "me", t.id, { atk: m.atk, mult: (Number(wp2.uMult) || 250), critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wp2.dmgType || "phys"), style: (wp2.style || "melee") }, wp2.uHits || 1);
+      const rr = strike(st, "me", t.id, { atk: m.atk, mult: ultMult, critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wp2.dmgType || "phys"), style: (wp2.style || "melee") }, wp2.uHits || 1);
       total += rr.dmg; anyCrit = anyCrit || rr.crit;
     });
     m.rage = 0;
-    pushLog("💥 " + m.name + " 必杀 → " + targets.filter(Boolean).map((t) => t.name).join("、") + " 共 " + total + (anyCrit ? " 暴击💥" : ""));
+    if (st.__origId) { st.__frost = 0; }
+    pushLog("💥 " + m.name + " 必杀 → " + targets.filter(Boolean).map((t) => t.name).join("、") + " 共 " + total + (anyCrit ? " 暴击💥" : "") +
+      (frost ? "（消耗霜印 ×" + frost + "，倍率 +" + Math.round(frost * 15) + "%）" : ""));
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "support") {
     // ✨ 辅佐招式：自动选「血量比例最低的队友」（单人就自己）
@@ -1223,6 +1228,10 @@ function doAct(kind) {
     if (Number((m.traits || {}).doubleStrike) > 0 && f2.hp > 0 && Math.random() * 100 < Number(m.traits.doubleStrike)) {
       const r2 = damage(st, "me", targetId(), { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
       pushLog("🗡️ 连击追加 " + r2.dmg, "line");
+    }
+    if (st.__origId && r.dmg > 0) {
+      st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1);
+      pushLog("❄️ 霜印 +1（" + st.__frost + "/5，必杀 +" + (st.__frost * 15) + "%）", "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
   }
