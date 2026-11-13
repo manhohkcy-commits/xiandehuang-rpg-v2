@@ -400,11 +400,28 @@ function startBattle(stageId) {
         return { id: "me", name: playOrig.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg };
       })()
     : { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits };
-  const units = [
-    meUnit,
-    { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
-  ];
+  // 🗺 布阵：3 行 × 2 列（前排 col0 / 后排 col1）
+  const backRole = (role, name) => /远程|法术|辅助/.test(role || "") || /弓|弩|术士|医疗|机械|号角|鼓|投掷/.test(name || "");
+  const foeList = (s.enemies && s.enemies.length ? s.enemies : [null]).map((eid, i) => {
+    const e = eid ? enemyAt(eid, s.lv) : { name: s.foe.name, stats: { hp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, res: s.foe.res, spd: s.foe.spd, critRate: 5, critDmg: 150 }, role: "" };
+    return { id: "f" + i, name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
+      atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg,
+      __back: backRole(e.role, e.name) };
+  });
+  const foes = foeList.filter((u) => !u.__back).concat(foeList.filter((u) => u.__back));
+  foes.forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
+  const partyIds = (() => { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } })();
+  const allies = partyIds.map((id) => ORIGINALS.find((o) => o.id === id)).filter(Boolean).slice(0, 5).map((o) => {
+    const g = origStats(o);
+    return { id: "o_" + o.id, name: o.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg, __auto: true, __back: /远程|法术|辅助/.test(o.role || "") };
+  });
+  const aFront = allies.filter((u) => !u.__back), aBack = allies.filter((u) => u.__back);
+  meUnit.__row = 1; meUnit.__col = 0;
+  aFront.concat(aBack).forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
+  const units = [meUnit].concat(aFront, aBack, foes);
   st = createBattle(units);
+  st.__party = partyIds.slice(0, 5);
+  st.__target = foes.find((u) => !u.__back) ? foes.find((u) => !u.__back).id : (foes[0] || {}).id;
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
@@ -567,7 +584,29 @@ function tickStatuses() {
 }
 
 function me() { return st.units.find((u) => u.id === "me"); }
-function foe() { return st.units.find((u) => u.id === "foe"); }
+function foe() { return st.units.find((u) => u.side === "B" && u.hp > 0); }
+function aliveSide(side) { return st.units.filter((u) => u.side === side && u.hp > 0); }
+function isRangedUnit(u) {
+  if (u.id === "me") {
+    const stl = (wpOf(st.__weapon) || {}).style;
+    return stl === "ranged" || stl === "focus";
+  }
+  return !!u.__back;
+}
+function frontAlive(side) { return aliveSide(side).filter((u) => !u.__col); }
+function validTargets(u) {
+  const enemySide = u.side === "A" ? "B" : "A";
+  const list = aliveSide(enemySide);
+  const front = list.filter((x) => !x.__col);
+  if (isRangedUnit(u) || !front.length) return list;
+  return front;
+}
+function targetId() {
+  const list = validTargets(me());
+  const cur = st.units.find((u) => u.id === st.__target && u.hp > 0);
+  if (cur && list.indexOf(cur) >= 0) return cur.id;
+  return (list[0] || list[0] || { id: "f0" }).id;
+}
 
 function skillBtnHtml(m) {
   const wp = wpOf(st.__weapon);
@@ -749,15 +788,36 @@ function renderBattle() {
       (stt ? ' · ' + stt : '') + '</div>';
   };
 
+  // 🗺 3 行 × 2 列布阵（前排/后排）
+  const cell = (u) => {
+    if (!u) return '<div style="min-height:62px;border:1px dashed #2a3350;border-radius:8px;"></div>';
+    const dead = u.hp <= 0;
+    const sel = st.__target === u.id && u.side === "B";
+    const pct = Math.max(0, Math.round(u.hp / u.maxHp * 100));
+    return '<div data-unit="' + u.id + '" style="min-height:62px;border:1px solid ' + (sel ? "#ff9b9b" : (u.side === "A" ? "#3d5a8a" : "#7a3b3b")) +
+      ';border-radius:8px;padding:4px;' + (dead ? "opacity:.35;" : "") + 'cursor:pointer;">' +
+      '<div style="font-size:11px;font-weight:700;">' + esc(u.name) + (u.__col ? ' <span class="hint">后排</span>' : "") + '</div>' +
+      '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) + '</div>' +
+      '<div class="bar' + (pct <= 25 ? "" : " full") + '"><i style="width:' + pct + '%"></i></div></div>';
+  };
+  const grid = (side, title, color) => {
+    const list = st.units.filter((u) => u.side === side);
+    let html = '<div class="hint" style="color:' + color + ';font-weight:700;margin:8px 0 3px;">' + title + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 2; c++) {
+        html += cell(list.find((x) => x.__row === r && (x.__col ? 1 : 0) === c));
+      }
+    }
+    return html + '</div>';
+  };
+
   view().innerHTML =
     '<div class="card"><div class="card-title">' + turnText + '</div>' +
       queueHtml2() +
-      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + m.hp + '/' + m.maxHp + '</span></div>' + hpBar(m) +
-      (st.__party || []).map((id) => {
-        const u = st.units.find((x) => x.id === "o_" + id);
-        return u ? '<div class="row"><span class="k">🤖 ' + esc(u.name) + '</span><span class="v">' + u.hp + '/' + u.maxHp + '</span></div>' + hpBar(u) : "";
-      }).join("") +
-      '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + f2.hp + '/' + f2.maxHp + '</span></div>' + hpBar(f2) +
+      grid("A", "🔵 我方", "#8fd8ff") +
+      grid("B", "🔴 敌方", "#ff9b9b") +
+      '<div class="hint" style="margin-top:6px;">点敌方格子切换攻击目标（近战只能打前排）</div>' +
     '</div>' +
     (st.finished ? '<div class="card"><div class="card-title">' + (st.winner === "A" ? "🏆 胜利" : "💀 失败") + '</div>' +
       (st.winner === "A" && st.__reward
@@ -815,6 +875,13 @@ function renderBattle() {
     aiTurnIfNeeded();
   };
   view().querySelectorAll("[data-act]").forEach((b) => { b.onclick = () => doAct(b.dataset.act); });
+  view().querySelectorAll("[data-unit]").forEach((el) => el.onclick = () => {
+    const u = st.units.find((x) => x.id === el.dataset.unit);
+    if (!u || u.side !== "B" || u.hp <= 0) return;
+    if (validTargets(me()).indexOf(u) < 0) { pushLog("🚫 近战打不到后排，先清前排", "line"); renderBattle(); return; }
+    st.__target = u.id;
+    renderBattle();
+  });
   // 日志自动滚到最新
   try {
     const lg = view().querySelector(".log");
@@ -850,7 +917,7 @@ function doAct(kind) {
     else if (t.key === "frenzy") { addStatus(st, "me", "atkUp", 40, 2, "狂战"); subs.push("攻击 +40%（2 回合）"); }
     else if (t.key === "gale") { m.allowed = (Number(m.allowed) || 1) + 1; subs.push("本回合多行动一次"); }
     else if (t.key === "arcane") {
-      const r = damage(st, "me", "foe", { atk: m.atk, mult: 200, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: "spell" });
+      const r = damage(st, "me", targetId(), { atk: m.atk, mult: 200, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: "spell" });
       subs.push("奥术冲击 " + r.dmg + (r.crit ? " 暴击💥" : ""));
     } else if (t.key === "bless") { const h = healUnit(st, "me", m.maxHp * 0.3); subs.push("恢复 " + h); }
     addStatus(st, "me", "tcd", 0, t.cd, "天赋技CD");
@@ -925,7 +992,7 @@ function doAct(kind) {
     setCooldown(st, "me", baseCd);
     // 🏃 追击：招式命中后概率追加 50% 普攻
     if (Number(tr.chase) > 0 && f2.hp > 0 && Math.random() * 100 < Number(tr.chase)) {
-      const r3 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys"), style: (wp.style || "melee") });
+      const r3 = damage(st, "me", targetId(), { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys"), style: (wp.style || "melee") });
       pushLog("🏃 追击追加 " + r3.dmg, "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
@@ -935,7 +1002,7 @@ function doAct(kind) {
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     // 🗡️ 连击：普攻概率再打一次（半伤）
     if (Number((m.traits || {}).doubleStrike) > 0 && f2.hp > 0 && Math.random() * 100 < Number(m.traits.doubleStrike)) {
-      const r2 = damage(st, "me", "foe", { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
+      const r2 = damage(st, "me", targetId(), { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
       pushLog("🗡️ 连击追加 " + r2.dmg, "line");
     }
     if (!tryDualborn(m)) commit(st, "me");
@@ -960,8 +1027,9 @@ function doAct(kind) {
 // 🤖 我方原创单位自动出手（默认托管）
 function autoUnitAct(u) {
   if (!st || st.finished) return;
-  const f2 = foe();
-  if (!f2 || f2.hp <= 0) return;
+  const list = validTargets(u);
+  const f2 = list[0];
+  if (!f2) return;
   if (isStunned(u)) {
     pushLog("💫 " + u.name + " 被控住，跳过", "line");
     commit(st, u.id);
@@ -969,8 +1037,29 @@ function autoUnitAct(u) {
     setTimeout(aiTurnIfNeeded, 300);
     return;
   }
-  const r = damage(st, u.id, "foe", { atk: u.atk, mult: 100, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: "melee" });
+  const r = damage(st, u.id, f2.id, { atk: u.atk, mult: 100, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: "melee" });
   pushLog("🤖 " + u.name + " → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
+  commit(st, u.id);
+  if (st.finished) finish();
+  renderBattle();
+  setTimeout(aiTurnIfNeeded, 360);
+}
+
+// 👹 敌人行动：近战打前排、远程随机
+function enemyAct(u) {
+  if (!st || st.finished) return;
+  if (isStunned(u)) {
+    pushLog("💫 " + u.name + " 被控住，跳过", "line");
+    commit(st, u.id);
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 300);
+    return;
+  }
+  const list = validTargets(u);
+  if (!list.length) return;
+  const pick = isRangedUnit(u) ? list[Math.floor(Math.random() * list.length)] : list[0];
+  const r = damage(st, u.id, pick.id, { atk: u.atk, mult: 100, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
+  pushLog("👹 " + u.name + " → " + pick.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
   commit(st, u.id);
   if (st.finished) finish();
   renderBattle();
@@ -982,7 +1071,7 @@ function aiTurnIfNeeded() {
   if (roomId && amHost) {
     // 联机模式：等对手提交；超时 20 秒由房主代打
     const a0 = nextActor(st);
-    if (a0 && a0.id === "foe" && window.__guestControls) {
+    if (a0 && a0.side === "B" && window.__guestControls) {
       if (!window.__waitSince || window.__waitUnit !== a0.id) { window.__waitSince = Date.now(); window.__waitUnit = a0.id; }
       const waited = Date.now() - window.__waitSince;
       if (waited < 20000) { setTimeout(pullIntents, 350); return; }
@@ -997,44 +1086,7 @@ function aiTurnIfNeeded() {
     renderBattle(); return;
   }
   if (a.side === "A") { autoUnitAct(a); return; }
-  if (a.id !== "foe") { renderBattle(); return; }
-  busy = true;
-  setTimeout(() => {
-    const f2 = foe(), m = me();
-    clearDefend(f2);
-    if (isStunned(f2)) {
-      pushLog("💫 " + f2.name + " 被控住，跳过本回合");
-      commit(st, "foe");
-      busy = false;
-      renderBattle();
-      setTimeout(aiTurnIfNeeded, 300);
-      return;
-    }
-    const useSkill = Math.random() < 0.3;
-    const mult = useSkill ? 150 : 100;
-    const r = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg, kind: "normal", dmgType: "phys", style: "melee" });
-    pushLog((useSkill ? "🥋 " : "⚔️ ") + f2.name + (useSkill ? " 技能" : " 普攻") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
-    // 🔁 反击：被击后概率反打 60%
-    const cb = Number((m.traits || {}).counter) || 0;
-    if (cb > 0 && m.alive !== false && f2.alive !== false && Math.random() * 100 < cb) {
-      const rc = damage(st, "me", "foe", { atk: m.atk, mult: 60, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
-      pushLog("🔁 " + m.name + " 反击 " + rc.dmg, "line");
-    }
-    // 🛡️ 防具反制：缴械 / 嘲讽
-    const dt3 = m.traits || {};
-    if (Number(dt3.disarm) > 0 && f2.alive !== false && Math.random() * 100 < 30) {
-      applyStatus(st, "me", "foe", "disarm", 1, Number(dt3.disarm) || 1, "缴械");
-      pushLog("🚫 " + f2.name + " 被缴械", "line");
-    }
-    if (Number(dt3.taunt) > 0 && f2.alive !== false) {
-      applyStatus(st, "me", "foe", "taunt", 0, 1, "嘲讽");
-    }
-    commit(st, "foe");
-    busy = false;
-    if (st.finished) finish();
-    renderBattle();
-    setTimeout(aiTurnIfNeeded, 300);
-  }, 420);
+  if (a.side === "B") { enemyAct(a); return; }
 }
 
 function finish() {
