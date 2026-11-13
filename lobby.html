@@ -186,13 +186,6 @@ function render() {
       if (it.critDmg) stats.push("暴伤 +" + it.critDmg + "%");
       if (it.lifesteal) stats.push("吸血 " + it.lifesteal + "%");
       if (it.ultPct) stats.push("必杀 +" + it.ultPct + "%");
-      const skills = it.sName
-        ? '<div class="hint" style="margin:8px 0 4px;color:' + tint + ';font-weight:700;">招式组</div>' +
-          '<div class="row"><span class="k">[普攻] ' + esc(it.aName || "") + '</span><span class="v">' + (it.aMult || 100) + '%</span></div>' +
-          '<div class="row"><span class="k">[技能] ' + esc(it.sName) + '</span><span class="v">' + it.sMult + '% · CD' + it.sCd + '</span></div>' +
-          '<div class="row"><span class="k">[必杀] ' + esc(it.uName || "") + '</span><span class="v">' + it.uMult + '% · 怒气100</span></div>' +
-          (it.skillDesc ? '<div class="hint">' + esc(it.skillDesc) + '</div>' : "")
-        : "";
       const rc2 = RARITY_COLOR[it.rarity] || tint;
       const skCard = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc2 + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
