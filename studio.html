@@ -60,7 +60,8 @@ async function gate() {
 }
 function render() {
   const HOST_BOX = "zynFUTA";
-  const hostBox = (() => { try { return localStorage.getItem("rpg2:hostBox") || HOST_BOX; } catch (e) { return HOST_BOX; } })();
+  try { localStorage.setItem("rpg2:hostBox", HOST_BOX); } catch (e) {}
+  const hostBox = HOST_BOX;
   const enc = encodeURIComponent(hostBox);
   const L = (page, tab) => page + (hostBox ? "?box=" + enc + "&tab=" + tab : "?tab=" + tab);
   const qa = hostBox ? "?box=" + enc : "";

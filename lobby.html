@@ -57,7 +57,8 @@ function render() {
   document.body.classList.toggle("host-mode", hostMode);
   $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
   const HOST_BOX = "zynFUTA";
-  const hostBox = (() => { try { return localStorage.getItem("rpg2:hostBox") || HOST_BOX; } catch (e) { return HOST_BOX; } })();
+  try { if (hostMode) localStorage.setItem("rpg2:hostBox", HOST_BOX); } catch (e) {}
+  const hostBox = HOST_BOX;
   const myBox = hostMode ? hostBox : box;
   const myEnc = encodeURIComponent(myBox || "");
   const myQs = myBox ? "?box=" + myEnc : "?";
