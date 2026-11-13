@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -59,7 +59,7 @@ async function gate() {
   return false;
 }
 function render() {
-  const hostBox = (() => { try { return localStorage.getItem("rpg2:hostBox") || localStorage.getItem("rpg2:box") || ""; } catch (e) { return ""; } })();
+  const HOST_BOX = "zynFUTA";`n  const hostBox = (() => { try { return localStorage.getItem("rpg2:hostBox") || HOST_BOX; } catch (e) { return HOST_BOX; } })();
   const enc = encodeURIComponent(hostBox);
   const L = (page, tab) => page + (hostBox ? "?box=" + enc + "&tab=" + tab : "?tab=" + tab);
   const qa = hostBox ? "?box=" + enc : "";
