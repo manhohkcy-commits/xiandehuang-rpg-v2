@@ -101,7 +101,7 @@ function detail(it) {
         [d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
       : (d.sMult
         ? skCard("技能", d.sName || "—", splitMult(d.sMult, d.sHits),
-          [SHAPE[d.sShape] || "单体", distTxt, dmgTypeTxt], "回怒 " + (Number(d.sRage) || 0) + "%",
+          [SHAPE[d.sShape] || "单体", distTxt, dmgTypeTxt], "回怒 " + (Number(d.sRage) || 0),
           (() => {
             const e = [];
             if (d.sCd) e.push("CD " + d.sCd);
