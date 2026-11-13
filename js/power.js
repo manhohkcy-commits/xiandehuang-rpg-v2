@@ -69,6 +69,25 @@ export function baseBonus(cat, rarity) {
   return out;
 }
 
+// 🧱 仅主属性（部位基础）的最终值：取整，不含副属性
+export function itemMain(it) {
+  if (!it || !it.data) return {};
+  const d = it.data;
+  const base = d.main || SLOT_BASE[it.cat] || {};
+  const lvMul = 1 + 0.02 * ((Number(d.lv) || 1) - 1);
+  const starMul = 1 + 0.12 * ((Number(d.star) || 1) - 1);
+  const rm = RARITY_MULT[d.rarity] || 1;
+  const fireMul = d.rarity === "UR" ? 1 + 0.08 * ((Number(d.fire) || 1) - 1) : 1;
+  const breakN = (CULT.breakNodes || []).filter((n) => (Number(d.lv) || 1) >= n).length;
+  const breakMul = 1 + 0.05 * breakN;
+  const upMul = 1;
+  const out = {};
+  Object.keys(base).forEach((k) => {
+    out[k] = Math.round((Number(base[k]) || 0) * rm * lvMul * starMul * breakMul * fireMul * upMul);
+  });
+  return out;
+}
+
 export function itemBonus(it) {
   if (!it || !it.data) return {};
   const d = it.data;

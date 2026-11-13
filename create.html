@@ -25,7 +25,7 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=4b1aaa5e";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2318bcc3";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=4b1aaa5e";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
 import { ORIGINALS, pullOriginals, originalFinal } from "./js/originals.js?v=942eb463";
@@ -218,7 +218,7 @@ function showItemDetail(it) {
     { title: "伤害类型", keys: ["physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"] },
     { title: "战斗词条", keys: ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "block", "tenacity", "lowHpCut", "statusPower", "statusHit", "statusResist", "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash", "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"] }
   ];
-  const val = (k, v) => (Math.round((Number(v) || 0) * 10) / 10) + (ITEM_UNITS[k] || "");
+  const val = (k, v) => Math.round(Number(v) || 0) + (ITEM_UNITS[k] || "");
   const mainKeys = mainKeysOf(it);
   const mainRows = mainKeys.filter((k) => Number(b[k]) > 0).map((k) =>
     '<div class="row"><span class="k">' + (ITEM_NAMES[k] || k) + '</span><span class="v" style="color:#ffd666;">+' + val(k, b[k]) + '</span></div>').join("");

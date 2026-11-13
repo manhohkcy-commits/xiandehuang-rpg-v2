@@ -1,5 +1,5 @@
 import { cloudGet, cloudSave } from "./core.js?v=13807141";
-import { powerOf } from "./power.js?v=2318bcc3";
+import { powerOf } from "./power.js?v=d92ed317";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
