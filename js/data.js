@@ -146,7 +146,7 @@ export const ACCESSORIES = [
   { id: "c_bell", name: "祈愿铃", rarity: "SR", main: { res: 9, hp: 40 }, desc: "铃舌很轻，摇起来只有自己听得见。" },
   { id: "c_mercy", name: "慈心吊坠", rarity: "SR", main: { hp: 80 }, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
 ];
-import { enemyAt } from "./enemies.js?v=5441fc3a";
+import { enemyAt } from "./enemies.js?v=d0b219fa";
 const DUNGEON_LEVELS = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
 const foeOf = (name, lv, mul = 1) => ({
   name, lv,

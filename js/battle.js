@@ -39,6 +39,7 @@ export function createBattle(units) {
       __col: u.__col ? 1 : 0,
       __back: !!u.__back,
       __skills: u.__skills || [],
+      __rageGain: Number(u.__rageGain) || 25,
       __buff: u.__buff || null,
       __auto: !!u.__auto
     });

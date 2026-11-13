@@ -21,11 +21,11 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=2d8f1941";
-import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=5441fc3a";
+import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=d0b219fa";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=67e20d3d";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 // 🧬 当前操控的原创角色（记住上次选择，换页不丢）
@@ -144,7 +144,7 @@ function openEnemyDetail(id, lv) {
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
   const skRow = (x) => '<div style="padding:6px 9px;border-bottom:1px solid #1a2438;"><div style="display:flex;justify-content:space-between;gap:8px;">' +
     '<b style="font-size:13px;color:#dbe4f3;">' + esc(x.name) + '</b><span style="font-size:10.5px;color:#8fd8ff;">' +
-    (x.mult ? x.mult + "%" : "") + (x.cd ? ' · CD' + x.cd : "") + '</span></div><div class="hint" style="margin-top:2px;">' + esc(x.desc || "") + '</div></div>';
+    (x.mult ? x.mult + "%" : "") + (x.kind === "ult" ? ' · 怒气100' : (x.cd ? ' · CD' + x.cd : "")) + '</span></div><div class="hint" style="margin-top:2px;">' + esc(x.desc || "") + '</div></div>';
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
   ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;border:1px solid ' + tint + '66;">' +
@@ -432,7 +432,7 @@ function buildFoeUnits(s, playerCount) {
       hp: Math.round(e.stats.hp * dp), maxHp: Math.round(e.stats.hp * dp),
       atk: Math.round(e.stats.atk * dp), def: Math.round(e.stats.def * dp), res: Math.round(e.stats.res * dp),
       critRate: e.stats.critRate, critDmg: e.stats.critDmg,
-      __skills: e.skills || [], __back: backRole(e.role, e.name) };
+      __skills: e.skills || [], __rageGain: e.rageGain || 25, __back: backRole(e.role, e.name) };
   });
   assignLayout(list);
   // 🌊 分波：超过 6 个就平均拆波
@@ -1184,7 +1184,52 @@ function autoUnitAct(u) {
   setTimeout(aiTurnIfNeeded, 360);
 }
 
-// 👹 敌人行动：有招式就放，否则普攻
+// 👹 敌人行动：怒气满放必杀 → 技能冷却好放技能 → 否则普攻
+function applyEnemySkill(u, sk, allies, foes, bAtk, bDmg) {
+  if (sk.heal || sk.shieldPct || sk.shield) {
+    if (sk.heal) {
+      allies.forEach((a) => healUnit(st, a.id, Math.round(a.maxHp * (Number(sk.heal) || 15) / 100)));
+      pushLog("💚 " + u.name + "「" + sk.name + "」治疗全体", "line");
+    }
+    if (sk.shieldPct) {
+      allies.forEach((a) => addShield(st, a.id, Math.round(a.maxHp * (Number(sk.shieldPct) || 0) / 100)));
+      pushLog("🛡 " + u.name + "「" + sk.name + "」全队获得护盾", "line");
+    } else if (sk.shield) {
+      allies.forEach((a) => addShield(st, a.id, Number(sk.shield) || 40));
+      pushLog("🛡 " + u.name + "「" + sk.name + "」全队获得护盾", "line");
+    }
+    if (sk.summon) {
+      const e = enemyAt(sk.summon, st.__lv || 1);
+      if (e) {
+        st.units.push({ id: "f_s" + st.units.length, name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
+          atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg,
+          __skills: e.skills || [], __rageGain: e.rageGain || 25, __back: false, __row: 2, __col: 0 });
+        pushLog("📢 " + u.name + "「" + sk.name + "」召唤了 " + e.name, "line");
+      }
+    }
+    return;
+  }
+  if (sk.buff) {
+    const label = sk.buff.atkPct ? "攻击 +" + sk.buff.atkPct + "%" : ("伤害 +" + (sk.buff.dmgPct || 0) + "%");
+    allies.forEach((a) => { a.__buff = { atkPct: Number(sk.buff.atkPct) || 0, dmgPct: Number(sk.buff.dmgPct) || 0, turns: 3 }; });
+    pushLog("📣 " + u.name + "「" + sk.name + "」全队 " + label + "（3 回合）", "line");
+    return;
+  }
+  const targets = sk.aoe ? foes : [isRangedUnit(u) ? foes[Math.floor(Math.random() * foes.length)] : foes[0]];
+  const hits = Number(sk.hits) || 1;
+  targets.forEach((t) => {
+    let total = 0, crit = false;
+    for (let i = 0; i < hits; i++) {
+      if (t.hp <= 0) break;
+      const r = damage(st, u.id, t.id, { atk: bAtk, mult: (Number(sk.mult) || 100) * bDmg, critRate: u.critRate, critDmg: u.critDmg,
+        kind: sk.kind === "normal" ? "normal" : "skill", dmgType: sk.spell ? "spell" : "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
+      total += r.dmg; crit = crit || r.crit;
+    }
+    pushLog("👹 " + u.name + "「" + sk.name + "」→ " + t.name + " " + total + (crit ? " 暴击💥" : ""), "line");
+    if (sk.burn && t.hp > 0) applyStatus(st, u.id, t.id, "burn", Math.round(u.atk * 0.15), 2, "灼烧");
+  });
+}
+
 function enemyAct(u) {
   if (!st || st.finished) return;
   if (isStunned(u)) {
@@ -1195,58 +1240,24 @@ function enemyAct(u) {
     return;
   }
   u.cd = Math.max(0, (Number(u.cd) || 0) - 1);
-  // 增益回合递减
   if (u.__buff) { u.__buff.turns = (u.__buff.turns || 0) - 1; if (u.__buff.turns <= 0) u.__buff = null; }
   const bAtk = u.atk * (1 + ((u.__buff && u.__buff.atkPct) || 0) / 100);
   const bDmg = 1 + ((u.__buff && u.__buff.dmgPct) || 0) / 100;
   const list = validTargets(u);
   if (!list.length) return;
-  const sk = (u.__skills || []).find((s) => s && (u.cd || 0) <= 0);
   const allies = aliveSide(u.side);
-  const foes = list;
+  const skills = u.__skills || [];
+  const ult = skills.find((s) => s.kind === "ult");
+  const skill = skills.find((s) => s.kind === "skill");
+  const normal = skills.find((s) => s.kind === "normal") || { name: "普攻", mult: 100, kind: "normal" };
+  u.rage = Number(u.rage) || 0;
 
-  if (sk && !isSilenced(u)) {
-    u.cd = Number(sk.cd) || 0;
-    if (sk.heal) {
-      const amount = Math.round(u.maxHp * 0.1 + 20);
-      allies.forEach((a) => healUnit(st, a.id, Math.round(a.maxHp * (sk.heal || 20) / 100)));
-      pushLog("💚 " + u.name + " 使用「" + sk.name + "」，治疗全队", "line");
-    } else if (sk.shieldPct) {
-      allies.forEach((a) => addShield(st, a.id, Math.round(a.maxHp * (Number(sk.shieldPct) || 0) / 100)));
-      pushLog("🛡 " + u.name + " 使用「" + sk.name + "」，全队获得护盾", "line");
-    } else if (sk.shield) {
-      allies.forEach((a) => addShield(st, a.id, Number(sk.shield) || 40));
-      pushLog("🛡 " + u.name + " 使用「" + sk.name + "」，全队获得护盾", "line");
-    } else if (sk.buff) {
-      const label = sk.buff.atkPct ? "攻击 +" + sk.buff.atkPct + "%" : ("伤害 +" + (sk.buff.dmgPct || 0) + "%");
-      allies.forEach((a) => { a.__buff = { atkPct: Number(sk.buff.atkPct) || 0, dmgPct: Number(sk.buff.dmgPct) || 0, turns: 3 }; });
-      pushLog("📣 " + u.name + " 使用「" + sk.name + "」，全队 " + label + "（3 回合）", "line");
-    } else if (sk.summon) {
-      const e = enemyAt(sk.summon, st.__lv || 1);
-      if (e) {
-        const nu = { id: "f_s" + (st.units.length), name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
-          atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg, __skills: e.skills || [], __back: false, __row: 2, __col: 0 };
-        st.units.push(nu);
-        pushLog("📢 " + u.name + " 使用「" + sk.name + "」，召唤了 " + e.name, "line");
-      }
-    } else {
-      const targets = sk.aoe ? foes : [foes[0]];
-      targets.forEach((t) => {
-        const r = damage(st, u.id, t.id, { atk: bAtk, mult: (Number(sk.mult) || 100) * bDmg, critRate: u.critRate, critDmg: u.critDmg, kind: "skill", dmgType: sk.spell ? "spell" : "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
-        pushLog("🥋 " + u.name + "「" + sk.name + "」→ " + t.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
-        if (sk.burn && t.hp > 0) applyStatus(st, u.id, t.id, "burn", Math.round(u.atk * 0.15), 2, "灼烧");
-      });
-    }
-    commit(st, u.id);
-    if (st.finished) finish();
-    renderBattle();
-    setTimeout(aiTurnIfNeeded, 360);
-    return;
-  }
+  let used = normal;
+  if (ult && u.rage >= 100 && !isSilenced(u)) { used = ult; u.rage = 0; pushLog("💥 " + u.name + " 怒气爆发！", "line"); }
+  else if (skill && (u.cd || 0) <= 0 && !isSilenced(u)) { used = skill; u.cd = Number(skill.cd) || 0; u.rage = Math.min(100, u.rage + (Number(u.__rageGain) || 25)); }
+  else { u.rage = Math.min(100, u.rage + (Number(u.__rageGain) || 25)); }
 
-  const pick = isRangedUnit(u) ? foes[Math.floor(Math.random() * foes.length)] : foes[0];
-  const r = damage(st, u.id, pick.id, { atk: bAtk, mult: 100 * bDmg, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
-  pushLog("👹 " + u.name + " → " + pick.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
+  applyEnemySkill(u, used, allies, list, bAtk, bDmg);
   commit(st, u.id);
   if (st.finished) finish();
   renderBattle();

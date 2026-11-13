@@ -94,6 +94,42 @@ export const ENEMIES = [
     { weapon: "裂地战斧", armor: "铁壁重甲", armor2: "磐石护腿", accessory: "狂怒指环" }, EG_B, "红枫团首领，据说没人见过他全力。")
 ];
 
+// ⚡ 回怒效率（每次行动获得怒气）与必杀招式（怒气 100 释放）
+const ENEMY_RAGE = {
+  e_thug: 25, e_brute: 22, e_soldier: 24, e_archer: 28, e_crossbow: 26,
+  e_trainee_mage: 30, e_trainee_medic: 32, e_light_shield: 20, e_heavy_shield: 18, e_firebomb: 28,
+  e_vet_soldier: 26, e_vet_archer: 30, e_vet_crossbow: 27, e_vet_medic: 34, e_vet_shield: 20, e_high_mage: 32, e_bomber: 29,
+  e_horn: 36, e_drum: 34, e_mech: 33, e_mech2: 30,
+  e_chiyu: 30, e_tieya: 33, e_baishuang: 34, e_fengwang: 31
+};
+const ENEMY_ULT = {
+  e_thug: { name: "乱棍", desc: "单体 200% 攻击", mult: 200 },
+  e_brute: { name: "狂暴冲撞", desc: "单体 220% 攻击", mult: 220 },
+  e_soldier: { name: "盾墙突击", desc: "单体 190% 攻击", mult: 190 },
+  e_archer: { name: "贯目箭", desc: "单体 240% 攻击", mult: 240 },
+  e_crossbow: { name: "穿甲重弩", desc: "单体 260% 攻击", mult: 260, pierce: true },
+  e_trainee_mage: { name: "火球术", desc: "单体 220% 法术并灼烧", mult: 220, spell: true, burn: true },
+  e_trainee_medic: { name: "应急包扎", desc: "治疗全体 15% 生命", heal: 15 },
+  e_light_shield: { name: "铁壁", desc: "全体获得 10% 最大生命护盾", shieldPct: 10 },
+  e_heavy_shield: { name: "磐石壁垒", desc: "全体获得 15% 最大生命护盾", shieldPct: 15 },
+  e_firebomb: { name: "火海", desc: "全体 140% 攻击并灼烧", mult: 140, aoe: true, burn: true },
+  e_vet_soldier: { name: "连刺突袭", desc: "单体 200% 攻击 ×2", mult: 200, hits: 2 },
+  e_vet_archer: { name: "万箭齐发", desc: "全体 150% 攻击", mult: 150, aoe: true },
+  e_vet_crossbow: { name: "破军弩", desc: "单体 280% 攻击", mult: 280, pierce: true },
+  e_vet_medic: { name: "战地圣歌", desc: "治疗全体 20% 生命", heal: 20 },
+  e_vet_shield: { name: "不动如山", desc: "全体获得 20% 最大生命护盾", shieldPct: 20 },
+  e_high_mage: { name: "炎爆", desc: "全体 160% 法术并灼烧", mult: 160, aoe: true, spell: true, burn: true },
+  e_bomber: { name: "连环爆破", desc: "全体 170% 攻击", mult: 170, aoe: true },
+  e_horn: { name: "冲锋号", desc: "全体友军攻击 +20%（3 回合）", buff: { atkPct: 20 } },
+  e_drum: { name: "战意鼓", desc: "全体友军伤害 +30%（3 回合）", buff: { dmgPct: 30 } },
+  e_mech: { name: "护盾发生器", desc: "全体获得 10% 最大生命护盾", shieldPct: 10 },
+  e_mech2: { name: "要塞装甲", desc: "全体获得 18% 最大生命护盾", shieldPct: 18 },
+  e_chiyu: { name: "血斧狂扫", desc: "全体 170% 攻击", mult: 170, aoe: true },
+  e_tieya: { name: "兽性爆发", desc: "单体 300% 攻击", mult: 300 },
+  e_baishuang: { name: "霜华结界", desc: "治疗全体 25% 并给 10% 护盾", heal: 25, shieldPct: 10 },
+  e_fengwang: { name: "枫落九天", desc: "全体 200% 攻击并召唤流寇", mult: 200, aoe: true, summon: "e_thug" }
+};
+
 export function enemyById(id) { return ENEMIES.find((e) => e.id === id); }
 // ⚔️ 敌人战力（与角色同一套换算）
 export function enemyPower(e) {
@@ -155,6 +191,16 @@ ENEMIES.forEach((e) => {
     : /号角|鼓|机械/.test(e.name) ? "special"
     : /资深|高阶|爆破/.test(e.name) ? "elite" : "normal";
   e.growth = GROWTH_BY(e);
+  // 🎯 固定招式结构：普攻 / 技能 / 必杀
+  const old = e.skills || [];
+  const sk = old[0] || { name: "猛击", desc: "单体 130% 攻击", mult: 130, cd: 2 };
+  const ult = ENEMY_ULT[e.id] || { name: "全力一击", desc: "单体 200% 攻击", mult: 200 };
+  e.skills = [
+    { name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" },
+    Object.assign({ kind: "skill" }, sk),
+    Object.assign({ kind: "ult", rage: 100 }, ult)
+  ];
+  e.rageGain = ENEMY_RAGE[e.id] || 25;
 });
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
 export function enemyAt(id, lv) {
@@ -168,6 +214,6 @@ export function enemyAt(id, lv) {
   return {
     id: e.id, name: e.name, camp: e.camp, role: e.role, desc: e.desc, lv: L,
     stats: { atk: k("atk"), hp: k("hp"), def: k("def"), res: k("res"), spd: k("spd"), critRate: e.critRate, critDmg: e.critDmg },
-    equip: e.equip, skills: e.skills
+    equip: e.equip, skills: e.skills, rageGain: e.rageGain
   };
 }
