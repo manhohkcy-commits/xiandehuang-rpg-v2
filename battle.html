@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -70,6 +70,7 @@ function strike(st, atkId, defId, opts, hits) {
 }
 
 function readBox() {
+  try { if (localStorage.getItem("rpg2:host") === "1") return "zynFUTA"; } catch (e) {}
   const q = new URLSearchParams(location.search);
   if (q.get("box")) return q.get("box");
   return localStorage.getItem("rpg2:box") || "";
