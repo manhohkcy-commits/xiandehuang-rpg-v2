@@ -19,7 +19,7 @@
 <script type="module">
 import { cloudList, cloudGet, cloudSave } from "./js/core.js?v=13807141";
 import { charPower, gradeOf } from "./js/power.js?v=d92ed317";
-import { ORIGINALS, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=942eb463";
+import { ORIGINALS, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=b8bc91ed";
 
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
@@ -128,9 +128,9 @@ function render() {
       if (it.critDmg) parts.push("暴伤 +" + it.critDmg + "%");
       if (it.lifesteal) parts.push("吸血 " + it.lifesteal + "%");
       if (it.ultPct) parts.push("必杀 +" + it.ultPct + "%");
-      return '<div style="padding:7px 9px;border-bottom:1px solid #1a2438;">' +
+      return '<div data-gear="' + k + '" style="padding:7px 9px;border-bottom:1px solid #1a2438;cursor:pointer;">' +
         '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;color:#dbe4f3;">🗡 ' + esc(it.name) + '</b>' +
-        '<span class="hint">' + SLOT[k] + '</span></div>' +
+        '<span class="hint">' + SLOT[k] + ' ›</span></div>' +
         (parts.length ? '<div class="hint" style="margin-top:2px;">' + esc(parts.join(" · ")) + '</div>' : "") + '</div>';
     }).join("") || '<div class="hint" style="padding:8px 9px;">（暂无专属装备）</div>';
 
@@ -168,6 +168,40 @@ function render() {
     document.body.appendChild(ov);
     ov.querySelector("#lClose").onclick = () => ov.remove();
     ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+    ov.querySelectorAll("[data-gear]").forEach((el) => el.onclick = (ev) => {
+      ev.stopPropagation();
+      const slot = el.dataset.gear;
+      const it = g[slot] || {};
+      if (!it.name) return;
+      const d = document.createElement("div");
+      d.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;";
+      const stats = [];
+      if (it.atk) stats.push("攻击 +" + it.atk);
+      if (it.hp) stats.push("生命 +" + it.hp);
+      if (it.def) stats.push("防御 +" + it.def);
+      if (it.res) stats.push("法抗 +" + it.res);
+      if (it.spd) stats.push("速度 +" + it.spd);
+      if (it.critRate) stats.push("暴击 +" + it.critRate + "%");
+      if (it.critDmg) stats.push("暴伤 +" + it.critDmg + "%");
+      if (it.lifesteal) stats.push("吸血 " + it.lifesteal + "%");
+      if (it.ultPct) stats.push("必杀 +" + it.ultPct + "%");
+      const skills = it.sName
+        ? '<div class="hint" style="margin:8px 0 4px;color:' + tint + ';font-weight:700;">招式组</div>' +
+          '<div class="row"><span class="k">[普攻] ' + esc(it.aName || "") + '</span><span class="v">' + (it.aMult || 100) + '%</span></div>' +
+          '<div class="row"><span class="k">[技能] ' + esc(it.sName) + '</span><span class="v">' + it.sMult + '% · CD' + it.sCd + '</span></div>' +
+          '<div class="row"><span class="k">[必杀] ' + esc(it.uName || "") + '</span><span class="v">' + it.uMult + '% · 怒气100</span></div>' +
+          (it.skillDesc ? '<div class="hint">' + esc(it.skillDesc) + '</div>' : "")
+        : "";
+      d.innerHTML = '<div class="card" style="max-width:360px;width:100%;border:1px solid ' + tint + '66;">' +
+        '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:17px;color:' + tint + ';">' + esc(it.name) + '</b>' +
+        (it.rarity ? '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">' + it.rarity + '</span>' : "") +
+        '<span class="tag" style="margin-left:auto;">' + SLOT[slot] + '</span></div>' +
+        '<div class="hint" style="margin-top:6px;">' + (stats.join(" · ") || "无属性") + '</div>' + skills +
+        '<div style="margin-top:10px;"><button id="gClose" style="width:100%;">关闭</button></div></div>';
+      document.body.appendChild(d);
+      d.querySelector("#gClose").onclick = () => d.remove();
+      d.onclick = (e) => { if (e.target === d) d.remove(); };
+    });
   });
 
   if (tab === "player") loadPlayers();

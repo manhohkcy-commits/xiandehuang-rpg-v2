@@ -49,7 +49,12 @@ export async function pullOriginals() {  try {
 export const ORIGINAL_GEAR = {
   // 晓天（先锋 · 冰系 · 命中叠层 · 稀有）
   dmweo00x9: {
-    weapon: { name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8, ultPct: 10 },
+    weapon: {
+      name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8, ultPct: 10,
+      aName: "霜切", aMult: 100, sName: "雪葬", sMult: 190, sCd: 3, sShape: "single", sRage: 10,
+      uName: "泣雪", uMult: 300, uShape: "cross", style: "melee", dmgType: "phys",
+      skillDesc: "雪葬命中额外 +1 层霜印"
+    },
     armor: { name: "霜绡战衣", rarity: "SR", atk: 0, hp: 340, def: 26, res: 14, spd: 0, critRate: 0 },
     armor2: { name: "踏雪战裤", rarity: "SR", atk: 0, hp: 170, def: 10, res: 0, spd: 4, critRate: 0 },
     accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12, lifesteal: 15 }
