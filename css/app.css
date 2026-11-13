@@ -137,3 +137,15 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
 .hall-grid a:hover{border-color:#6ea8fe}
 .hall-grid .t{font-weight:700;margin-top:4px;font-size:13px}
 
+
+/* 🧑‍💻 主机端（琥珀色主题） */
+body.host-mode{--host:#ffb347}
+body.host-mode .brand .dot{background:#ffb347;box-shadow:0 0 10px #ffb34788}
+body.host-mode .card{border-color:#3a2c14}
+body.host-mode .card-title{color:#ffcf7a}
+body.host-mode button{border-color:#6b4a1e;color:#ffd9a0}
+body.host-mode button:hover{border-color:#ffb347}
+body.host-mode .tree-tabs button.on{border-color:#ffb347;color:#ffb347;background:#2a2010}
+body.host-mode .hall-grid a{border-color:#3a2c14}
+body.host-mode .hall-grid a:hover{border-color:#ffb347}
+
