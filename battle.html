@@ -40,15 +40,25 @@ const activeChar = () => (store && store.chars || []).find((c) => c.id === store
 // 武器数据兼容两种存法：装备里直接存 data，或存 {cat,data} 包装
 const wpOf = (w) => (w && (w.data || (w.sMult != null || w.sName || w.hitStatus ? w : null))) || {};
 // 多段攻击：总倍率平均分到 N 段，每段独立判定暴击
+// 🌊 多段伤害：总倍率不变，按段伤曲线分配（首段重、后段轻）
+const HIT_CURVE = {
+  1: [1],
+  2: [0.6, 0.4],
+  3: [0.45, 0.35, 0.2],
+  4: [0.4, 0.3, 0.2, 0.1],
+  5: [0.3, 0.25, 0.2, 0.15, 0.1]
+};
 function strike(st, atkId, defId, opts, hits) {
-  const n = Math.max(1, Number(hits) || 1);
+  const n = Math.max(1, Math.min(5, Number(hits) || 1));
+  const w = HIT_CURVE[n] || Array(n).fill(1 / n);
+  const total = Number(opts.mult) || 100;
   let dmg = 0, crit = false, killed = false;
   for (let i = 0; i < n; i++) {
-    const r = damage(st, atkId, defId, Object.assign({}, opts, { mult: (Number(opts.mult) || 100) / n }));
+    const r = damage(st, atkId, defId, Object.assign({}, opts, { mult: total * w[i] }));
     dmg += r.dmg; crit = crit || r.crit; killed = killed || r.killed;
     if (killed) break;
   }
-  return { dmg, crit, killed };
+  return { dmg, crit, killed, hits: n };
 }
 
 function readBox() {
