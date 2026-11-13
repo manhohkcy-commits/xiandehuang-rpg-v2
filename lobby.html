@@ -55,7 +55,13 @@ function origRows() {
 
 function render() {
   document.body.classList.toggle("host-mode", hostMode);
-  $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
+  if (hostMode) {
+    $("backLink").href = "studio.html";
+    $("backLink").textContent = "← 主机工作台";
+  } else {
+    $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
+    $("backLink").textContent = "← 返回";
+  }
   const HOST_BOX = "zynFUTA";
   try { if (hostMode) localStorage.setItem("rpg2:hostBox", HOST_BOX); } catch (e) {}
   const hostBox = HOST_BOX;
