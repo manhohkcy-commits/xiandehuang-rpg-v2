@@ -1279,7 +1279,7 @@ function renderOrig() {
   const brk = Math.min(3, Number(prog.breaks) || 0);
   const need = CHAR.expNeed(lv);
   const pct = Math.min(100, Math.round(((Number(prog.exp) || 0) / need) * 100));
-  const fin = originalFinal(o, prog, false); // 面板只显示角色本体（装备单独列出）
+  const fin = originalFinal(o, prog);
   const atk = fin.atk, hp = fin.hp, def = fin.def, res = fin.res, spd = fin.spd;
   const s = o.stats || {};
   const pw = fin.power;
