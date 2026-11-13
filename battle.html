@@ -631,7 +631,12 @@ function startBattle(stageId, prepPos) {
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   applyEnv(st, s.weather || "clear", s.sceneMods);
   st.__origId = playOrig ? playOrig.id : null;
-  st.__gearAbil = playOrig ? gearAbilities(playOrig) : null;
+  st.__gearAbil = playOrig ? (function () {
+    const ab = gearAbilities(playOrig);
+    const pr = ((store.orig || {})[playOrig.id] || {});
+    ab.ultPct = (Number(ab.ultPct) || 0) + (Number(pr.bonus && pr.bonus.ultPct) || 0);
+    return ab;
+  })() : null;
   st.__frost = 0;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
