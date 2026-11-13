@@ -1272,8 +1272,7 @@ function doAct(kind) {
   if (kind !== "ult") {
     // ⚡ 回怒效率由武器决定：普攻 aRage / 技能 sRage / 防御固定 10
     const wpG = wpOf(st.__weapon) || {};
-    let base = kind === "skill" ? Number(wpG.sRage) : Number(wpG.aRage);
-    if (!base || base <= 0) base = kind === "skill" ? 8 : 25;
+    let base = Number(wpG.aRage) || 25;
     if (kind === "defend") base = 10;
     const gain = base * (1 + (Number((m.traits || {}).rageOnSkill) || 0) / 100 + (Number((m.traits || {}).ragePct) || 0) / 100);
     m.rage = Math.min(100, (Number(m.rage) || 0) + gain);
