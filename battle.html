@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=9e10deab";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=b88329e9";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -501,7 +501,9 @@ function renderPrep(stageId) {
     esc((s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ") || s.foe.name) +
     (F.waves.length ? '　（共 ' + (F.waves.length + 1) + ' 波，每波最多 6 名）' : '') + '</div>' +
     '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
-      '　|　建议战力 ' + fmt(stagePower(s)) + '　·　主角战力 ' + fmt(charPower(P.ch)) + '</div>' + grid +
+      '　|　建议战力 ' + fmt(stagePower(s)) + '　·　主角战力 ' + fmt(charPower(P.ch)) + '</div>' +
+    '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
+      (ENVIRONMENTS[s.env || "forest"].icon + " " + ENVIRONMENTS[s.env || "forest"].name + "：" + ENVIRONMENTS[s.env || "forest"].desc) + '</div>' + grid +
     '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
       '<button id="prepGo" style="flex:1;min-width:140px;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
       '<button id="prepBack" style="flex:1;min-width:140px;">← 返回选关</button>' +
@@ -538,6 +540,27 @@ function renderPrep(stageId) {
   const bk = $("prepBack"); if (bk) bk.onclick = renderPick;
 }
 
+// 🌦 战斗环境：影响双方属性
+function applyEnv(st, envId) {
+  const env = ENVIRONMENTS[envId] || ENVIRONMENTS.forest;
+  const m = env.mods || {};
+  st.__env = envId;
+  st.__envName = env.icon + " " + env.name;
+  st.units.forEach((u) => {
+    if (m.hpPct) { const f = 1 + m.hpPct / 100; u.maxHp = Math.round(u.maxHp * f); u.hp = Math.round(u.hp * f); }
+    if (m.atkPct) u.atk = Math.round(u.atk * (1 + m.atkPct / 100));
+    if (m.defPct) u.def = Math.round(u.def * (1 + m.defPct / 100));
+    if (m.resPct) u.res = Math.round(u.res * (1 + m.resPct / 100));
+    if (m.spdPct) u.spd = Math.round(u.spd * (1 + m.spdPct / 100) * 10) / 10;
+    if (m.critRate) u.critRate = Math.max(0, (Number(u.critRate) || 0) + m.critRate);
+    u.traits = u.traits || {};
+    ["spellPct", "physPct", "rangedPct", "meleePct", "focusPct"].forEach((k) => {
+      if (m[k]) u.traits[k] = (Number(u.traits[k]) || 0) + m[k];
+    });
+  });
+  return env;
+}
+
 function startBattle(stageId, prepPos) {
   if (roomId && amHost) { buildMultiBattle(stageId); return; }
   const s = STAGES.find((x) => x.id === stageId);
@@ -555,6 +578,7 @@ function startBattle(stageId, prepPos) {
   st.__waveNo = 1;
   st.__onCommit = () => spawnWave();
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
+  applyEnv(st, s.env || "forest");
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
@@ -907,7 +931,7 @@ function renderBattle() {
   afterCommit();
   const a = nextActor(st);
   const m = me(), f2 = foe();
-  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—") + (st.__waveNo ? " · 第 " + st.__waveNo + " 波" : ""));
+  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—") + (st.__waveNo ? " · 第 " + st.__waveNo + " 波" : "") + (st.__envName ? " · " + st.__envName : ""));
 
   const hpBar = (u) => {
     const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));

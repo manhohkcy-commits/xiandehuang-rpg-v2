@@ -180,6 +180,18 @@ function makeDaily(id, name, kind, icon, desc, foeName) {
   return { id, name, kind, icon, desc, type: "daily", stages };
 }
 // 🍁 经验本 · 红枫团（20 关，敌人按 Lv1 模板缩放）
+// 🌦 战斗环境：影响双方属性
+export const ENVIRONMENTS = {
+  forest: { name: "枫林", icon: "🍁", desc: "落叶铺地，双方行动如常。", mods: {} },
+  rain: { name: "雨幕", icon: "🌧", desc: "速度 -10%，法术伤害 +10%。", mods: { spdPct: -10, spellPct: 10 } },
+  sun: { name: "烈日", icon: "☀️", desc: "攻击 +10%，防御 -10%。", mods: { atkPct: 10, defPct: -10 } },
+  night: { name: "夜战", icon: "🌙", desc: "暴击率 -5%。", mods: { critRate: -5 } },
+  fog: { name: "浓雾", icon: "🌫", desc: "远程伤害 -15%，速度 -5%。", mods: { rangedPct: -15, spdPct: -5 } },
+  marsh: { name: "沼泽", icon: "🪵", desc: "速度 -20%。", mods: { spdPct: -20 } },
+  ruins: { name: "古战场", icon: "🏛", desc: "防御 +15%，生命 +5%。", mods: { defPct: 15, hpPct: 5 } }
+};
+const REDMAPLE_ENV = ["forest", "forest", "forest", "forest", "rain", "forest", "forest", "forest", "forest", "sun",
+  "forest", "forest", "forest", "forest", "night", "fog", "fog", "fog", "marsh", "ruins"];
 const REDMAPLE_PLAN = [
   [5, ["e_thug"], 120, "一个打手抱着木棍守在枫林入口，哈欠连天。"],
   [9, ["e_thug", "e_archer"], 142, "打手在前挡路，树后有人拉开了弓。"],
@@ -209,6 +221,7 @@ function makeRedmaple() {
     return {
       id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + (STAGE_TITLE[i] || first.name), lv,
       story: story || "",
+      env: REDMAPLE_ENV[i] || "forest",
       group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       enemies: ids, gold: Math.round(exp * 0.25), exp,
       foe: { name: first.name, lv, hp: first.stats.hp, atk: first.stats.atk, def: first.stats.def, res: first.stats.res, spd: first.stats.spd },
