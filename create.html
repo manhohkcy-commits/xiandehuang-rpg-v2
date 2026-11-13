@@ -1836,11 +1836,12 @@ function render() {
     if (b) b.style.display = "none";
     if (tab === "orig") tab = "char";
   } else {
-    // 🧬 主机端：只显示「原创角色」，玩家角色不在这里
+    // 🧬 主机端：布局与玩家端一致，但角色是「原创角色」
     document.querySelectorAll('[data-tab]').forEach((b) => {
-      if (b.dataset.tab !== "orig") b.style.display = "none";
+      if (b.dataset.tab === "char") b.textContent = "🧬 原创角色";
+      b.style.display = "";
     });
-    if (tab !== "orig") tab = "orig";
+    if (tab === "orig") tab = "char";
     const sb = $("btnSwitchBox");
     if (sb) sb.style.display = "none";
   }
@@ -1872,6 +1873,11 @@ function render() {
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
   try {
     if (tab === "orig" && !ORIGINALS.length) pullOriginals().then(() => { try { render(); } catch (e) {} }).catch(() => {});
+    if (hostMode && (tab === "char" || tab === "cult" || tab === "orig")) { renderOrig(); return; }
+    if (hostMode && tab === "talent") {
+      view().innerHTML = card("🌳 天赋（原创角色）", '<div class="hint">按玩家端天赋树接入中；解锁阶段待配置。</div>');
+      return;
+    }
     if (tab === "char") renderChar();
     else if (tab === "talent") renderTalent();
     else if (tab === "cult") renderCult();
