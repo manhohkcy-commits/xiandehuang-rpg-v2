@@ -1835,6 +1835,14 @@ function render() {
     const b = document.querySelector('[data-tab="orig"]');
     if (b) b.style.display = "none";
     if (tab === "orig") tab = "char";
+  } else {
+    // 🧬 主机端：只显示「原创角色」，玩家角色不在这里
+    document.querySelectorAll('[data-tab]').forEach((b) => {
+      if (b.dataset.tab !== "orig") b.style.display = "none";
+    });
+    if (tab !== "orig") tab = "orig";
+    const sb = $("btnSwitchBox");
+    if (sb) sb.style.display = "none";
   }
   if (!store) {
     view().innerHTML =
