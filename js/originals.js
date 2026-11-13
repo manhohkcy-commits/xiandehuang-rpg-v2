@@ -52,7 +52,7 @@ export const ORIGINAL_GEAR = {
     weapon: {
       name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8, ultPct: 10,
       aName: "霜切", aMult: 100, sName: "雪葬", sMult: 190, sCd: 3, sShape: "single", sRage: 10,
-      uName: "千山暮雪", uMult: 300, uShape: "cross", style: "melee", dmgType: "phys",
+      uName: "千山暮雪", uMult: 340, uShape: "single", style: "melee", dmgType: "phys",
       skillDesc: "雪葬命中额外 +1 层霜印"
     },
     armor: { name: "霜绡战衣", rarity: "SSR", atk: 0, hp: 380, def: 30, res: 16, spd: 0, critRate: 0 },
