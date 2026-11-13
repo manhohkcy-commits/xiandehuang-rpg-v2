@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=2d8f1941";
-import { enemyAt, enemyById, stagePower } from "./js/enemies.js?v=6c576b03";
+import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=6c576b03";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
@@ -138,23 +138,25 @@ function openEnemyDetail(id, lv) {
   const e = enemyAt(id, lv);
   if (!e) return;
   const tint = "#ff9b9b", s = e.stats;
-  const r = (k, v, hot) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px dashed #1b2436;">' +
-    '<span class="hint">' + k + '</span><span style="font-weight:' + (hot ? "800" : "600") + ';color:' + (hot ? "#ffd666" : "#dbe4f3") + ';font-size:' + (hot ? "15px" : "13px") + ';">' + v + '</span></div>';
-  const sec = (t) => '<div style="font-size:11px;color:#8fd8ff;font-weight:700;letter-spacing:1px;margin:11px 0 2px;">' + t + '</div>';
-  const skRow = (x) => '<div style="padding:6px 2px;border-bottom:1px dashed #1b2436;"><div style="display:flex;justify-content:space-between;gap:8px;">' +
-    '<b style="font-size:13px;">' + esc(x.name) + '</b><span style="font-size:10.5px;color:#8fd8ff;">' +
+  const r = (k, v) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
+    '<span class="hint">' + k + '</span><span style="font-weight:600;color:#dbe4f3;font-size:13px;">' + v + '</span></div>';
+  const sec = (t) => '<div style="font-size:11px;color:#8fd8ff;font-weight:700;letter-spacing:1px;margin:12px 0 5px;">' + t + '</div>';
+  const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+  const skRow = (x) => '<div style="padding:6px 9px;border-bottom:1px solid #1a2438;"><div style="display:flex;justify-content:space-between;gap:8px;">' +
+    '<b style="font-size:13px;color:#dbe4f3;">' + esc(x.name) + '</b><span style="font-size:10.5px;color:#8fd8ff;">' +
     (x.mult ? x.mult + "%" : "") + (x.cd ? ' · CD' + x.cd : "") + '</span></div><div class="hint" style="margin-top:2px;">' + esc(x.desc || "") + '</div></div>';
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
   ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;border:1px solid ' + tint + '66;">' +
     '<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:20px;font-weight:800;color:' + tint + ';">' + esc(e.name) + '</div>' +
-    '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">Lv' + e.lv + '</span></div>' +
+    '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">Lv' + e.lv + '</span>' +
+    '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#1c2740,#101827);border:1px solid #ffd66655;border-radius:20px;padding:3px 11px;font-size:11px;color:#ffd666;">⚔️ 战力 <b style="font-size:13px;">' + fmt(enemyPower(e)) + '</b></span></div>' +
     '<div class="hint" style="margin:3px 0 2px;">' + esc(e.camp) + ' · ' + esc(e.role) + '</div>' +
     (e.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(e.desc) + '</div>' : "") +
-    sec("① 面板数据") + r("攻击", fmt(s.atk), true) + r("生命", fmt(s.hp), true) + r("防御", fmt(s.def)) +
-    r("法抗", fmt(s.res)) + r("速度", s.spd) + r("暴击率", s.critRate + "%") + r("暴击伤害", s.critDmg + "%") +
-    sec("② 装备") + r("武器", esc(e.equip.weapon)) + r("上装", esc(e.equip.armor)) + r("下装", esc(e.equip.armor2)) + r("饰品", esc(e.equip.accessory)) +
-    sec("③ 招式组") + ((e.skills || []).map(skRow).join("") || '<div class="hint">没有招式</div>') +
+    sec("① 面板数据") + panel(r("攻击", fmt(s.atk)) + r("生命", fmt(s.hp)) + r("防御", fmt(s.def)) +
+      r("法抗", fmt(s.res)) + r("速度", s.spd) + r("暴击率", s.critRate + "%") + r("暴击伤害", s.critDmg + "%")) +
+    sec("② 装备") + panel(r("武器", esc(e.equip.weapon)) + r("上装", esc(e.equip.armor)) + r("下装", esc(e.equip.armor2)) + r("饰品", esc(e.equip.accessory))) +
+    sec("③ 招式组") + panel((e.skills || []).map(skRow).join("") || '<div class="hint" style="padding:8px 9px;">没有招式</div>') +
     '<div style="margin-top:10px;"><button id="ecClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
   ov.querySelector("#ecClose").onclick = () => ov.remove();
