@@ -52,12 +52,12 @@ export const ORIGINAL_GEAR = {
     weapon: {
       name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8, ultPct: 10,
       aName: "霜切", aMult: 100, sName: "雪葬", sMult: 190, sCd: 3, sShape: "single", sRage: 10,
-      uName: "泣雪", uMult: 300, uShape: "cross", style: "melee", dmgType: "phys",
+      uName: "千山暮雪", uMult: 300, uShape: "cross", style: "melee", dmgType: "phys",
       skillDesc: "雪葬命中额外 +1 层霜印"
     },
-    armor: { name: "霜绡战衣", rarity: "SR", atk: 0, hp: 340, def: 26, res: 14, spd: 0, critRate: 0 },
-    armor2: { name: "踏雪战裤", rarity: "SR", atk: 0, hp: 170, def: 10, res: 0, spd: 4, critRate: 0 },
-    accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12, lifesteal: 15 }
+    armor: { name: "霜绡战衣", rarity: "SSR", atk: 0, hp: 380, def: 30, res: 16, spd: 0, critRate: 0 },
+    armor2: { name: "踏雪战裤", rarity: "SSR", atk: 0, hp: 190, def: 12, res: 0, spd: 4, critRate: 0 },
+    accessory: { name: "凝霜之泪", rarity: "SSR", atk: 52, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12, lifesteal: 15 }
   }
 };
 // 🗡 装备能力汇总（吸血 / 必杀加成）
