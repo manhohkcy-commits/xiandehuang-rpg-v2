@@ -406,7 +406,7 @@ function startBattle(stageId) {
     const e = eid ? enemyAt(eid, s.lv) : { name: s.foe.name, stats: { hp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, res: s.foe.res, spd: s.foe.spd, critRate: 5, critDmg: 150 }, role: "" };
     return { id: "f" + i, name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
       atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg,
-      __back: backRole(e.role, e.name) };
+      __skills: e.skills || [], __back: backRole(e.role, e.name) };
   });
   const foes = foeList.filter((u) => !u.__back).concat(foeList.filter((u) => u.__back));
   foes.forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
@@ -1045,7 +1045,7 @@ function autoUnitAct(u) {
   setTimeout(aiTurnIfNeeded, 360);
 }
 
-// 👹 敌人行动：近战打前排、远程随机
+// 👹 敌人行动：有招式就放，否则普攻
 function enemyAct(u) {
   if (!st || st.finished) return;
   if (isStunned(u)) {
@@ -1055,9 +1055,43 @@ function enemyAct(u) {
     setTimeout(aiTurnIfNeeded, 300);
     return;
   }
+  u.cd = Math.max(0, (Number(u.cd) || 0) - 1);
   const list = validTargets(u);
   if (!list.length) return;
-  const pick = isRangedUnit(u) ? list[Math.floor(Math.random() * list.length)] : list[0];
+  const sk = (u.__skills || []).find((s) => s && (u.cd || 0) <= 0);
+  const allies = aliveSide(u.side);
+  const foes = list;
+
+  if (sk && !isSilenced(u)) {
+    u.cd = Number(sk.cd) || 0;
+    if (sk.heal) {
+      const amount = Math.round(u.maxHp * 0.1 + 20);
+      allies.forEach((a) => healUnit(st, a.id, Math.round(a.maxHp * (sk.heal || 20) / 100)));
+      pushLog("💚 " + u.name + " 使用「" + sk.name + "」，治疗全队", "line");
+    } else if (sk.shield) {
+      allies.forEach((a) => addShield(st, a.id, Number(sk.shield) || 40));
+      pushLog("🛡 " + u.name + " 使用「" + sk.name + "」，全队获得护盾", "line");
+    } else if (sk.buff) {
+      const label = sk.buff.atkPct ? "攻击 +" + sk.buff.atkPct + "%" : ("伤害 +" + (sk.buff.dmgPct || 0) + "%");
+      pushLog("📣 " + u.name + " 使用「" + sk.name + "」，全队 " + label, "line");
+    } else if (sk.summon) {
+      pushLog("📢 " + u.name + " 使用「" + sk.name + "」", "line");
+    } else {
+      const targets = sk.aoe ? foes : [foes[0]];
+      targets.forEach((t) => {
+        const r = damage(st, u.id, t.id, { atk: u.atk, mult: Number(sk.mult) || 100, critRate: u.critRate, critDmg: u.critDmg, kind: "skill", dmgType: sk.spell ? "spell" : "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
+        pushLog("🥋 " + u.name + "「" + sk.name + "」→ " + t.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
+        if (sk.burn && t.hp > 0) applyStatus(st, u.id, t.id, "burn", Math.round(u.atk * 0.15), 2, "灼烧");
+      });
+    }
+    commit(st, u.id);
+    if (st.finished) finish();
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 360);
+    return;
+  }
+
+  const pick = isRangedUnit(u) ? foes[Math.floor(Math.random() * foes.length)] : foes[0];
   const r = damage(st, u.id, pick.id, { atk: u.atk, mult: 100, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
   pushLog("👹 " + u.name + " → " + pick.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
   commit(st, u.id);
