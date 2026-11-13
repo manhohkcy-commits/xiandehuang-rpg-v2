@@ -27,6 +27,7 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":
 const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
 const box = (() => { try { return localStorage.getItem("rpg2:box") || ""; } catch (e) { return ""; } })();
+const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
 const hostMode = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
 
 let tab = (new URLSearchParams(location.search)).get("tab") || "player";
@@ -192,11 +193,25 @@ function render() {
           '<div class="row"><span class="k">[必杀] ' + esc(it.uName || "") + '</span><span class="v">' + it.uMult + '% · 怒气100</span></div>' +
           (it.skillDesc ? '<div class="hint">' + esc(it.skillDesc) + '</div>' : "")
         : "";
-      d.innerHTML = '<div class="card" style="max-width:360px;width:100%;border:1px solid ' + tint + '66;">' +
-        '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:17px;color:' + tint + ';">' + esc(it.name) + '</b>' +
-        (it.rarity ? '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">' + it.rarity + '</span>' : "") +
+      const rc2 = RARITY_COLOR[it.rarity] || tint;
+      const skCard = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc2 + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
+        '<span style="font-size:12px;font-weight:700;color:' + rc2 + ';">' + mult + '</span></div>' +
+        (extra ? '<div class="hint" style="margin-top:2px;">' + esc(extra) + '</div>' : "") + '</div>';
+      const skills = it.sName
+        ? '<div class="hint" style="margin:12px 0 5px;color:#8fd8ff;font-weight:700;">招式组</div>' +
+          skCard("普攻", it.aName, (it.aMult || 100) + "%", "") +
+          skCard("技能", it.sName, it.sMult + "% · CD" + it.sCd, "回怒 " + (it.sRage || 0)) +
+          skCard("必杀", it.uName, it.uMult + "% · 怒气100", it.skillDesc || "")
+        : "";
+      d.innerHTML = '<div class="card" style="max-width:400px;width:100%;border:1px solid ' + rc2 + '66;">' +
+        '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:18px;color:' + rc2 + ';">' + esc(it.name) + '</b>' +
+        (it.rarity ? '<span class="tag" style="border-color:' + rc2 + ';color:' + rc2 + ';">' + it.rarity + '</span>' : "") +
         '<span class="tag" style="margin-left:auto;">' + SLOT[slot] + '</span></div>' +
-        '<div class="hint" style="margin-top:6px;">' + (stats.join(" · ") || "无属性") + '</div>' + skills +
+        '<div class="hint" style="margin:8px 0 4px;color:#ffd666;font-weight:700;">属性</div>' +
+        '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' +
+        (stats.length ? stats.map((t) => { const i = t.lastIndexOf(" "); return '<div style="display:flex;justify-content:space-between;padding:6px 9px;border-bottom:1px solid #1a2438;"><span class="hint">' + esc(t.slice(0, i)) + '</span><b style="font-size:13px;color:#dbe4f3;">' + esc(t.slice(i + 1)) + '</b></div>'; }).join("") : '<div class="hint" style="padding:8px 9px;">无属性加成</div>') +
+        '</div>' + skills +
         '<div style="margin-top:10px;"><button id="gClose" style="width:100%;">关闭</button></div></div>';
       document.body.appendChild(d);
       d.querySelector("#gClose").onclick = () => d.remove();
