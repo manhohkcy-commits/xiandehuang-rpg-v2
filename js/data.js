@@ -148,10 +148,10 @@ const WEAPON_FINAL = {
 // ⚡ 每把武器的回怒效率（普攻 / 技能）
 const WEAPON_RAGE = {
   w_iron: { aRage: 25, sRage: 0 }, w_bow: { aRage: 22 }, w_wood: { aRage: 25 },
-  w_dagger: { aRage: 18 }, w_fist: { aRage: 16 }, w_spear: { aRage: 26 },
+  w_dagger: { aRage: 9 }, w_fist: { aRage: 8 }, w_spear: { aRage: 26 },
   w_sling: { aRage: 20 }, w_hunt: { aRage: 18 }, w_torch: { aRage: 22 }, w_shield: { aRage: 15 },
-  w_twin: { aRage: 18, sRage: 12 }, w_axe: { aRage: 26, sRage: 10 }, w_spear2: { aRage: 24, sRage: 12 },
-  w_cross: { aRage: 20, sRage: 12 }, w_longbow: { aRage: 19, sRage: 14 }, w_firestaff: { aRage: 22, sRage: 12 },
+  w_twin: { aRage: 9, sRage: 6 }, w_axe: { aRage: 26, sRage: 10 }, w_spear2: { aRage: 24, sRage: 12 },
+  w_cross: { aRage: 20, sRage: 12 }, w_longbow: { aRage: 10, sRage: 7 }, w_firestaff: { aRage: 22, sRage: 12 },
   w_thunder: { aRage: 23, sRage: 12 }, w_aegis: { aRage: 28, sRage: 16 }, w_purify: { aRage: 30, sRage: 18 }
 };
 WEAPONS.forEach((w) => {
