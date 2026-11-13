@@ -40,7 +40,7 @@ function deny(msg) {
 }
 async function gate() {
   const stored = localStorage.getItem(PWKEY);
-  if (stored && localStorage.getItem("rpg2:designok") === stored) return true;
+  if (stored && localStorage.getItem("rpg2:designok") === stored) { localStorage.setItem("rpg2:host", "1"); return true; }
   if (!stored) {
     const p1 = prompt("首次使用：设置设计师口令（4 位以上）");
     if (!p1 || p1.length < 4) { deny("口令太短。"); return false; }
