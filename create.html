@@ -1340,7 +1340,15 @@ function renderOrig() {
       row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%")) +
     card("专属装备（" + gearCount + "）",
       gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
-    (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
+    (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "") +
+    card("仓库（主机存档）",
+      '<div class="hint" style="margin-bottom:6px;">金币 ' + fmt(store.gold || 0) +
+      ' · 强化石 ' + (store.flags.stone || 0) + ' · 碎片 ' + (store.flags.shards || 0) +
+      ' · 突破石 ' + (store.flags.bstone || 0) + '</div>' +
+      ((store.items || []).length
+        ? (store.items || []).map((it) => '<div class="row"><span class="k">' + esc(it.name || "装备") + '</span><span class="v">' +
+            (it.rarity || "") + ' Lv' + (it.lv || 1) + (it.star ? ' ★' + it.star : '') + '</span></div>').join("")
+        : '<div class="hint">仓库里还没有装备。</div>'));
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
   view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
