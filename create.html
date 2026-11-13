@@ -989,7 +989,7 @@ async function renderRank() {
             const isOrig = r.type === "orig";
             const nameCell = isOrig
               ? '<b style="color:#ffb347;">' + esc(r.name) + '</b>' + (r.title ? ' <span class="hint">' + esc(r.title) + '</span>' : '') + (r.rare ? ' <span class="tag">稀有</span>' : '')
-              : '<b style="color:' + r.color + ';">' + esc(r.grade) + '</b> ' + esc(r.name) + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '');
+              : '<b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '');
             return '<tr' + (isOrig ? ' data-origcard="' + r.id + '"' : "") + ' style="border-top:1px dashed #23233a;' +
               (r.type === "player" && r.box === meBox ? "background:#1b2740;" : "") + (isOrig ? "cursor:pointer;" : "") + '">' +
               '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
