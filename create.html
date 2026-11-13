@@ -1751,14 +1751,19 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
-  if (tab === "char") renderChar();
-  else if (tab === "talent") renderTalent();
-  else if (tab === "cult") renderCult();
-  else if (tab === "orig") renderOrig();
-  else if (tab === "rank") renderRank();
-  else if (tab === "daily") renderDaily();
-  else if (tab === "store") renderStore();
-  else renderShop();
+  try {
+    if (tab === "orig" && !ORIGINALS.length) pullOriginals().then(() => { try { render(); } catch (e) {} }).catch(() => {});
+    if (tab === "char") renderChar();
+    else if (tab === "talent") renderTalent();
+    else if (tab === "cult") renderCult();
+    else if (tab === "orig") renderOrig();
+    else if (tab === "rank") renderRank();
+    else if (tab === "daily") renderDaily();
+    else if (tab === "store") renderStore();
+    else renderShop();
+  } catch (e) {
+    view().innerHTML = '<div class="card"><div class="card-title">页面出错</div><div class="hint">' + String(e && e.message || e) + '</div></div>';
+  }
 }
 
 document.querySelectorAll("[data-tab]").forEach((b) => {
