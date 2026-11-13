@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal } from "./js/originals.js?v=2c90061f";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR } from "./js/originals.js?v=2c90061f";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1286,8 +1286,26 @@ function renderOrig() {
   const BRK_COST = [{ b: 20, g: 2000 }, { b: 45, g: 6000 }, { b: 75, g: 15000 }];
   const brkNext = brk < 3 ? BRK_COST[brk] : null;
   const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
-  const gear = (o.gear || "").split("\n").map((g) => g.trim()).filter(Boolean)
-    .map((g) => '<div class="row"><span class="k" style="font-size:12px;">' + esc(g) + '</span><span class="v"><span class="hint">专属 · 只读</span></span></div>').join("");
+  const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const gg = ORIGINAL_GEAR[o.id] || o.gearObj || {};
+  const gearCount = Object.keys(SLOTN).filter((k) => (gg[k] || {}).name).length;
+  const gear = Object.keys(SLOTN).map((k) => {
+    const it = gg[k] || {};
+    if (!it.name) return "";
+    const bits = [];
+    if (it.atk) bits.push("攻+" + it.atk);
+    if (it.hp) bits.push("生+" + it.hp);
+    if (it.def) bits.push("防+" + it.def);
+    if (it.res) bits.push("抗+" + it.res);
+    if (it.spd) bits.push("速+" + it.spd);
+    if (it.critRate) bits.push("暴击+" + it.critRate + "%");
+    if (it.critDmg) bits.push("暴伤+" + it.critDmg + "%");
+    if (it.lifesteal) bits.push("吸血" + it.lifesteal + "%");
+    if (it.ultPct) bits.push("必杀+" + it.ultPct + "%");
+    return '<div class="row"><span class="k" style="font-size:12px;">🗡 ' + esc(it.name) +
+      ' <span class="hint">' + (it.rarity || "") + '</span></span>' +
+      '<span class="v" style="font-size:11px;color:#9aa4b8;">' + esc(bits.join(" · ")) + '</span></div>';
+  }).join("");
 
   view().innerHTML =
     '<div class="tree-tabs">' + tabs + '</div>' +
@@ -1311,8 +1329,8 @@ function renderOrig() {
       '<div class="hint" style="margin-bottom:6px;">综合战力</div>' +
       row("攻击", Math.round(atk)) + row("生命", Math.round(hp)) + row("防御", Math.round(def)) +
       row("法抗", Math.round(res)) + row("速度", Math.round(spd * 10) / 10) +
-      row("暴击率", (Number(s.critRate) || 5) + "%") + row("暴击伤害", (Number(s.critDmg) || 150) + "%")) +
-    card("专属装备（" + ((o.gear || "").split("\n").filter((x) => x.trim()).length) + "）",
+      row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%")) +
+    card("专属装备（" + gearCount + "）",
       gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
