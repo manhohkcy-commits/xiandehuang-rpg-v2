@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -98,6 +98,9 @@ document.getElementById("view").addEventListener("click", (e) => {
   ov.querySelector("#afClose").onclick = () => ov.remove();
   ov.onclick = (ev) => { if (ev.target === ov) ov.remove(); };
 });
+</script>
+<script>
+(function(){try{var a=document.querySelector('a[href="index.html"]');if(!a)return;var h=localStorage.getItem("rpg2:host")==="1";a.href=h?"studio.html":"lobby.html";a.textContent=h?"← 主机工作台":"← 公共大厅";}catch(e){}})();
 </script>
 </body>
 </html>

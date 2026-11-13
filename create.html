@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -1762,6 +1762,9 @@ const bootTab = new URLSearchParams(location.search).get("tab");
 if (bootTab && ["char", "talent", "cult", "orig", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
 
 (async () => { await load(); try { await pullOriginals(); } catch (e) {} render(); })();
+</script>
+<script>
+(function(){try{var a=document.querySelector('a[href="index.html"]');if(!a)return;var h=localStorage.getItem("rpg2:host")==="1";a.href=h?"studio.html":"lobby.html";a.textContent=h?"← 主机工作台":"← 公共大厅";}catch(e){}})();
 </script>
 </body>
 </html>
