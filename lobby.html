@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公共大厅 · 闲得慌RPG</title>
+<link rel="stylesheet" href="css/app.css?v=d8dee059">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="dot"></span> 闲得慌RPG <span class="hint">· 公共大厅</span></div>
+    <a class="hint" id="backLink" href="index.html">← 返回</a>
+  </div>
+  <div id="view"></div>
+  <div class="foot">玩家大厅：云端玩家角色 · 原创大厅：主机发布的原创角色</div>
+</div>
+<script type="module">
+import { cloudList, cloudGet } from "./js/core.js?v=13807141";
+import { charPower, gradeOf } from "./js/power.js?v=d92ed317";
+import { ORIGINALS, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=942eb463";
+
+const $ = (id) => document.getElementById(id);
+const view = () => $("view");
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
+const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
+const box = (() => { try { return localStorage.getItem("rpg2:box") || ""; } catch (e) { return ""; } })();
+const hostMode = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+
+let tab = (new URLSearchParams(location.search)).get("tab") || "player";
+let cache = null;
+
+function playerRows(rows) {
+  const map = new Map();
+  rows.filter((r) => r && r.store && Number(r.store.v) === 2 && String(r.box).indexOf("__") !== 0).forEach((r) => {
+    const chars = r.store.chars || [];
+    const ch = chars.find((c) => c.id === r.store.activeChar) || chars[0];
+    if (!ch) return;
+    const g = gradeOf(ch);
+    const row = { box: String(r.box), name: ch.name || "无名", lv: Number(ch.lv) || 1, power: charPower(ch), grade: g.key, color: g.color, updated: r.updated_at || "" };
+    const prev = map.get(row.name);
+    if (!prev || row.power > prev.power) map.set(row.name, row);
+    else prev.dup = (prev.dup || 1) + 1;
+  });
+  return Array.from(map.values()).sort((a, b) => b.power - a.power);
+}
+
+function origRows() {
+  return ORIGINALS.slice().sort((a, b) => (Number((b.stats || {}).power) || 0) - (Number((a.stats || {}).power) || 0))
+    .map((o) => ({ o, final: originalFinal(o, {}), lv: 1 }));
+}
+
+function render() {
+  $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
+  const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
+    '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>' +
+    '<button data-tab="orig"' + (tab === "orig" ? ' class="on"' : '') + '>🧬 原创大厅</button>' +
+    '</div>';
+
+  let body = "";
+  if (tab === "player") {
+    body = card("🧑 玩家大厅", '<div class="hint" id="pmsg">读取云端玩家角色中…</div><div id="plist"></div>');
+  } else {
+    const list = origRows();
+    body = card("🧬 原创大厅（" + list.length + "）",
+      '<div class="hint" style="margin-bottom:6px;">主机发布的原创角色；点任意一名查看完整面板。</div>' +
+      (list.length ? '<table style="width:100%;border-collapse:collapse;">' +
+        '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">名字</th><th>定位</th><th style="text-align:right;">战力</th></tr>' +
+        list.map((x) => '<tr data-orig="' + x.o.id + '" style="border-top:1px dashed #23233a;cursor:pointer;">' +
+          '<td style="padding:6px 2px;font-size:12.5px;"><b style="color:' + (x.o.rare ? "#ffb347" : "#8a8ab0") + ';">' + esc(x.o.name) + '</b>' +
+          (x.o.title ? ' <span class="hint">' + esc(x.o.title) + '</span>' : '') + '</td>' +
+          '<td style="font-size:11px;color:#8a8ab0;">' + esc(x.o.role || "") + '</td>' +
+          '<td style="text-align:right;font-size:12px;color:#ffb347;font-weight:700;">' + fmt(x.final.power) + '</td></tr>').join("") +
+        '</table>' : '<div class="hint">主机还没发布原创角色。</div>'));
+  }
+  view().innerHTML = tabBar + body;
+
+  view().querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => { tab = b.dataset.tab; history.replaceState(null, "", "?tab=" + tab); render(); });
+  view().querySelectorAll("[data-orig]").forEach((tr) => tr.onclick = () => {
+    const o = ORIGINALS.find((x) => x.id === tr.dataset.orig);
+    if (!o) return;
+    const f = originalFinal(o, {});
+    const g = ORIGINAL_GEAR[o.id] || o.gearObj || {};
+    const gearLines = Object.keys(g).filter((k) => (g[k] || {}).name).map((k) => "🗡 " + g[k].name).join("　");
+    const ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
+    ov.innerHTML = '<div class="card" style="max-width:440px;width:100%;"><div style="display:flex;gap:8px;align-items:center;">' +
+      '<b style="font-size:20px;color:' + (o.rare ? "#ffb347" : "#dbe4f3") + ';">' + esc(o.name) + '</b>' +
+      '<span class="tag">' + (o.rare ? "稀有" : "普通") + '</span><span class="tag" style="margin-left:auto;">⚔️ ' + fmt(f.power) + '</span></div>' +
+      '<div class="hint">' + esc(o.title || "") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
+      (o.desc ? '<div class="hint" style="margin:6px 0;">' + esc(o.desc) + '</div>' : "") +
+      '<div class="row"><span class="k">攻击 / 生命</span><span class="v">' + Math.round(f.atk) + ' / ' + fmt(Math.round(f.hp)) + '</span></div>' +
+      '<div class="row"><span class="k">防御 / 法抗 / 速度</span><span class="v">' + Math.round(f.def) + ' / ' + Math.round(f.res) + ' / ' + f.spd + '</span></div>' +
+      (gearLines ? '<div class="hint" style="margin-top:6px;">' + esc(gearLines) + '</div>' : "") +
+      '<div style="margin-top:10px;"><button id="lClose" style="width:100%;">关闭</button></div></div>';
+    document.body.appendChild(ov);
+    ov.querySelector("#lClose").onclick = () => ov.remove();
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  });
+
+  if (tab === "player") loadPlayers();
+}
+
+async function loadPlayers() {
+  const msg = $("pmsg"), list = $("plist");
+  if (!msg || !list) return;
+  try {
+    if (!cache) cache = await cloudList(200);
+    const rows = playerRows(cache);
+    if (!rows.length) { msg.textContent = "还没有玩家的云端角色。"; return; }
+    msg.textContent = "共 " + rows.length + " 名玩家角色（同名取战力最高）。";
+    list.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
+      '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>等级</th><th style="text-align:right;">战力</th></tr>' +
+      rows.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === box ? "background:#1b2740;" : "") + '">' +
+        '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
+        '<td style="font-size:12.5px;"><b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
+        '<td style="font-size:11px;color:#8a8ab0;">Lv' + r.lv + '</td>' +
+        '<td style="text-align:right;font-size:12px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") + '</table>';
+  } catch (e) {
+    msg.textContent = "读取失败：" + (e && e.message || e);
+  }
+}
+
+try { await pullOriginals(); } catch (e) {}
+render();
+</script>
+</body>
+</html>
