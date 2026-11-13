@@ -34,10 +34,16 @@ export async function pullOriginals() {
     const list = r && r.store && r.store.originals;
     if (Array.isArray(list) && list.length) {
       ORIGINALS.length = 0;
-      list.forEach((o) => ORIGINALS.push(o));
+      list.forEach((o) => ORIGINALS.push(mergeGear(o)));
     }
   } catch (e) {}
   return ORIGINALS;
+}
+// 🗡 专属装备由开发者定稿写入（按角色 id 合并到云端数据上）
+export const ORIGINAL_GEAR = {};
+function mergeGear(o) {
+  const g = ORIGINAL_GEAR[o.id];
+  return g ? Object.assign({}, o, { gearObj: g }) : o;
 }
 export async function pushOriginals(list) {
   const arr = Array.isArray(list) ? list : [];

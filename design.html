@@ -27,7 +27,7 @@
 
 <script type="module">
 import { powerOf } from "./js/power.js?v=2318bcc3";
-import { pushOriginals, pullOriginals, ORIGINALS } from "./js/originals.js?v=70a997a7";
+import { pushOriginals, pullOriginals, ORIGINALS } from "./js/originals.js?v=2b4c1a61";
 
 const KEY = "rpg2:designs";
 const PWKEY = "rpg2:designpw";
@@ -212,24 +212,8 @@ function form(d) {
       '<div class="ostat"><span>敏捷</span>' + sNum("agi") + '</div>' +
     '</div>' +
 
-    '<div class="card-title" style="margin-top:14px;color:#ffb347;">④ 专属装备（4 格，数值直接加面板）</div>' +
-    '<div class="hint">名称 + 攻击/生命/防御/法抗/速度/暴击，留空则不显示。</div>' +
-    (() => {
-      const g = d.gearObj || {};
-      const num = (slot, key) => '<input class="onum" type="number" min="0" value="' + (Number((g[slot] || {})[key]) || 0) +
-        '" data-gslot="' + slot + '" data-gkey="' + key + '" style="width:54px;">';
-      return GEAR_SLOTS.map((slot) => {
-        const it = g[slot] || {};
-        return '<div style="margin-top:6px;padding:7px;border:1px solid #2a3350;border-radius:9px;">' +
-          '<div style="display:flex;gap:6px;align-items:center;">' +
-            '<span class="hint" style="width:32px;">' + GEAR_LABEL[slot] + '</span>' +
-            '<input class="ofield" id="gname_' + slot + '" value="' + esc(it.name || "") + '" placeholder="装备名" style="flex:1;">' +
-          '</div>' +
-          '<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;font-size:10.5px;align-items:center;">' +
-            '攻' + num(slot, "atk") + '生' + num(slot, "hp") + '防' + num(slot, "def") +
-            '抗' + num(slot, "res") + '速' + num(slot, "spd") + '暴' + num(slot, "critRate") + '</div></div>';
-      }).join("");
-    })() +
+    '<div class="card-title" style="margin-top:14px;color:#ffb347;">④ 专属装备</div>' +
+    '<div class="hint">装备由主机与开发者定稿后写入数据（不在设计器里填）。</div>' +
 
     '<div style="margin-top:12px;"><div class="hint">备注（弱点、想加的机制）</div>' +
     '<textarea class="ofield" id="fNotes" rows="2">' + esc(d.notes) + '</textarea></div>' +
