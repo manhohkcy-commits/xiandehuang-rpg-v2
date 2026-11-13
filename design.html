@@ -45,7 +45,23 @@ const ORIGIN = {
   }
 };
 const ROLES = ["通用", "守护", "先锋", "游侠", "术士", "辅佐", "首领"];
-// 🎯 定位预设模型（按普通品质 60/36 设计，稀有品质自动放大）
+// 💎 稀有原创专属预设（80 / 48）
+const RARE_PRESETS = {
+  "暴力输出": { role: "先锋", basic: { hp: 14, atk: 36, def: 14, res: 16 }, spec: { str: 20, int: 2, tech: 20, agi: 6 }, desc: "把全部身家压在伤害上，一轮打死。" },
+  "续航高攻": { role: "先锋", basic: { hp: 24, atk: 28, def: 14, res: 14 }, spec: { str: 18, int: 2, tech: 18, agi: 10 }, desc: "高攻还能扛，打持久也不虚。" },
+  "高速突击": { role: "游侠", basic: { hp: 18, atk: 28, def: 16, res: 18 }, spec: { str: 10, int: 2, tech: 12, agi: 24 }, desc: "速度拉满，先手接敌。" },
+  "极致法伤": { role: "术士", basic: { hp: 14, atk: 10, def: 12, res: 44 }, spec: { str: 1, int: 30, tech: 16, agi: 1 }, desc: "法术一发入魂，脆得也彻底。" },
+  "法系双核": { role: "术士", basic: { hp: 16, atk: 16, def: 14, res: 34 }, spec: { str: 4, int: 22, tech: 18, agi: 4 }, desc: "法伤与法抗双高，难缠。" },
+  "高法突击": { role: "术士", basic: { hp: 18, atk: 20, def: 12, res: 30 }, spec: { str: 4, int: 20, tech: 14, agi: 10 }, desc: "法伤配上机动，进退自如。" },
+  "攻守兼备": { role: "通用", basic: { hp: 22, atk: 22, def: 18, res: 18 }, spec: { str: 14, int: 6, tech: 12, agi: 16 }, desc: "没有短板，什么局都能上。" },
+  "高甲高抗": { role: "守护", basic: { hp: 20, atk: 14, def: 24, res: 22 }, spec: { str: 10, int: 10, tech: 10, agi: 18 }, desc: "双抗拉满，磨死对手。" },
+  "高伤坦克": { role: "守护", basic: { hp: 28, atk: 22, def: 20, res: 10 }, spec: { str: 18, int: 2, tech: 14, agi: 14 }, desc: "又肉又疼，前排噩梦。" },
+  "高伤法坦": { role: "守护", basic: { hp: 26, atk: 16, def: 18, res: 20 }, spec: { str: 8, int: 18, tech: 14, agi: 8 }, desc: "法伤型坦克，越打越硬。" },
+  "机动游击": { role: "游侠", basic: { hp: 16, atk: 24, def: 16, res: 24 }, spec: { str: 8, int: 2, tech: 12, agi: 26 }, desc: "打一枪换个地方。" },
+  "残忍高狙": { role: "游侠", basic: { hp: 12, atk: 38, def: 10, res: 20 }, spec: { str: 16, int: 4, tech: 24, agi: 4 }, desc: "一箭穿心，专挑后排。" },
+  "续航辅助": { role: "辅佐", basic: { hp: 18, atk: 12, def: 14, res: 36 }, spec: { str: 2, int: 24, tech: 16, agi: 6 }, desc: "奶量稳定，队伍不死。" },
+  "多动增辅": { role: "辅佐", basic: { hp: 20, atk: 12, def: 16, res: 32 }, spec: { str: 2, int: 18, tech: 8, agi: 20 }, desc: "行动频繁，增益不断。" }
+};
 const ROLE_PRESETS = {
   "普通原创": { role: "通用", basic: { hp: 15, atk: 15, def: 15, res: 15 }, spec: { str: 9, int: 9, tech: 9, agi: 9 }, desc: "没有特别偏科的原创角色。" },
   "突刺输出": { role: "先锋", basic: { hp: 12, atk: 26, def: 10, res: 12 }, spec: { str: 15, int: 3, tech: 15, agi: 3 }, desc: "高攻突进，一击穿孔。" },
@@ -143,7 +159,7 @@ function form(d) {
     '<div class="ogrid2" style="margin-top:10px;">' +
       '<div><div class="hint">定位预设</div><select class="ofield" id="fPreset">' +
         '<option value="">— 选择后自动分配加点 —</option>' +
-        Object.keys(ROLE_PRESETS).map((k) => '<option value="' + esc(k) + '">' + esc(k) + '</option>').join("") +
+        Object.keys(d.rare ? RARE_PRESETS : ROLE_PRESETS).map((k) => '<option value="' + esc(k) + '">' + esc(k) + '</option>').join("") +
       '</select></div>' +
       '<div><div class="hint">稀有度模板</div><select class="ofield" id="fRare">' +
         '<option value="0"' + (!d.rare ? " selected" : "") + '>普通原创（固定值较低 / 加点 60+36）</option>' +
@@ -224,9 +240,10 @@ function bind() {
   if ($("fRole")) $("fRole").onchange = () => { d.role = $("fRole").value; };
   // 🎯 定位预设：按当前品质模板缩放加点
   if ($("fPreset")) $("fPreset").onchange = () => {
-    const p = ROLE_PRESETS[$("fPreset").value];
+    const table = d.rare ? RARE_PRESETS : ROLE_PRESETS;
+    const p = table[$("fPreset").value];
     if (!p) return;
-    const fb = T.basicPoints / 60, fs = T.specPoints / 36;
+    const fb = T.basicPoints / (d.rare ? 80 : 60), fs = T.specPoints / (d.rare ? 48 : 36);
     const scale = (obj, k, keys) => {
       const o = {};
       keys.forEach((key) => { o[key] = Math.max(0, Math.round((obj[key] || 0) * k)); });
