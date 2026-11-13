@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=38ed0178";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=b49a6abd";
 import { enemyAt, enemyById } from "./js/enemies.js?v=6849b7aa";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -421,6 +421,7 @@ function startBattle(stageId) {
   const units = [meUnit].concat(aFront, aBack, foes);
   st = createBattle(units);
   st.__party = partyIds.slice(0, 5);
+  st.__lv = s.lv;
   st.__target = foes.find((u) => !u.__back) ? foes.find((u) => !u.__back).id : (foes[0] || {}).id;
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
@@ -938,9 +939,15 @@ function doAct(kind) {
     }
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "ult") {
-    const r = strike(st, "me", "foe", { atk: m.atk, mult: (Number(wpOf(st.__weapon).uMult) || 250), critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") }, wpOf(st.__weapon).uHits || 1);
+    const wp2 = wpOf(st.__weapon);
+    const targets = wp2.uAoe ? validTargets(m) : [st.units.find((u) => u.id === targetId())];
+    let total = 0, anyCrit = false;
+    targets.filter(Boolean).forEach((t) => {
+      const rr = strike(st, "me", t.id, { atk: m.atk, mult: (Number(wp2.uMult) || 250), critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wp2.dmgType || "phys"), style: (wp2.style || "melee") }, wp2.uHits || 1);
+      total += rr.dmg; anyCrit = anyCrit || rr.crit;
+    });
     m.rage = 0;
-    pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    pushLog("💥 " + m.name + " 必杀 → " + targets.filter(Boolean).map((t) => t.name).join("、") + " 共 " + total + (anyCrit ? " 暴击💥" : ""));
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "support") {
     // ✨ 辅佐招式：自动选「血量比例最低的队友」（单人就自己）
@@ -970,7 +977,14 @@ function doAct(kind) {
     const tr = m.traits || {};
     const baseCd = Number(wp.sCd) || 3;
     const cd = Math.max(1, baseCd - (Number(tr.cdReduce) || 0));
-    const r = strike(st, "me", "foe", { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys"), style: (wp.style || "melee") }, wp.sHits || 1);
+    const targets = wp.sAoe ? validTargets(m) : [st.units.find((u) => u.id === targetId())];
+    let total = 0, anyCrit = false, first = null;
+    targets.filter(Boolean).forEach((t) => {
+      const rr = strike(st, "me", t.id, { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys"), style: (wp.style || "melee") }, wp.sHits || 1);
+      total += rr.dmg; anyCrit = anyCrit || rr.crit; first = first || t;
+    });
+    const r = { dmg: total, crit: anyCrit };
+    const f2 = first || st.units.find((u) => u.id === targetId()) || { name: "目标" };
     const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "") +
       (cd !== baseCd ? " · 冷却缩减 → " + cd + " 回合" : "")];
     if (wp.hitStatus && r.dmg > 0) {
@@ -997,7 +1011,7 @@ function doAct(kind) {
     }
     if (!tryDualborn(m)) commit(st, "me");
   } else {
-    const r = strike(st, "me", "foe", { atk: m.atk, mult: (Number(wpOf(st.__weapon).aMult) || 100), critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") }, wpOf(st.__weapon).aHits || 1);
+    const r = strike(st, "me", targetId(), { atk: m.atk, mult: (Number(wpOf(st.__weapon).aMult) || 100), critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") }, wpOf(st.__weapon).aHits || 1);
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     // 🗡️ 连击：普攻概率再打一次（半伤）
@@ -1056,6 +1070,10 @@ function enemyAct(u) {
     return;
   }
   u.cd = Math.max(0, (Number(u.cd) || 0) - 1);
+  // 增益回合递减
+  if (u.__buff) { u.__buff.turns = (u.__buff.turns || 0) - 1; if (u.__buff.turns <= 0) u.__buff = null; }
+  const bAtk = u.atk * (1 + ((u.__buff && u.__buff.atkPct) || 0) / 100);
+  const bDmg = 1 + ((u.__buff && u.__buff.dmgPct) || 0) / 100;
   const list = validTargets(u);
   if (!list.length) return;
   const sk = (u.__skills || []).find((s) => s && (u.cd || 0) <= 0);
@@ -1073,13 +1091,20 @@ function enemyAct(u) {
       pushLog("🛡 " + u.name + " 使用「" + sk.name + "」，全队获得护盾", "line");
     } else if (sk.buff) {
       const label = sk.buff.atkPct ? "攻击 +" + sk.buff.atkPct + "%" : ("伤害 +" + (sk.buff.dmgPct || 0) + "%");
-      pushLog("📣 " + u.name + " 使用「" + sk.name + "」，全队 " + label, "line");
+      allies.forEach((a) => { a.__buff = { atkPct: Number(sk.buff.atkPct) || 0, dmgPct: Number(sk.buff.dmgPct) || 0, turns: 3 }; });
+      pushLog("📣 " + u.name + " 使用「" + sk.name + "」，全队 " + label + "（3 回合）", "line");
     } else if (sk.summon) {
-      pushLog("📢 " + u.name + " 使用「" + sk.name + "」", "line");
+      const e = enemyAt(sk.summon, st.__lv || 1);
+      if (e) {
+        const nu = { id: "f_s" + (st.units.length), name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
+          atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg, __skills: e.skills || [], __back: false, __row: 2, __col: 0 };
+        st.units.push(nu);
+        pushLog("📢 " + u.name + " 使用「" + sk.name + "」，召唤了 " + e.name, "line");
+      }
     } else {
       const targets = sk.aoe ? foes : [foes[0]];
       targets.forEach((t) => {
-        const r = damage(st, u.id, t.id, { atk: u.atk, mult: Number(sk.mult) || 100, critRate: u.critRate, critDmg: u.critDmg, kind: "skill", dmgType: sk.spell ? "spell" : "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
+        const r = damage(st, u.id, t.id, { atk: bAtk, mult: (Number(sk.mult) || 100) * bDmg, critRate: u.critRate, critDmg: u.critDmg, kind: "skill", dmgType: sk.spell ? "spell" : "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
         pushLog("🥋 " + u.name + "「" + sk.name + "」→ " + t.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
         if (sk.burn && t.hp > 0) applyStatus(st, u.id, t.id, "burn", Math.round(u.atk * 0.15), 2, "灼烧");
       });
@@ -1092,7 +1117,7 @@ function enemyAct(u) {
   }
 
   const pick = isRangedUnit(u) ? foes[Math.floor(Math.random() * foes.length)] : foes[0];
-  const r = damage(st, u.id, pick.id, { atk: u.atk, mult: 100, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
+  const r = damage(st, u.id, pick.id, { atk: bAtk, mult: 100 * bDmg, critRate: u.critRate, critDmg: u.critDmg, kind: "normal", dmgType: "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
   pushLog("👹 " + u.name + " → " + pick.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "line");
   commit(st, u.id);
   if (st.finished) finish();

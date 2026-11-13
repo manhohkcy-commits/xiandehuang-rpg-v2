@@ -65,9 +65,11 @@ const WEAPON_ATK = {
   w_iron: 40, w_bow: 38, w_wood: 36, w_dagger: 34, w_fist: 36,
   w_spear: 42, w_sling: 34, w_hunt: 38, w_torch: 36, w_shield: 38,
   w_twin: 50, w_axe: 50, w_spear2: 50, w_cross: 50, w_longbow: 48,
-  w_firestaff: 50, w_thunder: 50, w_aegis: 46, w_purify: 44
-};
+  w_firestaff: 50, w_thunder: 50, w_aegis: 46, w_purify: 44};
 WEAPONS.forEach((w) => { if (WEAPON_ATK[w.id]) w.main = { atk: WEAPON_ATK[w.id] }; });
+// 🌊 范围招式标记
+const WEAPON_AOE = { w_axe: { sAoe: 1 }, w_firestaff: { sAoe: 1 }, w_longbow: { uAoe: 1 }, w_fengwang: {} };
+WEAPONS.forEach((w) => Object.assign(w, WEAPON_AOE[w.id] || {}));
 
 export const ARMORS = [
   // ── 上装（part: top）─────────────────
