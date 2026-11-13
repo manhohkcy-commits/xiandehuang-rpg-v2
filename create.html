@@ -952,10 +952,17 @@ async function renderRank() {
     else if (r.power > prev.power) { map.set(r.name, Object.assign({ dup: prev.dup + 1 }, r)); }
     else { prev.dup += 1; }
   });
-  const list = Array.from(map.values()).sort((a, b) => b.power - a.power).slice(0, 20);
+  const players = Array.from(map.values()).sort((a, b) => b.power - a.power);
+  // 🧬 原创角色并入「可游玩角色」总榜
+  const origs = ORIGINALS.map((o) => ({
+    type: "orig", id: o.id, name: o.name, title: o.title || "", role: o.role || "", rare: !!o.rare,
+    power: Number((o.stats || {}).power) || 0
+  }));
+  const all = players.map((r) => Object.assign({ type: "player" }, r)).concat(origs).sort((a, b) => b.power - a.power);
+  const top = all.slice(0, 20);
 
   const meBox = box;
-  const myRank = list.findIndex((r) => r.box === meBox) + 1;
+  const myRank = all.findIndex((r) => r.type === "player" && r.box === meBox) + 1;
   const wk = (() => {
     const d = new Date();
     const one = new Date(d.getFullYear(), 0, 1);
@@ -973,33 +980,27 @@ async function renderRank() {
       : '<div class="hint">进前 10 名可领周榜奖励（每周一次）</div>');
 
   view().innerHTML =
-    card("🏆 排行榜 · 战力前 20",
-      '<div class="hint" style="margin-bottom:6px;">数据来自云端存档，按综合战力排序（仅供参考）。</div>' +
-      (list.length
+    card("🏆 可游玩角色 · 战力榜",
+      '<div class="hint" style="margin-bottom:6px;">包含玩家自创角色（🧑）与原创角色（🧬），按综合战力排序。点原创角色可查看完整面板。</div>' +
+      (top.length
         ? '<table style="width:100%;border-collapse:collapse;">' +
-          '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th style="text-align:right;">战力</th></tr>' +
-          list.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === meBox ? 'background:#1b2740;' : '') + '">' +
-            '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
-            '<td style="font-size:12.5px;"><b style="color:' + r.color + ';">' + esc(r.grade) + '</b> ' + esc(r.name) +
-            (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
-            '<td style="text-align:right;font-size:12px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") +
+          '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>类型</th><th style="text-align:right;">战力</th></tr>' +
+          top.map((r, i) => {
+            const isOrig = r.type === "orig";
+            const nameCell = isOrig
+              ? '<b style="color:#ffb347;">' + esc(r.name) + '</b>' + (r.title ? ' <span class="hint">' + esc(r.title) + '</span>' : '') + (r.rare ? ' <span class="tag">稀有</span>' : '')
+              : '<b style="color:' + r.color + ';">' + esc(r.grade) + '</b> ' + esc(r.name) + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '');
+            return '<tr' + (isOrig ? ' data-origcard="' + r.id + '"' : "") + ' style="border-top:1px dashed #23233a;' +
+              (r.type === "player" && r.box === meBox ? "background:#1b2740;" : "") + (isOrig ? "cursor:pointer;" : "") + '">' +
+              '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
+              '<td style="font-size:12.5px;">' + nameCell + '</td>' +
+              '<td style="font-size:10.5px;color:' + (isOrig ? "#ffb347" : "#6ea8fe") + ';">' + (isOrig ? "🧬 原创" : "🧑 玩家") + '</td>' +
+              '<td style="text-align:right;font-size:12px;color:' + (isOrig ? "#ffb347" : "#6ea8fe") + ';font-weight:700;">' + fmt(r.power) + '</td></tr>';
+          }).join("") +
           '</table>'
-        : '<div class="hint">还没有可排行的存档（或云端暂时不可用）。</div>') +
+        : '<div class="hint">还没有可排行的角色（或云端暂时不可用）。</div>') +
       weekHtml +
-      '<div class="hint" style="margin-top:8px;">只统计最近更新的 200 个位号；同分按先后。</div>') +
-    (ORIGINALS.length
-      ? card("🧬 原创角色（" + ORIGINALS.length + "）",
-        '<div class="hint" style="margin-bottom:6px;">点击任意一名查看完整面板（装备 / 招式）。</div>' +
-        '<table style="width:100%;border-collapse:collapse;">' +
-        '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">名字</th><th>定位</th><th style="text-align:right;">战力</th></tr>' +
-        ORIGINALS.slice().sort((a, b) => (Number((b.stats || {}).power) || 0) - (Number((a.stats || {}).power) || 0)).map((o) =>
-          '<tr data-origcard="' + o.id + '" style="border-top:1px dashed #23233a;cursor:pointer;">' +
-          '<td style="padding:6px 2px;font-size:12.5px;"><b style="color:#ffb347;">' + esc(o.name) + '</b>' +
-          (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') + (o.rare ? ' <span class="tag">稀有</span>' : '') + '</td>' +
-          '<td style="font-size:11px;color:#8a8ab0;">' + esc(o.role || "") + '</td>' +
-          '<td style="text-align:right;font-size:12px;color:#ffb347;font-weight:700;">' + fmt((o.stats || {}).power || 0) + '</td></tr>').join("") +
-        '</table>')
-      : "");
+      '<div class="hint" style="margin-top:8px;">玩家角色只统计最近更新的 200 个位号；原创角色来自主机发布。</div>');
 
   view().querySelectorAll("[data-origcard]").forEach((tr) => tr.onclick = () => {
     const o = ORIGINALS.find((x) => x.id === tr.dataset.origcard);
