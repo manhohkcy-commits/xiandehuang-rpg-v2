@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -32,7 +32,7 @@ function detail(it) {
   const b = itemBonus(it);
   const mainB = itemMain(it);
   const subB = {};
-  Object.keys(b).forEach((k) => { const v = Number(b[k]) - (Number(mainB[k]) || 0); if (v > 0) subB[k] = v; });
+  Object.keys(b).forEach((k) => { const v = Math.round(Number(b[k])) - Math.round(Number(mainB[k]) || 0); if (v > 0) subB[k] = v; });
   const mainKeys = Object.keys(mainB).filter((k) => Number(mainB[k]) > 0);
   const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
   const styleText = d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "";
@@ -193,7 +193,7 @@ function render() {
               const mb = itemMain({ cat: x.cat, data: d });
               const mk = Object.keys(mb).filter((k) => Number(mb[k]) > 0);
               const sub = {};
-              Object.keys(b).forEach((k) => { const v = Number(b[k]) - (Number(mb[k]) || 0); if (v > 0) sub[k] = v; });
+              Object.keys(b).forEach((k) => { const v = Math.round(Number(b[k])) - Math.round(Number(mb[k]) || 0); if (v > 0) sub[k] = v; });
               const mainTxt = statText(mb, mk);
               const subTxt = statText(sub, Object.keys(sub));
               return '<button data-i="' + list.findIndex((y) => y.data === d) + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
