@@ -17,7 +17,7 @@
   <div class="foot">原创角色专属装备，玩家端只读展示</div>
 </div>
 <script type="module">
-import { ORIGINALS, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=eb7845c1";
+import { ORIGINALS, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=2c90061f";
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
@@ -74,6 +74,7 @@ function detail(it, slot) {
     (mainRows ? '<div class="hint" style="margin:8px 0 5px;color:#ffd666;font-weight:700;">主属性（部位基础）</div>' + panel(mainRows) : "") +
     (subRows ? sec("副属性") + panel(subRows) : "") +
     (specRows ? sec("战斗词条") + panel(specRows) : "") +
+    (it.mech ? sec("机制说明") + '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px 9px;line-height:1.7;color:#9fb0c8;font-size:12px;">' + esc(it.mech) + '</div>' : "") +
     skills +
     '<div style="margin-top:10px;"><button id="ogClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);

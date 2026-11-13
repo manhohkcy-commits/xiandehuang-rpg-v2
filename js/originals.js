@@ -53,7 +53,8 @@ export const ORIGINAL_GEAR = {
       name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8, ultPct: 10,
       aName: "霜切", aMult: 100, sName: "雪葬", sMult: 190, sCd: 3, sShape: "single", sRage: 10,
       uName: "千山暮雪", uMult: 340, uShape: "single", style: "melee", dmgType: "phys",
-      skillDesc: "雪葬命中额外 +1 层霜印"
+      skillDesc: "雪葬命中额外 +1 层霜印",
+      mech: "霜印：普攻 / 技能命中各 +1 层（雪葬额外 +1），最多叠 5 层；每层使必杀伤害 +15%，释放必杀后全部清空。"
     },
     armor: { name: "霜绡战衣", rarity: "SSR", atk: 0, hp: 380, def: 30, res: 16, spd: 0, critRate: 0 },
     armor2: { name: "踏雪战裤", rarity: "SSR", atk: 0, hp: 190, def: 12, res: 0, spd: 4, critRate: 0 },
