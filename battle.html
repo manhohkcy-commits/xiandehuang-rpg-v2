@@ -102,26 +102,36 @@ function weekKey() {
   const w = Math.ceil((days + one.getDay() + 1) / 7);
   return d.getFullYear() + "-W" + String(w).padStart(2, "0");
 }
+// 🔒 关卡解锁：通关第 N 关才解锁第 N+1 关
+function stageNo(s) { const m = String(s && s.id).match(/(\d+)$/); return m ? Number(m[1]) : 0; }
+function expCleared() { return Number((store.flags || {}).expCleared) || 0; }
+function isUnlocked(s) { return stageNo(s) <= expCleared() + 1; }
+
 function dungeonHtml() {
   // 🚧 目前只有「枫林剿匪」设计完成，其他副本先隐藏
   const dailies = DUNGEONS.filter((d) => d.type === "daily" && d.id === "d_exp");
   const event = null;
-  const stageRow = (s) => '<div class="row"><span class="k">' + esc(s.name) +
-    '<div class="hint" style="margin-top:2px;">' + esc(s.story || "") + '</div>' +
-    '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
-      esc(s.scene || "") + " · " + (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name +
-      " · 适配 Lv" + s.lv + "~" + (s.lv + 5) + " · 建议战力 " + fmt(stagePower(s))) +
-    '</div></span>' +
-    '<span class="v">' +
-    '<button data-enemylist="' + s.id + '" style="margin-right:6px;">👁</button>' +
-    '<button data-stage="' + s.id + '">挑战</button></span></div>';
+  const stageRow = (s) => {
+    const no = stageNo(s), locked = !isUnlocked(s);
+    return '<div class="row" style="' + (locked ? "opacity:.55;" : "") + '"><span class="k">' + esc(s.name) +
+      '<div class="hint" style="margin-top:2px;">' + esc(s.story || "") + '</div>' +
+      '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
+        esc(s.scene || "") + " · " + (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name +
+        " · 适配 Lv" + s.lv + "~" + (s.lv + 5) + " · 建议战力 " + fmt(stagePower(s))) +
+      '</div></span>' +
+      '<span class="v">' + (locked
+        ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
+        : '<button data-enemylist="' + s.id + '" style="margin-right:6px;">👁</button><button data-stage="' + s.id + '">挑战</button>') +
+      '</span></div>';
+  };
 
   const dailyCards = dailies.map((d) => {
     if (!d.stages.length) {
       return '<div class="card"><div class="card-title">' + d.icon + ' ' + esc(d.name) + '</div><div class="hint">' + esc(d.desc) + '</div></div>';
     }
     const groups = [1, 2, 3, 4].map((g) => d.stages.filter((s) => s.group === g)).filter((arr) => arr.length);
-    return '<div class="card"><div class="card-title">' + d.icon + ' ' + esc(d.name) + ' <span class="tag">' + d.stages.length + ' 关</span></div>' +
+    return '<div class="card"><div class="card-title">' + d.icon + ' ' + esc(d.name) +
+      ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + Math.min(expCleared(), d.stages.length) + '/' + d.stages.length + '</span></div>' +
       '<div class="hint" style="margin-bottom:6px;">' + esc(d.desc) + '　|　不限次数</div>' +
       groups.map((arr, gi) => '<details style="margin-top:6px;"' + (gi === 0 ? ' open' : '') + '>' +
         '<summary style="cursor:pointer;font-size:12px;color:#8fd8ff;font-weight:700;">第 ' + (gi + 1) + ' 档 · Lv' +
@@ -497,6 +507,7 @@ window.__prep = window.__prep || { stageId: null, pos: {}, sel: null };
 function renderPrep(stageId) {
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
+  if (!isUnlocked(s)) { renderPick(); return; }
   const P = buildPlayerUnits();
   const F = buildFoeUnits(s, P.list.length);
   const foes = F.units;
@@ -1382,6 +1393,15 @@ function finish() {
   const exp = Number(s.exp != null ? s.exp : (40 + s.foe.lv * 6));
   store.gold = (Number(store.gold) || 0) + gold;
   store.exp = (Number(store.exp) || 0) + exp;
+  // 🔓 逐关解锁进度
+  store.flags = store.flags || {};
+  if (String(s.id).indexOf("exp_") === 0) {
+    const n = stageNo(s);
+    if (n > expCleared()) {
+      store.flags.expCleared = n;
+      pushLog("🔓 已解锁下一关", "line");
+    }
+  }
   // 🎁 掉落
   const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
   const dp = s.drop || { shards: [5, 8], stone: [1, 2], gearChance: 5 };
