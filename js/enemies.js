@@ -95,6 +95,12 @@ export const ENEMIES = [
 ];
 
 export function enemyById(id) { return ENEMIES.find((e) => e.id === id); }
+// 🏷 分类：首领 / 特色 / 精英 / 普通
+ENEMIES.forEach((e) => {
+  e.tier = (e.role || "").indexOf("首领") >= 0 ? "boss"
+    : /号角|战鼓|机械/.test(e.name) ? "special"
+    : /资深|高阶|爆破/.test(e.name) ? "elite" : "normal";
+});
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
 export function enemyAt(id, lv) {
   const e = enemyById(id);

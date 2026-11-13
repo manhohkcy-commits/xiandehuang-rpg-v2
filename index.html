@@ -59,6 +59,11 @@
       <div class="t">装备图鉴</div>
       <div class="hint">全部武器 / 防具 / 饰品预览</div>
     </button>
+    <button class="entry" data-go="enemy.html">
+      <div style="font-size:22px;">👹</div>
+      <div class="t">敌人图鉴</div>
+      <div class="hint">敌人档案 / 面板 / 装备 / 招式</div>
+    </button>
     <button class="entry" data-go="affixes.html">
       <div style="font-size:22px;">📖</div>
       <div class="t">词条一览</div>
@@ -102,7 +107,7 @@ document.querySelectorAll("[data-go]").forEach((b) => {
     let b0 = (box.value || "").trim();
     const page = b.dataset.go;
     if (page.endsWith(".md")) { location.href = page; return; }
-    if (!b0 && !["affixes.html", "equip.html", "design.html"].includes(page)) {
+    if (!b0 && !["affixes.html", "equip.html", "enemy.html", "design.html"].includes(page)) {
       // 新人位号留空：自动发一个，别让「缺少 box」劝退
       b0 = "p" + Math.random().toString(36).slice(2, 8);
       box.value = b0;

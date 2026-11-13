@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>敌人图鉴 · 闲得慌RPG</title>
+<link rel="stylesheet" href="css/app.css?v=d8dee059">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="dot"></span> 闲得慌RPG <span class="hint">· 敌人图鉴</span></div>
+    <a class="hint" href="index.html">← 返回首页</a>
+  </div>
+  <div id="view"></div>
+  <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
+</div>
+<script type="module">
+import { ENEMIES, enemyAt } from "./js/enemies.js?v=1aef1a79";
+
+const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
+const TIER_NAME = { boss: "首领", special: "特色", elite: "精英", normal: "普通" };
+const TIER_ORDER = ["boss", "special", "elite", "normal"];
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
+const card = (title, body) => '<div class="card"><div class="card-title">' + title + '</div>' + body + '</div>';
+
+let lv = 1;
+
+function detail(id) {
+  const e0 = ENEMIES.find((x) => x.id === id);
+  if (!e0) return;
+  const e = enemyAt(id, lv);
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const eq = [["武器", e.equip.weapon], ["上装", e.equip.armor], ["下装", e.equip.armor2], ["饰品", e.equip.accessory]]
+    .filter((x) => x[1]).map((x) => row(x[0], esc(x[1]))).join("") || '<div class="hint">没有装备</div>';
+  const sk = (e.skills || []).map((s) => '<div class="row"><span class="k">' + esc(s.name) + '<div class="hint">' + esc(s.desc || "") +
+    '</div></span><span class="v">' + (s.mult ? s.mult + "%" : "") + (s.cd ? " · CD" + s.cd : "") + '</span></div>').join("") || '<div class="hint">没有招式</div>';
+  const s = e.stats;
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.86);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:480px;width:100%;max-height:88vh;overflow:auto;">' +
+    '<div class="card-title" style="color:' + (RARITY_COLOR[e0.tier] || "#8a8ab0") + ';">' + esc(e.name) +
+    ' <span class="tag">' + (TIER_NAME[e0.tier] || "") + '</span></div>' +
+    '<div class="hint">① 单位信息</div>' + row("阵营", esc(e.camp)) + row("定位", esc(e.role)) +
+    '<div class="hint" style="margin:6px 0;">' + esc(e.desc || "") + '</div>' +
+    '<div class="hint">② 面板数据（Lv' + e.lv + '）</div>' +
+    row("攻击", fmt(s.atk)) + row("生命", fmt(s.hp)) + row("防御", fmt(s.def)) + row("法抗", fmt(s.res)) +
+    row("速度", s.spd) + row("暴击", s.critRate + "%") + row("暴伤", s.critDmg + "%") +
+    '<div class="hint">③ 装备</div>' + eq +
+    '<div class="hint">④ 招式组</div>' + sk +
+    '<div style="margin-top:10px;"><button id="ecClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#ecClose").onclick = () => ov.remove();
+  ov.onclick = (ev) => { if (ev.target === ov) ov.remove(); };
+}
+
+function render() {
+  const groups = TIER_ORDER.map((t) => ({ t, list: ENEMIES.filter((e) => e.tier === t) })).filter((g) => g.list.length);
+  const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+    '<span class="hint">等级预览</span><input id="lvIn" type="number" min="1" max="100" value="' + lv + '" style="width:70px;padding:3px 6px;">' +
+    '<span class="hint">Lv1~100（面板按成长率缩放）</span></div></div>';
+  document.getElementById("view").innerHTML =
+    card("👹 敌人图鉴", '<div class="hint">共 ' + ENEMIES.length + ' 名敌人档案。点任意一名查看完整资料。</div>') +
+    bar +
+    groups.map((g) => card('<span style="color:' + RARITY_COLOR[g.t] + ';">' + TIER_NAME[g.t] + '</span>（' + g.list.length + '）',
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:6px;">' +
+      g.list.map((e) => {
+        const s = e.stats;
+        return '<button data-enemy="' + e.id + '" style="text-align:left;background:#12182a;border:1px solid ' + RARITY_COLOR[g.t] + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
+          '<div style="font-size:13px;font-weight:700;color:' + RARITY_COLOR[g.t] + ';">' + esc(e.name) + '</div>' +
+          '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.role) + '</div>' +
+          '<div style="font-size:10px;color:#ffd666;margin-top:5px;">攻 ' + s.atk + ' · 生 ' + s.hp + '</div>' +
+          '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;">防 ' + s.def + ' · 抗 ' + s.res + ' · 速 ' + s.spd + '</div>' +
+          '</button>';
+      }).join("") + '</div>')).join("");
+  document.getElementById("view").querySelectorAll("[data-enemy]").forEach((b) => b.onclick = () => detail(b.dataset.enemy));
+  const inp = document.getElementById("lvIn");
+  if (inp) inp.onchange = () => { lv = Math.max(1, Math.min(100, Number(inp.value) || 1)); render(); };
+}
+
+render();
+</script>
+</body>
+</html>
