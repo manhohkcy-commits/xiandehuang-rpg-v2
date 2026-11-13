@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -17,7 +17,7 @@
   <div class="foot">玩家大厅：云端玩家角色 · 原创大厅：主机发布的原创角色</div>
 </div>
 <script type="module">
-import { cloudList, cloudGet } from "./js/core.js?v=13807141";
+import { cloudList, cloudGet, cloudSave } from "./js/core.js?v=13807141";
 import { charPower, gradeOf } from "./js/power.js?v=d92ed317";
 import { ORIGINALS, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=942eb463";
 
@@ -93,7 +93,7 @@ function render() {
           '<td style="text-align:right;font-size:12px;color:#ffb347;font-weight:700;">' + fmt(x.final.power) + '</td></tr>').join("") +
         '</table>' : '<div class="hint">主机还没发布原创角色。</div>'));
   }
-  view().innerHTML = enter + card("🏛 大厅功能区", feat) + tabBar + body;
+  view().innerHTML = enter + card("🏛 大厅功能区", feat) + tabBar + body + chatCard();
 
   view().querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => { tab = b.dataset.tab; history.replaceState(null, "", "?tab=" + tab); render(); });
   view().querySelectorAll("[data-orig]").forEach((tr) => tr.onclick = () => {
@@ -119,6 +119,7 @@ function render() {
   });
 
   if (tab === "player") loadPlayers();
+  if ($("chatList")) loadChat();
 }
 
 async function loadPlayers() {
@@ -141,8 +142,73 @@ async function loadPlayers() {
   }
 }
 
+// 💬 公共频道
+let myName = "玩家";
+const CHAT_BOX = "__chat";
+function chatCard() {
+  return card("💬 公共频道", '<div class="hint" id="chatMsg" style="margin-bottom:6px;">读取中…</div>' +
+    '<div id="chatList" style="max-height:220px;overflow:auto;background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px;"></div>' +
+    '<div style="display:flex;gap:6px;margin-top:8px;">' +
+      '<input id="chatIn" maxlength="120" placeholder="说点什么…" style="flex:1;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:8px;">' +
+      '<button id="chatSend" style="border-color:#6ea8fe;color:#cfe6ff;">发送</button>' +
+    '</div>');
+}
+async function loadChat() {
+  const list = $("chatList"), msg = $("chatMsg");
+  if (!list) return;
+  try {
+    const r = await cloudGet(CHAT_BOX);
+    const msgs = (r && r.store && r.store.msgs) || [];
+    if (!msgs.length) { list.innerHTML = '<div class="hint">还没有人说话，来一句吧。</div>'; }
+    else {
+      list.innerHTML = msgs.slice(-60).map((m) =>
+        '<div style="padding:3px 0;border-bottom:1px dashed #1a2438;">' +
+        '<b style="color:' + (m.n === myName ? "#8fd8ff" : "#ffd666") + ';">' + esc(m.n || "玩家") + '</b>' +
+        ' <span style="font-size:10px;color:#6a7a90;">' + new Date(m.at || Date.now()).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }) + '</span>' +
+        '<div style="font-size:12.5px;color:#dbe4f3;">' + esc(m.t || "") + '</div></div>').join("");
+      list.scrollTop = list.scrollHeight;
+    }
+    if (msg) msg.textContent = "共 " + msgs.length + " 条消息";
+  } catch (e) {
+    if (msg) msg.textContent = "聊天读取失败：" + (e && e.message || e);
+  }
+}
+async function sendChat() {
+  const inp = $("chatIn");
+  const text = ((inp && inp.value) || "").trim();
+  if (!text) return;
+  try {
+    const r = await cloudGet(CHAT_BOX);
+    const msgs = ((r && r.store && r.store.msgs) || []).slice(-59);
+    msgs.push({ n: myName, t: text, at: Date.now() });
+    await cloudSave(CHAT_BOX, { v: 2, items: [], chars: [], msgs }, r && r.updated_at, "公共聊天");
+    if (inp) inp.value = "";
+    await loadChat();
+  } catch (e) { alert("发送失败：" + (e && e.message || e)); }
+}
+async function initChat() {
+  try {
+    if (box) {
+      const r = await cloudGet(box);
+      const chars = (r && r.store && r.store.chars) || [];
+      const ch = chars.find((c) => c.id === r.store.activeChar) || chars[0];
+      if (ch && ch.name) myName = ch.name;
+    }
+  } catch (e) {}
+  await loadChat();
+  setInterval(loadChat, 8000);
+}
+// 事件代理：切换分栏重渲染后依然可点
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.closest && e.target.closest("#chatSend")) sendChat();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target && e.target.id === "chatIn" && e.key === "Enter") sendChat();
+});
+
 try { await pullOriginals(); } catch (e) {}
 render();
+initChat();
 </script>
 </body>
 </html>
