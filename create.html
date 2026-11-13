@@ -570,7 +570,7 @@ function renderChar() {
         'color:' + (c.id === ch.id ? "#cfe6ff" : "#eaeaea") + ';">' + (c.id === ch.id ? "● " : "") + esc(c.name) +
         ' <span class="hint">Lv' + (c.lv || 1) + '</span></button>').join("") +
       '<button id="btnNewChar" style="padding:6px 10px;border-color:#7ee787;color:#7ee787;">＋ 新建角色</button>' +
-      (store.chars.length > 1 ? '<button id="btnDelChar" style="padding:6px 10px;border-color:#ff6b6b;color:#ff6b6b;">🗑 删除此角色</button>' : '') +
+      (store.chars.length ? '<button id="btnDelChar" style="padding:6px 10px;border-color:#ff6b6b;color:#ff6b6b;">🗑 删除此角色</button>' : '') +
       '</div>') +
     '<div class="card">' +
       '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + ch.lv + (ch.lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
@@ -611,10 +611,18 @@ function renderChar() {
     buildCreateScreen();
   };
   if ($("btnDelChar")) $("btnDelChar").onclick = async () => {
-    if (store.chars.length <= 1) return toast("至少保留一个角色", true);
     if (!confirm("删除角色「" + ch.name + "」？装备会一起没，不可恢复。")) return;
     store.chars = store.chars.filter((c) => c.id !== ch.id);
-    if (store.activeChar === ch.id) store.activeChar = (store.chars[0] || {}).id;
+    if (!store.chars.length) {
+      store.activeChar = "";
+      await save();
+      window.__cc = null;
+      window.__creating = 1;
+      buildCreateScreen();
+      toast("已删除角色，请新建一个");
+      return;
+    }
+    if (store.activeChar === ch.id) store.activeChar = store.chars[0].id;
     await save(); render(); toast("已删除角色");
   };
 
