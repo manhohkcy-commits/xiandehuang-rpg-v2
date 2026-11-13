@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -59,12 +59,14 @@ function strike(st, atkId, defId, opts, hits) {
   const w = HIT_CURVE[n] || Array(n).fill(1 / n);
   const total = Number(opts.mult) || 100;
   let dmg = 0, crit = false, killed = false;
+  const parts = [];
   for (let i = 0; i < n; i++) {
     const r = damage(st, atkId, defId, Object.assign({}, opts, { mult: total * w[i] }));
     dmg += r.dmg; crit = crit || r.crit; killed = killed || r.killed;
+    parts.push({ dmg: r.dmg, crit: r.crit });
     if (killed) break;
   }
-  return { dmg, crit, killed, hits: n };
+  return { dmg, crit, killed, hits: n, parts };
 }
 
 function readBox() {
@@ -1069,7 +1071,10 @@ function renderBattle() {
     '<div class="card"><div class="card-title">战斗日志</div><div class="log">' +
       log.map((l) => l.kind === "hdr"
         ? '<div style="color:#ffd666;font-weight:700;margin:6px 0 2px;">' + esc(l.text) + '</div>'
-        : '<div class="act">' + esc(l.text) + (l.subs && l.subs.length ? l.subs.map((x) => '<div class="sub">↳ ' + esc(x) + '</div>').join("") : "") + '</div>'
+        : '<div class="act">' + esc(l.text) + (l.subs && l.subs.length ? l.subs.map((x) =>
+            typeof x === "string"
+              ? '<div class="sub">↳ ' + esc(x) + '</div>'
+              : '<div class="sub" style="font-size:' + x.size + 'px;">↳ ' + esc(x.t) + '</div>').join("") : "") + '</div>'
       ).join("") + '</div></div>';
 
   if ($("btnBack")) $("btnBack").onclick = renderPick;
@@ -1103,6 +1108,12 @@ function lifestealHeal(m, dealt) {
   const before = m.hp;
   m.hp = Math.min(m.maxHp, m.hp + Math.max(1, Math.round(dealt * ls / 100)));
   if (m.hp > before) pushLog("🩸 吸血 +" + (m.hp - before) + "（" + ls + "%）", "line");
+}
+
+// 🎯 多段伤害展示：每段独立大小，凸显立体感
+function hitParts(r) {
+  if (!r || !r.parts || r.parts.length <= 1) return [];
+  return r.parts.map((p, i) => ({ t: "第 " + (i + 1) + " 段 " + p.dmg + (p.crit ? " 暴击💥" : ""), size: i === 0 ? 13 : Math.max(9, 12 - i * 0.8) }));
 }
 
 function doAct(kind) {
@@ -1199,15 +1210,17 @@ function doAct(kind) {
     const cd = Math.max(1, baseCd - (Number(tr.cdReduce) || 0));
     const t0 = st.units.find((u) => u.id === targetId());
     const targets = t0 ? shapeUnits(wp.sShape || "single", t0) : [];
-    let total = 0, anyCrit = false, first = null;
+    let total = 0, anyCrit = false, first = null, firstParts = null;
     targets.filter(Boolean).forEach((t) => {
       const rr = strike(st, "me", t.id, { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys"), style: (wp.style || "melee") }, wp.sHits || 1);
       total += rr.dmg; anyCrit = anyCrit || rr.crit; first = first || t;
+      if (!firstParts) firstParts = rr.parts;
     });
-    const r = { dmg: total, crit: anyCrit };
+    const r = { dmg: total, crit: anyCrit, parts: targets.filter(Boolean).length === 1 ? firstParts : null };
     const f2 = first || st.units.find((u) => u.id === targetId()) || { name: "目标" };
     const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "") +
       (cd !== baseCd ? " · 冷却缩减 → " + cd + " 回合" : "")];
+    hitParts(r).forEach((x) => subs.push(x));
     if (wp.hitStatus && r.dmg > 0) {
       const v = Number(wp.hitStatusV) || 3;
       const turns = Number(wp.hitStatusTurns) || 2;
@@ -1234,7 +1247,7 @@ function doAct(kind) {
   } else {
     const r = strike(st, "me", targetId(), { atk: m.atk, mult: (Number(wpOf(st.__weapon).aMult) || 100), critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") }, wpOf(st.__weapon).aHits || 1);
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
-      ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
+      ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")].concat(hitParts(r)));
     // 🗡️ 连击：普攻概率再打一次（半伤）
     if (Number((m.traits || {}).doubleStrike) > 0 && f2.hp > 0 && Math.random() * 100 < Number(m.traits.doubleStrike)) {
       const r2 = damage(st, "me", targetId(), { atk: m.atk, mult: 50, critRate: m.critRate, critDmg: m.critDmg, kind: "normal", dmgType: (wpOf(st.__weapon).dmgType || "phys"), style: (wpOf(st.__weapon).style || "melee") });
