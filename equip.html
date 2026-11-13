@@ -70,23 +70,48 @@ function detail(it) {
     if (d.silence) t.push("沉默");
     return t;
   };
-  const skCard = (label, name, multText, tags) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
+  const skCard = (label, name, multText, meta, rageText, effects) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
-      '<b style="font-size:13px;color:#dbe4f3;">' + label + (name ? ' · ' + esc(name) : '') + '</b>' +
+      '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + (name ? esc(name) : "") + '</b>' +
       '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + multText + '</span></div>' +
-    (tags && tags.length ? '<div class="hint" style="margin-top:3px;">' + tags.join(" · ") + '</div>' : "") + '</div>';
+    '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px;">' +
+      '<span class="hint">' + (meta || []).filter(Boolean).join(" · ") + '</span>' +
+      (rageText ? '<span class="hint" style="color:#8fd8ff;">' + rageText + '</span>' : '') + '</div>' +
+    (effects && effects.length ? '<div class="hint" style="margin-top:2px;color:#9aa4b8;">' + effects.join(" · ") + '</div>' : "") + '</div>';
 
+  const dmgTypeTxt = d.dmgType === "spell" ? "法术" : "物理";
+  const distTxt = d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "近战";
   const skill = it.cat !== "weapon" ? "" :
     '<div class="hint" style="margin:12px 0 5px;font-weight:700;color:#8fd8ff;letter-spacing:1px;">招式组</div>' +
     skCard("普攻", "", (Number(d.aMult) || 100) + "%" + ((Number(d.aHits) || 1) > 1 ? " ×" + d.aHits : ""),
-      [d.dmgType === "spell" ? "法术" : "物理", d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "近战"]) +
+      ["单体", distTxt, dmgTypeTxt], "回怒 25", []) +
     (d.sSupport
-      ? skCard("技能", d.sName || "—", "辅助", ["CD " + (d.sCd || 3), d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
+      ? skCard("技能", d.sName || "—", "辅助", ["辅助", "CD " + (d.sCd || 3)], "",
+        [d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
       : (d.sMult
-        ? skCard("技能", d.sName || "—", d.sMult + "%" + (d.sHits > 1 ? " ×" + d.sHits : ""), effTags(d))
-        : skCard("技能", "", "—", ["R 阶没有技能"]))) +
+        ? skCard("技能", d.sName || "—", d.sMult + "%" + (d.sHits > 1 ? " ×" + d.sHits : ""),
+          [SHAPE[d.sShape] || "单体", distTxt, dmgTypeTxt], "回怒 " + (Number(d.sRage) || 0) + "%",
+          (() => {
+            const e = [];
+            if (d.sCd) e.push("CD " + d.sCd);
+            if (d.sunderBoost) e.push("破防 " + d.sunderBoost);
+            if (d.penetrate) e.push("穿透 " + d.penetrate + "%");
+            if (d.stun) e.push("眩晕 " + d.stun + "%");
+            if (d.freeze) e.push("冰冻");
+            if (d.silence) e.push("沉默");
+            if (d.burn) e.push("灼烧");
+            return e;
+          })())
+        : skCard("技能", "", "—", ["R 阶没有技能"], "", []))) +
     skCard("必杀", "", (Number(d.uMult) || 250) + "%" + ((Number(d.uHits) || 1) > 1 ? " ×" + d.uHits : ""),
-      ["怒气 100", d.uShape ? (SHAPE[d.uShape] || d.uShape) : "单体"]);
+      [SHAPE[d.uShape] || "单体", distTxt, dmgTypeTxt], "怒气 100",
+      (() => {
+        const e = [];
+        if (Number(d.uHits) > 1) e.push("×" + d.uHits + " 段");
+        if (d.burn) e.push("灼烧");
+        if (d.stun) e.push("眩晕");
+        return e;
+      })());
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
