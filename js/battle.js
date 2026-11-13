@@ -33,7 +33,14 @@ export function createBattle(units) {
       weapon: u.weapon || null,
       shield: Number(u.shield) || 0,
       rage: u.rage != null ? (Number(u.rage) || 0) : (Number(traits.rageStart) || 0),
-      alive: true, acted: 0, allowed: 1, cd: 0, statuses: [], seq: i
+      alive: true, acted: 0, allowed: 1, cd: 0, statuses: [], seq: i,
+      // 🗺 布阵与敌方招式
+      __row: u.__row != null ? u.__row : 1,
+      __col: u.__col ? 1 : 0,
+      __back: !!u.__back,
+      __skills: u.__skills || [],
+      __buff: u.__buff || null,
+      __auto: !!u.__auto
     });
   });
   recomputeAllowed(st);
