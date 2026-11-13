@@ -191,15 +191,18 @@ ENEMIES.forEach((e) => {
     : /号角|鼓|机械/.test(e.name) ? "special"
     : /资深|高阶|爆破/.test(e.name) ? "elite" : "normal";
   e.growth = GROWTH_BY(e);
-  // 🎯 固定招式结构：普攻 / 技能 / 必杀
+  // 🎯 固定招式结构：普攻 / 技能（部分敌人没有）/ 必杀
   const old = e.skills || [];
   const sk = old[0] || { name: "猛击", desc: "单体 130% 攻击", mult: 130, cd: 2 };
   const ult = ENEMY_ULT[e.id] || { name: "全力一击", desc: "单体 200% 攻击", mult: 200 };
-  e.skills = [
-    { name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" },
-    Object.assign({ kind: "skill" }, sk),
-    Object.assign({ kind: "ult", rage: 100 }, ult)
-  ];
+  // 纯杂兵只有普攻 + 必杀，不配技能
+  const NO_SKILL = { e_thug: 1, e_brute: 1, e_soldier: 1, e_archer: 1, e_crossbow: 1 };
+  e.skills = NO_SKILL[e.id]
+    ? [{ name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" },
+       Object.assign({ kind: "ult", rage: 100 }, ult)]
+    : [{ name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" },
+       Object.assign({ kind: "skill" }, sk),
+       Object.assign({ kind: "ult", rage: 100 }, ult)];
   e.rageGain = ENEMY_RAGE[e.id] || 25;
 });
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
