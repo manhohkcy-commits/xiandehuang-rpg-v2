@@ -889,7 +889,7 @@ async function renderRank() {
   view().innerHTML = '<div class="card"><div class="card-title">🏆 排行榜</div><div class="hint">读取云端存档中…</div></div>';
   let rows = [];
   try { rows = await cloudList(200); } catch (e) { rows = []; }
-  const list = rows
+  const candidates = rows
     .filter((r) => r && r.store && Number(r.store.v) === 2 && String(r.box).indexOf("__") !== 0)
     .map((r) => {
       const st = r.store;
@@ -900,9 +900,16 @@ async function renderRank() {
         power: charPower(ch), grade: gradeOf(ch).key, color: gradeOf(ch).color
       } : null;
     })
-    .filter(Boolean)
-    .sort((a, b) => b.power - a.power)
-    .slice(0, 20);
+    .filter(Boolean);
+  // 同名合并：保留战力最高的一个，避免同一角色重复占榜
+  const map = new Map();
+  candidates.forEach((r) => {
+    const prev = map.get(r.name);
+    if (!prev) { map.set(r.name, Object.assign({ dup: 1 }, r)); }
+    else if (r.power > prev.power) { map.set(r.name, Object.assign({ dup: prev.dup + 1 }, r)); }
+    else { prev.dup += 1; }
+  });
+  const list = Array.from(map.values()).sort((a, b) => b.power - a.power).slice(0, 20);
 
   const meBox = box;
   const myRank = list.findIndex((r) => r.box === meBox) + 1;
@@ -930,7 +937,8 @@ async function renderRank() {
           '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th style="text-align:right;">战力</th></tr>' +
           list.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === meBox ? 'background:#1b2740;' : '') + '">' +
             '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
-            '<td style="font-size:12.5px;"><b style="color:' + r.color + ';">' + esc(r.grade) + '</b> ' + esc(r.name) + '</td>' +
+            '<td style="font-size:12.5px;"><b style="color:' + r.color + ';">' + esc(r.grade) + '</b> ' + esc(r.name) +
+            (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
             '<td style="text-align:right;font-size:12px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") +
           '</table>'
         : '<div class="hint">还没有可排行的存档（或云端暂时不可用）。</div>') +
