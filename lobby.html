@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -55,28 +55,31 @@ function origRows() {
 function render() {
   document.body.classList.toggle("host-mode", hostMode);
   $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
+  const hostBox = (() => { try { return localStorage.getItem("rpg2:hostBox") || box || ""; } catch (e) { return box || ""; } })();
+  const myBox = hostMode ? hostBox : box;
+  const myEnc = encodeURIComponent(myBox || "");
+  const myQs = myBox ? "?box=" + myEnc : "?";
   const enc = encodeURIComponent(box || "");
   const qs = box ? "?box=" + enc : "?";
   const enter = '<div class="card" style="padding:10px;"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
     '<span class="hint">进入个人页面</span>' +
-    '<a href="create.html' + qs + (box ? "&" : "") + 'tab=char" style="text-decoration:none;"><button style="border-color:#6ea8fe;color:#cfe6ff;">🧑 玩家端 · 我的角色</button></a>' +
     (hostMode
-      ? '<a href="create.html' + qs + (box ? "&" : "") + 'tab=orig" style="text-decoration:none;"><button style="border-color:#ffb347;color:#ffb347;">🧬 原创端 · 原创角色</button></a>'
-      : '<span class="hint">🧬 原创端仅主机可进入</span>') +
+      ? '<a href="create.html' + myQs + (myBox ? "&" : "") + 'tab=orig" style="text-decoration:none;"><button style="border-color:#ffb347;color:#ffb347;">🧬 原创端 · 原创角色</button></a>'
+      : '<a href="create.html' + myQs + (myBox ? "&" : "") + 'tab=char" style="text-decoration:none;"><button style="border-color:#6ea8fe;color:#cfe6ff;">🧑 玩家端 · 我的角色</button></a>') +
     '</div>' +
     '<div style="display:flex;gap:6px;margin-top:8px;align-items:center;">' +
-      '<span class="hint">位号</span>' +
-      '<input id="lobbyBox" value="' + esc(box) + '" placeholder="没有可留空，进个人页会自动生成" style="flex:1;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:7px;">' +
+      '<span class="hint">' + (hostMode ? "原创端位号" : "我的位号") + '</span>' +
+      '<input id="lobbyBox" value="' + esc(myBox) + '" placeholder="没有可留空，进个人页会自动生成" style="flex:1;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:7px;">' +
       '<button id="lobbyBoxSave" style="border-color:' + (hostMode ? "#ffb347" : "#6ea8fe") + ';color:' + (hostMode ? "#ffb347" : "#cfe6ff") + ';">保存位号</button>' +
     '</div></div>';
   const feat = '<div class="hall-grid" style="margin:10px 0;">' +
-    '<a href="battle.html' + (box ? "?box=" + enc : "") + '"><div style="font-size:22px;">⚔️</div><div class="t">挑战副本</div><div class="hint">枫林剿匪 / 波次战斗</div></a>' +
+    '<a href="battle.html' + (myBox ? "?box=" + myEnc : "") + '"><div style="font-size:22px;">⚔️</div><div class="t">挑战副本</div><div class="hint">枫林剿匪 / 波次战斗</div></a>' +
     '<a href="rooms.html"><div style="font-size:22px;">🏠</div><div class="t">联机房间</div><div class="hint">和朋友一起打</div></a>' +
-    '<a href="create.html' + qs + (box ? "&" : "") + 'tab=rank"><div style="font-size:22px;">🏆</div><div class="t">排行榜</div><div class="hint">可游玩角色战力榜</div></a>' +
+    '<a href="create.html' + myQs + (myBox ? "&" : "") + 'tab=rank"><div style="font-size:22px;">🏆</div><div class="t">排行榜</div><div class="hint">可游玩角色战力榜</div></a>' +
     '<a href="equip.html"><div style="font-size:22px;">📚</div><div class="t">装备图鉴</div><div class="hint">武器 / 防具 / 饰品</div></a>' +
     '<a href="enemy.html"><div style="font-size:22px;">👹</div><div class="t">敌人图鉴</div><div class="hint">敌人档案 / 招式</div></a>' +
     '<a href="affixes.html"><div style="font-size:22px;">📖</div><div class="t">词条库</div><div class="hint">词条效果说明</div></a>' +
-    '<a href="create.html' + qs + (box ? "&" : "") + 'tab=store"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
+    '<a href="create.html' + myQs + (myBox ? "&" : "") + 'tab=store"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
     '</div>';
   const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
     '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>' +
@@ -138,7 +141,7 @@ async function loadPlayers() {
     msg.textContent = "共 " + rows.length + " 名玩家角色（同名取战力最高）。";
     list.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
       '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>等级</th><th style="text-align:right;">战力</th></tr>' +
-      rows.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === box ? "background:#1b2740;" : "") + '">' +
+      rows.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === myBox ? "background:#1b2740;" : "") + '">' +
         '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
         '<td style="font-size:12.5px;"><b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
         '<td style="font-size:11px;color:#8a8ab0;">Lv' + r.lv + '</td>' +
@@ -210,7 +213,10 @@ document.addEventListener("click", (e) => {
   const sb = e.target && e.target.closest ? e.target.closest("#lobbyBoxSave") : null;
   if (sb) {
     const v = (($("lobbyBox") || {}).value || "").trim();
-    try { localStorage.setItem("rpg2:box", v); } catch (err) {}
+    try {
+      if (hostMode) localStorage.setItem("rpg2:hostBox", v);
+      localStorage.setItem("rpg2:box", v);
+    } catch (err) {}
     location.href = "lobby.html";
   }
 });
