@@ -16,7 +16,7 @@
   <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
 </div>
 <script type="module">
-import { ENEMIES, enemyAt } from "./js/enemies.js?v=bd80e1b4";
+import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=6c576b03";
 
 const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
 const TIER_NAME = { boss: "首领", special: "特色", elite: "精英", normal: "普通" };
@@ -47,6 +47,7 @@ function detail(id) {
     '<div class="hint">② 面板数据（Lv' + e.lv + '）</div>' +
     row("攻击", fmt(s.atk)) + row("生命", fmt(s.hp)) + row("防御", fmt(s.def)) + row("法抗", fmt(s.res)) +
     row("速度", s.spd) + row("暴击", s.critRate + "%") + row("暴伤", s.critDmg + "%") +
+    row("战力", fmt(enemyPower(e))) +
     '<div class="hint">③ 装备</div>' + eq +
     '<div class="hint">④ 招式组</div>' + sk +
     '<div style="margin-top:10px;"><button id="ecClose" style="width:100%;">关闭</button></div></div>';

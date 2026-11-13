@@ -95,6 +95,20 @@ export const ENEMIES = [
 ];
 
 export function enemyById(id) { return ENEMIES.find((e) => e.id === id); }
+// ⚔️ 敌人战力（与角色同一套换算）
+export function enemyPower(e) {
+  if (!e || !e.stats) return 0;
+  const s = e.stats;
+  return Math.round((s.atk || 0) * 16 + (s.hp || 0) + (s.def || 0) * 7 + (s.res || 0) * 5 +
+    (s.spd || 0) * 28 + (e.critRate || 5) * 16 + (e.critDmg || 150) * 5);
+}
+// 🏯 关卡建议战力：该关全部敌人（含增援/波次）的战力总和
+export function stagePower(stage) {
+  if (!stage) return 0;
+  const ids = stage.enemies && stage.enemies.length ? stage.enemies : [];
+  if (!ids.length) return enemyPower({ stats: stage.foe });
+  return ids.reduce((sum, id) => sum + enemyPower(enemyAt(id, stage.lv)), 0);
+}
 // 📊 数值重定：以「平均 Lv1 角色」为基准（攻 144 / 生 850 / 防 29 / 抗 22 / 速 11）
 const ENEMY_STATS = {
   // 普通

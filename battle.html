@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=2d8f1941";
-import { enemyAt, enemyById } from "./js/enemies.js?v=bd80e1b4";
+import { enemyAt, enemyById, stagePower } from "./js/enemies.js?v=6c576b03";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
@@ -99,7 +99,7 @@ function dungeonHtml() {
     const list = (s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ");
     return '<div class="row"><span class="k">' + esc(s.name) +
       '<div class="hint">' + esc(list || s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) +
-      (s.gold ? ' · 金币 ' + fmt(s.gold) : '') + (s.exp ? ' · 经验 ' + fmt(s.exp) : '') + '</div></span>' +
+      (s.gold ? ' · 金币 ' + fmt(s.gold) : '') + (s.exp ? ' · 经验 ' + fmt(s.exp) : '') + ' · 建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
       '<span class="v">' +
       (s.enemies && s.enemies.length ? '<button data-enemy="' + s.enemies[0] + ':' + s.lv + '" style="margin-right:6px;">👁</button>' : '') +
       '<button data-stage="' + s.id + '">挑战</button></span></div>';
@@ -490,7 +490,8 @@ function renderPrep(stageId) {
     '<div class="hint">先调站位：点我方单位选中，再点空格放过去（互换）。敌人：' +
     esc((s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ") || s.foe.name) +
     (F.waves.length ? '　（共 ' + (F.waves.length + 1) + ' 波，每波最多 6 名）' : '') + '</div>' +
-    '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) + '</div>' + grid +
+    '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
+      '　|　建议战力 ' + fmt(stagePower(s)) + '　·　主角战力 ' + fmt(charPower(P.ch)) + '</div>' + grid +
     '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
       '<button id="prepGo" style="flex:1;min-width:140px;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
       '<button id="prepBack" style="flex:1;min-width:140px;">← 返回选关</button>' +
