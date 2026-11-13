@@ -1272,7 +1272,9 @@ function renderOrig() {
   const selId = (window.__origSel && ORIGINALS.some((o) => o.id === window.__origSel)) ? window.__origSel : ORIGINALS[0].id;
   window.__origSel = selId;
   const o = ORIGINALS.find((x) => x.id === selId);
-  const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0, breaks: 0 };
+  if (!store) store = { v: 2, items: [], chars: [], orig: {}, gold: 0, exp: 0, flags: {} };
+  if (!store.orig) store.orig = {};
+  const prog = store.orig[o.id] || { lv: 1, exp: 0, breaks: 0 };
   const lv = Number(prog.lv) || 1;
   const brk = Math.min(3, Number(prog.breaks) || 0);
   const need = CHAR.expNeed(lv);
