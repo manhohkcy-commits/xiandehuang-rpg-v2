@@ -206,6 +206,8 @@ export const SCENES = [
 const REDMAPLE_SCENE_IDX = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9];
 const REDMAPLE_WEATHER = ["clear", "clear", "rain", "rain", "fog", "fog", "clear", "sun", "sun", "night",
   "clear", "rain", "storm", "storm", "night", "fog", "fog", "rain", "storm", "night"];
+const REDMAPLE_TITLES = ["山径哨兵", "林间冷箭", "营前斥候", "断木拒马", "隘口双哨", "雾锁隘口", "下坡伏击", "半山营地",
+  "山隘夜哨", "大当家的斧", "上山夺道", "火烧枫林", "广场械斗", "广场混战", "铁牙的狂笑", "亲卫合围", "帐前的火", "军师白霜", "全员压上", "枫王座前"];
 const REDMAPLE_PLAN = [
   [5, ["e_thug"], 120, "一个打手抱着木棍守在枫林入口，哈欠连天。"],
   [9, ["e_thug", "e_archer"], 142, "打手在前挡路，树后有人拉开了弓。"],
@@ -233,7 +235,7 @@ function makeRedmaple() {
     const first = enemyAt(ids[0], lv);
     const sc = SCENES[REDMAPLE_SCENE_IDX[i]] || SCENES[0];
     return {
-      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + sc.name, lv,
+      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + (REDMAPLE_TITLES[i] || sc.name), lv,
       story: story || "",
       scene: sc.name,
       sceneDesc: sc.desc,

@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=7f775564";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=eb89f905";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -109,7 +109,7 @@ function dungeonHtml() {
   const stageRow = (s) => '<div class="row"><span class="k">' + esc(s.name) +
     '<div class="hint" style="margin-top:2px;">' + esc(s.story || "") + '</div>' +
     '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
-      (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name + " · 建议战力 " + fmt(stagePower(s))) +
+      esc(s.scene || "") + " · " + (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name + " · 建议战力 " + fmt(stagePower(s))) +
     '</div></span>' +
     '<span class="v">' +
     (s.enemies && s.enemies.length ? '<button data-enemy="' + s.enemies[0] + ':' + s.lv + '" style="margin-right:6px;">👁</button>' : '') +
