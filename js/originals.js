@@ -18,10 +18,10 @@ export function originalFinal(o, prog, withGear, withBonus) {
     const st = gl[slot] || {};
     const lv = Math.max(1, Number(st.lv) || 1);
     const star = Math.max(1, Number(st.star) || 1);
-    const mul = (1 + 0.02 * (lv - 1)) * (1 + 0.12 * (star - 1));
+    const mul = (1 + 0.02 * (lv - 1)) * (1 + 0.12 * (star - 1)) * (1 + 0.05 * (Number(st.advance) || 0));
     ["atk", "hp", "def", "res", "spd"].forEach((key) => { gs[key] += (Number(it[key]) || 0) * mul; });
     gs.critRate += Number(it.critRate) || 0;
-    gs.critDmg += Number(it.critDmg) || 0;
+    gs.critDmg += (Number(it.critDmg) || 0) + (Number(st.refine) || 0);
   });
   const out = {
     atk: (Number(s.atk) || 60) * k + gs.atk,

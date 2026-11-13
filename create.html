@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=4ecaf41a";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=550ceeac";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1263,7 +1263,91 @@ function renderCult() {
   });
 }
 
-// 🧬 原创角色面板（独立进度：各自等级/经验；专属装备只读）
+// ⚒ 原创角色培养（与玩家同构：强化 / 升星 / 精炼 / 升阶 / 觉醒）
+function renderOrigCult() {
+  if (!ORIGINALS.length) {
+    view().innerHTML = card("⚒ 培养", '<div class="hint">还没有原创角色。</div>');
+    return;
+  }
+  const selId = (window.__origSel && ORIGINALS.some((o) => o.id === window.__origSel)) ? window.__origSel : ORIGINALS[0].id;
+  window.__origSel = selId;
+  const o = ORIGINALS.find((x) => x.id === selId);
+  if (!store) store = { v: 2, items: [], chars: [], orig: {}, gold: 0, exp: 0, flags: {} };
+  if (!store.orig) store.orig = {};
+  const prog = store.orig[o.id] || (store.orig[o.id] = { lv: 1, exp: 0, breaks: 0 });
+  if (!prog.gear) prog.gear = {};
+  const gg = ORIGINAL_GEAR[o.id] || {};
+  const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
+  const res = '<div class="hint" style="margin-bottom:8px;">金币 ' + fmt(store.gold || 0) + ' · 强化石 ' + (store.flags.stone || 0) +
+    ' · 碎片 ' + (store.flags.shards || 0) + ' · 突破石 ' + (store.flags.bstone || 0) + '</div>';
+  const body = Object.keys(SLOTN).map((slot) => {
+    const it = gg[slot] || {};
+    if (!it.name) return "";
+    const gs = prog.gear[slot] || (prog.gear[slot] = { lv: 1, star: 1 });
+    const lv = Number(gs.lv) || 1, star = Number(gs.star) || 1;
+    const ref = Number(gs.refine) || 0, adv = Number(gs.advance) || 0, awk = Number(gs.awaken) || 0;
+    return card("🗡 " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
+      '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / ★' + star +
+        (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        '<button data-og="' + slot + ':lv">强化 Lv' + lv + '→' + (lv + 1) + '</button>' +
+        '<button data-og="' + slot + ':star">升星 ★' + star + '→' + (star + 1) + '</button>' +
+        '<button data-og="' + slot + ':refine">精炼 ' + ref + '→' + (ref + 1) + '</button>' +
+        '<button data-og="' + slot + ':advance">升阶 ' + adv + '→' + (adv + 1) + '</button>' +
+        '<button data-og="' + slot + ':awakenG">觉醒 ' + awk + '→' + (awk + 1) + '</button>' +
+      '</div>');
+  }).join("");
+  view().innerHTML = '<div class="tree-tabs">' + tabs + '</div>' + res + (body || card("⚒ 培养", '<div class="hint">这名角色还没有专属装备。</div>'));
+
+  view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+  view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
+    const parts = b.dataset.og.split(":");
+    const slot = parts[0], act = parts[1];
+    const gs = prog.gear[slot] || (prog.gear[slot] = { lv: 1, star: 1 });
+    if (!store.flags) store.flags = {};
+    const gold = () => Number(store.gold) || 0;
+    if (act === "lv") {
+      const lv = Number(gs.lv) || 1;
+      if (lv >= ORIG_GEAR_CULT.maxLv) return toast("已满级", true);
+      const cs = ORIG_GEAR_CULT.lvStone(lv), cg = ORIG_GEAR_CULT.lvGold(lv);
+      if ((store.flags.stone || 0) < cs) return toast("强化石不足（需 " + cs + "）", true);
+      if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
+      store.flags.stone -= cs; store.gold -= cg; gs.lv = lv + 1;
+    } else if (act === "star") {
+      const star = Number(gs.star) || 1;
+      if (star >= ORIG_GEAR_CULT.maxStar) return toast("已满星", true);
+      const cs = ORIG_GEAR_CULT.starShards(star), cg = ORIG_GEAR_CULT.starGold(star);
+      if ((store.flags.shards || 0) < cs) return toast("碎片不足（需 " + cs + "）", true);
+      if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
+      store.flags.shards -= cs; store.gold -= cg; gs.star = star + 1;
+    } else if (act === "refine") {
+      const n = Number(gs.refine) || 0;
+      const cs = 5 + 3 * n, cg = 300 + 200 * n;
+      if ((store.flags.shards || 0) < cs) return toast("碎片不足（需 " + cs + "）", true);
+      if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
+      store.flags.shards -= cs; store.gold -= cg; gs.refine = n + 1;
+    } else if (act === "advance") {
+      const n = Number(gs.advance) || 0;
+      if (n >= 5) return toast("已满阶", true);
+      const cs = 30 + 15 * n, cg = 2000 + 1200 * n;
+      if ((store.flags.stone || 0) < cs) return toast("强化石不足（需 " + cs + "）", true);
+      if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
+      store.flags.stone -= cs; store.gold -= cg; gs.advance = n + 1;
+    } else {
+      const n = Number(gs.awaken) || 0;
+      if (n >= 3) return toast("已满觉醒", true);
+      const cb = 20 + 15 * n;
+      if ((store.flags.bstone || 0) < cb) return toast("突破石不足（需 " + cb + "）", true);
+      store.flags.bstone -= cb; gs.awaken = n + 1;
+      if (!prog.bonus) prog.bonus = {};
+      prog.bonus.ultPct = (Number(prog.bonus.ultPct) || 0) + 3;
+    }
+    await save(); render();
+  });
+}
+
+
 function renderOrig() {
   if (!ORIGINALS.length) {
     view().innerHTML = card("🧬 原创角色", '<div class="hint">还没有原创角色。等主机端设计并加入游戏后，这里会出现他们的面板。</div>');
@@ -1873,7 +1957,8 @@ function render() {
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
   try {
     if (tab === "orig" && !ORIGINALS.length) pullOriginals().then(() => { try { render(); } catch (e) {} }).catch(() => {});
-    if (hostMode && (tab === "char" || tab === "cult" || tab === "orig")) { renderOrig(); return; }
+    if (hostMode && (tab === "char" || tab === "orig")) { renderOrig(); return; }
+    if (hostMode && tab === "cult") { renderOrigCult(); return; }
     if (hostMode && tab === "talent") {
       view().innerHTML = card("🌳 天赋（原创角色）", '<div class="hint">按玩家端天赋树接入中；解锁阶段待配置。</div>');
       return;
