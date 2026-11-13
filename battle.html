@@ -233,7 +233,7 @@ function renderPick() {
     renderPick();
   });
   view().querySelectorAll("[data-stage]").forEach((b) => {
-    b.onclick = () => startBattle(b.dataset.stage);
+    b.onclick = () => renderPrep(b.dataset.stage);
   });
   view().querySelectorAll("[data-enemy]").forEach((b) => b.onclick = () => {
     const parts = b.dataset.enemy.split(":");
@@ -386,43 +386,136 @@ function startOriginal(id) {
   aiTurnIfNeeded();
 }
 
-function startBattle(stageId) {
-  if (roomId && amHost) { buildMultiBattle(stageId); return; }
+// 🗺 站位分配：前排近战、后排远程，居中排列（行序 1,0,2）
+const LAYOUT_ORDER = [1, 0, 2];
+function assignLayout(units, keep) {
+  if (keep) return units;
+  const front = units.filter((u) => !u.__back);
+  const back = units.filter((u) => u.__back);
+  front.forEach((u, i) => { u.__row = LAYOUT_ORDER[i % 3]; u.__col = 0; });
+  back.forEach((u, i) => { u.__row = LAYOUT_ORDER[i % 3]; u.__col = 1; });
+  return units;
+}
+
+// 🧍 我方单位（主角 + 同行）
+function buildPlayerUnits() {
   const ch = activeChar();
   const f = charFinal(ch);
   const traits = combatTraits(ch);
-  const s = STAGES.find((x) => x.id === stageId);
-  if (!s) return;
   const playOrig = window.__playOrig ? ORIGINALS.find((o) => o.id === window.__playOrig) : null;
   const meUnit = playOrig
     ? (() => {
         const g = origStats(playOrig);
-        return { id: "me", name: playOrig.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg };
+        return { id: "me", name: playOrig.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg, __back: false };
       })()
-    : { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits };
-  // 🗺 布阵：3 行 × 2 列（前排 col0 / 后排 col1）
-  const backRole = (role, name) => /远程|法术|辅助/.test(role || "") || /弓|弩|术士|医疗|机械|号角|鼓|投掷/.test(name || "");
-  const foeList = (s.enemies && s.enemies.length ? s.enemies : [null]).map((eid, i) => {
-    const e = eid ? enemyAt(eid, s.lv) : { name: s.foe.name, stats: { hp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, res: s.foe.res, spd: s.foe.spd, critRate: 5, critDmg: 150 }, role: "" };
-    return { id: "f" + i, name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
-      atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg,
-      __skills: e.skills || [], __back: backRole(e.role, e.name) };
-  });
-  const foes = foeList.filter((u) => !u.__back).concat(foeList.filter((u) => u.__back));
-  foes.forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
+    : { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, traits, __back: ["ranged", "focus"].indexOf((ch.equip && ch.equip.weapon && ch.equip.weapon.style) || "melee") >= 0 };
   const partyArr = (() => { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } })();
   const allies = partyArr.map((id) => ORIGINALS.find((o) => o.id === id)).filter(Boolean).slice(0, 5).map((o) => {
     const g = origStats(o);
     return { id: "o_" + o.id, name: o.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg, __auto: true, __back: /远程|法术|辅助/.test(o.role || "") };
   });
-  const aFront = allies.filter((u) => !u.__back), aBack = allies.filter((u) => u.__back);
-  meUnit.__row = 1; meUnit.__col = 0;
-  aFront.concat(aBack).forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
-  const units = [meUnit].concat(aFront, aBack, foes);
-  st = createBattle(units);
-  st.__party = partyArr.slice(0, 5);
+  const list = [meUnit].concat(allies);
+  assignLayout(list);
+  return { ch, f, playOrig, meUnit, allies, list, partyArr };
+}
+
+// 👹 敌人单位
+function buildFoeUnits(s) {
+  const backRole = (role, name) => /远程|法术|辅助/.test(role || "") || /弓|弩|术士|医疗|机械|号角|鼓|投掷/.test(name || "");
+  const list = (s.enemies && s.enemies.length ? s.enemies : [null]).map((eid, i) => {
+    const e = eid ? enemyAt(eid, s.lv) : { name: s.foe.name, stats: { hp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, res: s.foe.res, spd: s.foe.spd, critRate: 5, critDmg: 150 }, role: "" };
+    return { id: "f" + i, name: e.name, side: "B", spd: e.stats.spd, power: 0, hp: e.stats.hp, maxHp: e.stats.hp,
+      atk: e.stats.atk, def: e.stats.def, res: e.stats.res, critRate: e.stats.critRate, critDmg: e.stats.critDmg,
+      __skills: e.skills || [], __back: backRole(e.role, e.name) };
+  });
+  assignLayout(list);
+  return list;
+}
+
+// ⚔️ 备战界面：调整站位 → 开战
+window.__prep = window.__prep || { stageId: null, pos: {}, sel: null };
+function renderPrep(stageId) {
+  const s = STAGES.find((x) => x.id === stageId);
+  if (!s) return;
+  const P = buildPlayerUnits();
+  const foes = buildFoeUnits(s);
+  window.__prep.stageId = stageId;
+  const posOf = (u) => window.__prep.pos[u.id] || { r: u.__row, c: u.__col };
+  P.list.forEach((u) => { const p = posOf(u); u.__row = p.r; u.__col = p.c; });
+  window.__prep.foes = foes;
+
+  const cellHtml = (u, side, r, c) => {
+    const sel = window.__prep.sel === (u && u.id);
+    const border = u ? (sel ? "#ffd666" : (side === "A" ? "#3d5a8a" : "#7a3b3b")) : "#2a3350";
+    return '<div ' + (u ? 'data-prep="' + u.id + '"' : 'data-slot="' + r + ":" + c + '"') +
+      ' style="min-height:58px;border:1px ' + (u ? "solid" : "dashed") + " " + border + ';border-radius:8px;padding:4px;' + (side === "A" ? "cursor:pointer;" : "") + '">' +
+      (u ? '<div style="font-size:11px;font-weight:700;">' + esc(u.name) + '</div><div class="hint">' + fmt(u.maxHp) + ' HP</div>' : "") + '</div>';
+  };
+  const pick = (side, list, col, row) => list.find((u) => (u.__col ? 1 : 0) === col && u.__row === row);
+  let grid = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">' +
+    '<div class="hint" style="grid-column:span 2;text-align:center;color:#8fd8ff;font-weight:700;">🔵 我方（可调）</div>' +
+    '<div class="hint" style="grid-column:span 2;text-align:center;color:#ff9b9b;font-weight:700;">🔴 敌方</div>' +
+    '<div class="hint" style="text-align:center;font-size:10px;">后排</div><div class="hint" style="text-align:center;font-size:10px;">前排</div>' +
+    '<div class="hint" style="text-align:center;font-size:10px;">前排</div><div class="hint" style="text-align:center;font-size:10px;">后排</div>';
+  for (let r = 0; r < 3; r++) {
+    grid += cellHtml(pick("A", P.list, 1, r), "A", r, 1) + cellHtml(pick("A", P.list, 0, r), "A", r, 0) +
+      cellHtml(pick("B", foes, 0, r), "B", r, 0) + cellHtml(pick("B", foes, 1, r), "B", r, 1);
+  }
+  grid += '</div>';
+
+  view().innerHTML = '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
+    '<div class="hint">先调站位：点我方单位选中，再点空格放过去（互换）。敌人：' +
+    esc((s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ") || s.foe.name) + '</div>' +
+    '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) + '</div>' + grid +
+    '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
+      '<button id="prepGo" style="flex:1;min-width:140px;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
+      '<button id="prepBack" style="flex:1;min-width:140px;">← 返回选关</button>' +
+    '</div></div>';
+
+  view().querySelectorAll("[data-prep]").forEach((el) => el.onclick = () => {
+    const id = el.dataset.prep;
+    const sel = window.__prep.sel;
+    if (sel && sel !== id) {
+      const a = P.list.find((x) => x.id === sel), b = P.list.find((x) => x.id === id);
+      if (a && b) {
+        const pa = { r: a.__row, c: a.__col }, pb = { r: b.__row, c: b.__col };
+        window.__prep.pos[a.id] = pb; window.__prep.pos[b.id] = pa;
+      }
+      window.__prep.sel = null;
+    } else {
+      window.__prep.sel = id;
+    }
+    renderPrep(stageId);
+  });
+  view().querySelectorAll("[data-slot]").forEach((el) => el.onclick = () => {
+    const [r, c] = el.dataset.slot.split(":").map(Number);
+    const selId = window.__prep.sel;
+    const u = P.list.find((x) => x.id === selId);
+    if (!u) return;
+    // 目标格已有人则互换
+    const other = P.list.find((x) => x.id !== u.id && (x.__col ? 1 : 0) === c && x.__row === r);
+    const cur = { r: u.__row, c: u.__col };
+    window.__prep.pos[u.id] = { r, c };
+    if (other) window.__prep.pos[other.id] = { r: cur.r, c: cur.c };
+    renderPrep(stageId);
+  });
+  const go = $("prepGo"); if (go) go.onclick = () => startBattle(stageId, window.__prep.pos);
+  const bk = $("prepBack"); if (bk) bk.onclick = renderPick;
+}
+
+function startBattle(stageId, prepPos) {
+  if (roomId && amHost) { buildMultiBattle(stageId); return; }
+  const s = STAGES.find((x) => x.id === stageId);
+  if (!s) return;
+  const P = buildPlayerUnits();
+  const ch = P.ch, playOrig = P.playOrig;
+  const pos = prepPos || (window.__prep && window.__prep.stageId === stageId ? window.__prep.pos : null);
+  if (pos) P.list.forEach((u) => { const p = pos[u.id]; if (p) { u.__row = p.r; u.__col = p.c; } });
+  const foes = buildFoeUnits(s);
+  st = createBattle(P.list.concat(foes));
+  st.__party = P.partyArr.slice(0, 5);
   st.__lv = s.lv;
-  st.__target = foes.find((u) => !u.__back) ? foes.find((u) => !u.__back).id : (foes[0] || {}).id;
+  st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
