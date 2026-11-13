@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=4b1aaa5e";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=efe390f5";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
 import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, gearAbilities } from "./js/originals.js?v=942eb463";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -1270,7 +1270,12 @@ function doAct(kind) {
 
   if (st.finished) { finish(); renderBattle(); return; }
   if (kind !== "ult") {
-    const gain = 25 * (1 + (Number((m.traits || {}).rageOnSkill) || 0) / 100 + (Number((m.traits || {}).ragePct) || 0) / 100);
+    // ⚡ 回怒效率由武器决定：普攻 aRage / 技能 sRage / 防御固定 10
+    const wpG = wpOf(st.__weapon) || {};
+    let base = kind === "skill" ? Number(wpG.sRage) : Number(wpG.aRage);
+    if (!base || base <= 0) base = kind === "skill" ? 8 : 25;
+    if (kind === "defend") base = 10;
+    const gain = base * (1 + (Number((m.traits || {}).rageOnSkill) || 0) / 100 + (Number((m.traits || {}).ragePct) || 0) / 100);
     m.rage = Math.min(100, (Number(m.rage) || 0) + gain);
   }
   renderBattle();

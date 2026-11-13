@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=4b1aaa5e";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=efe390f5";
 import { itemBonus, itemMain, mainKeysOf } from "./js/power.js?v=d92ed317";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
@@ -95,7 +95,7 @@ function detail(it) {
   const skill = it.cat !== "weapon" ? "" :
     '<div class="hint" style="margin:12px 0 5px;font-weight:700;color:#8fd8ff;letter-spacing:1px;">招式组</div>' +
     skCard("普攻", d.aName || "", splitMult(Number(d.aMult) || 100, d.aHits),
-      ["单体", distTxt, dmgTypeTxt], "回怒 25", []) +
+      ["单体", distTxt, dmgTypeTxt], "回怒 " + (Number(d.aRage) || 25), []) +
     (d.sSupport
       ? skCard("技能", d.sName || "—", "辅助", ["辅助", "CD " + (d.sCd || 3)], "",
         [d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
