@@ -137,30 +137,24 @@ function dungeonHtml() {
 function openEnemyDetail(id, lv) {
   const e = enemyAt(id, lv);
   if (!e) return;
-  const tint = "#ff9b9b";
-  const s = e.stats;
-  const box = (label, val, big) => '<div style="background:#0d1322;border:1px solid #1e2740;border-radius:9px;padding:7px 9px;">' +
-    '<div class="hint" style="font-size:9.5px;">' + label + '</div>' +
-    '<div style="font-weight:' + (big ? "800" : "700") + ';font-size:' + (big ? "18px" : "14px") + ';color:' + (big ? "#ffd666" : "#dbe4f3") + ';">' + val + '</div></div>';
-  const chip = (k, v) => v ? '<span style="display:inline-block;background:#101a2e;border:1px solid #22304d;border-radius:6px;padding:3px 7px;margin:0 4px 4px 0;font-size:11px;">' +
-    '<span class="hint">' + k + '</span> ' + esc(v) + '</span>' : "";
-  const sk = (x) => '<div style="background:#0d1322;border-left:3px solid ' + tint + ';border-radius:7px;padding:7px 9px;margin-bottom:6px;">' +
-    '<div style="display:flex;gap:6px;"><b style="font-size:13px;">' + esc(x.name) + '</b>' +
-    '<span style="margin-left:auto;font-size:10.5px;color:#8fd8ff;">' + (x.mult ? x.mult + "%" : "") + (x.cd ? ' · CD ' + x.cd : "") + '</span></div>' +
-    '<div class="hint">' + esc(x.desc || "") + '</div></div>';
+  const tint = "#ff9b9b", s = e.stats;
+  const r = (k, v, hot) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px dashed #1b2436;">' +
+    '<span class="hint">' + k + '</span><span style="font-weight:' + (hot ? "800" : "600") + ';color:' + (hot ? "#ffd666" : "#dbe4f3") + ';font-size:' + (hot ? "15px" : "13px") + ';">' + v + '</span></div>';
+  const sec = (t) => '<div style="font-size:11px;color:#8fd8ff;font-weight:700;letter-spacing:1px;margin:11px 0 2px;">' + t + '</div>';
+  const skRow = (x) => '<div style="padding:6px 2px;border-bottom:1px dashed #1b2436;"><div style="display:flex;justify-content:space-between;gap:8px;">' +
+    '<b style="font-size:13px;">' + esc(x.name) + '</b><span style="font-size:10.5px;color:#8fd8ff;">' +
+    (x.mult ? x.mult + "%" : "") + (x.cd ? ' · CD' + x.cd : "") + '</span></div><div class="hint" style="margin-top:2px;">' + esc(x.desc || "") + '</div></div>';
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
-  ov.innerHTML = '<div class="card" style="max-width:480px;width:100%;max-height:88vh;overflow:auto;border:1px solid #ff9b9b66;">' +
+  ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;border:1px solid ' + tint + '66;">' +
     '<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:20px;font-weight:800;color:' + tint + ';">' + esc(e.name) + '</div>' +
     '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">Lv' + e.lv + '</span></div>' +
-    '<div class="hint" style="margin:3px 0 8px;">' + esc(e.camp) + ' · ' + esc(e.role) + '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' + box("生命", fmt(s.hp), true) + box("攻击", fmt(s.atk), true) + '</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;">' + box("防御", s.def) + box("法抗", s.res) + box("速度", s.spd) + '</div>' +
-    (e.desc ? '<div class="hint" style="margin:9px 0;line-height:1.7;">' + esc(e.desc) + '</div>' : "") +
-    '<div class="hint" style="font-weight:700;color:#8fd8ff;margin:10px 0 4px;">③ 装备</div>' +
-    (chip("武器", e.equip.weapon) + chip("上装", e.equip.armor) + chip("下装", e.equip.armor2) + chip("饰品", e.equip.accessory) || '<div class="hint">没有装备</div>') +
-    '<div class="hint" style="font-weight:700;color:#8fd8ff;margin:10px 0 4px;">④ 招式组</div>' +
-    ((e.skills || []).map(sk).join("") || '<div class="hint">没有招式</div>') +
+    '<div class="hint" style="margin:3px 0 2px;">' + esc(e.camp) + ' · ' + esc(e.role) + '</div>' +
+    (e.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(e.desc) + '</div>' : "") +
+    sec("① 面板数据") + r("攻击", fmt(s.atk), true) + r("生命", fmt(s.hp), true) + r("防御", fmt(s.def)) +
+    r("法抗", fmt(s.res)) + r("速度", s.spd) + r("暴击率", s.critRate + "%") + r("暴击伤害", s.critDmg + "%") +
+    sec("② 装备") + r("武器", esc(e.equip.weapon)) + r("上装", esc(e.equip.armor)) + r("下装", esc(e.equip.armor2)) + r("饰品", esc(e.equip.accessory)) +
+    sec("③ 招式组") + ((e.skills || []).map(skRow).join("") || '<div class="hint">没有招式</div>') +
     '<div style="margin-top:10px;"><button id="ecClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
   ov.querySelector("#ecClose").onclick = () => ov.remove();
