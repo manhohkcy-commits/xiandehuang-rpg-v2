@@ -141,11 +141,6 @@ function form(d) {
       '<div><div class="hint">称号</div><input class="ofield" id="fTitle" maxlength="20" value="' + esc(d.title) + '" placeholder="例如：不眠的守夜人"></div>' +
     '</div>' +
     '<div class="ogrid2" style="margin-top:10px;">' +
-      '<div><div class="hint">定位预设</div><select class="ofield" id="fPreset">' +
-        '<option value="">— 选择后自动分配加点 —</option>' +
-        Object.keys(ROLE_PRESETS).map((k) => '<option value="' + esc(k) + '">' + esc(k) + '</option>').join("") +
-      '</select></div>' +
-      '<div><div class="hint">定位</div><select class="ofield" id="fRole">' + ROLES.map((r) => '<option' + (d.role === r ? " selected" : "") + '>' + r + '</option>').join("") + '</select></div>' +
       '<div><div class="hint">稀有度模板</div><select class="ofield" id="fRare">' +
         '<option value="0"' + (!d.rare ? " selected" : "") + '>普通原创（固定值较低 / 加点 60+36）</option>' +
         '<option value="1"' + (d.rare ? " selected" : "") + '>稀有原创（固定值更高 / 加点 80+48）</option>' +
@@ -226,7 +221,7 @@ function bind() {
   const T = ORIGIN[d.rare ? "rare" : "normal"];
   $("fName").oninput = () => { d.name = $("fName").value; };
   $("fTitle").oninput = () => { d.title = $("fTitle").value; };
-  $("fRole").onchange = () => { d.role = $("fRole").value; };
+  if ($("fRole")) $("fRole").onchange = () => { d.role = $("fRole").value; };
   // 🎯 定位预设：按当前品质模板缩放加点
   if ($("fPreset")) $("fPreset").onchange = () => {
     const p = ROLE_PRESETS[$("fPreset").value];
