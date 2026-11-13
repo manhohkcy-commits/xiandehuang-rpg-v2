@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=7986d624";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=4ecaf41a";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1279,7 +1279,7 @@ function renderOrig() {
   const brk = Math.min(3, Number(prog.breaks) || 0);
   const need = CHAR.expNeed(lv);
   const pct = Math.min(100, Math.round(((Number(prog.exp) || 0) / need) * 100));
-  const fin = originalFinal(o, prog);
+  const fin = originalFinal(o, prog, true, false); // 面板 = 本体 + 装备，不含培养加成
   const atk = fin.atk, hp = fin.hp, def = fin.def, res = fin.res, spd = fin.spd;
   const s = o.stats || {};
   const pw = fin.power;

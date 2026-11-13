@@ -3,7 +3,7 @@ import { powerOf } from "./power.js?v=d92ed317";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
-export function originalFinal(o, prog, withGear) {
+export function originalFinal(o, prog, withGear, withBonus) {
   const useGear = withGear !== false;
   const lv = Number(prog && prog.lv) || 1;
   const br = Math.min(3, Number(prog && prog.breaks) || 0);
@@ -33,7 +33,7 @@ export function originalFinal(o, prog, withGear) {
     critDmg: (Number(s.critDmg) || 150) + gs.critDmg
   };
   // 🏋 属性强化 / 精炼等长期加成
-  const bonus = useGear ? ((prog && prog.bonus) || {}) : {};
+  const bonus = (useGear && withBonus !== false) ? ((prog && prog.bonus) || {}) : {};
   ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].forEach((key) => {
     out[key] += Number(bonus[key]) || 0;
   });
