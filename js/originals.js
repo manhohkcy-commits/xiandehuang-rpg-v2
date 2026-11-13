@@ -8,14 +8,21 @@ export function originalFinal(o, prog) {
   const br = Math.min(3, Number(prog && prog.breaks) || 0);
   const k = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
   const s = o.stats || {};
+  // 🗡 专属装备加成
+  const g = o.gearObj || {};
+  const gs = { atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 0 };
+  Object.keys(g).forEach((slot) => {
+    const it = g[slot] || {};
+    Object.keys(gs).forEach((key) => { gs[key] += Number(it[key]) || 0; });
+  });
   const out = {
-    atk: (Number(s.atk) || 60) * k,
-    hp: (Number(s.hp) || 500) * k,
-    def: (Number(s.def) || 20) * k,
-    res: (Number(s.res) || 15) * k,
-    spd: (Number(s.spd) || 10) + 0.1 * (lv - 1),
-    critRate: Number(s.critRate) || 5,
-    critDmg: Number(s.critDmg) || 150
+    atk: (Number(s.atk) || 60) * k + gs.atk,
+    hp: (Number(s.hp) || 500) * k + gs.hp,
+    def: (Number(s.def) || 20) * k + gs.def,
+    res: (Number(s.res) || 15) * k + gs.res,
+    spd: (Number(s.spd) || 10) + 0.1 * (lv - 1) + gs.spd,
+    critRate: (Number(s.critRate) || 5) + gs.critRate,
+    critDmg: (Number(s.critDmg) || 150) + gs.critDmg
   };
   out.power = powerOf(out);
   return out;
@@ -45,12 +52,12 @@ export const ORIGINAL_GEAR = {
     weapon: { name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8 },
     armor: { name: "霜绡战衣", rarity: "SR", atk: 0, hp: 340, def: 26, res: 14, spd: 0, critRate: 0 },
     armor2: { name: "踏雪战裤", rarity: "SR", atk: 0, hp: 170, def: 10, res: 0, spd: 4, critRate: 0 },
-    accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0 }
+    accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12 }
   }
 };
 // 🩸 原创角色特性（按 id）
 export const ORIGINAL_TRAITS = {
-  dmweo00x9: { lifesteal: 15, frostMax: 5, frostPerStack: 15 }
+  dmweo00x9: { lifesteal: 15, ultPct: 10, frostMax: 5, frostPerStack: 15 }
 };
 function mergeGear(o) {
   const g = ORIGINAL_GEAR[o.id];

@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=07fa2916";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, ORIGINAL_TRAITS } from "./js/originals.js?v=9ea87c06";
+import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, ORIGINAL_TRAITS } from "./js/originals.js?v=e5f17a94";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -1157,7 +1157,8 @@ function doAct(kind) {
     const t0 = st.units.find((u) => u.id === targetId());
     const targets = t0 ? shapeUnits(wp2.uShape || "single", t0) : [];
     const frost = st.__origId ? (Number(st.__frost) || 0) : 0;
-    const ultMult = (Number(wp2.uMult) || 250) * (1 + 0.15 * frost);
+    const ultPct = Number((st.__otraits || {}).ultPct) || 0;
+    const ultMult = (Number(wp2.uMult) || 250) * (1 + 0.15 * frost) * (1 + ultPct / 100);
     let total = 0, anyCrit = false;
     targets.filter(Boolean).forEach((t) => {
       const rr = strike(st, "me", t.id, { atk: m.atk, mult: ultMult, critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wp2.dmgType || "phys"), style: (wp2.style || "melee") }, wp2.uHits || 1);
