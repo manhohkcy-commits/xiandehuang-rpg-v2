@@ -40,7 +40,15 @@ export async function pullOriginals() {
   return ORIGINALS;
 }
 // 🗡 专属装备由开发者定稿写入（按角色 id 合并到云端数据上）
-export const ORIGINAL_GEAR = {};
+export const ORIGINAL_GEAR = {
+  // 晓天（先锋 · 暴力输出 · 稀有）
+  dmweo00x9: {
+    weapon: { name: "破晓长刀", atk: 96, hp: 0, def: 0, res: 0, spd: 0, critRate: 8 },
+    armor: { name: "赤枫战衣", atk: 0, hp: 320, def: 24, res: 8, spd: 0, critRate: 0 },
+    armor2: { name: "疾行战裤", atk: 0, hp: 160, def: 8, res: 0, spd: 3.5, critRate: 0 },
+    accessory: { name: "燃血护符", atk: 52, hp: 0, def: 0, res: 0, spd: 0, critRate: 0 }
+  }
+};
 function mergeGear(o) {
   const g = ORIGINAL_GEAR[o.id];
   return g ? Object.assign({}, o, { gearObj: g }) : o;
