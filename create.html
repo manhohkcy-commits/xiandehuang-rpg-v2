@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR } from "./js/originals.js?v=2c90061f";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT } from "./js/originals.js?v=02062389";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1292,6 +1292,8 @@ function renderOrig() {
   const gear = Object.keys(SLOTN).map((k) => {
     const it = gg[k] || {};
     if (!it.name) return "";
+    const gst = (prog.gear && prog.gear[k]) || { lv: 1, star: 1 };
+    const glv = Math.max(1, Number(gst.lv) || 1), gst2 = Math.max(1, Number(gst.star) || 1);
     const bits = [];
     if (it.atk) bits.push("攻+" + it.atk);
     if (it.hp) bits.push("生+" + it.hp);
@@ -1302,9 +1304,15 @@ function renderOrig() {
     if (it.critDmg) bits.push("暴伤+" + it.critDmg + "%");
     if (it.lifesteal) bits.push("吸血" + it.lifesteal + "%");
     if (it.ultPct) bits.push("必杀+" + it.ultPct + "%");
-    return '<div class="row"><span class="k" style="font-size:12px;">🗡 ' + esc(it.name) +
-      ' <span class="hint">' + (it.rarity || "") + '</span></span>' +
-      '<span class="v" style="font-size:11px;color:#9aa4b8;">' + esc(bits.join(" · ")) + '</span></div>';
+    return '<div style="padding:7px 2px;border-bottom:1px dashed #2a2418;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+        '<span style="font-size:12.5px;">🗡 <b>' + esc(it.name) + '</b> <span class="hint">' + (it.rarity || "") + '</span>' +
+        ' <span style="color:#ffd666;font-size:11px;">Lv' + glv + ' ★' + gst2 + '</span></span>' +
+        '<span style="display:flex;gap:4px;">' +
+          '<button data-og="' + k + ':lv" style="font-size:10.5px;padding:3px 7px;">强化</button>' +
+          '<button data-og="' + k + ':star" style="font-size:10.5px;padding:3px 7px;">升星</button>' +
+        '</span></div>' +
+      '<div class="hint" style="margin-top:2px;">' + esc(bits.join(" · ")) + '</div></div>';
   }).join("");
 
   view().innerHTML =
@@ -1335,6 +1343,30 @@ function renderOrig() {
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+  view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
+    const parts = b.dataset.og.split(":");
+    const slot = parts[0], act = parts[1];
+    const p = store.orig[o.id] || (store.orig[o.id] = { lv: 1, exp: 0, breaks: 0 });
+    if (!p.gear) p.gear = {};
+    const gs2 = p.gear[slot] || (p.gear[slot] = { lv: 1, star: 1 });
+    if (!store.flags) store.flags = {};
+    if (act === "lv") {
+      const lv2 = Number(gs2.lv) || 1;
+      if (lv2 >= ORIG_GEAR_CULT.maxLv) return toast("这件已满级", true);
+      const cs = ORIG_GEAR_CULT.lvStone(lv2), cg = ORIG_GEAR_CULT.lvGold(lv2);
+      if ((store.flags.stone || 0) < cs) return toast("强化石不足（需 " + cs + "）", true);
+      if ((store.gold || 0) < cg) return toast("金币不足（需 " + cg + "）", true);
+      store.flags.stone -= cs; store.gold -= cg; gs2.lv = lv2 + 1;
+    } else {
+      const sr = Number(gs2.star) || 1;
+      if (sr >= ORIG_GEAR_CULT.maxStar) return toast("这件已满星", true);
+      const cs2 = ORIG_GEAR_CULT.starShards(sr), cg2 = ORIG_GEAR_CULT.starGold(sr);
+      if ((store.flags.shards || 0) < cs2) return toast("碎片不足（需 " + cs2 + "）", true);
+      if ((store.gold || 0) < cg2) return toast("金币不足（需 " + cg2 + "）", true);
+      store.flags.shards -= cs2; store.gold -= cg2; gs2.star = sr + 1;
+    }
+    await save(); render();
+  });
   if ($("btnPlayOrig")) $("btnPlayOrig").onclick = () => {
     try { localStorage.setItem("rpg2:playAs", o.id); } catch (e) {}
     location.href = "battle.html";

@@ -10,10 +10,17 @@ export function originalFinal(o, prog) {
   const s = o.stats || {};
   // 🗡 专属装备加成
   const g = o.gearObj || {};
+  const gl = (prog && prog.gear) || {};
   const gs = { atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 0 };
   Object.keys(g).forEach((slot) => {
     const it = g[slot] || {};
-    Object.keys(gs).forEach((key) => { gs[key] += Number(it[key]) || 0; });
+    const st = gl[slot] || {};
+    const lv = Math.max(1, Number(st.lv) || 1);
+    const star = Math.max(1, Number(st.star) || 1);
+    const mul = (1 + 0.02 * (lv - 1)) * (1 + 0.12 * (star - 1));
+    ["atk", "hp", "def", "res", "spd"].forEach((key) => { gs[key] += (Number(it[key]) || 0) * mul; });
+    gs.critRate += Number(it.critRate) || 0;
+    gs.critDmg += Number(it.critDmg) || 0;
   });
   const out = {
     atk: (Number(s.atk) || 60) * k + gs.atk,
@@ -61,7 +68,14 @@ export const ORIGINAL_GEAR = {
     accessory: { name: "凝霜之泪", rarity: "SSR", atk: 52, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12, lifesteal: 15 }
   }
 };
-// 🗡 装备能力汇总（吸血 / 必杀加成）
+// 🛠 专属装备培养：每件 +2%/级（上限 20 级）、+12%/星（上限 5 星）
+export const ORIG_GEAR_CULT = {
+  maxLv: 20, maxStar: 5,
+  lvStone: (lv) => 3 + 2 * (Number(lv) || 1),
+  lvGold: (lv) => 80 * (Number(lv) || 1),
+  starShards: (star) => 10 * (Number(star) || 1),
+  starGold: (star) => 300 * (Number(star) || 1)
+};
 export function gearAbilities(o) {
   const g = (o && o.gearObj) || {};
   const out = { lifesteal: 0, ultPct: 0 };
