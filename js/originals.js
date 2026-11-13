@@ -3,7 +3,8 @@ import { powerOf } from "./power.js?v=d92ed317";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
-export function originalFinal(o, prog) {
+export function originalFinal(o, prog, withGear) {
+  const useGear = withGear !== false;
   const lv = Number(prog && prog.lv) || 1;
   const br = Math.min(3, Number(prog && prog.breaks) || 0);
   const k = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
@@ -12,7 +13,7 @@ export function originalFinal(o, prog) {
   const g = o.gearObj || {};
   const gl = (prog && prog.gear) || {};
   const gs = { atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 0 };
-  Object.keys(g).forEach((slot) => {
+  if (useGear) Object.keys(g).forEach((slot) => {
     const it = g[slot] || {};
     const st = gl[slot] || {};
     const lv = Math.max(1, Number(st.lv) || 1);
@@ -32,7 +33,7 @@ export function originalFinal(o, prog) {
     critDmg: (Number(s.critDmg) || 150) + gs.critDmg
   };
   // 🏋 属性强化 / 精炼等长期加成
-  const bonus = (prog && prog.bonus) || {};
+  const bonus = useGear ? ((prog && prog.bonus) || {}) : {};
   ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].forEach((key) => {
     out[key] += Number(bonus[key]) || 0;
   });
