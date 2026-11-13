@@ -93,6 +93,71 @@ const WEAPON_TUNE = {
   w_purify: { sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 3, uMult: 0 }
 };
 WEAPONS.forEach((w) => Object.assign(w, WEAPON_TUNE[w.id] || {}));
+// 🗡 全武器重做：主属性（攻击）+ 副属性 + 招式组（形式/距离/类别/效果）
+const WEAPON_FINAL = {
+  // ── R ──────────────────────────────
+  w_iron: { atk: 40, style: "melee", dmgType: "phys", sub: { atk: 5 },
+    aMult: 100, uMult: 250, desc: "最普通的铁剑，胜在趁手。" },
+  w_bow: { atk: 38, style: "ranged", dmgType: "phys", sub: { critRate: 2 },
+    aMult: 95, uMult: 240, desc: "轻便的短弓，拉起来不费力。" },
+  w_wood: { atk: 36, style: "focus", dmgType: "spell", sub: { res: 5 },
+    aMult: 90, uMult: 230, desc: "练习用的木法杖，也能砸人。" },
+  w_dagger: { atk: 34, style: "melee", dmgType: "phys", sub: { spd: 1 },
+    aMult: 90, aHits: 2, uMult: 220, uHits: 2, desc: "短刃贴身，出手极快。" },
+  w_fist: { atk: 36, style: "melee", dmgType: "phys", sub: { critRate: 1 },
+    aMult: 85, aHits: 2, uMult: 210, uHits: 2, desc: "缠着布条的铁拳套。" },
+  w_spear: { atk: 42, style: "melee", dmgType: "phys", sub: { hp: 20 },
+    aMult: 105, uMult: 260, desc: "长枪一寸长一寸强。" },
+  w_sling: { atk: 34, style: "ranged", dmgType: "phys", sub: { spd: 1 },
+    aMult: 100, uMult: 240, desc: "投石索，打不死人也疼。" },
+  w_hunt: { atk: 38, style: "ranged", dmgType: "phys", sub: { critRate: 2 },
+    aMult: 110, uMult: 250, desc: "猎弩上弦慢，但这一下够狠。" },
+  w_torch: { atk: 36, style: "melee", dmgType: "spell", sub: { res: 3 },
+    aMult: 95, uMult: 230, burn: true, desc: "火把当武器，烫手也烫敌。" },
+  w_shield: { atk: 38, style: "melee", dmgType: "phys", sub: { def: 6 },
+    aMult: 90, uMult: 230, desc: "木盾主要用来挡，其次才是砸。" },
+  // ── SR ─────────────────────────────
+  w_twin: { atk: 50, style: "melee", dmgType: "phys", sub: { critRate: 3 },
+    aMult: 100, aHits: 2, sName: "追影", sMult: 180, sHits: 2, sShape: "single", sCd: 3, sRage: 10,
+    uMult: 320, uHits: 2, uShape: "single", desc: "双刃交错，追着影子砍。" },
+  w_axe: { atk: 50, style: "melee", dmgType: "phys", sub: { hp: 40 },
+    aMult: 110, sName: "裂地", sMult: 200, sShape: "all", sCd: 4, sunderBoost: 30, sRage: 5,
+    uMult: 300, uShape: "all", desc: "一斧落地，半圈都碎。" },
+  w_spear2: { atk: 50, style: "melee", dmgType: "phys", sub: { atk: 6 },
+    aMult: 105, sName: "穿云", sMult: 210, sShape: "col", sCd: 3, penetrate: 15, sRage: 8,
+    uMult: 330, uShape: "col", desc: "枪尖专找甲缝，正面很难挡。" },
+  w_cross: { atk: 50, style: "ranged", dmgType: "phys", sub: { critRate: 4 },
+    aMult: 100, sName: "破甲弩", sMult: 190, sShape: "single", sCd: 3, penetrate: 20, sRage: 8,
+    uMult: 300, uShape: "row", desc: "弩机沉重，专破重甲。" },
+  w_longbow: { atk: 48, style: "ranged", dmgType: "phys", sub: { spd: 2 },
+    aMult: 95, aHits: 2, sName: "猎风", sMult: 170, sHits: 2, sShape: "single", sCd: 3, sRage: 10,
+    uMult: 260, uShape: "all", desc: "长弓拉满，风声先到。" },
+  w_firestaff: { atk: 50, style: "focus", dmgType: "spell", sub: { res: 8 },
+    aMult: 100, sName: "火石", sMult: 200, sShape: "all", sCd: 4, burn: true, sRage: 6,
+    uMult: 300, uShape: "all", desc: "杖头火石，落地一片火。" },
+  w_thunder: { atk: 50, style: "focus", dmgType: "spell", sub: { critRate: 3 },
+    aMult: 100, sName: "雷鸣", sMult: 190, sShape: "single", sCd: 4, stun: 30, sRage: 8,
+    uMult: 320, uShape: "cross", desc: "短杖一响，雷先劈下来。" },
+  w_aegis: { atk: 46, style: "focus", dmgType: "spell", sub: { res: 10, hp: 30 },
+    aMult: 90, sName: "守护", sSupport: "shield", sShieldPct: 25, sCd: 3,
+    uMult: 230, uShape: "single", desc: "权杖立地，替人挡下。" },
+  w_purify: { atk: 44, style: "focus", dmgType: "spell", sub: { res: 12, spd: 1 },
+    aMult: 90, sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 3,
+    uMult: 220, uShape: "single", desc: "铃声清亮，能驱散不干净的东西。" }
+};
+WEAPONS.forEach((w) => {
+  const f = WEAPON_FINAL[w.id];
+  if (!f) return;
+  w.main = { atk: f.atk };
+  w.style = f.style;
+  w.dmgType = f.dmgType;
+  Object.assign(w, f.sub || {});
+  ["aMult", "aHits", "sName", "sMult", "sHits", "sShape", "sCd", "sRage", "sSupport", "sShieldPct", "sDispelN",
+    "uMult", "uHits", "uShape", "sunderBoost", "penetrate", "stun", "burn"].forEach((k) => {
+    if (f[k] != null) w[k] = f[k];
+  });
+  if (f.desc) w.desc = f.desc;
+});
 
 export const ARMORS = [
   // ── 上装（part: top）─────────────────
