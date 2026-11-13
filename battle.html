@@ -33,6 +33,12 @@ window.__playOrig = localStorage.getItem("rpg2:playAs") || null;
 
 // 🤝 同行队伍（最多 5 名友方原创角色，默认托管）
 function partyIds() { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } }
+// 👑 主机标记：只有主机能操控原创角色
+function isHost() { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } }
+function origLv(o) {
+  if (isHost()) return Number(((store.orig || {})[o.id] || {}).lv) || 1;
+  return Number(o.lv) || 1;
+}
 function setParty(a) { try { localStorage.setItem("rpg2:party", JSON.stringify(a.slice(0, 5))); } catch (e) {} }
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
@@ -229,10 +235,15 @@ function renderPick() {
       (origList.length
         ? origList.map((o) => {
             const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
+            const lvShow = origLv(o);
+            const host = isHost();
             return '<div class="row"><span class="k">🧬 ' + esc(o.name) + (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') +
-              '<div class="hint">原创角色 · Lv' + prog.lv + ' · 经验 ' + fmt(prog.exp) + '</div></span>' +
-              '<span class="v"><button data-playorig="' + o.id + '" ' + (playOrig && playOrig.id === o.id ? 'style="border-color:#ffb347;color:#ffb347;"' : '') + '>' +
-              (playOrig && playOrig.id === o.id ? "✅ 出战中" : "选择") + '</button></span></div>';
+              '<div class="hint">原创角色 · Lv' + lvShow + (host ? ' · 经验 ' + fmt(prog.exp) : '') + '</div></span>' +
+              '<span class="v">' + (host
+                ? '<button data-playorig="' + o.id + '" ' + (playOrig && playOrig.id === o.id ? 'style="border-color:#ffb347;color:#ffb347;"' : '') + '>' +
+                  (playOrig && playOrig.id === o.id ? "✅ 出战中" : "选择") + '</button>'
+                : '<span class="hint">👑 仅主机可操控</span>') +
+              '</span></div>';
           }).join("")
         : '<div class="hint">还没有原创角色（主机端设计好后会出现）。</div>') +
     '</div>' +
@@ -399,7 +410,7 @@ async function tryRestore() {
 // 🧬 原创角色：按自己的等级成长（每级 +5% 攻/血/防/抗，速度 +0.1）
 function origStats(o) {
   const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
-  const lv = Number(prog.lv) || 1;
+  const lv = origLv(o);
   const k = 1 + 0.05 * (lv - 1);
   const s = o.stats || {};
   return {

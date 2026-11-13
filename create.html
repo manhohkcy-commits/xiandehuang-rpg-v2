@@ -1191,7 +1191,9 @@ function renderOrig() {
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
       '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
       '<div class="hint" style="margin-top:8px;">用这名原创角色打一场战斗可以给他涨经验（每胜 +120）。</div>' +
-      '<div style="margin-top:10px;"><button id="btnPlayOrig" style="border-color:#ffb347;color:#ffb347;">⚔️ 用他出战</button></div>') +
+      (localStorage.getItem("rpg2:host") === "1"
+      ? '<div style="margin-top:10px;"><button id="btnPlayOrig" style="border-color:#ffb347;color:#ffb347;">⚔️ 用他出战</button></div>'
+      : '<div class="hint" style="margin-top:10px;">👑 仅主机可操控该原创角色（其他玩家可查看 / 同行 / 挑战）</div>')) +
     card("战斗面板",
       '<div style="font-size:24px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>' +
       '<div class="hint" style="margin-bottom:6px;">综合战力</div>' +

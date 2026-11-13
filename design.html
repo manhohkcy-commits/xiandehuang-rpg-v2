@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -61,14 +61,14 @@ async function gate() {
     const p1 = prompt("首次使用：设置设计师口令（4 位以上）");
     if (!p1 || p1.length < 4) { deny("口令太短。"); return false; }
     const h = await sha(p1);
-    localStorage.setItem(PWKEY, h); localStorage.setItem("rpg2:designok", h);
+    localStorage.setItem(PWKEY, h); localStorage.setItem("rpg2:designok", h); localStorage.setItem("rpg2:host", "1");
     alert("口令已设置，这台设备已记住。");
     return true;
   }
   for (let i = 0; i < 3; i++) {
     const p = prompt("请输入设计师口令（第 " + (i + 1) + " 次）");
     if (p == null) { deny("已取消。"); return false; }
-    if ((await sha(p)) === stored) { localStorage.setItem("rpg2:designok", stored); return true; }
+    if ((await sha(p)) === stored) { localStorage.setItem("rpg2:designok", stored); localStorage.setItem("rpg2:host", "1"); return true; }
   }
   deny("口令错误 3 次。");
   return false;
@@ -294,7 +294,7 @@ function bind() {
   });
   $("btnLock") && ($("btnLock").onclick = () => {
     if (!confirm("锁定？下次需要重新输入口令。")) return;
-    localStorage.removeItem("rpg2:designok"); location.reload();
+    localStorage.removeItem("rpg2:designok"); localStorage.removeItem("rpg2:host"); location.reload();
   });
 }
 
