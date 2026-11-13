@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -110,17 +110,44 @@ function render() {
     if (!o) return;
     const f = originalFinal(o, {});
     const g = ORIGINAL_GEAR[o.id] || o.gearObj || {};
-    const gearLines = Object.keys(g).filter((k) => (g[k] || {}).name).map((k) => "🗡 " + g[k].name).join("　");
+    const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+    const tint = o.rare ? "#ffb347" : "#8a8ab0";
+    const row = (k, v) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
+      '<span class="hint">' + k + '</span><span style="font-weight:600;color:#dbe4f3;font-size:13px;">' + v + '</span></div>';
+    const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+    const gearHtml = Object.keys(SLOT).map((k) => {
+      const it = g[k] || {};
+      if (!it.name) return "";
+      const parts = [];
+      if (it.atk) parts.push("攻击 +" + it.atk);
+      if (it.hp) parts.push("生命 +" + it.hp);
+      if (it.def) parts.push("防御 +" + it.def);
+      if (it.res) parts.push("法抗 +" + it.res);
+      if (it.spd) parts.push("速度 +" + it.spd);
+      if (it.critRate) parts.push("暴击 +" + it.critRate + "%");
+      if (it.critDmg) parts.push("暴伤 +" + it.critDmg + "%");
+      if (it.lifesteal) parts.push("吸血 " + it.lifesteal + "%");
+      if (it.ultPct) parts.push("必杀 +" + it.ultPct + "%");
+      return '<div style="padding:7px 9px;border-bottom:1px solid #1a2438;">' +
+        '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;color:#dbe4f3;">🗡 ' + esc(it.name) + '</b>' +
+        '<span class="hint">' + SLOT[k] + '</span></div>' +
+        (parts.length ? '<div class="hint" style="margin-top:2px;">' + esc(parts.join(" · ")) + '</div>' : "") + '</div>';
+    }).join("") || '<div class="hint" style="padding:8px 9px;">（暂无专属装备）</div>';
+
     const ov = document.createElement("div");
     ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
-    ov.innerHTML = '<div class="card" style="max-width:440px;width:100%;"><div style="display:flex;gap:8px;align-items:center;">' +
-      '<b style="font-size:20px;color:' + (o.rare ? "#ffb347" : "#dbe4f3") + ';">' + esc(o.name) + '</b>' +
-      '<span class="tag">' + (o.rare ? "稀有" : "普通") + '</span><span class="tag" style="margin-left:auto;">⚔️ ' + fmt(f.power) + '</span></div>' +
-      '<div class="hint">' + esc(o.title || "") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
-      (o.desc ? '<div class="hint" style="margin:6px 0;">' + esc(o.desc) + '</div>' : "") +
-      '<div class="row"><span class="k">攻击 / 生命</span><span class="v">' + Math.round(f.atk) + ' / ' + fmt(Math.round(f.hp)) + '</span></div>' +
-      '<div class="row"><span class="k">防御 / 法抗 / 速度</span><span class="v">' + Math.round(f.def) + ' / ' + Math.round(f.res) + ' / ' + f.spd + '</span></div>' +
-      (gearLines ? '<div class="hint" style="margin-top:6px;">' + esc(gearLines) + '</div>' : "") +
+    ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;border:1px solid ' + tint + '66;">' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<div style="font-size:21px;font-weight:800;color:' + tint + ';">' + esc(o.name) + '</div>' +
+        '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">' + (o.rare ? "稀有" : "普通") + '</span>' +
+        '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:3px 11px;font-size:11px;color:' + tint + ';">⚔️ 战力 <b style="font-size:13px;">' + fmt(f.power) + '</b></span></div>' +
+      '<div class="hint" style="margin:3px 0 2px;">' + esc(o.title || "无称号") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
+      (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(o.desc) + '</div>' : "") +
+      '<div class="hint" style="font-size:11px;color:' + tint + ';font-weight:700;letter-spacing:1px;margin:10px 0 5px;">① 面板数据</div>' +
+      panel(row("攻击", Math.round(f.atk)) + row("生命", fmt(Math.round(f.hp))) + row("防御", Math.round(f.def)) +
+        row("法抗", Math.round(f.res)) + row("速度", f.spd) + row("暴击率", f.critRate + "%") + row("暴击伤害", f.critDmg + "%")) +
+      '<div class="hint" style="font-size:11px;color:' + tint + ';font-weight:700;letter-spacing:1px;margin:10px 0 5px;">② 专属装备</div>' +
+      panel(gearHtml) +
       '<div style="margin-top:10px;"><button id="lClose" style="width:100%;">关闭</button></div></div>';
     document.body.appendChild(ov);
     ov.querySelector("#lClose").onclick = () => ov.remove();
