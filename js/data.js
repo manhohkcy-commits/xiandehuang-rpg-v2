@@ -67,9 +67,32 @@ const WEAPON_ATK = {
   w_twin: 50, w_axe: 50, w_spear2: 50, w_cross: 50, w_longbow: 48,
   w_firestaff: 50, w_thunder: 50, w_aegis: 46, w_purify: 44};
 WEAPONS.forEach((w) => { if (WEAPON_ATK[w.id]) w.main = { atk: WEAPON_ATK[w.id] }; });
-// 🌊 范围招式标记
-const WEAPON_AOE = { w_axe: { sAoe: 1 }, w_firestaff: { sAoe: 1 }, w_longbow: { uAoe: 1 }, w_fengwang: {} };
-WEAPONS.forEach((w) => Object.assign(w, WEAPON_AOE[w.id] || {}));
+// 🌊 攻击形式：single 单体 / row 一排 / col 一列 / cross 十字 / all 全体；back 无视前排
+const WEAPON_SHAPE = {
+  w_twin: { sShape: "single", uShape: "single" },
+  w_axe: { sShape: "all", uShape: "all" },
+  w_spear2: { sShape: "col", uShape: "col" },
+  w_cross: { sShape: "single", uShape: "row" },
+  w_longbow: { sShape: "single", sBack: 1, uShape: "all" },
+  w_firestaff: { sShape: "all", uShape: "all" },
+  w_thunder: { sShape: "single", uShape: "cross" },
+  w_aegis: { sShape: "single" },
+  w_purify: { sShape: "single" }
+};
+WEAPONS.forEach((w) => Object.assign(w, WEAPON_SHAPE[w.id] || {}));
+// 🗡 SR 武器数值重做（普攻/技能/必杀）
+const WEAPON_TUNE = {
+  w_twin: { sName: "追影", sMult: 180, sHits: 2, sCd: 3, uMult: 320, uHits: 2 },
+  w_axe: { sName: "裂地", sMult: 200, sCd: 4, uMult: 300, sunderBoost: 30 },
+  w_spear2: { sName: "穿云", sMult: 210, sCd: 3, uMult: 330, penetrate: 15 },
+  w_cross: { sName: "破甲弩", sMult: 190, sCd: 3, uMult: 300, penetrate: 20 },
+  w_longbow: { sName: "猎风", sMult: 170, sHits: 2, sCd: 3, uMult: 260 },
+  w_firestaff: { sName: "火石", sMult: 200, sCd: 4, uMult: 300, burn: true },
+  w_thunder: { sName: "雷鸣", sMult: 190, sCd: 4, uMult: 320, stun: 30 },
+  w_aegis: { sName: "守护", sSupport: "shield", sShieldPct: 25, sCd: 3, uMult: 0 },
+  w_purify: { sName: "净化", sSupport: "dispel", sDispelN: 2, sCd: 3, uMult: 0 }
+};
+WEAPONS.forEach((w) => Object.assign(w, WEAPON_TUNE[w.id] || {}));
 
 export const ARMORS = [
   // ── 上装（part: top）─────────────────

@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=b49a6abd";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=375bfeb1";
 import { enemyAt, enemyById } from "./js/enemies.js?v=6849b7aa";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -602,6 +602,15 @@ function validTargets(u) {
   if (isRangedUnit(u) || !front.length) return list;
   return front;
 }
+// 🌊 攻击形式解析：single/row/col/cross/all（相对目标格子）
+function shapeUnits(shape, t) {
+  const list = st.units.filter((u) => u.side === t.side && u.hp > 0);
+  if (shape === "all") return list;
+  if (shape === "row") return list.filter((u) => u.__row === t.__row);
+  if (shape === "col") return list.filter((u) => u.__col === t.__col);
+  if (shape === "cross") return list.filter((u) => u.__row === t.__row || u.__col === t.__col);
+  return [t];
+}
 function targetId() {
   const list = validTargets(me());
   const cur = st.units.find((u) => u.id === st.__target && u.hp > 0);
@@ -751,6 +760,7 @@ async function pullIntents() {
 }
 
 // 🧩 战斗词条展示（第二批）
+const SHAPE_NAME = { single: "单体", row: "一排", col: "一列", cross: "十字", all: "全体" };
 const TRAIT_NAMES = { cdReduce: "冷却缩减", rageOnSkill: "招式回怒", rageOnKill: "击杀回怒", rageStart: "初始怒气", sunderBoost: "破防强度", statusPower: "状态强度", statusHit: "状态命中", statusResist: "状态抗性", block: "格挡", tenacity: "韧性", lowHpCut: "残血减伤", physPct: "物理伤害", spellPct: "法术伤害", normalPct: "普攻伤害", skillPct: "技能伤害", ultPct: "必杀伤害", physPen: "物理穿透", spellPen: "法术穿透", meleePct: "近战伤害", rangedPct: "远程伤害", focusPct: "法器伤害" };
 const STATUS_NAMES = { stun: "眩晕", freeze: "冰冻", silence: "沉默", disarm: "缴械", taunt: "嘲讽", noheal: "禁疗", immune: "免疫", burn: "灼烧", sunder: "破防", mark: "标记", stack: "层数", atkUp: "增益", tcd: "天赋技CD", scd: "辅助技CD" };
 const statusName = (k) => STATUS_NAMES[k] || k;
@@ -837,9 +847,9 @@ function renderBattle() {
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
           '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || !canUseNormal(m) ? 'disabled' : '') + '>⚔️ 普攻</button>' +
           '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 || !canUseSkill(m) || (!wpOf(st.__weapon).sMult && !wpOf(st.__weapon).sSupport) ? 'disabled' : '') + '>' +
-            '🥋 ' + ((!wpOf(st.__weapon).sMult && !wpOf(st.__weapon).sSupport) ? "无技能" : (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%'))) + '</button>' +
+            '🥋 ' + ((!wpOf(st.__weapon).sMult && !wpOf(st.__weapon).sSupport) ? "无技能" : (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc(wpOf(st.__weapon).sName || "招式") + ' ' + (Number(wpOf(st.__weapon).sMult) || 150) + '%' + (wpOf(st.__weapon).sMult ? '（' + (SHAPE_NAME[wpOf(st.__weapon).sShape] || "单体") + '）' : '')))) + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 || isStunned(m) || isSilenced(m) ? 'disabled' : '') + '>' +
-            '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' ' + (Number(wpOf(st.__weapon).uMult) || 250) + '%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
+            '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' ' + (Number(wpOf(st.__weapon).uMult) || 250) + '%（' + (SHAPE_NAME[wpOf(st.__weapon).uShape] || "单体") + '）' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
           '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || isStunned(m) ? 'disabled' : '') + '>🛡️ 防御</button>' +
         '</div>' +
         ((wpOf(st.__weapon).sSupport || st.__talent) ? '<div style="margin-top:10px;">' +
@@ -940,7 +950,8 @@ function doAct(kind) {
     if (!tryDualborn(m)) commit(st, "me");
   } else if (kind === "ult") {
     const wp2 = wpOf(st.__weapon);
-    const targets = wp2.uAoe ? validTargets(m) : [st.units.find((u) => u.id === targetId())];
+    const t0 = st.units.find((u) => u.id === targetId());
+    const targets = t0 ? shapeUnits(wp2.uShape || "single", t0) : [];
     let total = 0, anyCrit = false;
     targets.filter(Boolean).forEach((t) => {
       const rr = strike(st, "me", t.id, { atk: m.atk, mult: (Number(wp2.uMult) || 250), critRate: m.critRate, critDmg: m.critDmg, kind: "ult", dmgType: (wp2.dmgType || "phys"), style: (wp2.style || "melee") }, wp2.uHits || 1);
@@ -977,7 +988,8 @@ function doAct(kind) {
     const tr = m.traits || {};
     const baseCd = Number(wp.sCd) || 3;
     const cd = Math.max(1, baseCd - (Number(tr.cdReduce) || 0));
-    const targets = wp.sAoe ? validTargets(m) : [st.units.find((u) => u.id === targetId())];
+    const t0 = st.units.find((u) => u.id === targetId());
+    const targets = t0 ? shapeUnits(wp.sShape || "single", t0) : [];
     let total = 0, anyCrit = false, first = null;
     targets.filter(Boolean).forEach((t) => {
       const rr = strike(st, "me", t.id, { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: (wp.dmgType || "phys"), style: (wp.style || "melee") }, wp.sHits || 1);
