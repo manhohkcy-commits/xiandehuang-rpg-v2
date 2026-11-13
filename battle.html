@@ -25,7 +25,7 @@ import { enemyAt, enemyById } from "./js/enemies.js?v=6849b7aa";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=4e65035f";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=67e20d3d";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 // 🧬 当前操控的原创角色（记住上次选择，换页不丢）
@@ -429,29 +429,25 @@ function buildFoeUnits(s) {
       __skills: e.skills || [], __back: backRole(e.role, e.name) };
   });
   assignLayout(list);
-  const units = list.slice(0, 6);
-  const reserve = list.slice(6);
-  reserve.forEach((u) => { u.__reserve = true; u.__row = 0; u.__col = 0; });
-  return { units, reserve, all: list };
+  // 🌊 分波：超过 6 个就平均拆波
+  const wc = Math.ceil(list.length / 6);
+  const per = Math.ceil(list.length / wc);
+  const waves = [];
+  for (let i = 0; i < list.length; i += per) waves.push(list.slice(i, i + per));
+  const units = waves[0] || [];
+  return { units, waves: waves.slice(1), all: list };
 }
 
-// 🪖 增援：场上有空位时，替补上场
-function deployReserve() {
-  if (!st || !st.__reserve || !st.__reserve.length) return;
-  const aliveB = st.units.filter((u) => u.side === "B" && u.hp > 0);
-  if (aliveB.length >= 6) return;
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 2; c++) {
-      const occupied = st.units.some((u) => u.side === "B" && u.hp > 0 && u.__row === r && (u.__col ? 1 : 0) === c);
-      if (occupied) continue;
-      const nu = st.__reserve.shift();
-      if (!nu) return;
-      nu.__row = r; nu.__col = c;
-      st.units.push(nu);
-      pushLog("🪖 敌方增援：" + nu.name + " 上场", "line");
-      return;
-    }
-  }
+// 🌊 当前波清空 → 上下一波
+function spawnWave() {
+  if (!st || st.finished || !st.__waves || !st.__waves.length) return false;
+  if (st.units.some((u) => u.side === "B" && u.hp > 0)) return false;
+  const wave = st.__waves.shift();
+  assignLayout(wave);
+  wave.forEach((u) => { u.__row = u.__row; st.units.push(u); });
+  st.__waveNo = (st.__waveNo || 1) + 1;
+  pushLog("🌊 第 " + st.__waveNo + " 波来袭：" + wave.map((u) => u.name).join("、"), "hdr");
+  return true;
 }
 
 // ⚔️ 备战界面：调整站位 → 开战
@@ -489,7 +485,7 @@ function renderPrep(stageId) {
   view().innerHTML = '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
     '<div class="hint">先调站位：点我方单位选中，再点空格放过去（互换）。敌人：' +
     esc((s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ") || s.foe.name) +
-    (F.reserve.length ? '　（另有 ' + F.reserve.length + ' 名增援）' : '') + '</div>' +
+    (F.waves.length ? '　（共 ' + (F.waves.length + 1) + ' 波，每波最多 6 名）' : '') + '</div>' +
     '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) + '</div>' + grid +
     '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
       '<button id="prepGo" style="flex:1;min-width:140px;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
@@ -540,8 +536,9 @@ function startBattle(stageId, prepPos) {
   st = createBattle(P.list.concat(foes));
   st.__party = P.partyArr.slice(0, 5);
   st.__lv = s.lv;
-  st.__reserve = F.reserve;
-  st.__onCommit = () => deployReserve();
+  st.__waves = F.waves;
+  st.__waveNo = 1;
+  st.__onCommit = () => spawnWave();
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
@@ -895,7 +892,7 @@ function renderBattle() {
   afterCommit();
   const a = nextActor(st);
   const m = me(), f2 = foe();
-  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—"));
+  const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—") + (st.__waveNo ? " · 第 " + st.__waveNo + " 波" : ""));
 
   const hpBar = (u) => {
     const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));

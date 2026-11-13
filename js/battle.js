@@ -81,8 +81,9 @@ export function commit(st, unitId) {
     st.round += 1;
     recomputeAllowed(st);
   }
-  checkEnd(st);
+  // 🌊 波次钩子：清完当前波先补下一波，再判定胜负
   if (typeof st.__onCommit === "function") { try { st.__onCommit(st); } catch (e) {} }
+  checkEnd(st);
   return st;
 }
 export function damage(st, atkId, defId, opts = {}) {
