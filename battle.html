@@ -410,8 +410,8 @@ function startBattle(stageId) {
   });
   const foes = foeList.filter((u) => !u.__back).concat(foeList.filter((u) => u.__back));
   foes.forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
-  const partyIds = (() => { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } })();
-  const allies = partyIds.map((id) => ORIGINALS.find((o) => o.id === id)).filter(Boolean).slice(0, 5).map((o) => {
+  const partyArr = (() => { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } })();
+  const allies = partyArr.map((id) => ORIGINALS.find((o) => o.id === id)).filter(Boolean).slice(0, 5).map((o) => {
     const g = origStats(o);
     return { id: "o_" + o.id, name: o.name, side: "A", spd: g.spd, power: 0, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, critRate: g.critRate, critDmg: g.critDmg, __auto: true, __back: /远程|法术|辅助/.test(o.role || "") };
   });
@@ -420,7 +420,7 @@ function startBattle(stageId) {
   aFront.concat(aBack).forEach((u, i) => { u.__row = i % 3; u.__col = u.__back ? 1 : 0; });
   const units = [meUnit].concat(aFront, aBack, foes);
   st = createBattle(units);
-  st.__party = partyIds.slice(0, 5);
+  st.__party = partyArr.slice(0, 5);
   st.__lv = s.lv;
   st.__target = foes.find((u) => !u.__back) ? foes.find((u) => !u.__back).id : (foes[0] || {}).id;
   st.__origId = playOrig ? playOrig.id : null;
@@ -437,18 +437,6 @@ function startBattle(stageId) {
       u.spd = Math.round((u.spd + (b.spd || 0)) * 10) / 10;
       st.__meal = meal.name;
     }
-  }
-  // 🤝 同行队伍：最多 5 名友方原创角色，作为独立单位（默认托管）
-  const party = partyIds().map((id) => ORIGINALS.find((o) => o.id === id)).filter((o) => o && o.camp === "ally").slice(0, 5);
-  if (party.length) {
-    st.__party = [];
-    party.forEach((o) => {
-      const g = origStats(o);
-      const u = originalToUnits(o, "A");
-      Object.assign(u, { id: "o_" + o.id, hp: g.hp, maxHp: g.hp, atk: g.atk, def: g.def, spd: g.spd, critRate: g.critRate, critDmg: g.critDmg });
-      st.units.push(u);
-      st.__party.push(o.id);
-    });
   }
   // 🤝 友方原创角色同行：作为不出现在行动条上的助战单位
   const ally = window.__allyId ? ORIGINALS.find((o) => o.id === window.__allyId && o.camp === "ally") : null;
