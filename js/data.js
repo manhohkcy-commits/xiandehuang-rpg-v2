@@ -186,27 +186,28 @@ const REDMAPLE_PLAN = [
   [13, ["e_archer", "e_archer"], 168],
   [17, ["e_brute", "e_soldier"], 198],
   [21, ["e_vet_soldier", "e_trainee_medic"], 470],
-  [25, ["e_soldier", "e_crossbow"], 276],
-  [29, ["e_trainee_mage", "e_archer"], 326],
-  [33, ["e_light_shield", "e_thug"], 385],
-  [37, ["e_crossbow", "e_trainee_mage"], 454],
-  [41, ["e_chiyu"], 1072],
-  [45, ["e_heavy_shield", "e_soldier"], 632],
+  [25, ["e_soldier", "e_soldier", "e_crossbow"], 276],
+  [29, ["e_trainee_mage", "e_archer", "e_archer"], 326],
+  [33, ["e_light_shield", "e_thug", "e_thug"], 385],
+  [37, ["e_crossbow", "e_crossbow", "e_trainee_mage"], 454],
+  [41, ["e_chiyu", "e_thug", "e_thug"], 1072],
+  [45, ["e_heavy_shield", "e_soldier", "e_soldier"], 632],
   [49, ["e_firebomb", "e_archer", "e_archer"], 746],
-  [53, ["e_vet_shield", "e_vet_soldier"], 880],
-  [57, ["e_vet_archer", "e_high_mage"], 1038],
-  [61, ["e_tieya"], 2450],
-  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier"], 1445],
-  [69, ["e_bomber", "e_vet_crossbow", "e_vet_crossbow"], 1705],
-  [73, ["e_baishuang"], 2012],
-  [77, ["e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 2374],
-  [80, ["e_fengwang"], 5602]
+  [53, ["e_vet_shield", "e_vet_soldier", "e_archer"], 880],
+  [57, ["e_vet_archer", "e_high_mage", "e_crossbow"], 1038],
+  [61, ["e_tieya", "e_vet_soldier", "e_vet_soldier", "e_trainee_medic"], 2450],
+  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier", "e_vet_soldier"], 1445],
+  [69, ["e_bomber", "e_vet_crossbow", "e_vet_crossbow", "e_high_mage"], 1705],
+  [73, ["e_baishuang", "e_vet_soldier", "e_vet_soldier", "e_vet_shield"], 2012],
+  [77, ["e_thug", "e_brute", "e_soldier", "e_archer", "e_crossbow", "e_trainee_mage", "e_firebomb", "e_light_shield"], 2374],
+  [80, ["e_fengwang", "e_vet_shield", "e_vet_shield", "e_high_mage", "e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 5602]
 ];
 function makeRedmaple() {
+  const STAGE_TITLE = { 8: "双弩手", 18: "杂兵乱战", 19: "枫王·终局" };
   const stages = REDMAPLE_PLAN.map(([lv, ids, exp], i) => {
     const first = enemyAt(ids[0], lv);
     return {
-      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + first.name, lv,
+      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + (STAGE_TITLE[i] || first.name), lv,
       group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       enemies: ids, gold: Math.round(exp * 0.25), exp,
       foe: { name: first.name, lv, hp: first.stats.hp, atk: first.stats.atk, def: first.stats.def, res: first.stats.res, spd: first.stats.spd },
