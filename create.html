@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=b5a19601";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=b859ebc5";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1377,6 +1377,35 @@ function renderOrig() {
       store.flags.shards -= cost;
       prog.bonus.critDmg = (Number(prog.bonus.critDmg) || 0) + 1;
       await save(); render(); return toast("精炼 +1% 暴击伤害");
+    }
+    if (key === "advance") {
+      const n = Number(prog.advance) || 0;
+      if (n >= 5) return toast("升阶已满（5 阶）", true);
+      const g = 2000 + n * 1500, s = 30 + n * 15;
+      if ((store.gold || 0) < g) return toast("金币不足（需 " + g + "）", true);
+      if ((store.flags.stone || 0) < s) return toast("强化石不足（需 " + s + "）", true);
+      if (!prog.bonus) prog.bonus = {};
+      store.gold -= g; store.flags.stone -= s;
+      prog.advance = n + 1;
+      prog.bonus.atk = (Number(prog.bonus.atk) || 0) + 10;
+      prog.bonus.def = (Number(prog.bonus.def) || 0) + 3;
+      await save(); render(); return toast("升阶 → " + (n + 1) + " 阶（+10 攻击 / +3 防御）");
+    }
+    if (key === "awaken") {
+      const n = Number(prog.awaken) || 0;
+      if (n >= 3) return toast("觉醒已满（3 星）", true);
+      const b = 20 + n * 15;
+      if ((store.flags.bstone || 0) < b) return toast("突破石不足（需 " + b + "）", true);
+      if (!prog.bonus) prog.bonus = {};
+      store.flags.bstone -= b;
+      prog.awaken = n + 1;
+      prog.bonus.hp = (Number(prog.bonus.hp) || 0) + 40;
+      prog.bonus.ultPct = (Number(prog.bonus.ultPct) || 0) + 3;
+      await save(); render(); return toast("觉醒 → " + (n + 1) + " 星（+40 生命 / 必杀 +3%）");
+    }
+    if (key === "shop") {
+      toast("商店就在个人页的「商店」，装备可买后放入仓库");
+      return;
     }
     toast("这个模块还要等配置");
   });

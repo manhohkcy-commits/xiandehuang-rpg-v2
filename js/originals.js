@@ -79,8 +79,9 @@ export const ORIG_UNLOCK = {
 };
 export function origUnlocked(id, feature, prog) {
   const rule = ORIG_UNLOCK[id] || {};
-  const need = Number(rule[feature]);
-  if (!need) return false;
+  if (feature === "talent" && rule.talent == null) return false; // 天赋默认锁住
+  const DEF = { stat: 1, refine: 1, advance: 1, awaken: 1, shop: 1 };
+  const need = Number(rule[feature] != null ? rule[feature] : (DEF[feature] != null ? DEF[feature] : 999));
   return (Number((prog || {}).lv) || 1) >= need;
 }
 // 🛠 专属装备培养：每件 +2%/级（上限 20 级）、+12%/星（上限 5 星）
