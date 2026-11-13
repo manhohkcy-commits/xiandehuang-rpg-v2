@@ -28,8 +28,7 @@ export const ORIGINALS = [];
 
 // ☁️ 云端原创角色：主机发布，全玩家拉取（失败时用本地空数组兜底）
 const ORIGINALS_BOX = "__originals";
-export async function pullOriginals() {
-  try {
+export async function pullOriginals() {  try {
     const r = await cloudGet(ORIGINALS_BOX);
     const list = r && r.store && r.store.originals;
     if (Array.isArray(list) && list.length) {
@@ -41,13 +40,17 @@ export async function pullOriginals() {
 }
 // 🗡 专属装备由开发者定稿写入（按角色 id 合并到云端数据上）
 export const ORIGINAL_GEAR = {
-  // 晓天（先锋 · 冰系 · 命中叠层 · 稀有）
+  // 晓天（先锋 · 冰系 · 命中叠层 · 吸血 · 稀有）
   dmweo00x9: {
-    weapon: { name: "霜噬长刀", atk: 96, hp: 0, def: 0, res: 0, spd: 0, critRate: 8 },
-    armor: { name: "寒晶战衣", atk: 0, hp: 320, def: 24, res: 12, spd: 0, critRate: 0 },
-    armor2: { name: "踏霜战裤", atk: 0, hp: 160, def: 8, res: 6, spd: 3.5, critRate: 0 },
-    accessory: { name: "凝霜护符", atk: 52, hp: 0, def: 0, res: 0, spd: 0, critRate: 0 }
+    weapon: { name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8 },
+    armor: { name: "霜绡战衣", rarity: "SR", atk: 0, hp: 340, def: 26, res: 14, spd: 0, critRate: 0 },
+    armor2: { name: "踏雪战裤", rarity: "SR", atk: 0, hp: 170, def: 10, res: 0, spd: 4, critRate: 0 },
+    accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0 }
   }
+};
+// 🩸 原创角色特性（按 id）
+export const ORIGINAL_TRAITS = {
+  dmweo00x9: { lifesteal: 15, frostMax: 5, frostPerStack: 15 }
 };
 function mergeGear(o) {
   const g = ORIGINAL_GEAR[o.id];

@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=07fa2916";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits, pullOriginals, originalFinal } from "./js/originals.js?v=7decc393";
+import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, ORIGINAL_TRAITS } from "./js/originals.js?v=9ea87c06";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -628,6 +628,7 @@ function startBattle(stageId, prepPos) {
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   applyEnv(st, s.weather || "clear", s.sceneMods);
   st.__origId = playOrig ? playOrig.id : null;
+  st.__otraits = st.__origId ? (ORIGINAL_TRAITS[st.__origId] || null) : null;
   st.__frost = 0;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
@@ -1095,6 +1096,15 @@ function renderBattle() {
   publishState();
 }
 
+// 🩸 原创角色吸血
+function lifestealHeal(m, dealt) {
+  const ls = Number((st.__otraits || {}).lifesteal) || 0;
+  if (ls <= 0 || dealt <= 0) return;
+  const before = m.hp;
+  m.hp = Math.min(m.maxHp, m.hp + Math.max(1, Math.round(dealt * ls / 100)));
+  if (m.hp > before) pushLog("🩸 吸血 +" + (m.hp - before) + "（" + ls + "%）", "line");
+}
+
 function doAct(kind) {
   if (!st || st.finished || busy) return;
   if (st.finished) return;
@@ -1154,7 +1164,7 @@ function doAct(kind) {
       total += rr.dmg; anyCrit = anyCrit || rr.crit;
     });
     m.rage = 0;
-    if (st.__origId) { st.__frost = 0; }
+    if (st.__origId) { lifestealHeal(m, total); st.__frost = 0; }
     pushLog("💥 " + m.name + " 必杀 → " + targets.filter(Boolean).map((t) => t.name).join("、") + " 共 " + total + (anyCrit ? " 暴击💥" : "") +
       (frost ? "（消耗霜印 ×" + frost + "，倍率 +" + Math.round(frost * 15) + "%）" : ""));
     if (!tryDualborn(m)) commit(st, "me");
@@ -1230,6 +1240,7 @@ function doAct(kind) {
       pushLog("🗡️ 连击追加 " + r2.dmg, "line");
     }
     if (st.__origId && r.dmg > 0) {
+      lifestealHeal(m, r.dmg);
       st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1);
       pushLog("❄️ 霜印 +1（" + st.__frost + "/5，必杀 +" + (st.__frost * 15) + "%）", "line");
     }
