@@ -54,6 +54,15 @@ function origRows() {
 
 function render() {
   $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
+  const enc = encodeURIComponent(box || "");
+  const qs = box ? "?box=" + enc : "?";
+  const enter = '<div class="card" style="padding:10px;"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
+    '<span class="hint">进入个人页面</span>' +
+    '<a href="create.html' + qs + (box ? "&" : "") + 'tab=char" style="text-decoration:none;"><button style="border-color:#6ea8fe;color:#cfe6ff;">🧑 玩家端 · 我的角色</button></a>' +
+    (hostMode
+      ? '<a href="create.html' + qs + (box ? "&" : "") + 'tab=orig" style="text-decoration:none;"><button style="border-color:#ffb347;color:#ffb347;">🧬 原创端 · 原创角色</button></a>'
+      : '<span class="hint">🧬 原创端仅主机可进入</span>') +
+    '</div></div>';
   const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
     '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>' +
     '<button data-tab="orig"' + (tab === "orig" ? ' class="on"' : '') + '>🧬 原创大厅</button>' +
@@ -75,7 +84,7 @@ function render() {
           '<td style="text-align:right;font-size:12px;color:#ffb347;font-weight:700;">' + fmt(x.final.power) + '</td></tr>').join("") +
         '</table>' : '<div class="hint">主机还没发布原创角色。</div>'));
   }
-  view().innerHTML = tabBar + body;
+  view().innerHTML = enter + tabBar + body;
 
   view().querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => { tab = b.dataset.tab; history.replaceState(null, "", "?tab=" + tab); render(); });
   view().querySelectorAll("[data-orig]").forEach((tr) => tr.onclick = () => {
