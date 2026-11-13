@@ -71,6 +71,16 @@ function detail(it) {
     if (d.silence) t.push("沉默");
     return t;
   };
+  // 🌊 多段倍率拆分：XX% + YY%（共 ZZZ%）
+  const CURVE = { 2: [0.6, 0.4], 3: [0.45, 0.35, 0.2], 4: [0.4, 0.3, 0.2, 0.1], 5: [0.3, 0.25, 0.2, 0.15, 0.1] };
+  const splitMult = (mult, hits) => {
+    const n = Number(hits) || 1;
+    const m = Number(mult) || 100;
+    if (n <= 1) return m + "%";
+    const w = CURVE[n] || Array(n).fill(1 / n);
+    return w.map((x) => Math.round(m * x) + "%").join(" + ") + "（共 " + m + "%）";
+  };
+
   const skCard = (label, name, multText, meta, rageText, effects) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
       '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + (name ? esc(name) : "") + '</b>' +
@@ -84,13 +94,13 @@ function detail(it) {
   const distTxt = d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "近战";
   const skill = it.cat !== "weapon" ? "" :
     '<div class="hint" style="margin:12px 0 5px;font-weight:700;color:#8fd8ff;letter-spacing:1px;">招式组</div>' +
-    skCard("普攻", d.aName || "", (Number(d.aMult) || 100) + "%" + ((Number(d.aHits) || 1) > 1 ? " ×" + d.aHits : ""),
+    skCard("普攻", d.aName || "", splitMult(Number(d.aMult) || 100, d.aHits),
       ["单体", distTxt, dmgTypeTxt], "回怒 25", []) +
     (d.sSupport
       ? skCard("技能", d.sName || "—", "辅助", ["辅助", "CD " + (d.sCd || 3)], "",
         [d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
       : (d.sMult
-        ? skCard("技能", d.sName || "—", d.sMult + "%" + (d.sHits > 1 ? " ×" + d.sHits : ""),
+        ? skCard("技能", d.sName || "—", splitMult(d.sMult, d.sHits),
           [SHAPE[d.sShape] || "单体", distTxt, dmgTypeTxt], "回怒 " + (Number(d.sRage) || 0) + "%",
           (() => {
             const e = [];
@@ -104,11 +114,10 @@ function detail(it) {
             return e;
           })())
         : skCard("技能", "", "—", ["R 阶没有技能"], "", []))) +
-    skCard("必杀", d.uName || "", (Number(d.uMult) || 250) + "%" + ((Number(d.uHits) || 1) > 1 ? " ×" + d.uHits : ""),
+    skCard("必杀", d.uName || "", splitMult(Number(d.uMult) || 250, d.uHits),
       [SHAPE[d.uShape] || "单体", distTxt, dmgTypeTxt], "怒气 100",
       (() => {
         const e = [];
-        if (Number(d.uHits) > 1) e.push("×" + d.uHits + " 段");
         if (d.burn) e.push("灼烧");
         if (d.stun) e.push("眩晕");
         return e;
