@@ -47,18 +47,25 @@ export async function pullOriginals() {  try {
 }
 // 🗡 专属装备由开发者定稿写入（按角色 id 合并到云端数据上）
 export const ORIGINAL_GEAR = {
-  // 晓天（先锋 · 冰系 · 命中叠层 · 吸血 · 稀有）
+  // 晓天（先锋 · 冰系 · 命中叠层 · 稀有）
   dmweo00x9: {
-    weapon: { name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8 },
+    weapon: { name: "泣雪", rarity: "SSR", atk: 108, hp: 0, def: 0, res: 0, spd: 0, critRate: 8, ultPct: 10 },
     armor: { name: "霜绡战衣", rarity: "SR", atk: 0, hp: 340, def: 26, res: 14, spd: 0, critRate: 0 },
     armor2: { name: "踏雪战裤", rarity: "SR", atk: 0, hp: 170, def: 10, res: 0, spd: 4, critRate: 0 },
-    accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12 }
+    accessory: { name: "凝霜之泪", rarity: "SR", atk: 46, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12, lifesteal: 15 }
   }
 };
-// 🩸 原创角色特性（按 id）
-export const ORIGINAL_TRAITS = {
-  dmweo00x9: { lifesteal: 15, ultPct: 10, frostMax: 5, frostPerStack: 15 }
-};
+// 🗡 装备能力汇总（吸血 / 必杀加成）
+export function gearAbilities(o) {
+  const g = (o && o.gearObj) || {};
+  const out = { lifesteal: 0, ultPct: 0 };
+  Object.keys(g).forEach((k) => {
+    const it = g[k] || {};
+    out.lifesteal += Number(it.lifesteal) || 0;
+    out.ultPct += Number(it.ultPct) || 0;
+  });
+  return out;
+}
 function mergeGear(o) {
   const g = ORIGINAL_GEAR[o.id];
   return g ? Object.assign({}, o, { gearObj: g }) : o;

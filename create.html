@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2318bcc3";
 import { GRADE, APTITUDE } from "./js/data.js?v=07fa2916";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_TRAITS } from "./js/originals.js?v=e5f17a94";
+import { ORIGINALS, pullOriginals, originalFinal } from "./js/originals.js?v=942eb463";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -906,6 +906,8 @@ function openOrigCard(o) {
         if (it.spd) parts.push("速度 +" + it.spd);
         if (it.critRate) parts.push("暴击 +" + it.critRate + "%");
         if (it.critDmg) parts.push("暴伤 +" + it.critDmg + "%");
+        if (it.lifesteal) parts.push("吸血 " + it.lifesteal + "%");
+        if (it.ultPct) parts.push("必杀 +" + it.ultPct + "%");
         return '<div style="padding:7px 9px;border-bottom:1px solid #1a2438;">' +
           '<div style="font-weight:700;font-size:13px;color:#dbe4f3;">🗡 ' + esc(it.name) + ' <span class="hint">' + gearLabels[k] + '</span></div>' +
           (parts.length ? '<div class="hint" style="margin-top:2px;">' + esc(parts.join(" · ")) + '</div>' : "") + '</div>';
@@ -926,15 +928,6 @@ function openOrigCard(o) {
       '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">' + (o.rare ? "稀有" : "普通") + '</span>' +
       '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:3px 11px;font-size:11px;color:' + tint + ';">⚔️ 战力 <b style="font-size:13px;">' + fmt(s.power || 0) + '</b></span></div>' +
     '<div class="hint" style="margin:3px 0 2px;">' + esc(o.title || "无称号") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
-    (() => {
-      const tr = ORIGINAL_TRAITS[o.id];
-      if (!tr) return "";
-      const bits = [];
-      if (tr.lifesteal) bits.push("吸血 " + tr.lifesteal + "%");
-      if (tr.ultPct) bits.push("必杀 +" + tr.ultPct + "%");
-      if (tr.frostMax) bits.push("霜印上限 " + tr.frostMax);
-      return bits.length ? '<div class="hint" style="color:#8fd8ff;">特性：' + bits.join(" · ") + '</div>' : "";
-    })() +
     (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(o.desc) + '</div>' : "") +
     sec("① 面板数据") +
     panel(row("攻击", fmt(s.atk), true) + row("生命", fmt(s.hp), true) + row("防御", fmt(s.def)) + row("法抗", fmt(s.res)) +

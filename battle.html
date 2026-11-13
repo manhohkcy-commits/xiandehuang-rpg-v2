@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=07fa2916";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, ORIGINAL_TRAITS } from "./js/originals.js?v=e5f17a94";
+import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, gearAbilities } from "./js/originals.js?v=942eb463";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -628,7 +628,7 @@ function startBattle(stageId, prepPos) {
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   applyEnv(st, s.weather || "clear", s.sceneMods);
   st.__origId = playOrig ? playOrig.id : null;
-  st.__otraits = st.__origId ? (ORIGINAL_TRAITS[st.__origId] || null) : null;
+  st.__gearAbil = playOrig ? gearAbilities(playOrig) : null;
   st.__frost = 0;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效
@@ -1098,7 +1098,7 @@ function renderBattle() {
 
 // 🩸 原创角色吸血
 function lifestealHeal(m, dealt) {
-  const ls = Number((st.__otraits || {}).lifesteal) || 0;
+  const ls = Number((st.__gearAbil || {}).lifesteal) || 0;
   if (ls <= 0 || dealt <= 0) return;
   const before = m.hp;
   m.hp = Math.min(m.maxHp, m.hp + Math.max(1, Math.round(dealt * ls / 100)));
@@ -1157,7 +1157,7 @@ function doAct(kind) {
     const t0 = st.units.find((u) => u.id === targetId());
     const targets = t0 ? shapeUnits(wp2.uShape || "single", t0) : [];
     const frost = st.__origId ? (Number(st.__frost) || 0) : 0;
-    const ultPct = Number((st.__otraits || {}).ultPct) || 0;
+    const ultPct = Number((st.__gearAbil || {}).ultPct) || 0;
     const ultMult = (Number(wp2.uMult) || 250) * (1 + 0.15 * frost) * (1 + ultPct / 100);
     let total = 0, anyCrit = false;
     targets.filter(Boolean).forEach((t) => {
