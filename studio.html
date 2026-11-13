@@ -141,6 +141,20 @@ function render() {
     } catch (e) { msg("删除失败：" + e.message, true); }
   };
 }
+// 🖱 兜底：用事件代理处理「保存位号」，避免绑定丢失
+document.addEventListener("click", (e) => {
+  const t = e.target && e.target.closest ? e.target.closest("#btnHostBox") : null;
+  if (!t) return;
+  const inp = document.getElementById("hostBoxIn");
+  const v = ((inp && inp.value) || "").trim();
+  try {
+    localStorage.setItem("rpg2:hostBox", v);
+    if (v) localStorage.setItem("rpg2:box", v);
+  } catch (err) {}
+  alert(v ? ("✅ 已保存主机位号：" + v) : "已清空主机位号");
+  render();
+});
+
 if (await gate()) render();
 </script>
 </body>
