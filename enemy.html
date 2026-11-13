@@ -71,26 +71,64 @@ function detail(id, atLv) {
   ov.onclick = (ev) => { if (ev.target === ov) ov.remove(); };
 }
 
+const roleTag = (e) => {
+  const r = e.role || "";
+  if (r.indexOf("首领") >= 0) return "boss";
+  if (r.indexOf("坦克") >= 0) return "tank";
+  if (r.indexOf("远程") >= 0) return "ranged";
+  if (r.indexOf("法术") >= 0) return "spell";
+  if (r.indexOf("辅助") >= 0) return "support";
+  return "melee";
+};
+const ROLE_NAME = { boss: "首领", tank: "坦克", melee: "近战", ranged: "远程", spell: "法术", support: "辅助" };
+const F = (window.__ef = window.__ef || { tier: "all", role: "all" });
+const chip = (type, val, label) => {
+  const on = F[type] === val;
+  return '<button data-f="' + type + ':' + val + '" style="font-size:11px;padding:3px 10px;border-radius:20px;' +
+    (on ? 'border-color:#6ea8fe;color:#cfe6ff;background:#1b2740;' : '') + '">' + label + '</button>';
+};
+
 function render() {
-  const groups = TIER_ORDER.map((t) => ({ t, list: ENEMIES.filter((e) => e.tier === t) })).filter((g) => g.list.length);
   const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
-    '<span class="hint">等级预览</span><input id="lvIn" type="number" min="1" max="100" value="' + lv + '" style="width:70px;padding:3px 6px;">' +
-    '<span class="hint">Lv1~100（面板按成长率缩放）</span></div></div>';
+    '<span class="hint">品质</span>' + chip("tier", "all", "全部") +
+    TIER_ORDER.map((t) => chip("tier", t, TIER_NAME[t] + "（" + ENEMIES.filter((e) => e.tier === t).length + "）")).join("") +
+    '<span style="width:8px;"></span><span class="hint">定位</span>' + chip("role", "all", "全部") +
+    ["boss", "tank", "melee", "ranged", "spell", "support"].map((k) => chip("role", k, ROLE_NAME[k])).join("") +
+    '<span style="width:8px;"></span><span class="hint">等级预览</span>' +
+    '<input id="lvIn" type="number" min="1" max="100" value="' + lv + '" style="width:64px;padding:3px 6px;">' +
+    '</div></div>';
+
+  const groups = TIER_ORDER.map((t) => {
+    const list = ENEMIES.filter((e) => e.tier === t)
+      .filter((e) => F.tier === "all" || e.tier === F.tier)
+      .filter((e) => F.role === "all" || roleTag(e) === F.role);
+    return { t, list };
+  }).filter((g) => g.list.length);
+
   document.getElementById("view").innerHTML =
     card("👹 敌人图鉴", '<div class="hint">共 ' + ENEMIES.length + ' 名敌人档案。点任意一名查看完整资料。</div>') +
     bar +
-    groups.map((g) => card('<span style="color:' + RARITY_COLOR[g.t] + ';">' + TIER_NAME[g.t] + '</span>（' + g.list.length + '）',
-      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:6px;">' +
-      g.list.map((e) => {
-        const s = e.stats;
-        return '<button data-enemy="' + e.id + '" style="text-align:left;background:#12182a;border:1px solid ' + RARITY_COLOR[g.t] + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
-          '<div style="font-size:13px;font-weight:700;color:' + RARITY_COLOR[g.t] + ';">' + esc(e.name) + '</div>' +
-          '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.role) + '</div>' +
-          '<div style="font-size:10px;color:#ffd666;margin-top:5px;">攻 ' + s.atk + ' · 生 ' + s.hp + '</div>' +
-          '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;">防 ' + s.def + ' · 抗 ' + s.res + ' · 速 ' + s.spd + '</div>' +
-          '</button>';
-      }).join("") + '</div>')).join("");
-  document.getElementById("view").querySelectorAll("[data-enemy]").forEach((b) => b.onclick = () => detail(b.dataset.enemy));
+    (groups.length
+      ? groups.map((g) => card('<span style="color:' + RARITY_COLOR[g.t] + ';">' + TIER_NAME[g.t] + '</span>（' + g.list.length + '）',
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:6px;">' +
+        g.list.map((e) => {
+          const s = e.stats;
+          return '<button data-enemy="' + e.id + '" style="text-align:left;background:#12182a;border:1px solid ' + RARITY_COLOR[g.t] + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
+            '<div style="font-size:13px;font-weight:700;color:' + RARITY_COLOR[g.t] + ';">' + esc(e.name) + '</div>' +
+            '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.role) + '</div>' +
+            '<div style="font-size:10px;color:#ffd666;margin-top:5px;">攻 ' + s.atk + ' · 生 ' + s.hp + '</div>' +
+            '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;">防 ' + s.def + ' · 抗 ' + s.res + ' · 速 ' + s.spd + '</div>' +
+            '</button>';
+        }).join("") + '</div>')).join("")
+      : card("没有结果", '<div class="hint">这个筛选下没有敌人</div>'));
+
+  const view = document.getElementById("view");
+  view.querySelectorAll("[data-enemy]").forEach((b) => b.onclick = () => detail(b.dataset.enemy));
+  view.querySelectorAll("[data-f]").forEach((b) => b.onclick = () => {
+    const [k, v] = b.dataset.f.split(":");
+    F[k] = v;
+    render();
+  });
   const inp = document.getElementById("lvIn");
   if (inp) inp.onchange = () => { lv = Math.max(1, Math.min(100, Number(inp.value) || 1)); render(); };
 }
