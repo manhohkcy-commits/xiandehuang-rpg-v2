@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=860ea784";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=91596b92";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2318bcc3";
-import { GRADE, APTITUDE } from "./js/data.js?v=860ea784";
+import { GRADE, APTITUDE } from "./js/data.js?v=91596b92";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
 import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
 
@@ -1211,6 +1211,7 @@ function renderOrig() {
 
 function renderStore() {
   const ch = activeChar(), all = store.items || [];
+  const fl = store.flags || {};
   const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
   const batch = window.__batch || (window.__batch = { on: false, sel: {} });
 
@@ -1239,9 +1240,11 @@ function renderStore() {
         : '<button id="bOn" style="font-size:11px;">🧹 批量分解</button>') +
     '</div></div>';
 
-  // 🚧 其他资源（碎片/强化石/突破石/手稿/勋章）获取途径未定，先只显示金币
   const resCard = '<div class="card"><div class="card-title">资源</div>' +
-    '<div class="row"><span class="k">金币</span><span class="v">' + fmt(Number(store.gold) || 0) + '</span></div>' + '</div>';
+    '<div class="row"><span class="k">金币</span><span class="v">' + fmt(Number(store.gold) || 0) + '</span></div>' +
+    '<div class="row"><span class="k">碎片</span><span class="v">' + fmt(Number(fl.shards) || 0) + '</span></div>' +
+    '<div class="row"><span class="k">强化石</span><span class="v">' + fmt(Number(fl.stone) || 0) + '</span></div>' +
+    '<div class="row"><span class="k">突破石</span><span class="v">' + fmt(Number(fl.bstone) || 0) + '</span></div>' + '</div>';
 
   if (!filtered.length) {
     view().innerHTML = tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';

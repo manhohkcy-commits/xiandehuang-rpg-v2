@@ -2,7 +2,7 @@
 export const RARITY_MULT = { R: 1, SR: 1.15, SSR: 1.3, UR: 1.5 };
 // 🚧 内容开关：装备选择已开放；关卡内容仍待定（数据保留）
 export const CONTENT_READY = true;
-export const STAGE_READY = false;
+export const STAGE_READY = true;
 export const SLOT_BASE = {
   weapon: { atk: 40 },
   armor: { hp: 220, def: 18, res: 14 },
@@ -121,32 +121,55 @@ export const ACCESSORIES = [
   { id: "c_bell", name: "祈愿铃", rarity: "SR", main: { res: 9, hp: 40 }, desc: "铃舌很轻，摇起来只有自己听得见。" },
   { id: "c_mercy", name: "慈心吊坠", rarity: "SR", main: { hp: 80 }, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
 ];
-export const STAGES = [
-  { id: "k1", name: "训练木桩", tier: 1, gold: 120, exp: 40,
-    foe: { name: "木桩", lv: 5, hp: 800, atk: 60, def: 20, res: 10, spd: 8 },
-    drop: { shards: [8, 12], stone: [2, 4], gearChance: 10, manuscript: 1, medal: 0, medalChance: 0 } },
-  { id: "k2", name: "街头混混", tier: 2, gold: 260, exp: 90,
-    foe: { name: "混混", lv: 15, hp: 1800, atk: 120, def: 40, res: 20, spd: 11 },
-    drop: { shards: [14, 22], stone: [5, 9], gearChance: 25, manuscript: 2, medal: 1, medalChance: 30 } },
-  { id: "k3", name: "草薙京·试炼", tier: 3, gold: 520, exp: 180,
-    foe: { name: "草薙京", lv: 34, hp: 2398, atk: 170, def: 60, res: 40, spd: 13 },
-    drop: { shards: [26, 40], stone: [10, 16], gearChance: 45, manuscript: 4, medal: 1, medalChance: 60 } },
-  { id: "k4", name: "无尽·第一层", tier: 4, gold: 900, exp: 320,
-    foe: { name: "影武者", lv: 50, hp: 5200, atk: 260, def: 90, res: 60, spd: 15 },
-    drop: { shards: [40, 60], stone: [18, 28], gearChance: 70, manuscript: 6, medal: 2, medalChance: 80 } },
-  { id: "k5", name: "鬼武者", tier: 5, gold: 1400, exp: 460,
-    foe: { name: "鬼武者", lv: 65, hp: 7200, atk: 330, def: 130, res: 90, spd: 17 },
-    drop: { shards: [55, 75], stone: [24, 34], gearChance: 80, manuscript: 8, medal: 2, medalChance: 85 } },
-  { id: "k6", name: "影众·头目", tier: 6, gold: 2000, exp: 650,
-    foe: { name: "影众头目", lv: 80, hp: 9800, atk: 420, def: 170, res: 120, spd: 19 },
-    drop: { shards: [70, 95], stone: [30, 42], gearChance: 85, manuscript: 10, medal: 3, medalChance: 90 } },
-  { id: "k7", name: "剑圣·试炼", tier: 7, gold: 2800, exp: 900,
-    foe: { name: "剑圣", lv: 90, hp: 13000, atk: 520, def: 210, res: 150, spd: 21 },
-    drop: { shards: [90, 120], stone: [38, 52], gearChance: 90, manuscript: 12, medal: 3, medalChance: 95 } },
-  { id: "k8", name: "无尽·主宰", tier: 8, gold: 3800, exp: 1200,
-    foe: { name: "无尽主宰", lv: 100, hp: 18000, atk: 650, def: 260, res: 190, spd: 23 },
-    drop: { shards: [120, 160], stone: [48, 66], gearChance: 100, manuscript: 15, medal: 4, medalChance: 100 } }
+// 🏯 副本系统：4 个日常 × 20 关 + 待定日常 + 庆典试炼（限定 BOSS）
+const DUNGEON_LEVELS = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
+const foeOf = (name, lv, mul = 1) => ({
+  name, lv,
+  hp: Math.round((420 + lv * 46) * mul),
+  atk: Math.round((38 + lv * 3.4) * mul),
+  def: Math.round((10 + lv * 1.3) * mul),
+  res: Math.round((8 + lv * 1.1) * mul),
+  spd: Math.round((8 + lv * 0.09) * 10) / 10
+});
+const stageRewards = (kind, i) => {
+  const g = Math.pow(1.18, i);
+  const mile = (i + 1) % 5 === 0 ? 2 : 1;
+  const r = { exp: 0, gold: 0, drop: {} };
+  if (kind === "exp") { r.exp = Math.round(120 * g * mile); r.gold = Math.round(40 * g); }
+  if (kind === "gold") { r.gold = Math.round(240 * g * mile); r.exp = Math.round(30 * g); }
+  if (kind === "char") { r.drop.bstone = Math.round((1 + i * 0.95) * mile); r.exp = Math.round(25 * g); }
+  if (kind === "gear") { r.drop.stone = Math.round((5 + i * 3.5) * mile); r.drop.shards = Math.round((10 + i * 8) * mile); r.exp = Math.round(25 * g); }
+  return r;
+};
+function makeDaily(id, name, kind, icon, desc, foeName) {
+  const stages = DUNGEON_LEVELS.map((lv, i) => {
+    const r = stageRewards(kind, i);
+    return {
+      id: kind + "_" + (i + 1), name: "第 " + (i + 1) + " 关 · Lv" + lv, lv,
+      group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
+      gold: r.gold, exp: r.exp,
+      foe: foeOf(foeName, lv, 1 + Math.floor(i / 10) * 0.15),
+      drop: Object.assign({ shards: [0, 0], stone: [0, 0], bstone: 0, gearChance: 0, manuscript: 0, medal: 0, medalChance: 0 }, r.drop)
+    };
+  });
+  return { id, name, kind, icon, desc, type: "daily", stages };
+}
+export const DUNGEONS = [
+  makeDaily("d_exp", "试炼场", "exp", "📕", "大量角色经验", "训练傀儡"),
+  makeDaily("d_gold", "旧金库", "gold", "💰", "大量金币", "守财奴"),
+  makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
+  makeDaily("d_gear", "废弃矿脉", "gear", "⚒️", "装备强化素材", "矿脉蠕虫"),
+  { id: "d_tbd", name: "待定日常", kind: "tbd", icon: "❔", desc: "内容待定", type: "daily", stages: [] },
+  {
+    id: "d_fest", name: "庆典试炼", kind: "fest", icon: "🏮", desc: "限定 BOSS 挑战（每周 1 次）", type: "event",
+    stages: [{
+      id: "fest_1", name: "庆典巨像", lv: 60, group: 1, milestone: false, gold: 12000, exp: 4000,
+      foe: { name: "庆典巨像", lv: 60, hp: 26000, atk: 420, def: 180, res: 140, spd: 14 },
+      drop: { shards: [400, 600], stone: [150, 220], bstone: 40, gearChance: 100, manuscript: 10, medal: 3, medalChance: 100 }
+    }]
+  }
 ];
+export const STAGES = DUNGEONS.flatMap((d) => d.stages);
 export const CONSUMABLES = [
   // 🏪 便利店日常货（战前准备：下一场战斗生效；limit = 每日限购）
   { id: "p_rice", name: "饭团", desc: "战前吃：生命 +5%", price: 30, meal: { hpPct: 5 }, limit: 5 },

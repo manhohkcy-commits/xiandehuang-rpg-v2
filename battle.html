@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR } from "./js/data.js?v=860ea784";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=91596b92";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
@@ -83,6 +83,50 @@ async function save() {
 }
 
 // ── 选关 ──────────────────────────────────────────────
+// 🏯 副本列表：4 个日常（每档 5 关折叠）+ 待定 + 庆典试炼
+function weekKey() {
+  const d = new Date();
+  const one = new Date(d.getFullYear(), 0, 1);
+  const days = Math.floor((d - one) / 86400000);
+  const w = Math.ceil((days + one.getDay() + 1) / 7);
+  return d.getFullYear() + "-W" + String(w).padStart(2, "0");
+}
+function dungeonHtml() {
+  const dailies = DUNGEONS.filter((d) => d.type === "daily");
+  const event = DUNGEONS.find((d) => d.type === "event");
+  const stageRow = (s) => '<div class="row"><span class="k">' + esc(s.name) +
+    '<div class="hint">' + esc(s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) + ' · 攻 ' + s.foe.atk +
+    (s.gold ? ' · 金币 ' + fmt(s.gold) : '') + (s.exp ? ' · 经验 ' + fmt(s.exp) : '') + '</div></span>' +
+    '<span class="v"><button data-stage="' + s.id + '">挑战</button></span></div>';
+
+  const dailyCards = dailies.map((d) => {
+    if (!d.stages.length) {
+      return '<div class="card"><div class="card-title">' + d.icon + ' ' + esc(d.name) + '</div><div class="hint">' + esc(d.desc) + '</div></div>';
+    }
+    const groups = [1, 2, 3, 4].map((g) => d.stages.filter((s) => s.group === g)).filter((arr) => arr.length);
+    return '<div class="card"><div class="card-title">' + d.icon + ' ' + esc(d.name) + ' <span class="tag">' + d.stages.length + ' 关</span></div>' +
+      '<div class="hint" style="margin-bottom:6px;">' + esc(d.desc) + '　|　不限次数</div>' +
+      groups.map((arr, gi) => '<details style="margin-top:6px;"' + (gi === 0 ? ' open' : '') + '>' +
+        '<summary style="cursor:pointer;font-size:12px;color:#8fd8ff;font-weight:700;">第 ' + (gi + 1) + ' 档 · Lv' +
+        arr[0].lv + ' ~ ' + arr[arr.length - 1].lv + '</summary>' +
+        arr.map(stageRow).join("") + '</details>').join("") + '</div>';
+  }).join("");
+
+  let eventCard = "";
+  if (event) {
+    const done = (store.flags && store.flags.festWeek) === weekKey();
+    eventCard = '<div class="card"><div class="card-title">' + event.icon + ' ' + esc(event.name) + ' <span class="tag">限定</span></div>' +
+      '<div class="hint">' + esc(event.desc) + '</div>' +
+      (event.stages.length
+        ? '<div class="row"><span class="k">' + esc(event.stages[0].name) + ' Lv' + event.stages[0].foe.lv +
+          '<div class="hint">HP ' + fmt(event.stages[0].foe.hp) + ' · 攻 ' + event.stages[0].foe.atk + ' · 奖励丰厚</div></span>' +
+          '<span class="v">' + (done ? '<span class="hint">本周已通关</span>' :
+            '<button data-stage="' + event.stages[0].id + '" style="border-color:#ffb347;color:#ffb347;">挑战</button>') + '</span></div>'
+        : '<div class="hint">筹备中</div>') + '</div>';
+  }
+  return dailyCards + eventCard;
+}
+
 function renderPick() {
   const ch = activeChar();
   if (!ch) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
@@ -128,14 +172,11 @@ function renderPick() {
             (on ? "✅ 已入队" : "加入") + '</button></span></div>';
         }).join("") + '</div>'
       : "") +
-    '<div class="card"><div class="card-title">' + (STAGE_READY ? "选择关卡" : "开始战斗") + '</div>' +
-      (STAGE_READY
-        ? STAGES.map((s) => '<div class="row"><span class="k">' + esc(s.name) +
-            '<div class="hint">' + esc(s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) + ' · 攻 ' + s.foe.atk + '</div></span>' +
-            '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>').join("")
-        : '<div class="hint">关卡内容待定，先用默认训练场试功能。</div>' +
-          '<div class="row"><span class="k">默认训练场</span><span class="v"><button data-stage="' + STAGES[0].id + '">开战</button></span></div>') +
-    '</div>' +
+    (STAGE_READY
+      ? dungeonHtml()
+      : '<div class="card"><div class="card-title">开始战斗</div>' +
+        '<div class="hint">关卡内容待定，先用默认训练场试功能。</div>' +
+        '<div class="row"><span class="k">默认训练场</span><span class="v"><button data-stage="' + (STAGES[0] && STAGES[0].id) + '">开战</button></span></div></div>') +
     (ORIGINALS.length
       ? '<div class="card"><div class="card-title">原创角色</div>' +
         ORIGINALS.filter((o) => o.camp !== "ally").map((o) =>
@@ -984,34 +1025,42 @@ function finish() {
     }
   }
   const s = STAGES.find((x) => x.id === st.__stage) || STAGES[0];
-  const gold = Number(s.gold) || (120 + s.foe.lv * 8);
-  const exp = Number(s.exp) || (40 + s.foe.lv * 6);
+  const gold = Number(s.gold != null ? s.gold : (120 + s.foe.lv * 8));
+  const exp = Number(s.exp != null ? s.exp : (40 + s.foe.lv * 6));
   store.gold = (Number(store.gold) || 0) + gold;
   store.exp = (Number(store.exp) || 0) + exp;
-  // 🎁 掉落：碎片必掉、强化石必掉、装备按概率
+  // 🎁 掉落
   const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
   const dp = s.drop || { shards: [5, 8], stone: [1, 2], gearChance: 5 };
-  const shards = rnd(dp.shards), stone = rnd(dp.stone);
+  const shards = Array.isArray(dp.shards) ? rnd(dp.shards) : 0;
+  const stone = Array.isArray(dp.stone) ? rnd(dp.stone) : 0;
   store.flags = store.flags || {};
-  store.flags.shards = (Number(store.flags.shards) || 0) + shards;
-  store.flags.stone = (Number(store.flags.stone) || 0) + stone;
+  if (shards) store.flags.shards = (Number(store.flags.shards) || 0) + shards;
+  if (stone) store.flags.stone = (Number(store.flags.stone) || 0) + stone;
   // 🎖️ 资历手稿 / 资质勋章：通关掉落（勋章按概率）
   const ms = Math.max(0, Number(dp.manuscript) || 0);
   if (ms) store.flags.manuscript = (Number(store.flags.manuscript) || 0) + ms;
   const mdBase = Math.max(0, Number(dp.medal) || 0);
   const md = (mdBase && Math.random() * 100 < (Number(dp.medalChance) || 0)) ? mdBase : 0;
   if (md) store.flags.medal = (Number(store.flags.medal) || 0) + md;
-  const drops = [{ name: "碎片", count: shards }, { name: "强化石", count: stone }];
+  const bst = Math.max(0, Number(dp.bstone) || 0);
+  if (bst) store.flags.bstone = (Number(store.flags.bstone) || 0) + bst;
+  const drops = [];
+  if (shards) drops.push({ name: "碎片", count: shards });
+  if (stone) drops.push({ name: "强化石", count: stone });
+  if (bst) drops.push({ name: "突破石", count: bst });
   if (ms) drops.push({ name: "资历手稿", count: ms });
   if (md) drops.push({ name: "资质鉴定勋章", count: md });
   if (Math.random() * 100 < (dp.gearChance || 0)) {
-    const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
+    const pool = s.foe.lv >= 40 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
     const list = pool[Math.floor(Math.random() * pool.length)];
     const def = list[Math.floor(Math.random() * list.length)];
-    const cat = pool[0] === WEAPONS && list === WEAPONS ? "weapon" : (list === ARMORS ? "armor" : "accessory");
+    const cat = list === WEAPONS ? "weapon" : (list === ARMORS ? "armor" : "accessory");
     store.items.push(makeItem(cat, def));
     drops.push({ name: def.name, count: 1 });
   }
+  // 🏮 庆典试炼：每周记录
+  if (String(s.id).indexOf("fest") === 0) store.flags.festWeek = weekKey();
   addReceipt(store, "战斗", s.name, { gold, items: drops });
   bumpDaily(store, "battles");
   store.flags.wins = (Number(store.flags.wins) || 0) + 1;
