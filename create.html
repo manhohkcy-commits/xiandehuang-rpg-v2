@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT } from "./js/originals.js?v=02062389";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=b5a19601";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1341,8 +1341,15 @@ function renderOrig() {
     card("专属装备（" + gearCount + "）",
       gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "") +
-    card("仓库（主机存档）",
-      '<div class="hint" style="margin-bottom:6px;">金币 ' + fmt(store.gold || 0) +
+    card("原创培养（解锁阶段待配置）",
+      '<div class="hint" style="margin-bottom:6px;">按角色等级解锁；条件确定后由主机端配置。</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        ["stat|属性强化", "refine|精炼", "advance|升阶", "awaken|觉醒", "talent|天赋", "shop|商店"].map((x) => {
+          const key = x.split("|")[0], label = x.split("|")[1];
+          const ok = origUnlocked(o.id, key, prog);
+          return '<button data-of="' + key + '"' + (ok ? "" : ' disabled style="opacity:.45;"') + '>' + label + (ok ? "" : " 🔒") + '</button>';
+        }).join("") + '</div>') +
+    card("仓库（主机存档）",      '<div class="hint" style="margin-bottom:6px;">金币 ' + fmt(store.gold || 0) +
       ' · 强化石 ' + (store.flags.stone || 0) + ' · 碎片 ' + (store.flags.shards || 0) +
       ' · 突破石 ' + (store.flags.bstone || 0) + '</div>' +
       ((store.items || []).length
@@ -1351,6 +1358,28 @@ function renderOrig() {
         : '<div class="hint">仓库里还没有装备。</div>'));
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+  view().querySelectorAll("[data-of]").forEach((b) => b.onclick = async () => {
+    const key = b.dataset.of;
+    if (!origUnlocked(o.id, key, prog)) return toast("还没解锁（解锁阶段待配置）", true);
+    if (key === "stat") {
+      const cost = 500;
+      if ((store.gold || 0) < cost) return toast("金币不足（需 " + cost + "）", true);
+      if (!prog.bonus) prog.bonus = {};
+      store.gold -= cost;
+      prog.bonus.atk = (Number(prog.bonus.atk) || 0) + 2;
+      prog.bonus.hp = (Number(prog.bonus.hp) || 0) + 8;
+      await save(); render(); return toast("属性强化 +2 攻击 / +8 生命");
+    }
+    if (key === "refine") {
+      const cost = 5;
+      if ((store.flags.shards || 0) < cost) return toast("碎片不足（需 " + cost + "）", true);
+      if (!prog.bonus) prog.bonus = {};
+      store.flags.shards -= cost;
+      prog.bonus.critDmg = (Number(prog.bonus.critDmg) || 0) + 1;
+      await save(); render(); return toast("精炼 +1% 暴击伤害");
+    }
+    toast("这个模块还要等配置");
+  });
   view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
     const parts = b.dataset.og.split(":");
     const slot = parts[0], act = parts[1];

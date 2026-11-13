@@ -31,6 +31,11 @@ export function originalFinal(o, prog) {
     critRate: (Number(s.critRate) || 5) + gs.critRate,
     critDmg: (Number(s.critDmg) || 150) + gs.critDmg
   };
+  // 🏋 属性强化 / 精炼等长期加成
+  const bonus = (prog && prog.bonus) || {};
+  ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].forEach((key) => {
+    out[key] += Number(bonus[key]) || 0;
+  });
   out.power = powerOf(out);
   return out;
 }
@@ -68,6 +73,16 @@ export const ORIGINAL_GEAR = {
     accessory: { name: "凝霜之泪", rarity: "SSR", atk: 52, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 12, lifesteal: 15 }
   }
 };
+// 🔓 原创角色功能解锁（阶段由主机配置，暂全部锁住）
+export const ORIG_UNLOCK = {
+  // 例：dmweo00x9: { stat: 5, refine: 10, advance: 15, awaken: 20, talent: 25, shop: 1 }
+};
+export function origUnlocked(id, feature, prog) {
+  const rule = ORIG_UNLOCK[id] || {};
+  const need = Number(rule[feature]);
+  if (!need) return false;
+  return (Number((prog || {}).lv) || 1) >= need;
+}
 // 🛠 专属装备培养：每件 +2%/级（上限 20 级）、+12%/星（上限 5 星）
 export const ORIG_GEAR_CULT = {
   maxLv: 20, maxStar: 5,
