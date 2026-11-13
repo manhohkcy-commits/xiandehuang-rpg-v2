@@ -27,6 +27,7 @@
 
 <script type="module">
 import { powerOf } from "./js/power.js?v=2318bcc3";
+import { pushOriginals, pullOriginals, ORIGINALS } from "./js/originals.js?v=a3530878";
 
 const KEY = "rpg2:designs";
 const PWKEY = "rpg2:designpw";
@@ -207,6 +208,8 @@ function form(d) {
       '<button id="btnExport">📤 导出 JSON</button>' +
       '<button id="btnImport">📥 导入 JSON</button>' +
       '<button id="btnGame" style="border-color:#ffb347;color:#ffb347;">📦 导出游戏数据</button>' +
+      '<button id="btnCloud" style="border-color:#6ea8fe;color:#6ea8fe;">☁️ 发布到云端</button>' +
+      '<button id="btnCloudPull">☁️ 从云端拉取</button>' +
     '</div></div>';
 }
 
@@ -300,10 +303,9 @@ function bind() {
     saveAll(list); alert("已保存：" + d.name); render();
   };
   $("btnReset").onclick = () => { editing = blank(); render(); };
-  $("btnGame").onclick = () => {
+  const buildGameData = () => {
     const list = loadAll();
-    if (!list.length) return alert("先保存至少一个设计");
-    const data = list.map((x) => {
+    return list.map((x) => {
       const r = calc(x);
       return {
         id: x.id, name: x.name || "未命名", title: x.title || "", role: x.role || "通用",
@@ -315,10 +317,26 @@ function bind() {
         }
       };
     });
+  };
+  $("btnGame").onclick = () => {
+    const data = buildGameData();
+    if (!data.length) return alert("先保存至少一个设计");
     const text = "export const ORIGINALS = " + JSON.stringify(data, null, 2) + ";";
     const w = window.open("", "_blank");
     if (w) { w.document.write("<pre style='white-space:pre-wrap;font:12px/1.5 monospace;'>" + esc(text) + "</pre>"); return; }
     prompt("复制下面的游戏数据：", text);
+  };
+  // ☁️ 发布到云端（全玩家生效，不用重新部署）
+  $("btnCloud").onclick = async () => {
+    const data = buildGameData();
+    if (!data.length) return alert("先保存至少一个设计");
+    if (!confirm("发布 " + data.length + " 个原创角色到云端？所有玩家都会看到。")) return;
+    try { await pushOriginals(data); alert("✅ 已发布 " + data.length + " 个原创角色"); }
+    catch (e) { alert("发布失败：" + (e && e.message || e)); }
+  };
+  $("btnCloudPull").onclick = async () => {
+    try { await pullOriginals(); alert("已从云端拉取 " + ORIGINALS.length + " 个原创角色"); }
+    catch (e) { alert("拉取失败：" + (e && e.message || e)); }
   };
   $("btnExport").onclick = () => {
     const data = JSON.stringify(loadAll(), null, 2);

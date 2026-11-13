@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=2318bcc3";
 import { GRADE, APTITUDE } from "./js/data.js?v=07fa2916";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS } from "./js/originals.js?v=bcbdbf7b";
+import { ORIGINALS, pullOriginals } from "./js/originals.js?v=a3530878";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1641,7 +1641,7 @@ $("btnSave").onclick = () => save();
 const bootTab = new URLSearchParams(location.search).get("tab");
 if (bootTab && ["char", "talent", "cult", "orig", "store", "shop", "rank", "daily"].indexOf(bootTab) >= 0) tab = bootTab;
 
-(async () => { await load(); render(); })();
+(async () => { await load(); try { await pullOriginals(); } catch (e) {} render(); })();
 </script>
 </body>
 </html>

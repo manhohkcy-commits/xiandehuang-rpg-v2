@@ -1,13 +1,28 @@
+import { cloudGet, cloudSave } from "./core.js?v=13807141";
+
 // 🧑‍💻 主机端原创角色（由设计器导出，加到游戏里）
 // 字段：id, name, title, role, rare, camp("enemy"|"ally"), desc, gear, notes,
 //       basic{hp,atk,def,res}, spec{str,int,tech,agi}, stats{atk,hp,def,res,spd,critRate,critDmg,power}
-export const ORIGINALS = [
-  // 示例（正式内容请用设计器导出后覆盖）：
-  // { id: "o_sample", name: "灰烬", title: "不眠的守夜人", role: "守护", rare: false, camp: "enemy",
-  //   desc: "…", gear: "灰烬之刃 — …", notes: "",
-  //   basic: { hp: 15, atk: 15, def: 15, res: 15 }, spec: { str: 9, int: 9, tech: 9, agi: 9 },
-  //   stats: { atk: 132, hp: 900, def: 42, res: 30, spd: 14, critRate: 8, critDmg: 150, power: 4200 } }
-];
+export const ORIGINALS = [];
+
+// ☁️ 云端原创角色：主机发布，全玩家拉取（失败时用本地空数组兜底）
+const ORIGINALS_BOX = "__originals";
+export async function pullOriginals() {
+  try {
+    const r = await cloudGet(ORIGINALS_BOX);
+    const list = r && r.store && r.store.originals;
+    if (Array.isArray(list) && list.length) {
+      ORIGINALS.length = 0;
+      list.forEach((o) => ORIGINALS.push(o));
+    }
+  } catch (e) {}
+  return ORIGINALS;
+}
+export async function pushOriginals(list) {
+  const arr = Array.isArray(list) ? list : [];
+  const cur = await cloudGet(ORIGINALS_BOX);
+  return cloudSave(ORIGINALS_BOX, { v: 2, items: [], chars: [], originals: arr }, cur && cur.updated_at, "原创角色");
+}
 
 export const originalsOf = (camp) => ORIGINALS.filter((o) => o.camp === camp);
 

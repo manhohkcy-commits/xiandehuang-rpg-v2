@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=07fa2916";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
+import { ORIGINALS, originalToUnits, pullOriginals } from "./js/originals.js?v=a3530878";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -84,6 +84,7 @@ async function load() {
     return;
   }
   store = g.store; updatedAt = g.updatedAt || "";
+  try { await pullOriginals(); } catch (e) {}
   renderPick();
 }
 
