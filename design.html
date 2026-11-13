@@ -141,13 +141,13 @@ function form(d) {
       '<div><div class="hint">称号</div><input class="ofield" id="fTitle" maxlength="20" value="' + esc(d.title) + '" placeholder="例如：不眠的守夜人"></div>' +
     '</div>' +
     '<div class="ogrid2" style="margin-top:10px;">' +
+      '<div><div class="hint">定位预设</div><select class="ofield" id="fPreset">' +
+        '<option value="">— 选择后自动分配加点 —</option>' +
+        Object.keys(ROLE_PRESETS).map((k) => '<option value="' + esc(k) + '">' + esc(k) + '</option>').join("") +
+      '</select></div>' +
       '<div><div class="hint">稀有度模板</div><select class="ofield" id="fRare">' +
         '<option value="0"' + (!d.rare ? " selected" : "") + '>普通原创（固定值较低 / 加点 60+36）</option>' +
         '<option value="1"' + (d.rare ? " selected" : "") + '>稀有原创（固定值更高 / 加点 80+48）</option>' +
-      '</select></div>' +
-      '<div><div class="hint">阵营</div><select class="ofield" id="fCamp">' +
-        '<option value="enemy"' + (d.camp !== "ally" ? " selected" : "") + '>敌对（玩家可挑战）</option>' +
-        '<option value="ally"' + (d.camp === "ally" ? " selected" : "") + '>友方（可同行助战）</option>' +
       '</select></div>' +
     '</div>' +
     '<div style="margin-top:10px;"><div class="hint">描述</div><textarea class="ofield" id="fDesc" rows="3" placeholder="性格、来历、战斗风格…">' + esc(d.desc) + '</textarea></div>' +
