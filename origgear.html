@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>专属装备图鉴 · 主机端</title>
+<link rel="stylesheet" href="css/app.css?v=52e2ada0">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="dot" style="background:#ffb347;box-shadow:0 0 10px #ffb34788;"></span> 闲得慌RPG <span class="hint">· 专属装备图鉴（主机端）</span></div>
+    <a class="hint" href="studio.html">← 回主机工作台</a>
+  </div>
+  <div id="view"></div>
+  <div class="foot">原创角色专属装备，玩家端只读展示</div>
+</div>
+<script type="module">
+import { ORIGINALS, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=b8bc91ed";
+
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
+const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
+const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+
+function statsOf(it) {
+  const parts = [];
+  if (it.atk) parts.push("攻击 +" + it.atk);
+  if (it.hp) parts.push("生命 +" + it.hp);
+  if (it.def) parts.push("防御 +" + it.def);
+  if (it.res) parts.push("法抗 +" + it.res);
+  if (it.spd) parts.push("速度 +" + it.spd);
+  if (it.critRate) parts.push("暴击 +" + it.critRate + "%");
+  if (it.critDmg) parts.push("暴伤 +" + it.critDmg + "%");
+  if (it.lifesteal) parts.push("吸血 " + it.lifesteal + "%");
+  if (it.ultPct) parts.push("必杀 +" + it.ultPct + "%");
+  return parts;
+}
+
+function detail(it, slot) {
+  const rc = RARITY_COLOR[it.rarity] || "#8a8ab0";
+  const stats = statsOf(it);
+  const skills = it.sName
+    ? '<div class="hint" style="margin:10px 0 4px;color:' + rc + ';font-weight:700;">招式组</div>' +
+      '<div class="row"><span class="k">[普攻] ' + esc(it.aName || "") + '</span><span class="v">' + (it.aMult || 100) + '%</span></div>' +
+      '<div class="row"><span class="k">[技能] ' + esc(it.sName) + '</span><span class="v">' + it.sMult + '% · CD' + it.sCd + '</span></div>' +
+      '<div class="row"><span class="k">[必杀] ' + esc(it.uName || "") + '</span><span class="v">' + it.uMult + '% · 怒气100</span></div>' +
+      (it.skillDesc ? '<div class="hint" style="margin-top:4px;">' + esc(it.skillDesc) + '</div>' : "")
+    : "";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:400px;width:100%;border:1px solid ' + rc + '66;">' +
+    '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:18px;color:' + rc + ';">' + esc(it.name) + '</b>' +
+    (it.rarity ? '<span class="tag" style="border-color:' + rc + ';color:' + rc + ';">' + it.rarity + '</span>' : "") +
+    '<span class="tag" style="margin-left:auto;">' + SLOT[slot] + '</span></div>' +
+    '<div class="hint" style="margin-top:8px;">' + (stats.join(" · ") || "无属性") + '</div>' + skills +
+    '<div style="margin-top:10px;"><button id="ogClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#ogClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
+function render() {
+  const owners = ORIGINALS.filter((o) => { const g = ORIGINAL_GEAR[o.id] || o.gearObj; return g && Object.keys(g).some((k) => (g[k] || {}).name); });
+  if (!owners.length) {
+    document.getElementById("view").innerHTML = '<div class="card"><div class="card-title">🛡 专属装备图鉴</div><div class="hint">还没有配置专属装备。</div></div>';
+    return;
+  }
+  document.getElementById("view").innerHTML =
+    '<div class="card"><div class="card-title">🛡 专属装备图鉴</div><div class="hint">共 ' + owners.length + ' 名原创角色、' +
+      owners.reduce((n, o) => n + Object.keys(ORIGINAL_GEAR[o.id] || o.gearObj || {}).filter((k) => ((ORIGINAL_GEAR[o.id] || o.gearObj || {})[k] || {}).name).length, 0) +
+      ' 件专属装备。点任意一件看详情。</div></div>' +
+    owners.map((o) => {
+      const g = ORIGINAL_GEAR[o.id] || o.gearObj || {};
+      return '<div class="card"><div class="card-title" style="color:#ffb347;">' + esc(o.name) + ' <span class="tag">' + (o.rare ? "稀有" : "普通") + '</span></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px;">' +
+        Object.keys(SLOT).map((k) => {
+          const it = g[k] || {};
+          if (!it.name) return "";
+          const rc = RARITY_COLOR[it.rarity] || "#8a8ab0";
+          return '<button data-g="' + o.id + ":" + k + '" style="text-align:left;background:#12182a;border:1px solid ' + rc + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
+            '<div style="font-size:13px;font-weight:700;color:' + rc + ';">' + esc(it.name) + '</div>' +
+            '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + (it.rarity || "") + ' · ' + SLOT[k] + '</div>' +
+            '<div style="font-size:10px;color:#9aa4b8;margin-top:5px;line-height:1.4;">' + esc(statsOf(it).join(" · ")) + '</div></button>';
+        }).join("") + '</div></div>';
+    }).join("");
+
+  document.getElementById("view").querySelectorAll("[data-g]").forEach((b) => b.onclick = () => {
+    const [id, slot] = b.dataset.g.split(":");
+    const o = ORIGINALS.find((x) => x.id === id);
+    const g = (o && (ORIGINAL_GEAR[o.id] || o.gearObj)) || {};
+    if (g[slot]) detail(g[slot], slot);
+  });
+}
+
+try { await pullOriginals(); } catch (e) {}
+render();
+</script>
+</body>
+</html>
