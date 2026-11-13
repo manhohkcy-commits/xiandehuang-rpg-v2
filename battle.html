@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=2d8f1941";
-import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=6c576b03";
+import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=5441fc3a";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
@@ -1211,6 +1211,9 @@ function enemyAct(u) {
       const amount = Math.round(u.maxHp * 0.1 + 20);
       allies.forEach((a) => healUnit(st, a.id, Math.round(a.maxHp * (sk.heal || 20) / 100)));
       pushLog("💚 " + u.name + " 使用「" + sk.name + "」，治疗全队", "line");
+    } else if (sk.shieldPct) {
+      allies.forEach((a) => addShield(st, a.id, Math.round(a.maxHp * (Number(sk.shieldPct) || 0) / 100)));
+      pushLog("🛡 " + u.name + " 使用「" + sk.name + "」，全队获得护盾", "line");
     } else if (sk.shield) {
       allies.forEach((a) => addShield(st, a.id, Number(sk.shield) || 40));
       pushLog("🛡 " + u.name + " 使用「" + sk.name + "」，全队获得护盾", "line");

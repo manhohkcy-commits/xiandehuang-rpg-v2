@@ -69,10 +69,10 @@ export const ENEMIES = [
     [{ name: "破阵鼓", desc: "全体友军伤害 +20%", buff: { dmgPct: 20 }, cd: 4 }],
     { weapon: "战鼓", armor: "藤甲护腿", armor2: "轻便护腿", accessory: "铁心吊坠" }, EG_E, "鼓点越急，士气越疯。"),
   E("e_mech", "入门机械师", "辅助", { atk: 10, hp: 220, def: 12, res: 12, spd: 9 },
-    [{ name: "简易护盾", desc: "给一名友军 60 点护盾", shield: 60, cd: 3 }],
+    [{ name: "简易护盾", desc: "给一名友军 8% 最大生命护盾", shieldPct: 8, cd: 3 }],
     { weapon: "板手", armor: "皮甲", armor2: "灵能护腿", accessory: "秘能石" }, EG_E, "背着一箱零件，叮叮当当。"),
   E("e_mech2", "资深机械师", "辅助", { atk: 14, hp: 300, def: 16, res: 16, spd: 9 },
-    [{ name: "力场护盾", desc: "给全体友军 140 点护盾", shield: 140, cd: 4 }],
+    [{ name: "力场护盾", desc: "给全体友军 12% 最大生命护盾", shieldPct: 12, cd: 4 }],
     { weapon: "板手", armor: "秘银轻甲", armor2: "灵能护腿", accessory: "秘能石" }, EG_E, "他造的护盾，刀砍不进、火烧不穿。"),
   // ── 首领 ────────────────────────
   E("e_chiyu", "赤羽", "首领·群攻", { atk: 40, hp: 900, def: 20, res: 12, spd: 10 },
@@ -161,7 +161,10 @@ export function enemyAt(id, lv) {
   const e = enemyById(id);
   if (!e) return null;
   const L = Math.max(1, Number(lv) || 1);
-  const k = (key) => Math.round((e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1)) * 10) / 10;
+  const k = (key) => {
+    const raw = (e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1));
+    return key === "spd" ? Math.round(raw * 10) / 10 : Math.round(raw);
+  };
   return {
     id: e.id, name: e.name, camp: e.camp, role: e.role, desc: e.desc, lv: L,
     stats: { atk: k("atk"), hp: k("hp"), def: k("def"), res: k("res"), spd: k("spd"), critRate: e.critRate, critDmg: e.critDmg },
