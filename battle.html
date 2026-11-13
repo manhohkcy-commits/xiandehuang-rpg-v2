@@ -20,7 +20,8 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=91596b92";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=38ed0178";
+import { enemyAt, enemyById } from "./js/enemies.js?v=6849b7aa";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
@@ -94,10 +95,15 @@ function weekKey() {
 function dungeonHtml() {
   const dailies = DUNGEONS.filter((d) => d.type === "daily");
   const event = DUNGEONS.find((d) => d.type === "event");
-  const stageRow = (s) => '<div class="row"><span class="k">' + esc(s.name) +
-    '<div class="hint">' + esc(s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) + ' · 攻 ' + s.foe.atk +
-    (s.gold ? ' · 金币 ' + fmt(s.gold) : '') + (s.exp ? ' · 经验 ' + fmt(s.exp) : '') + '</div></span>' +
-    '<span class="v"><button data-stage="' + s.id + '">挑战</button></span></div>';
+  const stageRow = (s) => {
+    const list = (s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ");
+    return '<div class="row"><span class="k">' + esc(s.name) +
+      '<div class="hint">' + esc(list || s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) +
+      (s.gold ? ' · 金币 ' + fmt(s.gold) : '') + (s.exp ? ' · 经验 ' + fmt(s.exp) : '') + '</div></span>' +
+      '<span class="v">' +
+      (s.enemies && s.enemies.length ? '<button data-enemy="' + s.enemies[0] + ':' + s.lv + '" style="margin-right:6px;">👁</button>' : '') +
+      '<button data-stage="' + s.id + '">挑战</button></span></div>';
+  };
 
   const dailyCards = dailies.map((d) => {
     if (!d.stages.length) {
@@ -125,6 +131,34 @@ function dungeonHtml() {
         : '<div class="hint">筹备中</div>') + '</div>';
   }
   return dailyCards + eventCard;
+}
+
+// 👁 敌人详情：①单位信息 ②面板数据 ③装备 ④招式组
+function openEnemyDetail(id, lv) {
+  const e = enemyAt(id, lv);
+  if (!e) return;
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const eqPairs = [["武器", e.equip.weapon], ["上装", e.equip.armor], ["下装", e.equip.armor2], ["饰品", e.equip.accessory]];
+  const eqHtml = eqPairs.filter((x) => x[1]).map((x) => row(x[0], esc(x[1]))).join("") || '<div class="hint">没有装备</div>';
+  const skHtml = (e.skills || []).map((s) => row(esc(s.name) + '<div class="hint">' + esc(s.desc || "") + '</div>',
+    (s.mult ? s.mult + "%" : "") + (s.cd ? " · CD" + s.cd : ""))).join("") || '<div class="hint">没有招式</div>';
+  const s = e.stats;
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.84);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:86vh;overflow:auto;">' +
+    '<div class="card-title" style="color:#ff9b9b;">' + esc(e.name) + ' <span class="tag">Lv' + e.lv + '</span></div>' +
+    '<div class="hint">① 单位信息</div>' +
+    row("阵营", esc(e.camp)) + row("定位", esc(e.role)) + row("等级", "Lv" + e.lv) +
+    (e.desc ? '<div class="hint" style="margin:6px 0;">' + esc(e.desc) + '</div>' : "") +
+    '<div class="hint">② 面板数据</div>' +
+    row("攻击", fmt(s.atk)) + row("生命", fmt(s.hp)) + row("防御", fmt(s.def)) +
+    row("法抗", fmt(s.res)) + row("速度", s.spd) + row("暴击", s.critRate + "%") + row("暴伤", s.critDmg + "%") +
+    '<div class="hint">③ 装备</div>' + eqHtml +
+    '<div class="hint">④ 招式组</div>' + skHtml +
+    '<div style="margin-top:10px;"><button id="ecClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#ecClose").onclick = () => ov.remove();
+  ov.onclick = (ev) => { if (ev.target === ov) ov.remove(); };
 }
 
 function renderPick() {
@@ -200,6 +234,10 @@ function renderPick() {
   });
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => startBattle(b.dataset.stage);
+  });
+  view().querySelectorAll("[data-enemy]").forEach((b) => b.onclick = () => {
+    const parts = b.dataset.enemy.split(":");
+    openEnemyDetail(parts[0], Number(parts[1]));
   });
   view().querySelectorAll("[data-orig]").forEach((b) => {
     b.onclick = () => startOriginal(b.dataset.orig);

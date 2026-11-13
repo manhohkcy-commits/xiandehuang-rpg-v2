@@ -121,7 +121,7 @@ export const ACCESSORIES = [
   { id: "c_bell", name: "祈愿铃", rarity: "SR", main: { res: 9, hp: 40 }, desc: "铃舌很轻，摇起来只有自己听得见。" },
   { id: "c_mercy", name: "慈心吊坠", rarity: "SR", main: { hp: 80 }, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
 ];
-// 🏯 副本系统：4 个日常 × 20 关 + 待定日常 + 庆典试炼（限定 BOSS）
+import { enemyAt } from "./enemies.js?v=6849b7aa";
 const DUNGEON_LEVELS = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
 const foeOf = (name, lv, mul = 1) => ({
   name, lv,
@@ -154,8 +154,44 @@ function makeDaily(id, name, kind, icon, desc, foeName) {
   });
   return { id, name, kind, icon, desc, type: "daily", stages };
 }
+// 🍁 经验本 · 红枫团（20 关，敌人按 Lv1 模板缩放）
+const REDMAPLE_PLAN = [
+  [5, ["e_thug"], 120],
+  [9, ["e_thug", "e_archer"], 142],
+  [13, ["e_archer", "e_archer"], 168],
+  [17, ["e_brute", "e_soldier"], 198],
+  [21, ["e_vet_soldier", "e_trainee_medic"], 470],
+  [25, ["e_soldier", "e_crossbow"], 276],
+  [29, ["e_trainee_mage", "e_archer"], 326],
+  [33, ["e_light_shield", "e_thug"], 385],
+  [37, ["e_crossbow", "e_trainee_mage"], 454],
+  [41, ["e_chiyu"], 1072],
+  [45, ["e_heavy_shield", "e_soldier"], 632],
+  [49, ["e_firebomb", "e_archer", "e_archer"], 746],
+  [53, ["e_vet_shield", "e_vet_soldier"], 880],
+  [57, ["e_vet_archer", "e_high_mage"], 1038],
+  [61, ["e_tieya"], 2450],
+  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier"], 1445],
+  [69, ["e_bomber", "e_vet_crossbow", "e_vet_crossbow"], 1705],
+  [73, ["e_baishuang"], 2012],
+  [77, ["e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 2374],
+  [80, ["e_fengwang"], 5602]
+];
+function makeRedmaple() {
+  const stages = REDMAPLE_PLAN.map(([lv, ids, exp], i) => {
+    const first = enemyAt(ids[0], lv);
+    return {
+      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + first.name, lv,
+      group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
+      enemies: ids, gold: Math.round(exp * 0.25), exp,
+      foe: { name: first.name, lv, hp: first.stats.hp, atk: first.stats.atk, def: first.stats.def, res: first.stats.res, spd: first.stats.spd },
+      drop: { shards: [0, 0], stone: [0, 0], bstone: 0, gearChance: 0, manuscript: 0, medal: 0, medalChance: 0 }
+    };
+  });
+  return { id: "d_exp", name: "红枫团", kind: "exp", icon: "🍁", desc: "盘踞枫林的山贼佣兵团，练级首选", type: "daily", stages };
+}
 export const DUNGEONS = [
-  makeDaily("d_exp", "试炼场", "exp", "📕", "大量角色经验", "训练傀儡"),
+  makeRedmaple(),
   makeDaily("d_gold", "旧金库", "gold", "💰", "大量金币", "守财奴"),
   makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
   makeDaily("d_gear", "废弃矿脉", "gear", "⚒️", "装备强化素材", "矿脉蠕虫"),
