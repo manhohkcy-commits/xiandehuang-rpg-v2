@@ -130,3 +130,10 @@ input,textarea,select{background:#0f0f1c;color:#eaeaea;border:1px solid #2f2f4a;
   .wrap{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
   button[data-tp]{min-height:34px}
 }
+
+/* 🏛 公共大厅功能区 */
+.hall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.hall-grid a{display:block;background:#12182a;border:1px solid #24304a;border-radius:10px;padding:10px;text-decoration:none;color:inherit}
+.hall-grid a:hover{border-color:#6ea8fe}
+.hall-grid .t{font-weight:700;margin-top:4px;font-size:13px}
+

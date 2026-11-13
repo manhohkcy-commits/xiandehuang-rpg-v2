@@ -1,11 +1,11 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-store">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>公共大厅 · 闲得慌RPG</title>
-<link rel="stylesheet" href="css/app.css?v=d8dee059">
+<link rel="stylesheet" href="css/app.css?v=20bb1e70">
 </head>
 <body>
 <div class="wrap">
@@ -63,6 +63,15 @@ function render() {
       ? '<a href="create.html' + qs + (box ? "&" : "") + 'tab=orig" style="text-decoration:none;"><button style="border-color:#ffb347;color:#ffb347;">🧬 原创端 · 原创角色</button></a>'
       : '<span class="hint">🧬 原创端仅主机可进入</span>') +
     '</div></div>';
+  const feat = '<div class="hall-grid" style="margin:10px 0;">' +
+    '<a href="battle.html' + (box ? "?box=" + enc : "") + '"><div style="font-size:22px;">⚔️</div><div class="t">挑战副本</div><div class="hint">枫林剿匪 / 波次战斗</div></a>' +
+    '<a href="rooms.html"><div style="font-size:22px;">🏠</div><div class="t">联机房间</div><div class="hint">和朋友一起打</div></a>' +
+    '<a href="create.html' + qs + (box ? "&" : "") + 'tab=rank"><div style="font-size:22px;">🏆</div><div class="t">排行榜</div><div class="hint">可游玩角色战力榜</div></a>' +
+    '<a href="equip.html"><div style="font-size:22px;">📚</div><div class="t">装备图鉴</div><div class="hint">武器 / 防具 / 饰品</div></a>' +
+    '<a href="enemy.html"><div style="font-size:22px;">👹</div><div class="t">敌人图鉴</div><div class="hint">敌人档案 / 招式</div></a>' +
+    '<a href="affixes.html"><div style="font-size:22px;">📖</div><div class="t">词条库</div><div class="hint">词条效果说明</div></a>' +
+    '<a href="create.html' + qs + (box ? "&" : "") + 'tab=store"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
+    '</div>';
   const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
     '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>' +
     '<button data-tab="orig"' + (tab === "orig" ? ' class="on"' : '') + '>🧬 原创大厅</button>' +
@@ -84,7 +93,7 @@ function render() {
           '<td style="text-align:right;font-size:12px;color:#ffb347;font-weight:700;">' + fmt(x.final.power) + '</td></tr>').join("") +
         '</table>' : '<div class="hint">主机还没发布原创角色。</div>'));
   }
-  view().innerHTML = enter + tabBar + body;
+  view().innerHTML = enter + card("🏛 大厅功能区", feat) + tabBar + body;
 
   view().querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => { tab = b.dataset.tab; history.replaceState(null, "", "?tab=" + tab); render(); });
   view().querySelectorAll("[data-orig]").forEach((tr) => tr.onclick = () => {
