@@ -95,11 +95,52 @@ export const ENEMIES = [
 ];
 
 export function enemyById(id) { return ENEMIES.find((e) => e.id === id); }
-// 🏷 分类：首领 / 特色 / 精英 / 普通
+// 📊 数值重定：以「平均 Lv1 角色」为基准（攻 144 / 生 850 / 防 29 / 抗 22 / 速 11）
+const ENEMY_STATS = {
+  // 普通
+  e_thug: { atk: 42, hp: 250, def: 13, res: 8, spd: 9 },
+  e_brute: { atk: 48, hp: 305, def: 12, res: 7, spd: 8 },
+  e_soldier: { atk: 38, hp: 330, def: 18, res: 10, spd: 8 },
+  e_archer: { atk: 44, hp: 190, def: 9, res: 9, spd: 12 },
+  e_crossbow: { atk: 52, hp: 180, def: 8, res: 8, spd: 10 },
+  e_trainee_mage: { atk: 46, hp: 170, def: 7, res: 13, spd: 9 },
+  e_trainee_medic: { atk: 20, hp: 240, def: 11, res: 14, spd: 10 },
+  e_light_shield: { atk: 30, hp: 430, def: 26, res: 12, spd: 7 },
+  e_heavy_shield: { atk: 26, hp: 560, def: 34, res: 15, spd: 6 },
+  e_firebomb: { atk: 45, hp: 185, def: 8, res: 10, spd: 11 },
+  // 精英
+  e_vet_soldier: { atk: 70, hp: 470, def: 24, res: 12, spd: 9 },
+  e_vet_archer: { atk: 76, hp: 250, def: 11, res: 11, spd: 12 },
+  e_vet_crossbow: { atk: 86, hp: 240, def: 10, res: 10, spd: 10 },
+  e_vet_medic: { atk: 34, hp: 310, def: 14, res: 18, spd: 10 },
+  e_vet_shield: { atk: 40, hp: 780, def: 42, res: 20, spd: 6 },
+  e_high_mage: { atk: 82, hp: 230, def: 8, res: 20, spd: 9 },
+  e_bomber: { atk: 74, hp: 245, def: 9, res: 12, spd: 9 },
+  // 特色
+  e_horn: { atk: 24, hp: 300, def: 14, res: 12, spd: 11 },
+  e_drum: { atk: 22, hp: 320, def: 14, res: 12, spd: 8 },
+  e_mech: { atk: 18, hp: 280, def: 16, res: 15, spd: 9 },
+  e_mech2: { atk: 26, hp: 380, def: 20, res: 18, spd: 9 },
+  // 首领
+  e_chiyu: { atk: 96, hp: 1900, def: 26, res: 16, spd: 10 },
+  e_tieya: { atk: 118, hp: 1700, def: 30, res: 14, spd: 10 },
+  e_baishuang: { atk: 72, hp: 1600, def: 20, res: 26, spd: 12 },
+  e_fengwang: { atk: 108, hp: 2400, def: 32, res: 22, spd: 11 }
+};
+// 成长特色：坦克血防成长高、远程攻高血低、首领双高
+const GROWTH_BY = (e) => {
+  if (e.tier === "boss") return { atk: 0.08, hp: 0.095, def: 0.07, res: 0.06, spd: 0.02 };
+  if (/盾|坦克/.test(e.role)) return { atk: 0.06, hp: 0.09, def: 0.075, res: 0.06, spd: 0.015 };
+  if (/远程|法术/.test(e.role)) return { atk: 0.085, hp: 0.07, def: 0.055, res: 0.055, spd: 0.025 };
+  if (/辅助/.test(e.role)) return { atk: 0.05, hp: 0.08, def: 0.06, res: 0.06, spd: 0.02 };
+  return { atk: 0.075, hp: 0.08, def: 0.06, res: 0.05, spd: 0.02 };
+};
 ENEMIES.forEach((e) => {
+  e.stats = Object.assign({}, e.stats, ENEMY_STATS[e.id] || {});
   e.tier = (e.role || "").indexOf("首领") >= 0 ? "boss"
-    : /号角|战鼓|机械/.test(e.name) ? "special"
+    : /号角|鼓|机械/.test(e.name) ? "special"
     : /资深|高阶|爆破/.test(e.name) ? "elite" : "normal";
+  e.growth = GROWTH_BY(e);
 });
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
 export function enemyAt(id, lv) {
