@@ -130,6 +130,35 @@ const ENEMY_ULT = {
   e_fengwang: { name: "枫落九天", desc: "全体 200% 攻击并召唤流寇", mult: 200, aoe: true, summon: "e_thug" }
 };
 
+// 🏷 特性标签
+const ENEMY_TAGS = {
+  e_thug: ["杂兵", "近战"],
+  e_brute: ["杂兵", "近战", "高攻"],
+  e_soldier: ["杂兵", "近战", "均衡"],
+  e_archer: ["杂兵", "远程", "高速"],
+  e_crossbow: ["杂兵", "远程", "单发"],
+  e_trainee_mage: ["杂兵", "法术", "灼烧"],
+  e_trainee_medic: ["杂兵", "治疗"],
+  e_light_shield: ["杂兵", "坦克", "护盾"],
+  e_heavy_shield: ["杂兵", "坦克", "护盾", "高防"],
+  e_firebomb: ["杂兵", "远程", "灼烧", "群攻"],
+  e_vet_soldier: ["精英", "近战", "多段"],
+  e_vet_archer: ["精英", "远程", "群攻", "高速"],
+  e_vet_crossbow: ["精英", "远程", "穿透"],
+  e_vet_medic: ["精英", "治疗", "群疗"],
+  e_vet_shield: ["精英", "坦克", "护盾", "高防"],
+  e_high_mage: ["精英", "法术", "群攻", "灼烧"],
+  e_bomber: ["精英", "远程", "群攻"],
+  e_horn: ["特色", "增益", "加攻"],
+  e_drum: ["特色", "增益", "加伤"],
+  e_mech: ["特色", "护盾"],
+  e_mech2: ["特色", "护盾", "群盾"],
+  e_chiyu: ["首领", "群攻", "召唤"],
+  e_tieya: ["首领", "爆发", "单体"],
+  e_baishuang: ["首领", "治疗", "增益", "护盾"],
+  e_fengwang: ["首领", "群攻", "召唤", "增益"]
+};
+
 export function enemyById(id) { return ENEMIES.find((e) => e.id === id); }
 // ⚔️ 敌人战力（与角色同一套换算）
 export function enemyPower(e) {
@@ -204,6 +233,8 @@ ENEMIES.forEach((e) => {
        Object.assign({ kind: "skill" }, sk),
        Object.assign({ kind: "ult", rage: 100 }, ult)];
   e.rageGain = ENEMY_RAGE[e.id] || 25;
+  e.tags = ENEMY_TAGS[e.id] || [];
+  e.faction = e.camp;
 });
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
 export function enemyAt(id, lv) {

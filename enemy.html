@@ -16,7 +16,8 @@
   <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
 </div>
 <script type="module">
-import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=fda34f2b";
+import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=00f0acb8";
+import { DUNGEONS } from "./js/data.js?v=2d8f1941";
 
 const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
 const TIER_NAME = { boss: "首领", special: "特色", elite: "精英", normal: "普通" };
@@ -52,6 +53,9 @@ function detail(id, atLv) {
       '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">' + (TIER_NAME[e0.tier] || "") + '</span>' +
       '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#1c2740,#101827);border:1px solid #ffd66655;border-radius:20px;padding:3px 11px;font-size:11px;color:#ffd666;">⚔️ 战力 <b style="font-size:13px;">' + fmt(enemyPower(e)) + '</b></span></div>' +
     '<div class="hint" style="margin:3px 0 2px;">' + esc(e.camp) + ' · ' + esc(e.role) + ' · Lv' + e.lv + '</div>' +
+    '<div style="display:flex;gap:3px;flex-wrap:wrap;margin:4px 0;">' + (e0.tags || []).map((t) =>
+      '<span style="font-size:10px;color:#8fd8ff;border:1px solid #2a3a55;border-radius:5px;padding:1px 6px;">' + esc(t) + '</span>').join("") + '</div>' +
+    (appearOf(e0.id).length ? '<div class="hint" style="margin-bottom:4px;">📅 出现关卡：' + esc(appearOf(e0.id).join("、")) + '</div>' : "") +
     (e.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(e.desc) + '</div>' : "") +
     sec("① 面板数据") +
     panel(r("攻击", fmt(s.atk)) + r("生命", fmt(s.hp)) + r("防御", fmt(s.def)) + r("法抗", fmt(s.res)) +
@@ -83,7 +87,13 @@ const roleTag = (e) => {
   return "melee";
 };
 const ROLE_NAME = { boss: "首领", tank: "坦克", melee: "近战", ranged: "远程", spell: "法术", support: "辅助" };
-const F = (window.__ef = window.__ef || { tier: "all", role: "all" });
+const F = (window.__ef = window.__ef || { tier: "all", role: "all", theme: "all", tag: "all" });
+// 出现关卡
+const appearOf = (id) => DUNGEONS.flatMap((d) => d.stages.filter((s) => (s.enemies || []).indexOf(id) >= 0).map((s) => s.name.split(" · ")[0]));
+// 所有主题（阵营）
+const THEMES = Array.from(new Set(ENEMIES.map((e) => e.faction || e.camp)));
+// 所有特性标签
+const TAGS = Array.from(new Set(ENEMIES.flatMap((e) => e.tags || []))).slice(0, 12);
 const chip = (type, val, label) => {
   const on = F[type] === val;
   return '<button data-f="' + type + ':' + val + '" style="font-size:11px;padding:3px 10px;border-radius:20px;' +
@@ -92,10 +102,15 @@ const chip = (type, val, label) => {
 
 function render() {
   const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
-    '<span class="hint">品质</span>' + chip("tier", "all", "全部") +
-    TIER_ORDER.map((t) => chip("tier", t, TIER_NAME[t] + "（" + ENEMIES.filter((e) => e.tier === t).length + "）")).join("") +
-    '<span style="width:8px;"></span><span class="hint">定位</span>' + chip("role", "all", "全部") +
+    '<span class="hint">主题</span>' + chip("theme", "all", "全部") +
+    THEMES.map((t) => chip("theme", t, t)).join("") +
+    '<span style="width:8px;"></span><span class="hint">品质</span>' + chip("tier", "all", "全部") +
+    TIER_ORDER.map((t) => chip("tier", t, TIER_NAME[t])).join("") +
+    '</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">' +
+    '<span class="hint">定位</span>' + chip("role", "all", "全部") +
     ["boss", "tank", "melee", "ranged", "spell", "support"].map((k) => chip("role", k, ROLE_NAME[k])).join("") +
+    '<span style="width:8px;"></span><span class="hint">特性</span>' + chip("tag", "all", "全部") +
+    TAGS.map((t) => chip("tag", t, t)).join("") +
     '<span style="width:8px;"></span><span class="hint">等级预览</span>' +
     '<input id="lvIn" type="number" min="1" max="100" value="' + lv + '" style="width:64px;padding:3px 6px;">' +
     '</div></div>';
@@ -103,7 +118,9 @@ function render() {
   const groups = TIER_ORDER.map((t) => {
     const list = ENEMIES.filter((e) => e.tier === t)
       .filter((e) => F.tier === "all" || e.tier === F.tier)
-      .filter((e) => F.role === "all" || roleTag(e) === F.role);
+      .filter((e) => F.role === "all" || roleTag(e) === F.role)
+      .filter((e) => F.theme === "all" || (e.faction || e.camp) === F.theme)
+      .filter((e) => F.tag === "all" || (e.tags || []).indexOf(F.tag) >= 0);
     return { t, list };
   }).filter((g) => g.list.length);
 
@@ -117,7 +134,9 @@ function render() {
           const s = e.stats;
           return '<button data-enemy="' + e.id + '" style="text-align:left;background:#12182a;border:1px solid ' + RARITY_COLOR[g.t] + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
             '<div style="font-size:13px;font-weight:700;color:' + RARITY_COLOR[g.t] + ';">' + esc(e.name) + '</div>' +
-            '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.role) + '</div>' +
+            '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.faction || e.camp) + ' · ' + esc(e.role) + '</div>' +
+            '<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap;">' + (e.tags || []).slice(0, 3).map((t) =>
+              '<span style="font-size:9px;color:#8fd8ff;border:1px solid #2a3a55;border-radius:4px;padding:0 4px;">' + esc(t) + '</span>').join("") + '</div>' +
             '<div style="font-size:10px;color:#ffd666;margin-top:5px;">攻 ' + s.atk + ' · 生 ' + s.hp + '</div>' +
             '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;">防 ' + s.def + ' · 抗 ' + s.res + ' · 速 ' + s.spd + '</div>' +
             '</button>';
