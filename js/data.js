@@ -205,7 +205,7 @@ export const SCENES = [
 ];
 const REDMAPLE_SCENE_IDX = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9];
 const REDMAPLE_WEATHER = ["clear", "clear", "rain", "rain", "fog", "fog", "clear", "sun", "sun", "night",
-  "clear", "rain", "storm", "storm", "night", "fog", "fog", "rain", "storm", "night"];
+  "wind", "wind", "storm", "storm", "night", "fog", "rain", "storm", "sun", "night"];
 const REDMAPLE_TITLES = ["山径哨兵", "林间冷箭", "营前斥候", "断木拒马", "隘口双哨", "雾锁隘口", "下坡伏击", "半山营地",
   "山隘夜哨", "大当家的斧", "上山夺道", "火烧枫林", "广场械斗", "广场混战", "铁牙的狂笑", "亲卫合围", "帐前的火", "军师白霜", "全员压上", "枫王座前"];
 const REDMAPLE_PLAN = [
@@ -224,10 +224,10 @@ const REDMAPLE_PLAN = [
   [53, ["e_vet_shield", "e_vet_soldier", "e_archer"], 880, "精英小队压上，盾、枪、弓配合紧密。"],
   [57, ["e_vet_archer", "e_high_mage", "e_crossbow"], 1038, "箭雨与火球同时蓄势，这队不好惹。"],
   [61, ["e_tieya", "e_vet_soldier", "e_vet_soldier", "e_trainee_medic"], 2450, "二当家铁牙咧嘴笑着，身后是精锐与医护。"],
-  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier", "e_vet_soldier"], 1445, "完整的精锐编队，攻守兼备。"],
+  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier", "e_vet_soldier", "e_vet_crossbow"], 1445, "完整的精锐编队，攻守兼备。"],
   [69, ["e_bomber", "e_vet_crossbow", "e_vet_crossbow", "e_high_mage"], 1705, "爆破手点燃引线，远程火力覆盖全场。"],
   [73, ["e_baishuang", "e_vet_soldier", "e_vet_soldier", "e_vet_shield"], 2012, "军师白霜立于阵后，亲卫寸步不离。"],
-  [77, ["e_thug", "e_brute", "e_soldier", "e_archer", "e_crossbow", "e_trainee_mage", "e_firebomb", "e_light_shield"], 2374, "枫林深处涌出一大群杂兵，一眼望不到头。"],
+  [77, ["e_thug", "e_brute", "e_soldier", "e_archer", "e_vet_soldier", "e_vet_archer", "e_firebomb", "e_light_shield"], 2374, "枫林深处涌出一大群杂兵，其中混着几名精锐。"],
   [80, ["e_fengwang", "e_vet_shield", "e_vet_shield", "e_high_mage", "e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 5602, "枫王终于现身，整片枫林都安静了下来。"]
 ];
 function makeRedmaple() {
