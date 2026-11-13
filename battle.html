@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=2b1030af";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, gearAbilities } from "./js/originals.js?v=b8bc91ed";
+import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=b8bc91ed";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=d92ed317";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -656,7 +656,11 @@ function startBattle(stageId, prepPos) {
     pushLog("🤝 " + ally.name + " 与你同行", "line");
   }
   st.__stage = s.id;
-  st.__weapon = playOrig ? null : (ch.equip.weapon || null);
+  st.__weapon = playOrig ? (function () {
+    const g = ORIGINAL_GEAR[playOrig.id] || playOrig.gearObj || {};
+    const w = g.weapon || null;
+    return w && (w.sName || w.aName) ? w : null;
+  })() : (ch.equip.weapon || null);
   st.__talent = playOrig ? null : talentActive(ch);
   log = [];
   lastRound = 1;
@@ -1237,6 +1241,12 @@ function doAct(kind) {
       }
     });
     pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act", subs);
+    // ❄️ 原创角色：技能也叠霜印（雪葬额外 +1）
+    if (st.__origId && r.dmg > 0) {
+      const add = 1 + (wp.sName === "雪葬" ? 1 : 0);
+      st.__frost = Math.min(5, (Number(st.__frost) || 0) + add);
+      pushLog("❄️ 霜印 +" + add + "（" + st.__frost + "/5，必杀 +" + (st.__frost * 15) + "%）", "line");
+    }
     setCooldown(st, "me", baseCd);
     // 🏃 追击：招式命中后概率追加 50% 普攻
     if (Number(tr.chase) > 0 && f2.hp > 0 && Math.random() * 100 < Number(tr.chase)) {
