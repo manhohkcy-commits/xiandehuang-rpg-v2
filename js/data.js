@@ -181,40 +181,41 @@ function makeDaily(id, name, kind, icon, desc, foeName) {
 }
 // 🍁 经验本 · 红枫团（20 关，敌人按 Lv1 模板缩放）
 const REDMAPLE_PLAN = [
-  [5, ["e_thug"], 120],
-  [9, ["e_thug", "e_archer"], 142],
-  [13, ["e_archer", "e_archer"], 168],
-  [17, ["e_brute", "e_soldier"], 198],
-  [21, ["e_vet_soldier", "e_trainee_medic"], 470],
-  [25, ["e_soldier", "e_soldier", "e_crossbow"], 276],
-  [29, ["e_trainee_mage", "e_archer", "e_archer"], 326],
-  [33, ["e_light_shield", "e_thug", "e_thug"], 385],
-  [37, ["e_crossbow", "e_crossbow", "e_trainee_mage"], 454],
-  [41, ["e_chiyu", "e_thug", "e_thug"], 1072],
-  [45, ["e_heavy_shield", "e_soldier", "e_soldier"], 632],
-  [49, ["e_firebomb", "e_archer", "e_archer"], 746],
-  [53, ["e_vet_shield", "e_vet_soldier", "e_archer"], 880],
-  [57, ["e_vet_archer", "e_high_mage", "e_crossbow"], 1038],
-  [61, ["e_tieya", "e_vet_soldier", "e_vet_soldier", "e_trainee_medic"], 2450],
-  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier", "e_vet_soldier"], 1445],
-  [69, ["e_bomber", "e_vet_crossbow", "e_vet_crossbow", "e_high_mage"], 1705],
-  [73, ["e_baishuang", "e_vet_soldier", "e_vet_soldier", "e_vet_shield"], 2012],
-  [77, ["e_thug", "e_brute", "e_soldier", "e_archer", "e_crossbow", "e_trainee_mage", "e_firebomb", "e_light_shield"], 2374],
-  [80, ["e_fengwang", "e_vet_shield", "e_vet_shield", "e_high_mage", "e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 5602]
+  [5, ["e_thug"], 120, "一个打手抱着木棍守在枫林入口，哈欠连天。"],
+  [9, ["e_thug", "e_archer"], 142, "打手在前挡路，树后有人拉开了弓。"],
+  [13, ["e_archer", "e_archer"], 168, "两名弓手占据两侧高处，箭矢交叉封锁。"],
+  [17, ["e_brute", "e_soldier"], 198, "暴徒吼着冲来，士兵紧随其后压住阵脚。"],
+  [21, ["e_vet_soldier", "e_trainee_medic"], 470, "老兵带着背药箱的新人，显然不是普通巡逻。"],
+  [25, ["e_soldier", "e_soldier", "e_crossbow"], 276, "三名士兵列阵，弩手在后方慢慢上弦。"],
+  [29, ["e_trainee_mage", "e_archer", "e_archer"], 326, "术士指尖冒火，弓手掩护他念咒。"],
+  [33, ["e_light_shield", "e_thug", "e_thug"], 385, "盾兵顶在前面，两个打手从侧翼围上来。"],
+  [37, ["e_crossbow", "e_crossbow", "e_trainee_mage"], 454, "两支弩对准路口，术士在后方压阵。"],
+  [41, ["e_chiyu", "e_thug", "e_thug"], 1072, "大当家赤羽扛着战斧，身后跟着两个打手。"],
+  [45, ["e_heavy_shield", "e_soldier", "e_soldier"], 632, "重盾兵像一堵墙，士兵在墙后待命。"],
+  [49, ["e_firebomb", "e_archer", "e_archer"], 746, "有人提着燃烧瓶，火光照亮了枫叶。"],
+  [53, ["e_vet_shield", "e_vet_soldier", "e_archer"], 880, "精英小队压上，盾、枪、弓配合紧密。"],
+  [57, ["e_vet_archer", "e_high_mage", "e_crossbow"], 1038, "箭雨与火球同时蓄势，这队不好惹。"],
+  [61, ["e_tieya", "e_vet_soldier", "e_vet_soldier", "e_trainee_medic"], 2450, "二当家铁牙咧嘴笑着，身后是精锐与医护。"],
+  [65, ["e_vet_medic", "e_vet_shield", "e_vet_soldier", "e_vet_soldier"], 1445, "完整的精锐编队，攻守兼备。"],
+  [69, ["e_bomber", "e_vet_crossbow", "e_vet_crossbow", "e_high_mage"], 1705, "爆破手点燃引线，远程火力覆盖全场。"],
+  [73, ["e_baishuang", "e_vet_soldier", "e_vet_soldier", "e_vet_shield"], 2012, "军师白霜立于阵后，亲卫寸步不离。"],
+  [77, ["e_thug", "e_brute", "e_soldier", "e_archer", "e_crossbow", "e_trainee_mage", "e_firebomb", "e_light_shield"], 2374, "枫林深处涌出一大群杂兵，一眼望不到头。"],
+  [80, ["e_fengwang", "e_vet_shield", "e_vet_shield", "e_high_mage", "e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 5602, "枫王终于现身，整片枫林都安静了下来。"]
 ];
 function makeRedmaple() {
   const STAGE_TITLE = { 8: "双弩手", 18: "杂兵乱战", 19: "枫王·终局" };
-  const stages = REDMAPLE_PLAN.map(([lv, ids, exp], i) => {
+  const stages = REDMAPLE_PLAN.map(([lv, ids, exp, story], i) => {
     const first = enemyAt(ids[0], lv);
     return {
       id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + (STAGE_TITLE[i] || first.name), lv,
+      story: story || "",
       group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       enemies: ids, gold: Math.round(exp * 0.25), exp,
       foe: { name: first.name, lv, hp: first.stats.hp, atk: first.stats.atk, def: first.stats.def, res: first.stats.res, spd: first.stats.spd },
       drop: { shards: [0, 0], stone: [0, 0], bstone: 0, gearChance: 0, manuscript: 0, medal: 0, medalChance: 0 }
     };
   });
-  return { id: "d_exp", name: "红枫团", kind: "exp", icon: "🍁", desc: "盘踞枫林的山贼佣兵团，练级首选", type: "daily", stages };
+  return { id: "d_exp", name: "枫林剿匪", kind: "exp", icon: "🍁", desc: "红枫团盘踞的枫林，剿灭他们换取经验", type: "daily", stages };
 }
 export const DUNGEONS = [
   makeRedmaple(),

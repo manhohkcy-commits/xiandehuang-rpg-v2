@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=2d8f1941";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS } from "./js/data.js?v=9e10deab";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -103,17 +103,15 @@ function weekKey() {
   return d.getFullYear() + "-W" + String(w).padStart(2, "0");
 }
 function dungeonHtml() {
-  const dailies = DUNGEONS.filter((d) => d.type === "daily");
-  const event = DUNGEONS.find((d) => d.type === "event");
-  const stageRow = (s) => {
-    const list = (s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ");
-    return '<div class="row"><span class="k">' + esc(s.name) +
-      '<div class="hint">' + esc(list || s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) +
-      (s.gold ? ' · 金币 ' + fmt(s.gold) : '') + (s.exp ? ' · 经验 ' + fmt(s.exp) : '') + ' · 建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
-      '<span class="v">' +
-      (s.enemies && s.enemies.length ? '<button data-enemy="' + s.enemies[0] + ':' + s.lv + '" style="margin-right:6px;">👁</button>' : '') +
-      '<button data-stage="' + s.id + '">挑战</button></span></div>';
-  };
+  // 🚧 目前只有「枫林剿匪」设计完成，其他副本先隐藏
+  const dailies = DUNGEONS.filter((d) => d.type === "daily" && d.id === "d_exp");
+  const event = null;
+  const stageRow = (s) => '<div class="row"><span class="k">' + esc(s.name) +
+    '<div class="hint" style="margin-top:2px;">' + esc(s.story || "") + '</div>' +
+    '<div class="hint" style="margin-top:2px;color:#8fd8ff;">建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
+    '<span class="v">' +
+    (s.enemies && s.enemies.length ? '<button data-enemy="' + s.enemies[0] + ':' + s.lv + '" style="margin-right:6px;">👁</button>' : '') +
+    '<button data-stage="' + s.id + '">挑战</button></span></div>';
 
   const dailyCards = dailies.map((d) => {
     if (!d.stages.length) {
