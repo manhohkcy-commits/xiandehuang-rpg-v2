@@ -1835,14 +1835,6 @@ function render() {
     const b = document.querySelector('[data-tab="orig"]');
     if (b) b.style.display = "none";
     if (tab === "orig") tab = "char";
-  } else {
-    // 🧬 主机端：只保留「原创」入口
-    document.querySelectorAll('[data-tab]').forEach((b) => {
-      if (b.dataset.tab !== "orig" && b.dataset.tab !== "rank") b.style.display = "none";
-    });
-    if (tab !== "orig" && tab !== "rank") tab = "orig";
-    const sb = $("btnSwitchBox");
-    if (sb) sb.style.display = "none"; // 主机位号固定 zynFUTA，不允许切换
   }
   if (!store) {
     view().innerHTML =

@@ -91,10 +91,9 @@ function render() {
     '<a href="create.html' + myQs + (myBox ? "&" : "") + 'tab=store"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
     '</div>';
   const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
-    (hostMode ? "" : '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>') +
-    '<button data-tab="orig"' + (tab === "orig" || hostMode ? ' class="on"' : '') + '>🧬 原创大厅</button>' +
+    '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>' +
+    '<button data-tab="orig"' + (tab === "orig" ? ' class="on"' : '') + '>🧬 原创大厅</button>' +
     '</div>';
-  if (hostMode) tab = "orig";
 
   let body = "";
   if (tab === "player") {
