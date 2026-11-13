@@ -55,15 +55,38 @@ function detail(it) {
     return ks.length ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">' + g.t + '</div>' + ks.map(row).join("") : "";
   }).join("");
 
+  const SHAPE = { single: "单体", row: "一排", col: "一列", cross: "十字", all: "全体" };
+  const effTags = (d) => {
+    const t = [];
+    if (d.sHits > 1) t.push("×" + d.sHits + " 段");
+    if (d.sShape) t.push(SHAPE[d.sShape] || d.sShape);
+    if (d.sCd) t.push("CD " + d.sCd);
+    if (d.sRage) t.push("回怒 " + d.sRage + "%");
+    if (d.sunderBoost) t.push("破防 " + d.sunderBoost);
+    if (d.penetrate) t.push("穿透 " + d.penetrate + "%");
+    if (d.stun) t.push("眩晕 " + d.stun + "%");
+    if (d.burn) t.push("灼烧");
+    if (d.freeze) t.push("冰冻");
+    if (d.silence) t.push("沉默");
+    return t;
+  };
+  const skCard = (label, name, multText, tags) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
+      '<b style="font-size:13px;color:#dbe4f3;">' + label + (name ? ' · ' + esc(name) : '') + '</b>' +
+      '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + multText + '</span></div>' +
+    (tags && tags.length ? '<div class="hint" style="margin-top:3px;">' + tags.join(" · ") + '</div>' : "") + '</div>';
+
   const skill = it.cat !== "weapon" ? "" :
-    '<div class="hint" style="margin-top:10px;font-weight:700;color:#8fd8ff;">招式</div>' +
-    '<div class="row"><span class="k">普攻</span><span class="v">' + (Number(d.aMult) || 100) + '%' + ((Number(d.aHits) || 1) > 1 ? ' ×' + d.aHits + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + '</span></div>' +
+    '<div class="hint" style="margin:12px 0 5px;font-weight:700;color:#8fd8ff;letter-spacing:1px;">招式组</div>' +
+    skCard("普攻", "", (Number(d.aMult) || 100) + "%" + ((Number(d.aHits) || 1) > 1 ? " ×" + d.aHits : ""),
+      [d.dmgType === "spell" ? "法术" : "物理", d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "近战"]) +
     (d.sSupport
-      ? '<div class="row"><span class="k">技能（辅助）</span><span class="v">「' + (d.sName || "—") + '」· CD ' + (d.sCd || 3) + '</span></div>'
+      ? skCard("技能", d.sName || "—", "辅助", ["CD " + (d.sCd || 3), d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
       : (d.sMult
-        ? '<div class="row"><span class="k">技能</span><span class="v">「' + (d.sName || "—") + '」' + d.sMult + '%' + (d.sHits > 1 ? ' ×' + d.sHits + ' 段' : '') + ' · CD ' + (d.sCd || 2) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>'
-        : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶没有技能（SR 起才有）</span></div>')) +
-    '<div class="row"><span class="k">必杀</span><span class="v">' + (Number(d.uMult) || 250) + '%' + ((Number(d.uHits) || 1) > 1 ? ' ×' + d.uHits + ' 段' : '') + ' · 怒气满 100 时可用</span></div>';
+        ? skCard("技能", d.sName || "—", d.sMult + "%" + (d.sHits > 1 ? " ×" + d.sHits : ""), effTags(d))
+        : skCard("技能", "", "—", ["R 阶没有技能"]))) +
+    skCard("必杀", "", (Number(d.uMult) || 250) + "%" + ((Number(d.uHits) || 1) > 1 ? " ×" + d.uHits : ""),
+      ["怒气 100", d.uShape ? (SHAPE[d.uShape] || d.uShape) : "单体"]);
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
@@ -73,7 +96,7 @@ function detail(it) {
     (meta ? '<div class="hint">' + meta + '</div>' : '') +
     (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + d.desc + '</div>' : '') +
     mainBlock +
-    (groups || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
+    (groups || '<div class="hint" style="margin-top:8px;color:#6a6a86;">无额外属性</div>') +
     skill +
     '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
