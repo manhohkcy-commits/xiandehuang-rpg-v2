@@ -58,6 +58,10 @@ async function gate() {
   return false;
 }
 function render() {
+  const hostBox = (() => { try { return localStorage.getItem("rpg2:hostBox") || localStorage.getItem("rpg2:box") || ""; } catch (e) { return ""; } })();
+  const enc = encodeURIComponent(hostBox);
+  const L = (page, tab) => page + (hostBox ? "?box=" + enc + "&tab=" + tab : "?tab=" + tab);
+  const qa = hostBox ? "?box=" + enc : "";
   document.getElementById("view").innerHTML =
     '<div class="studio-bar">🧑‍💻 <b>主机端 · 设计工作室</b>　这里的东西只改设计数据，不写任何玩家存档 / 排行榜</div>' +
     '<div class="card"><div class="card-title" style="color:#ffb347;">工作台</div>' +
@@ -70,14 +74,20 @@ function render() {
       '<div class="studio-note">提示：设计器里点「导出 JSON」可以把设计发给我，转成游戏内容。</div>' +
       '<div style="margin-top:12px;"><button id="btnLock" style="font-size:11px;border-color:#6b4a1e;color:#ffcf7a;">🔒 锁定主机端</button></div>' +
     '</div>' +
+    '<div class="card"><div class="card-title" style="color:#ffb347;">👤 主机位号</div>' +
+      '<div class="row"><span class="k">当前位号</span><span class="v">' + (hostBox ? '<b style="color:#ffcf7a;">' + hostBox + '</b>' : '<span class="hint">未设置（游戏入口会落到公用/新位号）</span>') + '</span></div>' +
+      '<div style="display:flex;gap:8px;margin-top:6px;"><input id="hostBoxIn" value="' + hostBox + '" placeholder="填你的位号" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;">' +
+      '<button id="btnHostBox" style="border-color:#6b4a1e;color:#ffcf7a;">保存</button></div>' +
+      '<div class="hint" style="margin-top:6px;">设置后，下面的游戏入口都会带上这个位号，直接进你自己的角色。</div>' +
+    '</div>' +
     '<div class="card"><div class="card-title" style="color:#ffb347;">🎮 我的游戏（主机操控）</div>' +
       '<div class="studio-card">' +
-        '<a href="create.html?tab=char"><div style="font-size:22px;">🧑</div><div class="t">我的角色</div><div class="hint">属性 / 突破 / 战斗面板</div></a>' +
-        '<a href="create.html?tab=talent"><div style="font-size:22px;">🌳</div><div class="t">天赋</div><div class="hint">分支加点</div></a>' +
-        '<a href="create.html?tab=cult"><div style="font-size:22px;">⚒</div><div class="t">培养</div><div class="hint">装备强化 / 升星 / 精炼</div></a>' +
-        '<a href="create.html?tab=orig"><div style="font-size:22px;">🧬</div><div class="t">原创角色</div><div class="hint">等级 / 突破 / 出战</div></a>' +
-        '<a href="create.html?tab=store"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
-        '<a href="battle.html"><div style="font-size:22px;">⚔️</div><div class="t">战斗</div><div class="hint">副本 / 同行 / 出战</div></a>' +
+        '<a href="' + L("create.html", "char") + '"><div style="font-size:22px;">🧑</div><div class="t">我的角色</div><div class="hint">属性 / 突破 / 战斗面板</div></a>' +
+        '<a href="' + L("create.html", "talent") + '"><div style="font-size:22px;">🌳</div><div class="t">天赋</div><div class="hint">分支加点</div></a>' +
+        '<a href="' + L("create.html", "cult") + '"><div style="font-size:22px;">⚒</div><div class="t">培养</div><div class="hint">装备强化 / 升星 / 精炼</div></a>' +
+        '<a href="' + L("create.html", "orig") + '"><div style="font-size:22px;">🧬</div><div class="t">原创角色</div><div class="hint">等级 / 突破 / 出战</div></a>' +
+        '<a href="' + L("create.html", "store") + '"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
+        '<a href="battle.html' + qa + '"><div style="font-size:22px;">⚔️</div><div class="t">战斗</div><div class="hint">副本 / 同行 / 出战</div></a>' +
       '</div>' +
       '<div class="studio-note">这几项和玩家端一样，只是给你自己用的入口。</div>' +
     '</div>' +
@@ -93,6 +103,15 @@ function render() {
     if (!confirm("锁定？下次进入需要重新输入口令。")) return;
     localStorage.removeItem("rpg2:designok"); localStorage.removeItem("rpg2:host");
     location.reload();
+  };
+  const hbBtn = document.getElementById("btnHostBox");
+  if (hbBtn) hbBtn.onclick = () => {
+    const v = document.getElementById("hostBoxIn").value.trim();
+    try {
+      localStorage.setItem("rpg2:hostBox", v);
+      if (v) localStorage.setItem("rpg2:box", v);
+    } catch (e) {}
+    render();
   };
   const msg = (t, bad) => { const el = document.getElementById("delMsg"); el.textContent = t; el.style.color = bad ? "#ff9b9b" : "#9ee7a0"; };
   document.getElementById("btnLookup").onclick = async () => {
