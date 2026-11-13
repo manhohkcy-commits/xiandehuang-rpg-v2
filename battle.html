@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=b88329e9";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=97619ac4";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -108,7 +108,9 @@ function dungeonHtml() {
   const event = null;
   const stageRow = (s) => '<div class="row"><span class="k">' + esc(s.name) +
     '<div class="hint" style="margin-top:2px;">' + esc(s.story || "") + '</div>' +
-    '<div class="hint" style="margin-top:2px;color:#8fd8ff;">建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
+    '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
+      (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name + " · 建议战力 " + fmt(stagePower(s))) +
+    '</div></span>' +
     '<span class="v">' +
     (s.enemies && s.enemies.length ? '<button data-enemy="' + s.enemies[0] + ':' + s.lv + '" style="margin-right:6px;">👁</button>' : '') +
     '<button data-stage="' + s.id + '">挑战</button></span></div>';
@@ -503,7 +505,7 @@ function renderPrep(stageId) {
     '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
       '　|　建议战力 ' + fmt(stagePower(s)) + '　·　主角战力 ' + fmt(charPower(P.ch)) + '</div>' +
     '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
-      (ENVIRONMENTS[s.env || "forest"].icon + " " + ENVIRONMENTS[s.env || "forest"].name + "：" + ENVIRONMENTS[s.env || "forest"].desc) + '</div>' + grid +
+      (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name + "：" + ENVIRONMENTS[s.weather || "clear"].desc) + '</div>' + grid +
     '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
       '<button id="prepGo" style="flex:1;min-width:140px;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
       '<button id="prepBack" style="flex:1;min-width:140px;">← 返回选关</button>' +
@@ -542,7 +544,7 @@ function renderPrep(stageId) {
 
 // 🌦 战斗环境：影响双方属性
 function applyEnv(st, envId) {
-  const env = ENVIRONMENTS[envId] || ENVIRONMENTS.forest;
+  const env = ENVIRONMENTS[envId] || ENVIRONMENTS.clear;
   const m = env.mods || {};
   st.__env = envId;
   st.__envName = env.icon + " " + env.name;
@@ -578,7 +580,7 @@ function startBattle(stageId, prepPos) {
   st.__waveNo = 1;
   st.__onCommit = () => spawnWave();
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
-  applyEnv(st, s.env || "forest");
+  applyEnv(st, s.weather || "clear");
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效

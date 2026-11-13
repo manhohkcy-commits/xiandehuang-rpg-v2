@@ -180,18 +180,24 @@ function makeDaily(id, name, kind, icon, desc, foeName) {
   return { id, name, kind, icon, desc, type: "daily", stages };
 }
 // 🍁 经验本 · 红枫团（20 关，敌人按 Lv1 模板缩放）
-// 🌦 战斗环境：影响双方属性
+// 🌦 战斗环境（天气）：影响双方属性
 export const ENVIRONMENTS = {
-  forest: { name: "枫林", icon: "🍁", desc: "落叶铺地，双方行动如常。", mods: {} },
-  rain: { name: "雨幕", icon: "🌧", desc: "速度 -10%，法术伤害 +10%。", mods: { spdPct: -10, spellPct: 10 } },
-  sun: { name: "烈日", icon: "☀️", desc: "攻击 +10%，防御 -10%。", mods: { atkPct: 10, defPct: -10 } },
-  night: { name: "夜战", icon: "🌙", desc: "暴击率 -5%。", mods: { critRate: -5 } },
+  clear: { name: "晴朗", icon: "☀️", desc: "天气晴好，双方行动如常。", mods: {} },
+  rain: { name: "细雨", icon: "🌦", desc: "速度 -5%。", mods: { spdPct: -5 } },
+  storm: { name: "暴雨", icon: "⛈", desc: "速度 -10%，远程伤害 -15%。", mods: { spdPct: -10, rangedPct: -15 } },
+  sun: { name: "烈日", icon: "🔥", desc: "攻击 +10%，防御 -10%。", mods: { atkPct: 10, defPct: -10 } },
+  night: { name: "夜战", icon: "🌙", desc: "暴击率 -5%，法术伤害 +10%。", mods: { critRate: -5, spellPct: 10 } },
   fog: { name: "浓雾", icon: "🌫", desc: "远程伤害 -15%，速度 -5%。", mods: { rangedPct: -15, spdPct: -5 } },
-  marsh: { name: "沼泽", icon: "🪵", desc: "速度 -20%。", mods: { spdPct: -20 } },
-  ruins: { name: "古战场", icon: "🏛", desc: "防御 +15%，生命 +5%。", mods: { defPct: 15, hpPct: 5 } }
+  wind: { name: "山风", icon: "🌬", desc: "速度 +5%，远程伤害 -10%。", mods: { spdPct: 5, rangedPct: -10 } }
 };
-const REDMAPLE_ENV = ["forest", "forest", "forest", "forest", "rain", "forest", "forest", "forest", "forest", "sun",
-  "forest", "forest", "forest", "forest", "night", "fog", "fog", "fog", "marsh", "ruins"];
+// 🏞 场景：红枫团据点路线（10 个场景，每 2 关一处）
+export const SCENES = [
+  "红枫山林小径", "红枫营区前沿", "红枫营区隘口", "红枫营区下山区", "红枫营区山隘",
+  "红枫营区上山区", "红枫营区广场", "红枫营区中央", "红枫营区主帐前", "红枫营区战筹主帐"
+];
+const REDMAPLE_SCENE_IDX = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9];
+const REDMAPLE_WEATHER = ["clear", "clear", "rain", "rain", "fog", "fog", "clear", "sun", "sun", "night",
+  "clear", "rain", "storm", "storm", "night", "fog", "fog", "rain", "storm", "night"];
 const REDMAPLE_PLAN = [
   [5, ["e_thug"], 120, "一个打手抱着木棍守在枫林入口，哈欠连天。"],
   [9, ["e_thug", "e_archer"], 142, "打手在前挡路，树后有人拉开了弓。"],
@@ -215,13 +221,14 @@ const REDMAPLE_PLAN = [
   [80, ["e_fengwang", "e_vet_shield", "e_vet_shield", "e_high_mage", "e_drum", "e_horn", "e_vet_soldier", "e_vet_soldier"], 5602, "枫王终于现身，整片枫林都安静了下来。"]
 ];
 function makeRedmaple() {
-  const STAGE_TITLE = { 8: "双弩手", 18: "杂兵乱战", 19: "枫王·终局" };
   const stages = REDMAPLE_PLAN.map(([lv, ids, exp, story], i) => {
     const first = enemyAt(ids[0], lv);
+    const scene = SCENES[REDMAPLE_SCENE_IDX[i]] || SCENES[0];
     return {
-      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + (STAGE_TITLE[i] || first.name), lv,
+      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + scene, lv,
       story: story || "",
-      env: REDMAPLE_ENV[i] || "forest",
+      scene,
+      weather: REDMAPLE_WEATHER[i] || "clear",
       group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       enemies: ids, gold: Math.round(exp * 0.25), exp,
       foe: { name: first.name, lv, hp: first.stats.hp, atk: first.stats.atk, def: first.stats.def, res: first.stats.res, spd: first.stats.spd },
