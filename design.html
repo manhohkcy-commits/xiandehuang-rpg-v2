@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -45,6 +45,18 @@ const ORIGIN = {
   }
 };
 const ROLES = ["通用", "守护", "先锋", "游侠", "术士", "辅佐", "首领"];
+// 🎯 定位预设模型（按普通品质 60/36 设计，稀有品质自动放大）
+const ROLE_PRESETS = {
+  "普通原创": { role: "通用", basic: { hp: 15, atk: 15, def: 15, res: 15 }, spec: { str: 9, int: 9, tech: 9, agi: 9 }, desc: "没有特别偏科的原创角色。" },
+  "突刺输出": { role: "先锋", basic: { hp: 12, atk: 26, def: 10, res: 12 }, spec: { str: 15, int: 3, tech: 15, agi: 3 }, desc: "高攻突进，一击穿孔。" },
+  "可攻可守": { role: "通用", basic: { hp: 16, atk: 17, def: 14, res: 13 }, spec: { str: 10, int: 8, tech: 10, agi: 8 }, desc: "攻守均衡，什么场合都能顶。" },
+  "高抗坦伤": { role: "守护", basic: { hp: 24, atk: 10, def: 16, res: 10 }, spec: { str: 8, int: 6, tech: 6, agi: 16 }, desc: "站在最前面替队友挨打。" },
+  "高伤狙击": { role: "游侠", basic: { hp: 10, atk: 26, def: 12, res: 12 }, spec: { str: 12, int: 3, tech: 18, agi: 3 }, desc: "远程点杀，一发定生死。" },
+  "先手抢攻": { role: "游侠", basic: { hp: 12, atk: 20, def: 14, res: 14 }, spec: { str: 6, int: 2, tech: 10, agi: 18 }, desc: "速度压人，先动手再说话。" },
+  "持续法输": { role: "术士", basic: { hp: 12, atk: 12, def: 12, res: 24 }, spec: { str: 3, int: 16, tech: 14, agi: 3 }, desc: "法伤持续铺场，越打越疼。" },
+  "爆发法术": { role: "术士", basic: { hp: 10, atk: 14, def: 10, res: 26 }, spec: { str: 2, int: 20, tech: 12, agi: 2 }, desc: "一轮技能打空全场。" },
+  "治疗增益": { role: "辅佐", basic: { hp: 14, atk: 10, def: 12, res: 24 }, spec: { str: 2, int: 14, tech: 10, agi: 10 }, desc: "奶量与增益，队伍的续航核心。" }
+};
 
 async function sha(s) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("xd2|" + s));
@@ -129,6 +141,10 @@ function form(d) {
       '<div><div class="hint">称号</div><input class="ofield" id="fTitle" maxlength="20" value="' + esc(d.title) + '" placeholder="例如：不眠的守夜人"></div>' +
     '</div>' +
     '<div class="ogrid2" style="margin-top:10px;">' +
+      '<div><div class="hint">定位预设</div><select class="ofield" id="fPreset">' +
+        '<option value="">— 选择后自动分配加点 —</option>' +
+        Object.keys(ROLE_PRESETS).map((k) => '<option value="' + esc(k) + '">' + esc(k) + '</option>').join("") +
+      '</select></div>' +
       '<div><div class="hint">定位</div><select class="ofield" id="fRole">' + ROLES.map((r) => '<option' + (d.role === r ? " selected" : "") + '>' + r + '</option>').join("") + '</select></div>' +
       '<div><div class="hint">稀有度模板</div><select class="ofield" id="fRare">' +
         '<option value="0"' + (!d.rare ? " selected" : "") + '>普通原创（固定值较低 / 加点 60+36）</option>' +
@@ -211,6 +227,30 @@ function bind() {
   $("fName").oninput = () => { d.name = $("fName").value; };
   $("fTitle").oninput = () => { d.title = $("fTitle").value; };
   $("fRole").onchange = () => { d.role = $("fRole").value; };
+  // 🎯 定位预设：按当前品质模板缩放加点
+  if ($("fPreset")) $("fPreset").onchange = () => {
+    const p = ROLE_PRESETS[$("fPreset").value];
+    if (!p) return;
+    const fb = T.basicPoints / 60, fs = T.specPoints / 36;
+    const scale = (obj, k, keys) => {
+      const o = {};
+      keys.forEach((key) => { o[key] = Math.max(0, Math.round((obj[key] || 0) * k)); });
+      return o;
+    };
+    const bk = ["hp", "atk", "def", "res"], sk = ["str", "int", "tech", "agi"];
+    d.basic = scale(p.basic, fb, bk);
+    d.spec = scale(p.spec, fs, sk);
+    // 补齐/扣除差值，保证总和精确
+    const fix = (obj, keys, total, cap) => {
+      let diff = total - keys.reduce((s2, k) => s2 + (obj[k] || 0), 0);
+      if (diff !== 0) obj[keys[0]] = Math.max(0, Math.min(cap, (obj[keys[0]] || 0) + diff));
+    };
+    fix(d.basic, bk, T.basicPoints, T.basicCap);
+    fix(d.spec, sk, T.specPoints, T.specCap);
+    d.role = p.role;
+    if (!d.desc) d.desc = p.desc;
+    render();
+  };
   if ($("fCamp")) $("fCamp").onchange = () => { d.camp = $("fCamp").value; render(); };
   $("fRare").onchange = () => {
     d.rare = $("fRare").value === "1";
