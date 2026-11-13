@@ -1318,7 +1318,7 @@ function renderOrig() {
   view().innerHTML =
     '<div class="tree-tabs">' + tabs + '</div>' +
     card("🧬 " + esc(o.name) + (o.title ? ' · ' + esc(o.title) : ''),
-      '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + ' · ' + esc(o.role || "") + (o.desc ? '　|　' + esc(o.desc) : '') + '</div>' +
+      '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + '</div>' +
       '<div class="row" style="margin-top:8px;"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
       '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
