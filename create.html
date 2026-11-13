@@ -884,6 +884,33 @@ function renderTalent() {
   };
 }
 
+// 🧬 原创角色卡（排行榜点开）
+function openOrigCard(o) {
+  const s = o.stats || {};
+  const row = (k, v) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
+    '<span class="hint">' + k + '</span><span style="font-weight:600;color:#dbe4f3;font-size:13px;">' + v + '</span></div>';
+  const gear = String(o.gear || "").split("\n").filter((x) => x.trim()).map((x) =>
+    '<div class="hint" style="padding:4px 9px;border-bottom:1px solid #1a2438;">' + esc(x) + '</div>').join("");
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;border:1px solid #ffb34766;">' +
+    '<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:20px;font-weight:800;color:#ffb347;">' + esc(o.name) + '</div>' +
+    (o.rare ? '<span class="tag" style="border-color:#ffb347;color:#ffb347;">稀有</span>' : '<span class="tag">普通</span>') +
+    '<span class="tag" style="margin-left:auto;">⚔️ ' + fmt(s.power || 0) + '</span></div>' +
+    '<div class="hint" style="margin:3px 0 2px;">' + esc(o.title || "") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
+    (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(o.desc) + '</div>' : "") +
+    '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;margin-top:6px;">' +
+      row("攻击", fmt(s.atk)) + row("生命", fmt(s.hp)) + row("防御", fmt(s.def)) + row("法抗", fmt(s.res)) +
+      row("速度", s.spd) + row("暴击率", (s.critRate || 5) + "%") + row("暴击伤害", (s.critDmg || 150) + "%") + '</div>' +
+    '<div class="hint" style="font-weight:700;color:#8fd8ff;margin:10px 0 4px;">专属装备</div>' +
+    '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + (gear || '<div class="hint" style="padding:8px 9px;">无</div>') + '</div>' +
+    (o.notes ? '<div class="hint" style="margin-top:8px;">' + esc(o.notes) + '</div>' : "") +
+    '<div style="margin-top:10px;"><button id="ocClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#ocClose").onclick = () => ov.remove();
+  ov.onclick = (ev) => { if (ev.target === ov) ov.remove(); };
+}
+
 // 🏆 排行榜：读云端存档，按战力排序（前 20）
 async function renderRank() {
   view().innerHTML = '<div class="card"><div class="card-title">🏆 排行榜</div><div class="hint">读取云端存档中…</div></div>';
@@ -943,7 +970,25 @@ async function renderRank() {
           '</table>'
         : '<div class="hint">还没有可排行的存档（或云端暂时不可用）。</div>') +
       weekHtml +
-      '<div class="hint" style="margin-top:8px;">只统计最近更新的 200 个位号；同分按先后。</div>');
+      '<div class="hint" style="margin-top:8px;">只统计最近更新的 200 个位号；同分按先后。</div>') +
+    (ORIGINALS.length
+      ? card("🧬 原创角色（" + ORIGINALS.length + "）",
+        '<div class="hint" style="margin-bottom:6px;">点击任意一名查看完整面板（装备 / 招式）。</div>' +
+        '<table style="width:100%;border-collapse:collapse;">' +
+        '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">名字</th><th>定位</th><th style="text-align:right;">战力</th></tr>' +
+        ORIGINALS.slice().sort((a, b) => (Number((b.stats || {}).power) || 0) - (Number((a.stats || {}).power) || 0)).map((o) =>
+          '<tr data-origcard="' + o.id + '" style="border-top:1px dashed #23233a;cursor:pointer;">' +
+          '<td style="padding:6px 2px;font-size:12.5px;"><b style="color:#ffb347;">' + esc(o.name) + '</b>' +
+          (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') + (o.rare ? ' <span class="tag">稀有</span>' : '') + '</td>' +
+          '<td style="font-size:11px;color:#8a8ab0;">' + esc(o.role || "") + '</td>' +
+          '<td style="text-align:right;font-size:12px;color:#ffb347;font-weight:700;">' + fmt((o.stats || {}).power || 0) + '</td></tr>').join("") +
+        '</table>')
+      : "");
+
+  view().querySelectorAll("[data-origcard]").forEach((tr) => tr.onclick = () => {
+    const o = ORIGINALS.find((x) => x.id === tr.dataset.origcard);
+    if (o) openOrigCard(o);
+  });
 
   view().querySelectorAll("[data-week]").forEach((b) => b.onclick = async () => {
     if (!reward || wf.claimed) return;
@@ -1596,6 +1641,12 @@ function renderShop() {
 }
 
 function render() {
+  const hostMode = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+  if (!hostMode) {
+    const b = document.querySelector('[data-tab="orig"]');
+    if (b) b.style.display = "none";
+    if (tab === "orig") tab = "char";
+  }
   if (!store) {
     view().innerHTML =
       '<div class="card"><div class="card-title">这个位号里是旧版存档（v1）</div>' +

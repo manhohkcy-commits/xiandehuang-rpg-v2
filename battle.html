@@ -256,7 +256,7 @@ function renderPick() {
         : '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
           '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>') +
     '</div>' +
-    (ORIGINALS.filter((o) => o.camp === "ally").length
+    (isHost() && ORIGINALS.filter((o) => o.camp === "ally").length
       ? '<div class="card"><div class="card-title">🤝 同行队伍（最多 5，默认托管）</div>' +
         ORIGINALS.filter((o) => o.camp === "ally").map((o) => {
           const on = partyIds().indexOf(o.id) >= 0;
@@ -270,7 +270,7 @@ function renderPick() {
       : '<div class="card"><div class="card-title">开始战斗</div>' +
         '<div class="hint">关卡内容待定，先用默认训练场试功能。</div>' +
         '<div class="row"><span class="k">默认训练场</span><span class="v"><button data-stage="' + (STAGES[0] && STAGES[0].id) + '">开战</button></span></div></div>') +
-    (ORIGINALS.length
+    (isHost() && ORIGINALS.length
       ? '<div class="card"><div class="card-title">原创角色</div>' +
         ORIGINALS.filter((o) => o.camp !== "ally").map((o) =>
           '<div class="row"><span class="k">' + esc(o.name) + (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') +
