@@ -1,4 +1,25 @@
 import { cloudGet, cloudSave } from "./core.js?v=13807141";
+import { powerOf } from "./power.js?v=2318bcc3";
+
+// 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
+// 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
+export function originalFinal(o, prog) {
+  const lv = Number(prog && prog.lv) || 1;
+  const br = Math.min(3, Number(prog && prog.breaks) || 0);
+  const k = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
+  const s = o.stats || {};
+  const out = {
+    atk: (Number(s.atk) || 60) * k,
+    hp: (Number(s.hp) || 500) * k,
+    def: (Number(s.def) || 20) * k,
+    res: (Number(s.res) || 15) * k,
+    spd: (Number(s.spd) || 10) + 0.1 * (lv - 1),
+    critRate: Number(s.critRate) || 5,
+    critDmg: Number(s.critDmg) || 150
+  };
+  out.power = powerOf(out);
+  return out;
+}
 
 // 🧑‍💻 主机端原创角色（由设计器导出，加到游戏里）
 // 字段：id, name, title, role, rare, camp("enemy"|"ally"), desc, gear, notes,

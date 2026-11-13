@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=07fa2916";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
-import { ORIGINALS, originalToUnits, pullOriginals } from "./js/originals.js?v=a3530878";
+import { ORIGINALS, originalToUnits, pullOriginals, originalFinal } from "./js/originals.js?v=70a997a7";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
@@ -411,15 +411,7 @@ async function tryRestore() {
 // 🧬 原创角色：按自己的等级成长（每级 +5% 攻/血/防/抗，速度 +0.1）
 function origStats(o) {
   const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
-  const lv = origLv(o);
-  const k = 1 + 0.05 * (lv - 1);
-  const s = o.stats || {};
-  return {
-    atk: (Number(s.atk) || 60) * k, hp: (Number(s.hp) || 500) * k,
-    def: (Number(s.def) || 20) * k, res: (Number(s.res) || 15) * k,
-    spd: (Number(s.spd) || 10) + 0.1 * (lv - 1),
-    critRate: Number(s.critRate) || 5, critDmg: Number(s.critDmg) || 150
-  };
+  return originalFinal(o, Object.assign({}, prog, { lv: origLv(o) }));
 }
 
 function startOriginal(id) {
