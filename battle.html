@@ -25,7 +25,7 @@ import { enemyAt, enemyById } from "./js/enemies.js?v=6849b7aa";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=2318bcc3";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=15bff5d5";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=4e65035f";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 // 🧬 当前操控的原创角色（记住上次选择，换页不丢）
@@ -429,7 +429,29 @@ function buildFoeUnits(s) {
       __skills: e.skills || [], __back: backRole(e.role, e.name) };
   });
   assignLayout(list);
-  return list;
+  const units = list.slice(0, 6);
+  const reserve = list.slice(6);
+  reserve.forEach((u) => { u.__reserve = true; u.__row = 0; u.__col = 0; });
+  return { units, reserve, all: list };
+}
+
+// 🪖 增援：场上有空位时，替补上场
+function deployReserve() {
+  if (!st || !st.__reserve || !st.__reserve.length) return;
+  const aliveB = st.units.filter((u) => u.side === "B" && u.hp > 0);
+  if (aliveB.length >= 6) return;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 2; c++) {
+      const occupied = st.units.some((u) => u.side === "B" && u.hp > 0 && u.__row === r && (u.__col ? 1 : 0) === c);
+      if (occupied) continue;
+      const nu = st.__reserve.shift();
+      if (!nu) return;
+      nu.__row = r; nu.__col = c;
+      st.units.push(nu);
+      pushLog("🪖 敌方增援：" + nu.name + " 上场", "line");
+      return;
+    }
+  }
 }
 
 // ⚔️ 备战界面：调整站位 → 开战
@@ -438,7 +460,8 @@ function renderPrep(stageId) {
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
   const P = buildPlayerUnits();
-  const foes = buildFoeUnits(s);
+  const F = buildFoeUnits(s);
+  const foes = F.units;
   window.__prep.stageId = stageId;
   const posOf = (u) => window.__prep.pos[u.id] || { r: u.__row, c: u.__col };
   P.list.forEach((u) => { const p = posOf(u); u.__row = p.r; u.__col = p.c; });
@@ -465,7 +488,8 @@ function renderPrep(stageId) {
 
   view().innerHTML = '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
     '<div class="hint">先调站位：点我方单位选中，再点空格放过去（互换）。敌人：' +
-    esc((s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ") || s.foe.name) + '</div>' +
+    esc((s.enemies || []).map((id) => (enemyById(id) || {}).name || id).join(" + ") || s.foe.name) +
+    (F.reserve.length ? '　（另有 ' + F.reserve.length + ' 名增援）' : '') + '</div>' +
     '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) + '</div>' + grid +
     '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
       '<button id="prepGo" style="flex:1;min-width:140px;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
@@ -511,10 +535,13 @@ function startBattle(stageId, prepPos) {
   const ch = P.ch, playOrig = P.playOrig;
   const pos = prepPos || (window.__prep && window.__prep.stageId === stageId ? window.__prep.pos : null);
   if (pos) P.list.forEach((u) => { const p = pos[u.id]; if (p) { u.__row = p.r; u.__col = p.c; } });
-  const foes = buildFoeUnits(s);
+  const F = buildFoeUnits(s);
+  const foes = F.units;
   st = createBattle(P.list.concat(foes));
   st.__party = P.partyArr.slice(0, 5);
   st.__lv = s.lv;
+  st.__reserve = F.reserve;
+  st.__onCommit = () => deployReserve();
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";

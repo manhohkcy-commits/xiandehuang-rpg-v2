@@ -82,6 +82,7 @@ export function commit(st, unitId) {
     recomputeAllowed(st);
   }
   checkEnd(st);
+  if (typeof st.__onCommit === "function") { try { st.__onCommit(st); } catch (e) {} }
   return st;
 }
 export function damage(st, atkId, defId, opts = {}) {
