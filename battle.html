@@ -20,7 +20,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad, bumpDaily } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=97619ac4";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVIRONMENTS } from "./js/data.js?v=7f775564";
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=00f0acb8";
 import { ORIGINALS, originalToUnits } from "./js/originals.js?v=bcbdbf7b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
@@ -504,6 +504,7 @@ function renderPrep(stageId) {
     (F.waves.length ? '　（共 ' + (F.waves.length + 1) + ' 波，每波最多 6 名）' : '') + '</div>' +
     '<div class="hint">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
       '　|　建议战力 ' + fmt(stagePower(s)) + '　·　主角战力 ' + fmt(charPower(P.ch)) + '</div>' +
+    '<div class="hint" style="margin-top:2px;color:#ffd666;">🏞 ' + esc(s.scene || "") + '：' + esc(s.sceneDesc || "") + '</div>' +
     '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' +
       (ENVIRONMENTS[s.weather || "clear"].icon + " " + ENVIRONMENTS[s.weather || "clear"].name + "：" + ENVIRONMENTS[s.weather || "clear"].desc) + '</div>' + grid +
     '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
@@ -542,12 +543,9 @@ function renderPrep(stageId) {
   const bk = $("prepBack"); if (bk) bk.onclick = renderPick;
 }
 
-// 🌦 战斗环境：影响双方属性
-function applyEnv(st, envId) {
-  const env = ENVIRONMENTS[envId] || ENVIRONMENTS.clear;
-  const m = env.mods || {};
-  st.__env = envId;
-  st.__envName = env.icon + " " + env.name;
+// 🌦 环境效果：天气 + 场地双重叠加
+function applyMods(st, m) {
+  if (!m) return;
   st.units.forEach((u) => {
     if (m.hpPct) { const f = 1 + m.hpPct / 100; u.maxHp = Math.round(u.maxHp * f); u.hp = Math.round(u.hp * f); }
     if (m.atkPct) u.atk = Math.round(u.atk * (1 + m.atkPct / 100));
@@ -560,6 +558,13 @@ function applyEnv(st, envId) {
       if (m[k]) u.traits[k] = (Number(u.traits[k]) || 0) + m[k];
     });
   });
+}
+function applyEnv(st, weatherId, sceneMods) {
+  const env = ENVIRONMENTS[weatherId] || ENVIRONMENTS.clear;
+  applyMods(st, env.mods || {});
+  applyMods(st, sceneMods || {});
+  st.__env = weatherId;
+  st.__envName = env.icon + " " + env.name;
   return env;
 }
 
@@ -580,7 +585,7 @@ function startBattle(stageId, prepPos) {
   st.__waveNo = 1;
   st.__onCommit = () => spawnWave();
   st.__target = (foes.find((u) => !u.__back) || foes[0] || {}).id;
-  applyEnv(st, s.weather || "clear");
+  applyEnv(st, s.weather || "clear", s.sceneMods);
   st.__origId = playOrig ? playOrig.id : null;
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   // 🍱 战前准备：便利店的食物，下一场生效

@@ -190,10 +190,18 @@ export const ENVIRONMENTS = {
   fog: { name: "浓雾", icon: "🌫", desc: "远程伤害 -15%，速度 -5%。", mods: { rangedPct: -15, spdPct: -5 } },
   wind: { name: "山风", icon: "🌬", desc: "速度 +5%，远程伤害 -10%。", mods: { spdPct: 5, rangedPct: -10 } }
 };
-// 🏞 场景：红枫团据点路线（10 个场景，每 2 关一处）
+// 🏞 场景（场地）：固定地形效果，每 2 关一处
 export const SCENES = [
-  "红枫山林小径", "红枫营区前沿", "红枫营区隘口", "红枫营区下山区", "红枫营区山隘",
-  "红枫营区上山区", "红枫营区广场", "红枫营区中央", "红枫营区主帐前", "红枫营区战筹主帐"
+  { name: "红枫山林小径", desc: "林间小路视野开阔，行军轻快。", mods: { spdPct: 5 } },
+  { name: "红枫营区前沿", desc: "营区外围无遮无挡，远程有优势。", mods: { rangedPct: 10 } },
+  { name: "红枫营区隘口", desc: "两山夹一隘，易守难攻。", mods: { defPct: 10 } },
+  { name: "红枫营区下山区", desc: "下坡地势，冲劲更足。", mods: { atkPct: 5 } },
+  { name: "红枫营区山隘", desc: "山路崎岖，行动迟缓但站得稳。", mods: { spdPct: -5, defPct: 5 } },
+  { name: "红枫营区上山区", desc: "仰攻地势，以攻代守。", mods: { atkPct: 8 } },
+  { name: "红枫营区广场", desc: "开阔广场，谁都能找到破绽。", mods: { critRate: 3 } },
+  { name: "红枫营区中央", desc: "营地核心，补给充足。", mods: { hpPct: 5 } },
+  { name: "红枫营区主帐前", desc: "主帐前的空场，守卫森严。", mods: { defPct: 8 } },
+  { name: "红枫营区战筹主帐", desc: "决战之地，士气与杀意同涨。", mods: { atkPct: 10 } }
 ];
 const REDMAPLE_SCENE_IDX = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9];
 const REDMAPLE_WEATHER = ["clear", "clear", "rain", "rain", "fog", "fog", "clear", "sun", "sun", "night",
@@ -223,11 +231,13 @@ const REDMAPLE_PLAN = [
 function makeRedmaple() {
   const stages = REDMAPLE_PLAN.map(([lv, ids, exp, story], i) => {
     const first = enemyAt(ids[0], lv);
-    const scene = SCENES[REDMAPLE_SCENE_IDX[i]] || SCENES[0];
+    const sc = SCENES[REDMAPLE_SCENE_IDX[i]] || SCENES[0];
     return {
-      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + scene, lv,
+      id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + sc.name, lv,
       story: story || "",
-      scene,
+      scene: sc.name,
+      sceneDesc: sc.desc,
+      sceneMods: sc.mods,
       weather: REDMAPLE_WEATHER[i] || "clear",
       group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       enemies: ids, gold: Math.round(exp * 0.25), exp,
