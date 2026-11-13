@@ -105,9 +105,17 @@ async function gate() {
 
 const loadAll = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
 const saveAll = (l) => localStorage.setItem(KEY, JSON.stringify(l));
+const GEAR_SLOTS = ["weapon", "armor", "armor2", "accessory"];
+const GEAR_LABEL = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+const blankGear = () => {
+  const o = {};
+  GEAR_SLOTS.forEach((k) => { o[k] = { name: "", atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0 }; });
+  return o;
+};
 const blank = () => ({
   id: "d" + Date.now().toString(36), rare: false, camp: "enemy",
   name: "", title: "", role: "通用", desc: "", gear: "", notes: "",
+  gearObj: blankGear(),
   basic: { hp: 15, atk: 15, def: 15, res: 15 },
   spec: { str: 9, int: 9, tech: 9, agi: 9 }
 });
@@ -121,13 +129,22 @@ function calc(d) {
   const f = T.fix;
   const b = d.basic, s = d.spec;
   const pct = (n) => 1 + (Number(n) || 0) * 5 / 100;
-  const atk = (f.atk + (s.str || 0) * 2 + (s.int || 0) * 2 + (s.tech || 0) * 2) * pct(b.atk);
-  const hp = f.hp * pct(b.hp);
-  const def = f.def * pct(b.def);
-  const res = f.res * pct(b.res);
-  const spd = f.spd + (s.agi || 0) * 0.6;
-  const power = powerOf({ atk, hp, def, res, spd, critRate: f.critRate, critDmg: f.critDmg });
-  return { atk, hp, def, res, spd, critRate: f.critRate, critDmg: f.critDmg, power, T };
+  const atk0 = (f.atk + (s.str || 0) * 2 + (s.int || 0) * 2 + (s.tech || 0) * 2) * pct(b.atk);
+  const hp0 = f.hp * pct(b.hp);
+  const def0 = f.def * pct(b.def);
+  const res0 = f.res * pct(b.res);
+  const spd0 = f.spd + (s.agi || 0) * 0.6;
+  // 🗡 专属装备加成
+  const g = d.gearObj || {};
+  const gs = { atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0 };
+  GEAR_SLOTS.forEach((k) => {
+    const it = g[k] || {};
+    Object.keys(gs).forEach((key) => { gs[key] += Number(it[key]) || 0; });
+  });
+  const atk = atk0 + gs.atk, hp = hp0 + gs.hp, def = def0 + gs.def, res = res0 + gs.res, spd = spd0 + gs.spd;
+  const critRate = f.critRate + gs.critRate;
+  const power = powerOf({ atk, hp, def, res, spd, critRate, critDmg: f.critDmg });
+  return { atk, hp, def, res, spd, critRate, critDmg: f.critDmg, power, T, gs };
 }
 
 function preview(d) {
@@ -195,9 +212,24 @@ function form(d) {
       '<div class="ostat"><span>敏捷</span>' + sNum("agi") + '</div>' +
     '</div>' +
 
-    '<div class="card-title" style="margin-top:14px;color:#ffb347;">④ 专属装备（自定义，不走预设）</div>' +
-    '<div class="hint">每行一件，写名字 + 效果即可（例如：灰烬之刃 — 攻击 +15%，普攻附带灼烧）</div>' +
-    '<textarea class="ofield" id="fGear" rows="4" placeholder="灰烬之刃 — …&#10;旧斗篷 — …&#10;断链 — …">' + esc(d.gear) + '</textarea>' +
+    '<div class="card-title" style="margin-top:14px;color:#ffb347;">④ 专属装备（4 格，数值直接加面板）</div>' +
+    '<div class="hint">名称 + 攻击/生命/防御/法抗/速度/暴击，留空则不显示。</div>' +
+    (() => {
+      const g = d.gearObj || {};
+      const num = (slot, key) => '<input class="onum" type="number" min="0" value="' + (Number((g[slot] || {})[key]) || 0) +
+        '" data-gslot="' + slot + '" data-gkey="' + key + '" style="width:54px;">';
+      return GEAR_SLOTS.map((slot) => {
+        const it = g[slot] || {};
+        return '<div style="margin-top:6px;padding:7px;border:1px solid #2a3350;border-radius:9px;">' +
+          '<div style="display:flex;gap:6px;align-items:center;">' +
+            '<span class="hint" style="width:32px;">' + GEAR_LABEL[slot] + '</span>' +
+            '<input class="ofield" id="gname_' + slot + '" value="' + esc(it.name || "") + '" placeholder="装备名" style="flex:1;">' +
+          '</div>' +
+          '<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;font-size:10.5px;align-items:center;">' +
+            '攻' + num(slot, "atk") + '生' + num(slot, "hp") + '防' + num(slot, "def") +
+            '抗' + num(slot, "res") + '速' + num(slot, "spd") + '暴' + num(slot, "critRate") + '</div></div>';
+      }).join("");
+    })() +
 
     '<div style="margin-top:12px;"><div class="hint">备注（弱点、想加的机制）</div>' +
     '<textarea class="ofield" id="fNotes" rows="2">' + esc(d.notes) + '</textarea></div>' +
@@ -275,7 +307,36 @@ function bind() {
     render();
   };
   $("fDesc").oninput = () => { d.desc = $("fDesc").value; };
-  $("fGear").oninput = () => { d.gear = $("fGear").value; };
+  // 🗡 专属装备 4 格
+  const gearText = (obj) => GEAR_SLOTS.map((s) => {
+    const it = (obj || {})[s] || {};
+    if (!it.name) return "";
+    const parts = [];
+    if (it.atk) parts.push("攻击 +" + it.atk);
+    if (it.hp) parts.push("生命 +" + it.hp);
+    if (it.def) parts.push("防御 +" + it.def);
+    if (it.res) parts.push("法抗 +" + it.res);
+    if (it.spd) parts.push("速度 +" + it.spd);
+    if (it.critRate) parts.push("暴击 +" + it.critRate + "%");
+    return it.name + (parts.length ? " — " + parts.join(" · ") : "");
+  }).filter(Boolean).join("\n");
+  document.querySelectorAll("[data-gslot]").forEach((inp) => inp.onchange = () => {
+    const s = inp.dataset.gslot, k = inp.dataset.gkey;
+    d.gearObj = d.gearObj || blankGear();
+    d.gearObj[s] = d.gearObj[s] || {};
+    d.gearObj[s][k] = Math.max(0, Number(inp.value) || 0);
+    d.gear = gearText(d.gearObj);
+    render();
+  });
+  GEAR_SLOTS.forEach((s) => {
+    const el = $("gname_" + s);
+    if (el) el.onchange = () => {
+      d.gearObj = d.gearObj || blankGear();
+      d.gearObj[s] = d.gearObj[s] || {};
+      d.gearObj[s].name = el.value;
+      d.gear = gearText(d.gearObj);
+    };
+  });
   $("fNotes").oninput = () => { d.notes = $("fNotes").value; };
   document.querySelectorAll("[data-basic]").forEach((inp) => {
     inp.onchange = () => {
@@ -310,6 +371,8 @@ function bind() {
       return {
         id: x.id, name: x.name || "未命名", title: x.title || "", role: x.role || "通用",
         rare: !!x.rare, camp: x.camp || "enemy", desc: x.desc || "", gear: x.gear || "", notes: x.notes || "",
+    gearObj: x.gearObj || blankGear(),
+        gearObj: x.gearObj || blankGear(),
         basic: x.basic, spec: x.spec,
         stats: {
           atk: Math.round(r.atk), hp: Math.round(r.hp), def: Math.round(r.def), res: Math.round(r.res),

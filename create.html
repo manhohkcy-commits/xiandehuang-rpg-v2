@@ -892,17 +892,30 @@ function openOrigCard(o) {
     '<span class="hint">' + k + '</span><span style="font-weight:' + (strong ? "700" : "600") + ';color:' + (strong ? tint : "#dbe4f3") + ';font-size:13px;">' + v + '</span></div>';
   const sec = (t) => '<div style="font-size:11px;color:' + tint + ';font-weight:700;letter-spacing:1px;margin:12px 0 5px;">' + t + '</div>';
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
-  const gearLines = String(o.gear || "").split("\n").map((x) => x.trim()).filter(Boolean);
-  const gearHtml = gearLines.length
-    ? gearLines.map((line) => {
-        const parts = line.split(/\s*—\s*|\s*--\s*|\s*-\s+/);
-        const nm = parts[0] || line;
-        const rest = parts.slice(1).join(" — ");
+  const gearLabels = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const gearObj = o.gearObj;
+  const gearHtml = gearObj
+    ? Object.keys(gearLabels).map((k) => {
+        const it = gearObj[k] || {};
+        if (!it.name) return "";
+        const parts = [];
+        if (it.atk) parts.push("攻击 +" + it.atk);
+        if (it.hp) parts.push("生命 +" + it.hp);
+        if (it.def) parts.push("防御 +" + it.def);
+        if (it.res) parts.push("法抗 +" + it.res);
+        if (it.spd) parts.push("速度 +" + it.spd);
+        if (it.critRate) parts.push("暴击 +" + it.critRate + "%");
         return '<div style="padding:7px 9px;border-bottom:1px solid #1a2438;">' +
-          '<div style="font-weight:700;font-size:13px;color:#dbe4f3;">🗡 ' + esc(nm) + '</div>' +
-          (rest ? '<div class="hint" style="margin-top:2px;">' + esc(rest) + '</div>' : "") + '</div>';
-      }).join("")
-    : '<div class="hint" style="padding:8px 9px;">（未填写专属装备）</div>';
+          '<div style="font-weight:700;font-size:13px;color:#dbe4f3;">🗡 ' + esc(it.name) + ' <span class="hint">' + gearLabels[k] + '</span></div>' +
+          (parts.length ? '<div class="hint" style="margin-top:2px;">' + esc(parts.join(" · ")) + '</div>' : "") + '</div>';
+      }).join("") || '<div class="hint" style="padding:8px 9px;">（未填写专属装备）</div>'
+    : (() => {
+        const lines = String(o.gear || "").split("\n").map((x) => x.trim()).filter(Boolean);
+        return lines.length
+          ? lines.map((line) => '<div style="padding:7px 9px;border-bottom:1px solid #1a2438;">' +
+              '<div style="font-weight:700;font-size:13px;color:#dbe4f3;">🗡 ' + esc(line) + '</div></div>').join("")
+          : '<div class="hint" style="padding:8px 9px;">（未填写专属装备）</div>';
+      })();
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
