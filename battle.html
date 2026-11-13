@@ -811,14 +811,16 @@ function renderBattle() {
       '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) + '</div>' +
       '<div class="bar' + (pct <= 25 ? "" : " full") + '"><i style="width:' + pct + '%"></i></div></div>';
   };
-  const grid = (side, title, color) => {
-    const list = st.units.filter((u) => u.side === side);
-    let html = '<div class="hint" style="color:' + color + ';font-weight:700;margin:8px 0 3px;">' + title + '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+  // 🗺 单块战场：我方后排 | 我方前排 ‖ 敌方前排 | 敌方后排（左右镜像）
+  const battlefield = () => {
+    const pick = (side, col, row) => st.units.find((u) => u.side === side && (u.__col ? 1 : 0) === col && u.__row === row);
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;align-items:start;">' +
+      '<div class="hint" style="grid-column:span 2;text-align:center;color:#8fd8ff;font-weight:700;">🔵 我方</div>' +
+      '<div class="hint" style="grid-column:span 2;text-align:center;color:#ff9b9b;font-weight:700;">🔴 敌方</div>' +
+      '<div class="hint" style="text-align:center;font-size:10px;">后排</div><div class="hint" style="text-align:center;font-size:10px;">前排</div>' +
+      '<div class="hint" style="text-align:center;font-size:10px;">前排</div><div class="hint" style="text-align:center;font-size:10px;">后排</div>';
     for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 2; c++) {
-        html += cell(list.find((x) => x.__row === r && (x.__col ? 1 : 0) === c));
-      }
+      html += cell(pick("A", 1, r)) + cell(pick("A", 0, r)) + cell(pick("B", 0, r)) + cell(pick("B", 1, r));
     }
     return html + '</div>';
   };
@@ -826,9 +828,8 @@ function renderBattle() {
   view().innerHTML =
     '<div class="card"><div class="card-title">' + turnText + '</div>' +
       queueHtml2() +
-      grid("A", "🔵 我方", "#8fd8ff") +
-      grid("B", "🔴 敌方", "#ff9b9b") +
-      '<div class="hint" style="margin-top:6px;">点敌方格子切换攻击目标（近战只能打前排）</div>' +
+      battlefield() +
+      '<div class="hint" style="margin-top:6px;">点敌方格子切换攻击目标（近战只能打前排，前排清空才能打后排）</div>' +
     '</div>' +
     (st.finished ? '<div class="card"><div class="card-title">' + (st.winner === "A" ? "🏆 胜利" : "💀 失败") + '</div>' +
       (st.winner === "A" && st.__reward
