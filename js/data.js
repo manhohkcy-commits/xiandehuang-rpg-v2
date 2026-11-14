@@ -720,15 +720,19 @@ const ULT_MECH = {
 };
 TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   b.style = BRANCH_STYLE[b.id] || "";
+  const addEff = (node, extra) => {
+    if (!node || !extra) return;
+    Object.keys(extra).forEach((k) => { node.eff[k] = r1((Number(node.eff[k]) || 0) + Number(extra[k])); });
+  };
   const major = MAJOR_MECH[b.id];
   if (major) {
-    [4, 9].forEach((i) => { if (b.nodes[i]) Object.assign(b.nodes[i].eff, major); });
-    const ult = b.nodes[13];
-    if (ult) Object.assign(ult.eff, major, ULT_MECH[b.id] || {});
+    [4, 9].forEach((i) => addEff(b.nodes[i], major));
+    addEff(b.nodes[13], major);
+    addEff(b.nodes[13], ULT_MECH[b.id]);
   }
   const last = b.nodes[b.nodes.length - 1];
   if (last) {
-    if (BRANCH_SIGN[b.id]) Object.assign(last.eff, BRANCH_SIGN[b.id]);
+    if (BRANCH_SIGN[b.id]) addEff(last, BRANCH_SIGN[b.id]);
     last.mech = true;
   }
 }));
