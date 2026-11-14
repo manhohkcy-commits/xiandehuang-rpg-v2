@@ -43,7 +43,21 @@ function detail(id, atLv) {
     '<div style="display:flex;justify-content:space-between;gap:8px;"><b style="font-size:13px;color:#dbe4f3;">' + esc(sk.name) + '</b>' +
     '<span style="font-size:10.5px;color:#8fd8ff;">' + (sk.mult ? sk.mult + "%" : "") +
     (sk.kind === "ult" ? ' · 怒气100' : (sk.cd ? ' · CD' + sk.cd : "")) + '</span></div>' +
-    '<div class="hint" style="margin-top:2px;">' + esc(sk.desc || "") + '</div></div>';
+    '<div class="hint" style="margin-top:2px;">' + esc(sk.desc || "") +
+    ((() => {
+      const fx = [];
+      if (sk.aoe) fx.push("群攻");
+      if (sk.row) fx.push("贯穿整排");
+      if (sk.stun) fx.push("眩晕 " + sk.stun + "%");
+      if (sk.silence) fx.push("沉默 " + sk.silence + "%");
+      if (sk.burn) fx.push("灼烧 " + sk.burn + "%");
+      if (sk.drain) fx.push("吸血 " + sk.drain + "%");
+      if (sk.heal) fx.push("治疗 " + sk.heal + "%");
+      if (sk.shield) fx.push("护盾 " + sk.shield + "%");
+      if (sk.summon) fx.push("召唤");
+      if (sk.buff) fx.push("增益 " + Object.keys(sk.buff).map((k) => k.replace("Pct", "%")).join("/"));
+      return fx.length ? '<span class="tag" style="margin-left:6px;color:#ffb347;border-color:#ffb347;">' + fx.join(" · ") + '</span>' : "";
+    })()) + '</div></div>';
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
