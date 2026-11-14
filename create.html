@@ -1411,6 +1411,56 @@ function origGearDetail(it, slot, gst) {
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
 }
 
+// 📊 原创角色属性加成明细
+function origBreakdown(o, prog) {
+  const s = o.stats || {};
+  const lv = Number(prog.lv) || 1, br = Math.min(5, Number(prog.breaks) || 0);
+  const gi = Math.max(0, Math.min(GRADE.length - 1, Number(prog.grade) || 0));
+  const ai = Math.max(1, Math.min(APTITUDE.length, Number(prog.apt) || 1));
+  const lvk = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
+  const gm = (GRADE[gi].mult || 1) * ((APTITUDE[ai - 1] || {}).mult || 1);
+  const sp = prog.spec || {};
+  const SPEC = { atk: (Number(sp.str) || 0) * 2, spd: (Number(sp.agi) || 0) * 0.05, res: (Number(sp.intel) || 0) * 1.5, def: (Number(sp.tech) || 0) * 0.5 };
+  const g = ORIGINAL_GEAR[o.id] || {};
+  const gl = prog.gear || {};
+  const gear = { atk: 0, hp: 0, def: 0, res: 0, spd: 0 };
+  Object.keys(g).forEach((slot) => {
+    const it = g[slot] || {}, st = gl[slot] || {};
+    const m = (1 + 0.02 * ((st.lv || 1) - 1)) * (1 + 0.12 * ((st.star || 1) - 1)) * (1 + 0.05 * (st.advance || 0));
+    ["atk", "hp", "def", "res", "spd"].forEach((k) => { gear[k] += (Number(it[k]) || 0) * m; });
+  });
+  const base = { atk: Number(s.atk) || 60, hp: Number(s.hp) || 500, def: Number(s.def) || 20, res: Number(s.res) || 15, spd: Number(s.spd) || 10 };
+  const rows = [["攻击", "atk"], ["生命", "hp"], ["防御", "def"], ["法抗", "res"], ["速度", "spd"]];
+  const th = '<th style="padding:4px 6px;text-align:right;">';
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px;">来源</th>' +
+    rows.map((r) => th + r[0] + '</th>').join("") + '</tr>';
+  const line = (label, fn, color) => '<tr style="border-top:1px solid #1a2438;"><td class="hint" style="padding:6px 4px;">' + label + '</td>' +
+    rows.map((r) => {
+      const v = fn(r[1]);
+      return '<td style="padding:6px;text-align:right;color:' + (color || "#dbe4f3") + ';">' + (v > 0 ? "+" : "") + Math.round(v * 10) / 10 + '</td>';
+    }).join("") + '</tr>';
+  html += line("基础本体", (k) => base[k]);
+  html += line("等级 / 突破", (k) => base[k] * lvk - base[k], "#8fd8ff");
+  html += line("资历 / 资质", (k) => base[k] * lvk * gm - base[k] * lvk, "#ffd666");
+  html += line("专精加点", (k) => SPEC[k] || 0, "#7ee787");
+  html += line("专属装备", (k) => gear[k], "#ffb347");
+  html += '<tr style="border-top:1px solid #2c3d5e;"><td style="padding:7px 4px;font-weight:700;">合计</td>' +
+    rows.map((r) => {
+      const k = r[1];
+      const v = base[k] * lvk * gm + (SPEC[k] || 0) + gear[k];
+      return '<td style="padding:7px 6px;text-align:right;font-weight:800;color:#6ea8fe;">' + (Math.round(v * 10) / 10) + '</td>';
+    }).join("") + '</tr></table>';
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:12px;";
+  ov.innerHTML = '<div class="card" style="max-width:560px;width:100%;max-height:86vh;overflow:auto;">' +
+    '<div class="card-title">📊 加成明细 · ' + esc(o.name) + '</div>' +
+    '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' · 突破 ' + br + '/5 · 资历 ' + GRADE[gi].key + ' · 资质 ' + ai + '★</div>' +
+    html + '<div style="margin-top:10px;"><button id="bdClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#bdClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function renderOrig() {
   if (!ORIGINALS.length) {
     view().innerHTML = card("🧬 原创角色", '<div class="hint">还没有原创角色。等主机端设计并加入游戏后，这里会出现他们的面板。</div>');
@@ -1484,7 +1534,8 @@ function renderOrig() {
     card("属性（含装备）",
       row("攻击", Math.round(atk)) + row("生命", Math.round(hp)) + row("防御", Math.round(def)) +
       row("法抗", Math.round(res)) + row("速度", Math.round(spd * 10) / 10) +
-      row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%")) +
+      row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%") +
+      '<div style="margin-top:8px;"><button id="btnOrigBreakdown">📊 加成明细</button></div>') +
     card("资历与资质",
       (() => {
         const gi = Math.max(0, Math.min(GRADE.length - 1, Number(prog.grade) || 0));
@@ -1511,10 +1562,17 @@ function renderOrig() {
       (() => {
         const sp = prog.spec || {};
         const free = Number(prog.free) || 0;
-        const line = (k, label, key) => '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 2px;">' +
-          '<span class="hint">' + label + '</span>' +
-          '<span style="display:flex;align-items:center;gap:6px;"><b>' + (Number((o.spec || {})[k]) || 0) + ' + ' + (Number(sp[key]) || 0) + '</b>' +
-          '<button data-spec="' + key + '"' + (free > 0 ? "" : " disabled") + ' style="padding:1px 8px;">＋</button></span></div>';
+        const line = (k, label, key) => {
+          const base = Number((o.spec || {})[k]) || 0;
+          const add = Number(sp[key]) || 0;
+          return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 2px;">' +
+            '<span class="hint">' + label + '</span>' +
+            '<span style="display:flex;align-items:center;gap:6px;">' +
+            (free > 0 ? '<button data-specdec="' + key + '"' + (add > 0 ? "" : " disabled") + ' style="padding:1px 8px;">−</button>' : "") +
+            '<b style="min-width:46px;text-align:right;">' + (base + add) + '</b>' +
+            (free > 0 ? '<button data-spec="' + key + '" style="padding:1px 8px;">＋</button>' : "") +
+            '</span></div>';
+        };
         return line("str", "力量", "str") + line("int", "智力", "intel") + line("tech", "技巧", "tech") + line("agi", "敏捷", "agi") +
           '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每级 +2）</div>' +
           '<div class="hint" style="margin-top:2px;">力 +2攻 · 敏 +0.05速 · 智 +1.5抗 · 技 +0.5防</div>';
@@ -1537,6 +1595,14 @@ function renderOrig() {
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+  view().querySelectorAll("[data-specdec]").forEach((b) => b.onclick = async () => {
+    const k = b.dataset.specdec;
+    const cur = Number((prog.spec || {})[k]) || 0;
+    if (cur <= 0) return;
+    prog.spec[k] = cur - 1; prog.free = (Number(prog.free) || 0) + 1;
+    store.orig[o.id] = prog; await save(); render();
+  });
+  if ($("btnOrigBreakdown")) $("btnOrigBreakdown").onclick = () => origBreakdown(o, prog);
   view().querySelectorAll("[data-spec]").forEach((b) => b.onclick = async () => {
     const k = b.dataset.spec;
     const free = Number(prog.free) || 0;
