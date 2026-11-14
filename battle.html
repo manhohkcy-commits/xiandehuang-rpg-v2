@@ -35,6 +35,17 @@ window.__playOrig = localStorage.getItem("rpg2:playAs") || null;
 function partyIds() { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } }
 // 👑 主机标记：只有主机能操控原创角色
 function isHost() { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } }
+async function sysPost(text) {
+  try {
+    const r = await cloudGet("__chat");
+    const st = (r && r.store) || { v: 2, items: [], chars: [] };
+    st.v = 2; if (!Array.isArray(st.items)) st.items = []; if (!Array.isArray(st.chars)) st.chars = [];
+    const msgs = (st.msgs || []).slice(-59);
+    msgs.push({ n: "📢 系统", t: text, at: Date.now() });
+    st.msgs = msgs;
+    await cloudSave("__chat", st, r && r.updated_at, "系统播报");
+  } catch (e) {}
+}
 function origLv(o) {
   if (isHost()) return Number(((store.orig || {})[o.id] || {}).lv) || 1;
   return Number(o.lv) || 1;
@@ -1442,6 +1453,7 @@ function finish() {
       let lvUp = 0;
       while (cur.lv < CHAR.maxLevel && cur.exp >= CHAR.expNeed(cur.lv)) { cur.exp -= CHAR.expNeed(cur.lv); cur.lv++; lvUp++; }
       store.orig[o.id] = cur;
+      if (lvUp > 0) sysPost("🧬 " + o.name + " 升级到 Lv" + cur.lv);
       pushLog("🧬 " + o.name + " 经验 +" + gain + "（当前 Lv" + cur.lv + (lvUp ? " ↑升级" : "") + "）");
       addReceipt(store, "原创", o.name, { note: "原创角色经验 +" + gain });
     }
@@ -1458,6 +1470,7 @@ function finish() {
     if (n > expCleared()) {
       store.flags.expCleared = n;
       pushLog("🔓 已解锁下一关", "line");
+      sysPost("🎉 " + (((store.chars || []).find((c) => c.id === store.activeChar) || {}).name || "有人") + " 首次通关「" + s.name + "」");
     }
   }
   // 🎁 掉落

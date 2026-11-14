@@ -249,15 +249,28 @@ async function loadPlayers() {
 let myName = (() => { try { return localStorage.getItem("rpg2:nick") || "玩家"; } catch (e) { return "玩家"; } })();
 const CHAT_BOX = "__chat";
 function chatCard() {
-  return card("💬 公共频道", '<div class="hint" id="chatMsg" style="margin-bottom:6px;">读取中…</div>' +
+  const quick = ["求组队", "缺输出", "缺前排", "带新人", "收材料", "来打本"];
+  return card("💬 公共频道 <span id=\"onlineNum\" class=\"hint\" style=\"font-weight:400;margin-left:6px;\"></span>",
     '<div id="chatList" style="max-height:220px;overflow:auto;background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px;"></div>' +
+    '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">' +
+      quick.map((q) => '<button data-say="' + q + '" style="font-size:10.5px;padding:3px 9px;border-radius:20px;">' + q + '</button>').join("") +
+    '</div>' +
     '<div style="display:flex;gap:6px;margin-top:8px;">' +
       '<input id="chatIn" maxlength="120" placeholder="说点什么…" style="flex:1;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:8px;">' +
       '<button id="chatSend" style="border-color:#6ea8fe;color:#cfe6ff;">发送</button>' +
     '</div>');
 }
+async function updateOnline() {
+  const el = $("onlineNum"); if (!el) return;
+  try {
+    const rows = cache || await cloudList(200); if (!cache) cache = rows;
+    const now = Date.now();
+    const n = rows.filter((r) => r && !String(r.box).startsWith("__") && r.updated_at && (now - new Date(r.updated_at).getTime()) < 5 * 60 * 1000).length;
+    el.textContent = "🟢 " + n + " 人在线";
+  } catch (e) { el.textContent = "🟢 ? 人在线"; }
+}
 async function loadChat() {
-  const list = $("chatList"), msg = $("chatMsg");
+  const list = $("chatList");
   if (!list) return;
   try {
     const r = await cloudGet(CHAT_BOX);
@@ -271,9 +284,9 @@ async function loadChat() {
         '<div style="font-size:12.5px;color:#dbe4f3;">' + esc(m.t || "") + '</div></div>').join("");
       list.scrollTop = list.scrollHeight;
     }
-    if (msg) msg.textContent = "共 " + msgs.length + " 条消息";
+    updateOnline();
   } catch (e) {
-    if (msg) msg.textContent = "聊天读取失败：" + (e && e.message || e);
+    const on = $("onlineNum"); if (on) on.textContent = "（连接失败）";
   }
 }
 async function sendChat() {
@@ -304,7 +317,9 @@ async function initChat() {
 }
 // 事件代理：切换分栏重渲染后依然可点
 document.addEventListener("click", (e) => {
-  if (e.target && e.target.closest && e.target.closest("#chatSend")) sendChat();
+  if (e.target && e.target.closest && e.target.closest("#chatSend")) { sendChat(); return; }
+  const say = e.target && e.target.closest ? e.target.closest("[data-say]") : null;
+  if (say) { const inp = $("chatIn"); if (inp) { inp.value = say.dataset.say; } sendChat(); return; }
   const sb = e.target && e.target.closest ? e.target.closest("#lobbyBoxSave") : null;
   if (sb) {
     const v = (($("lobbyBox") || {}).value || "").trim();
