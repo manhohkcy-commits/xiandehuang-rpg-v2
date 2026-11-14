@@ -104,7 +104,7 @@ const BANK_TIER = {
 const EB = (id, name, role, tier, skills, desc) => {
   const s = BANK_TIER[tier] || BANK_TIER["普通"];
   return {
-    id, name, camp: "哈罗德银行", role, tier, desc,
+    id, name, camp: "哈罗德银行", role, tier: ({ "普通": "normal", "精英": "elite", "特色": "special", "首领": "boss" }[tier] || "normal"), desc,
     stats: Object.assign({}, s), growth: tier === "首领" ? EG_B : tier === "精英" ? EG_E : EG,
     equip: { weapon: "制式短棍", armor: "银行制服", armor2: "制式长裤", accessory: "员工胸牌" },
     skills, critRate: 5, critDmg: 150
