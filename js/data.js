@@ -375,6 +375,29 @@ function makeHaroldBank() {
     "反制小队先锋", "反制小队精锐",
     "金库护卫", "金库弩手", "金库重盾兵", "金库技工", "金库技师"
   ];
+  // 关卡 → [敌人, 阶级]（普通 / 精英 / 特色）
+  const PLAN = [
+    ["保安", "普通"],
+    ["前台柜员", "普通"],
+    ["业务柜员", "普通"],
+    ["保安犬", "普通"],
+    ["资深保安", "精英"],
+    ["见习监控员", "普通"],
+    ["保安队长", "精英"],
+    ["保安护卫犬", "精英"],
+    ["大堂经理", "精英"],
+    ["资深保安队长", "特色"],
+    ["运钞护卫队队员", "普通"],
+    ["运钞护卫队弩手", "精英"],
+    ["运钞护卫队重盾兵", "精英"],
+    ["运钞护卫队队长", "精英"],
+    ["反制小队先锋", "精英"],
+    ["反制小队精锐", "特色"],
+    ["金库护卫", "精英"],
+    ["金库弩手", "精英"],
+    ["金库重盾兵", "精英"],
+    ["金库技师", "特色"]
+  ];
   const STORY = [
     "门口的石狮子在打哈欠，保安刚换班。",
     "柜员数钱的手很快，眼睛更快。",
@@ -386,12 +409,14 @@ function makeHaroldBank() {
   const stages = LV.map((lv, i) => {
     const g = Math.pow(1.18, i), mile = (i + 1) % 5 === 0 ? 2 : 1;
     const boss = i === 19;
-    const foeName = boss ? "行长「哈罗德」" : FOES[Math.min(FOES.length - 1, Math.floor(i * FOES.length / 19))];
-    const mul = boss ? 2.4 : 1 + Math.floor(i / 10) * 0.15;
+    const plan = boss ? ["行长「哈罗德」", "首领"] : PLAN[i % PLAN.length];
+    const foeName = plan[0], tier = plan[1];
+    const mul = boss ? 2.4 : (tier === "特色" ? 1.6 : tier === "精英" ? 1.25 : 1) + Math.floor(i / 10) * 0.12;
     return {
       id: "gold_" + (i + 1),
       name: "第 " + (i + 1) + " 关 · " + (boss ? "金库核心" : PLACES[i % PLACES.length]),
       lv, group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
+      tier, tierLabel: tier,
       gold: Math.round(320 * g * mile), exp: Math.round(40 * g),
       drop: { shards: [], stone: [], bstone: 0, gearChance: 3 },
       foe: foeOf(foeName, lv, mul),
