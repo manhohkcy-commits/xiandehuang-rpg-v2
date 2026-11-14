@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -260,13 +260,21 @@ function chatCard() {
       '<button id="chatSend" style="border-color:#6ea8fe;color:#cfe6ff;">发送</button>' +
     '</div>');
 }
+let onlineAt = 0;
 async function updateOnline() {
   const el = $("onlineNum"); if (!el) return;
+  if (Date.now() - onlineAt < 20000) return;
+  onlineAt = Date.now();
   try {
-    const rows = cache || await cloudList(200); if (!cache) cache = rows;
+    const rows = await cloudList(200);
     const now = Date.now();
-    const n = rows.filter((r) => r && !String(r.box).startsWith("__") && r.updated_at && (now - new Date(r.updated_at).getTime()) < 5 * 60 * 1000).length;
-    el.textContent = "🟢 " + n + " 人在线";
+    const active = new Set();
+    rows.forEach((r) => {
+      if (!r || String(r.box).startsWith("__") || !r.updated_at) return;
+      if (now - new Date(r.updated_at).getTime() < 5 * 60 * 1000) active.add(String(r.box));
+    });
+    if (box) active.add(String(box));
+    el.textContent = "🟢 " + active.size + " 人在线";
   } catch (e) { el.textContent = "🟢 ? 人在线"; }
 }
 async function loadChat() {
