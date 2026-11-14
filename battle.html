@@ -296,8 +296,13 @@ function startBattle(stageId, col) {
   if (extra > 0) {
     const base = foeSpecs.slice(0, 6);
     for (let k = 0; k < extra; k++) {
-      if (st.__waves.length < 1) st.__waves.push([]);
-      st.__waves[st.__waves.length - 1].push(Object.assign({}, base[k % base.length]));
+      const spec = Object.assign({}, base[k % base.length]);
+      const aliveB = st.units.filter((u) => u.side === "B").length;
+      if (aliveB < 6) st.units.push(mkFoe(spec, 100 + k));
+      else {
+        if (!st.__waves.length) st.__waves.push([]);
+        st.__waves[st.__waves.length - 1].push(spec);
+      }
     }
   }
   st.__waveNo = 1;
