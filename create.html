@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>闲得慌RPG v2</title>
-<link rel="stylesheet" href="css/app.css?v=c6880e77">
+<link rel="stylesheet" href="css/app.css?v=e0ed2d33">
 </head>
 <body>
 <div class="wrap">
@@ -872,7 +872,7 @@ function renderTalent() {
         : kind === "major" ? "box-shadow:inset 0 0 8px #c9a0ff2e;"
         : "";
       return '<td style="padding:2px;">' +
-        '<button ' + (can ? 'data-tp="' + n.id + '"' : 'data-prev="' + n.id + '"') + ' style="width:100%;height:66px;padding:3px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:8px;border:1px solid ' +
+        '<button class="tk ' + (n.kind || 'base') + (has ? ' on' : '') + '" ' + (can ? 'data-tp="' + n.id + '"' : 'data-prev="' + n.id + '"') + ' style="width:100%;height:66px;padding:3px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:8px;border:1px solid ' +
         (has ? tree.color : (kind !== "minor" ? (kind === "ultimate" ? "#ffd666" : "#c9a0ff") : (can ? "#4a6a9a" : "#2f2f4a"))) + ';' + kindFx + 'background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';cursor:pointer;" title="点击看完整效果">' +
         '<span style="font-size:12.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + mark + ' ' + n.name + '</span>' +
         '<span style="font-size:11px;line-height:1.2;color:' + (has ? "#cfe6ff" : "#8a97b8") + ';max-height:28px;overflow:hidden;text-align:center;">' + effText(n.eff) + '</span></button></td>';
