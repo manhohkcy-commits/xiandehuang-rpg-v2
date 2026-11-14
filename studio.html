@@ -26,7 +26,7 @@
 </div>
 
 <script type="module">
-import { cloudGet, cloudDelete } from "./js/core.js?v=13807141";
+import { cloudGet, cloudDelete, cloudSave } from "./js/core.js?v=13807141";
 const PWKEY = "rpg2:designpw";
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 async function sha(s) {
@@ -82,6 +82,7 @@ function render() {
       '<div class="row"><span class="k">当前位号</span><span class="v">' + (hostBox ? '<b style="color:#ffcf7a;">' + hostBox + '</b>' : '<span class="hint">未设置（游戏入口会落到公用/新位号）</span>') + '</span></div>' +
       '<div style="display:flex;gap:8px;margin-top:6px;"><input id="hostBoxIn" value="' + hostBox + '" placeholder="填你的位号" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;">' +
       '<button id="btnHostBox" style="border-color:#6b4a1e;color:#ffcf7a;">保存</button></div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;"><span class="hint">账号昵称</span><input id="hostNickIn" value="' + (function(){try{return localStorage.getItem("rpg2:nick")||";}catch(e){return ";}})() + '" placeholder="大厅/聊天显示" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;"><button id="btnHostNick" style="border-color:#6b4a1e;color:#ffcf7a;">保存昵称</button></div>' +
       '<div class="hint" style="margin-top:6px;">设置后，下面的游戏入口都会带上这个位号，直接进你自己的角色。</div>' +
     '</div>' +
     '<div class="card"><div class="card-title" style="color:#ffb347;">🎮 我的游戏（主机操控）</div>' +
@@ -157,6 +158,25 @@ document.addEventListener("click", (e) => {
   render();
 });
 
+document.addEventListener("click", async (e) => {
+  const t = e.target && e.target.closest ? e.target.closest("#btnHostNick") : null;
+  if (!t) return;
+  const v = ((document.getElementById("hostNickIn") || {}).value || "").trim().slice(0, 12);
+  try { localStorage.setItem("rpg2:nick", v); } catch (err) {}
+  try {
+    const HB = "zynSD117";
+    const row = await cloudGet(HB);
+    if (row) {
+      const st = row.store;
+      st.v = 2; if (!Array.isArray(st.items)) st.items = []; if (!Array.isArray(st.chars)) st.chars = [];
+      st.account = st.account || { id: HB, nick: "" };
+      st.account.nick = v;
+      await cloudSave(HB, st, row.updated_at, "账号昵称");
+    }
+  } catch (err) {}
+  alert("✅ 账号昵称：" + (v || "（空）"));
+  render();
+});
 if (await gate()) render();
 </script>
 </body>
