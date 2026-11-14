@@ -62,6 +62,14 @@ export function talentActive2(ch) {
   return null;
 }
 
+// ⚡ 主主动技等级：按本定位点数 10/20/30/36/42 → Lv1~5
+export function talentActiveLevel(ch, treeId) {
+  const n = talentSpentInTree(ch, treeId);
+  const NEED = [10, 20, 30, 36, 42];
+  let lv = 0;
+  NEED.forEach((x) => { if (n >= x) lv++; });
+  return Math.max(0, lv);
+}
 // 🎯 本职业已投入点数（主动技解锁门槛用）
 export function talentSpentInTree(ch, treeId) {
   const pts = (ch && ch.talent && ch.talent.points) || {};
