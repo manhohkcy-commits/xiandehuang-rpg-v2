@@ -606,9 +606,8 @@ function makeCave() {
         foe: first,
         drop: {
           bstone: 2 + Math.floor(i / 2),
-          shardR: [6, 12 + Math.floor(i / 3)],
-          shardSR: [1, 3 + Math.floor(i / 4)],
-          gearChance: 0
+          manuscript: [2, 4 + Math.floor(i / 4)],
+          medal: [1, 2 + Math.floor(i / 5)]
         },
         gold: Math.round(90 * Math.pow(1.15, i)) + 40,
         exp: Math.round(80 * Math.pow(1.16, i)) + 40
