@@ -291,7 +291,7 @@ function renderPick() {
       : '<div class="card"><div class="card-title">开始战斗</div>' +
         '<div class="hint">关卡内容待定，先用默认训练场试功能。</div>' +
         '<div class="row"><span class="k">默认训练场</span><span class="v"><button data-stage="' + (STAGES[0] && STAGES[0].id) + '">开战</button></span></div></div>') +
-    (isHost() && ORIGINALS.length
+    (!isHost() && ORIGINALS.length
       ? '<div class="card"><div class="card-title">原创角色</div>' +
         ORIGINALS.filter((o) => o.camp !== "ally").map((o) =>
           '<div class="row"><span class="k">' + esc(o.name) + (o.title ? ' <span class="hint">' + esc(o.title) + '</span>' : '') +
