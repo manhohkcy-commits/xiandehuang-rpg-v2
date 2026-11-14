@@ -679,6 +679,19 @@ function aiTurnIfNeeded() {
     }
   }  const a = nextActor(st);
   if (!a) return;
+  if (a.side === "A" && a.id !== "me") {
+    // 🤝 同行托管控
+    setTimeout(() => {
+      const t = foe();
+      const r = damage(st, a.id, t.id, { atk: a.atk, mult: 100, critRate: a.critRate, critDmg: a.critDmg });
+      pushLog("🤝 " + a.name + " 出手 → " + t.name + " " + r.dmg, "line");
+      commit(st, a.id);
+      if (st.finished && !spawnWave()) finish();
+      renderBattle();
+      setTimeout(aiTurnIfNeeded, 300);
+    }, 350);
+    return;
+  }
   if (a.side !== "B") { renderBattle(); return; }
   busy = true;
   setTimeout(() => {
