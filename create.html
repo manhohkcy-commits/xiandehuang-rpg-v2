@@ -1426,22 +1426,7 @@ function renderOrig() {
       row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%")) +
     card("专属装备（" + gearCount + "）",
       gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
-    (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "") +
-    card("原创培养（解锁阶段待配置）",
-      '<div class="hint" style="margin-bottom:6px;">按角色等级解锁；条件确定后由主机端配置。</div>' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        ["stat|属性强化", "refine|精炼", "advance|升阶", "awaken|觉醒", "talent|天赋", "shop|商店"].map((x) => {
-          const key = x.split("|")[0], label = x.split("|")[1];
-          const ok = origUnlocked(o.id, key, prog);
-          return '<button data-of="' + key + '"' + (ok ? "" : ' disabled style="opacity:.45;"') + '>' + label + (ok ? "" : " 🔒") + '</button>';
-        }).join("") + '</div>') +
-    card("仓库（主机存档）",      '<div class="hint" style="margin-bottom:6px;">金币 ' + fmt(store.gold || 0) +
-      ' · 强化石 ' + (store.flags.stone || 0) + ' · 碎片 ' + (store.flags.shards || 0) +
-      ' · 突破石 ' + (store.flags.bstone || 0) + '</div>' +
-      ((store.items || []).length
-        ? (store.items || []).map((it) => '<div class="row"><span class="k">' + esc(it.name || "装备") + '</span><span class="v">' +
-            (it.rarity || "") + ' Lv' + (it.lv || 1) + (it.star ? ' ★' + it.star : '') + '</span></div>').join("")
-        : '<div class="hint">仓库里还没有装备。</div>'));
+    (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
   view().querySelectorAll("[data-of]").forEach((b) => b.onclick = async () => {
