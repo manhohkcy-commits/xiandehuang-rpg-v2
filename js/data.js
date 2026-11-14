@@ -617,11 +617,21 @@ const CN14 = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "�
 const r1 = (n) => Math.round(n * 10) / 10;
 
 function chain(prefix, label, spec) {
-  // 🎯 五种格子：基础节点 / 专精节点 / 小天赋 / 大天赋 / 终极
+  // 🎯 五种格子：基础 / 专精 / 小天赋 / 大天赋 / 终极
   const KIND = ["base", "spec", "minor", "base", "spec", "major", "base", "spec", "minor", "base", "spec", "major", "base", "spec", "major", "ultimate"];
   const SPEC_BY = { g: "str", v: "str", r: "agi", m: "intel", s: "tech" };
   const specKey = SPEC_BY[String(prefix).charAt(0)] || "str";
-  const SCALE = { base: 1, minor: 1.35, major: 1.75, ultimate: 2.2, spec: 0 };
+  const SMALL = { g: { block: 3, tenacity: 4 }, v: { critRate: 1.5, critDmg: 5 }, r: { chase: 4, penetrate: 5 }, m: { statusHit: 4, statusPower: 5 }, s: { healPct: 5, statusResist: 4 } };
+  const BIG = {
+    g: [{ lowHpCut: 8 }, { counter: 10 }, { block: 10 }],
+    v: [{ critDmg: 10 }, { doubleStrike: 8 }, { atkPct: 6 }],
+    r: [{ chase: 8 }, { spdPct: 6 }, { penetrate: 8 }],
+    m: [{ penetrate: 8 }, { statusPower: 10 }, { statusHit: 8 }],
+    s: [{ healPct: 8 }, { hpPct: 8 }, { statusResist: 8 }]
+  };
+  const key = String(prefix).charAt(0);
+  const SCALE = { base: 1, minor: 1.35, major: 1.75, ultimate: 2.2 };
+  let minorN = 0, majorN = 0;
   return Array.from({ length: 16 }, (_, i) => {
     const kind = KIND[i] || "base";
     const eff = {};
@@ -631,6 +641,8 @@ function chain(prefix, label, spec) {
       const scale = SCALE[kind];
       Object.keys(spec.base).forEach((k) => { eff[k] = r1((spec.base[k] + (spec.step[k] || 0) * i) * scale); });
       if (spec.bonus && spec.bonus[i]) Object.assign(eff, spec.bonus[i]);
+      if (kind === "minor") { minorN++; const sm = SMALL[key] || {}; Object.keys(sm).forEach((k) => { eff[k] = r1((Number(eff[k]) || 0) + sm[k] * minorN); }); }
+      if (kind === "major") { majorN++; const big = (BIG[key] || [])[majorN - 1] || {}; Object.keys(big).forEach((k) => { eff[k] = r1((Number(eff[k]) || 0) + big[k]); }); }
     }
     const tag = kind === "base" ? "基础·" : kind === "spec" ? "专精·" : kind === "minor" ? "小·" : kind === "major" ? "大·" : "终·";
     const no = KIND.slice(0, i + 1).filter((k) => k === kind).length;

@@ -1,6 +1,6 @@
 import { cloudGet, cloudSave } from "./core.js?v=13807141";
 import { powerOf } from "./power.js?v=edbb3f86";
-import { GRADE, APTITUDE } from "./data.js?v=975c4f1b";
+import { GRADE, APTITUDE } from "./data.js?v=b741447b";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
