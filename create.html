@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -33,6 +33,12 @@ import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT,
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
+
+// 🧾 分档材料：按档读取 / 扣除 / 合计
+function matCount(p, t) { return Number(((store && store.flags) || {})[p + t]) || 0; }
+function matUse(p, t, n) { if (!store.flags) store.flags = {}; store.flags[p + t] = matCount(p, t) - n; }
+function matTotal(p) { let n = 0; for (let i = 1; i <= 4; i++) n += matCount(p, i); return n; }
+function matSpend(p, n) { for (let i = 1; i <= 4 && n > 0; i++) { const have = matCount(p, i), d = Math.min(have, n); if (d) matUse(p, i, d); n -= d; } }
 const activeChar = () => (store && store.chars || []).find((c) => c.id === store.activeChar) || (store && store.chars || [])[0] || null;
 
 function toast(msg, bad) {
