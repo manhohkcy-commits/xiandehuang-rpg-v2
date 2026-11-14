@@ -304,7 +304,12 @@ export const ENVIRONMENTS = {
   sun: { name: "烈日", icon: "🔥", desc: "攻击 +10%，防御 -10%。", mods: { atkPct: 10, defPct: -10 } },
   night: { name: "夜战", icon: "🌙", desc: "暴击率 -5%，法术伤害 +10%。", mods: { critRate: -5, spellPct: 10 } },
   fog: { name: "浓雾", icon: "🌫", desc: "远程伤害 -15%，速度 -5%。", mods: { rangedPct: -15, spdPct: -5 } },
-  wind: { name: "山风", icon: "🌬", desc: "速度 +5%，远程伤害 -10%。", mods: { spdPct: 5, rangedPct: -10 } }
+  wind: { name: "山风", icon: "🌬", desc: "速度 +5%，远程伤害 -10%。", mods: { spdPct: 5, rangedPct: -10 } },
+  heat: { name: "酷热", icon: "🌡", desc: "攻击 +8%，生命 -5%。", mods: { atkPct: 8, hpPct: -5 } },
+  ash: { name: "灰烬", icon: "🌋", desc: "法术伤害 +10%，法抗 -8%。", mods: { spellPct: 10, resPct: -8 } },
+  snow: { name: "风雪", icon: "❄️", desc: "速度 -8%，法抗 +8%。", mods: { spdPct: -8, resPct: 8 } },
+  sand: { name: "沙尘", icon: "🌪", desc: "暴击率 -4%，速度 -6%。", mods: { critRate: -4, spdPct: -6 } },
+  gale: { name: "强风", icon: "🌀", desc: "速度 +8%，防御 -5%。", mods: { spdPct: 8, defPct: -5 } }
 };
 // 🏞 场景（场地）：固定地形效果，每 2 关一处
 export const SCENES = [
@@ -428,7 +433,7 @@ function makeHaroldBank() {
       scene: ["银行大厅", "一号柜台", "押运通道", "贵宾室", "地下金库"][Math.min(4, Math.floor(i / 4))],
       sceneDesc: ["大理石大厅，回声很大。", "柜台后面堆满现金和单据。", "狭窄的押运通道，灯一闪一闪。", "厚地毯和皮沙发，空气很闷。", "地下金库，冷气混着钱的味道。"][Math.min(4, Math.floor(i / 4))],
       sceneMods: [{ defPct: 2 }, { resPct: 3 }, { spdPct: 3 }, { atkPct: 3 }, { defPct: 4, resPct: 4 }][Math.min(4, Math.floor(i / 4))],
-      weather: ["clear", "rain", "night", "fog"][Math.floor(i / 5) % 4],
+      weather: ["clear", "rain", "gale", "fog"][Math.floor(i / 5) % 4],
       gold: Math.round(320 * g * mile), exp: Math.round(40 * g),
       drop: { shards: [], stone: [], bstone: 0, gearChance: 3 },
       foe: foeOf(foeName, lv, mul),
@@ -514,7 +519,7 @@ function makeMine() {
         scene: ["采岩区", "碎岩平台", "熔炉区", "深层矿道", "锻造核心"][Math.min(4, Math.floor(i / 4))],
         sceneDesc: ["矿壁被一层层削下来，碎石不断落下。", "碎岩机轰鸣，地面跟着震动。", "炉火不熄，铁水顺着沟槽流动。", "矿道又窄又热，灯照不到尽头。", "锻造核心悬在炉心，热浪扭曲了空气。"][Math.min(4, Math.floor(i / 4))],
         sceneMods: [{ defPct: 3 }, { atkPct: 3 }, { atkPct: 3, resPct: 2 }, { resPct: 4 }, { atkPct: 5 }][Math.min(4, Math.floor(i / 4))],
-        weather: ["clear", "fog", "night", "sun"][Math.floor(i / 5) % 4],
+        weather: ["clear", "fog", "heat", "ash"][Math.min(3, Math.floor(i / 5))],
         sceneMods: { defPct: 3 },
         enemies: ids,
         foe: first,
