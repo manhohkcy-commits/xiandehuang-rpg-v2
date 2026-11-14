@@ -541,6 +541,41 @@ function gradeCard(ch) {
       : '<div class="hint">已到最高资质（7★）</div>'));
 }
 
+// 📊 玩家角色属性加成明细
+function charBreakdown(ch) {
+  const noGear = JSON.parse(JSON.stringify(ch));
+  noGear.equip = {};
+  const a = charFinal(noGear), b = charFinal(ch);
+  const rows = [["攻击", "atk"], ["生命", "hp"], ["防御", "def"], ["法抗", "res"], ["速度", "spd"]];
+  const th = '<th style="padding:4px 6px;text-align:right;">';
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px;">来源</th>' +
+    rows.map((r) => th + r[0] + '</th>').join("") + '</tr>';
+  const line = (label, fn, color) => '<tr style="border-top:1px solid #1a2438;"><td class="hint" style="padding:6px 4px;">' + label + '</td>' +
+    rows.map((r) => '<td style="padding:6px;text-align:right;color:' + (color || "#dbe4f3") + ';">' + Math.round(fn(r[1]) * 10) / 10 + '</td>').join("") + '</tr>';
+  html += line("角色本体（等级/突破/资历/专精）", (k) => a[k]);
+  html += line("装备加成", (k) => b[k] - a[k], "#ffb347");
+  html += '<tr style="border-top:1px solid #2c3d5e;"><td style="padding:7px 4px;font-weight:700;">合计</td>' +
+    rows.map((r) => '<td style="padding:7px 6px;text-align:right;font-weight:800;color:#6ea8fe;">' + (Math.round(b[r[1]] * 10) / 10) + '</td>').join("") + '</tr></table>';
+  const eq = Object.keys(ch.equip || {}).map((slot) => {
+    const it = ch.equip[slot];
+    if (!it) return "";
+    const bo = itemBonus(it);
+    const bits = Object.keys(bo).filter((k) => Number(bo[k]) > 0).slice(0, 4)
+      .map((k) => ({ atk: "攻", hp: "生", def: "防", res: "抗", spd: "速", critRate: "暴击", critDmg: "暴伤" }[k] || k) + "+" + Math.round(bo[k])).join(" · ");
+    return '<div class="hint">🗡 ' + esc(it.data.name) + '：' + esc(bits) + '</div>';
+  }).join("");
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:12px;";
+  ov.innerHTML = '<div class="card" style="max-width:560px;width:100%;max-height:86vh;overflow:auto;">' +
+    '<div class="card-title">📊 加成明细 · ' + esc(ch.name) + '</div>' +
+    '<div class="hint" style="margin-bottom:6px;">Lv' + (ch.lv || 1) + ' · 突破 ' + (ch.breaks || 0) + '</div>' +
+    html + (eq ? '<div style="margin-top:8px;"><div class="hint" style="font-weight:700;">装备来源</div>' + eq + '</div>' : "") +
+    '<div style="margin-top:10px;"><button id="bdClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#bdClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function renderChar() {
   const ch = activeChar();
   if (!ch || window.__creating) {
@@ -584,7 +619,8 @@ function renderChar() {
     gradeCard(ch) +
     card("属性（含装备）", row("攻击", Math.round(f.atk)) + row("生命", Math.round(f.hp)) + row("防御", Math.round(f.def)) +
       row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
-      row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%")) +
+      row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%") +
+      '<div style="margin-top:8px;"><button id="btnCharBreakdown">📊 加成明细</button></div>') +
     card("天赋与专精", row("专精换算", "+" + spec) +
       attrRow("力量", "str", ch) + attrRow("敏捷", "agi", ch) + attrRow("智力", "intel", ch) + attrRow("技巧", "tech", ch) +
       '<div class="hint" style="margin-top:6px;">剩余可分配点数：<b style="color:' + ((ch.free || 0) > 0 ? "#7ee787" : "#6a6a86") + ';">' + (ch.free || 0) + '</b>（每次升级 +2）</div>') +
@@ -606,6 +642,7 @@ function renderChar() {
     await save();
     render();
   });
+  if ($("btnCharBreakdown")) $("btnCharBreakdown").onclick = () => charBreakdown(ch);
   if ($("btnNewChar")) $("btnNewChar").onclick = () => {
     window.__cc = null;
     window.__creating = 1;
