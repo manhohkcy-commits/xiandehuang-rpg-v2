@@ -1361,6 +1361,46 @@ function renderBase() {
     place("🔬", "研究所", "把材料变成能用的东西。", '<div class="hint">待开放：装备改造、配方研究。</div>');
 }
 
+// 🗡 原创装备详情弹窗
+function origGearDetail(it, slot, gst) {
+  const rc = { SSR: "#ffd666", SR: "#c9a0ff", UR: "#ff6b6b", R: "#6ea8fe" }[it.rarity] || "#8a8ab0";
+  const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const LBL = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", lifesteal: "吸血", ultPct: "必杀伤害" };
+  const UNIT = { critRate: "%", critDmg: "%", lifesteal: "%", ultPct: "%" };
+  const MAIN = { weapon: ["atk"], armor: ["hp", "def", "res"], armor2: ["hp", "def", "spd"], accessory: ["atk", "critRate", "critDmg"] };
+  const mk = MAIN[slot] || [];
+  const row = (k, v) => '<div style="display:flex;justify-content:space-between;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
+    '<span class="hint">' + k + '</span><b style="font-size:13px;color:#dbe4f3;">' + v + '</b></div>';
+  const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+  const sec = (t) => '<div class="hint" style="margin:10px 0 5px;color:' + rc + ';font-weight:700;">' + t + '</div>';
+  const mainRows = mk.filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + (UNIT[k] || ""))).join("");
+  const subRows = ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].filter((k) => mk.indexOf(k) < 0 && it[k])
+    .map((k) => row(LBL[k], "+" + it[k] + (UNIT[k] || ""))).join("");
+  const specRows = ["lifesteal", "ultPct"].filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + "%")).join("");
+  const sk = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
+    '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
+    '<b style="color:' + rc + ';">' + mult + '</b></div>' + (extra ? '<div class="hint" style="margin-top:2px;">' + esc(extra) + '</div>' : "") + '</div>';
+  const skills = it.sName ? sec("招式组") +
+    sk("普攻", it.aName, (it.aMult || 100) + "%", "") +
+    sk("技能", it.sName, it.sMult + "% · CD" + it.sCd, "回怒 " + (it.sRage || 0)) +
+    sk("必杀", it.uName, it.uMult + "% · 怒气100", it.skillDesc || "") : "";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;border:1px solid ' + rc + '66;">' +
+    '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:18px;color:' + rc + ';">' + esc(it.name) + '</b>' +
+    '<span class="tag" style="border-color:' + rc + ';color:' + rc + ';">' + (it.rarity || "") + '</span>' +
+    '<span class="tag" style="margin-left:auto;">' + SLOTN[slot] + ' · Lv' + (gst.lv || 1) + ' ★' + (gst.star || 1) + '</span></div>' +
+    (mainRows ? '<div class="hint" style="margin:8px 0 5px;color:#ffd666;font-weight:700;">主属性</div>' + panel(mainRows) : "") +
+    (subRows ? sec("副属性") + panel(subRows) : "") +
+    (specRows ? sec("战斗词条") + panel(specRows) : "") +
+    (it.mech ? sec("机制说明") + '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px 9px;color:#9fb0c8;font-size:12px;line-height:1.7;">' + esc(it.mech) + '</div>' : "") +
+    skills +
+    '<div style="margin-top:10px;"><button id="ogdClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#ogdClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function renderOrig() {
   if (!ORIGINALS.length) {
     view().innerHTML = card("🧬 原创角色", '<div class="hint">还没有原创角色。等主机端设计并加入游戏后，这里会出现他们的面板。</div>');
@@ -1455,14 +1495,17 @@ function renderOrig() {
       }).join("") + '</div>') +
     card("操作", '<button id="btnOrigRename">✏️ 改名字</button>') +
     card("最近收据", receiptsHtml()) +
-    card("专属装备（" + gearCount + "）",
-      gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
     '<div class="hint" style="margin:8px 2px;">用这名原创角色打一场战斗可以涨经验（每胜 +120）。</div>' +
     '<div style="margin-bottom:8px;"><button id="btnPlayOrig" style="border-color:#ffb347;color:#ffb347;">⚔️ 用他出战</button></div>' +
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
-  view().querySelectorAll("[data-eqslot]").forEach((b) => b.onclick = () => { tab = "cult"; render(); });
+  view().querySelectorAll("[data-eqslot]").forEach((b) => b.onclick = () => {
+    const slot = b.dataset.eqslot;
+    const it = gg[slot] || {};
+    if (!it.name) return toast("这个位置还是空的", true);
+    origGearDetail(it, slot, (prog.gear && prog.gear[slot]) || { lv: 1, star: 1 });
+  });
   view().querySelectorAll("[data-of]").forEach((b) => b.onclick = async () => {
     const key = b.dataset.of;
     if (!origUnlocked(o.id, key, prog)) return toast("还没解锁（解锁阶段待配置）", true);
