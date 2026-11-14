@@ -89,6 +89,7 @@ function render() {
     '<a href="enemy.html"><div style="font-size:22px;">👹</div><div class="t">敌人图鉴</div><div class="hint">敌人档案 / 招式</div></a>' +
     '<a href="affixes.html"><div style="font-size:22px;">📖</div><div class="t">词条库</div><div class="hint">词条效果说明</div></a>' +
     '<a href="create.html' + myQs + (myBox ? "&" : "") + 'tab=store"><div style="font-size:22px;">🎒</div><div class="t">仓库</div><div class="hint">装备 / 资源</div></a>' +
+    (hostMode ? '<a href="studio.html"><div style="font-size:22px;">🛠</div><div class="t">主机工作台</div><div class="hint">设计 / 发布 / 管理</div></a>' : "") +
     '</div>';
   const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
     '<button data-tab="player"' + (tab === "player" ? ' class="on"' : '') + '>🧑 玩家大厅</button>' +
