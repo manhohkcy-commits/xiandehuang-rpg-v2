@@ -12,6 +12,20 @@ export function talentBonus(ch) {
     if (!pts[n.id]) return;
     Object.keys(n.eff).forEach((k) => { out[k] = (out[k] || 0) + (Number(n.eff[k]) || 0); });
   })));
+  // 🎖 等级被动：Lv60 解锁职业被动，Lv80 强化必杀
+  const lv = Number(ch && ch.lv) || 1;
+  const treeId = (ch && ch.talent && ch.talent.tree) || "vanguard";
+  if (lv >= 60) {
+    if (treeId === "guard") out.dmgCut = (out.dmgCut || 0) + 8;
+    else if (treeId === "vanguard") out.critRate = (out.critRate || 0) + 6;
+    else if (treeId === "ranger") out.spdPct = (out.spdPct || 0) + 8;
+    else if (treeId === "mage") out.resPct = (out.resPct || 0) + 12;
+    else if (treeId === "support") out.hpPct = (out.hpPct || 0) + 8;
+  }
+  if (lv >= 80) {
+    out.atkPct = (out.atkPct || 0) + 10;
+    out.critDmg = (out.critDmg || 0) + 10;
+  }
   return out;
 }
 
