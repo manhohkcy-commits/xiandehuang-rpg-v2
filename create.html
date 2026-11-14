@@ -1478,10 +1478,12 @@ function renderOrig() {
     card("资历与资质",
       row("资历评级", "D（全属性 ×1.00）") + row("资质评估", "1★（全属性 ×1.00）") +
       '<div class="hint" style="margin-top:6px;">原创角色固定资历，不参与晋升。</div>') +
-    card("天赋与专精",
-      row("专精换算", "+" + Math.round(((Number((o.spec || {}).str) || 0) * CHAR.spec.str + (Number((o.spec || {}).agi) || 0) * CHAR.spec.agi + (Number((o.spec || {}).int) || 0) * CHAR.spec.int + (Number((o.spec || {}).tech) || 0) * CHAR.spec.tech) * 10) / 10) +
-      row("天赋点", "0") +
-      '<div class="hint" style="margin-top:6px;">天赋树待接入。</div>') +
+    card("专精",
+      row("力量", (Number((o.spec || {}).str) || 0)) +
+      row("智力", (Number((o.spec || {}).int) || 0)) +
+      row("技巧", (Number((o.spec || {}).tech) || 0)) +
+      row("敏捷", (Number((o.spec || {}).agi) || 0)) +
+      '<div class="hint" style="margin-top:6px;">专精四维固定，由角色设计决定。</div>') +
     card("装备栏",
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
       Object.keys(SLOTN).map((k) => {
