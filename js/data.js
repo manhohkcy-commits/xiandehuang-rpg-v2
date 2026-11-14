@@ -1,4 +1,4 @@
-// 闲得慌RPG v2 · 数据（纯数据，无逻辑）
+﻿// 闲得慌RPG v2 · 数据（纯数据，无逻辑）
 export const RARITY_MULT = { R: 1, SR: 1.15, SSR: 1.3, UR: 1.5 };
 // 🚧 内容开关：装备选择已开放；关卡内容仍待定（数据保留）
 export const CONTENT_READY = true;
@@ -703,14 +703,14 @@ const BRANCH_SIGN = {
 };
 // ✦ 大天赋 / 终天赋的独有机制词条
 const MAJOR_MECH = {
-  g1: { block: 8 }, g2: { lowHpCut: 8 }, g3: { thorns: 12 },
+  g1: { block: 8 }, g2: { lowHpCut: 8 }, g3: { dmgCut: 4 },
   v1: { critDmg: 12 }, v2: { rageOnKill: 10 }, v3: { doubleStrike: 8 },
   r1: { spdPct: 4 }, r2: { penetrate: 10 }, r3: { chase: 10 },
   m1: { statusResist: 12 }, m2: { statusHit: 12 }, m3: { penetrate: 12 },
   s1: { block: 8 }, s2: { lowHpCut: 10 }, s3: { tenacity: 12 }
 };
 const ULT_MECH = {
-  g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { thorns: 20 },
+  g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { dmgCut: 8 },
   v1: { critDmg: 18 }, v2: { rageOnSkill: 12 }, v3: { chase: 12 },
   r1: { spdPct: 6 }, r2: { penetrate: 15 }, r3: { dualborn: 10 },
   m1: { statusPower: 12 }, m2: { statusHit: 15 }, m3: { statusPower: 15 },
