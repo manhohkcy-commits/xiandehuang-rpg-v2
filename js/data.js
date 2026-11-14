@@ -661,7 +661,7 @@ export const TALENT_TREES = [
     branches: [
       tb("g1", "铁壁", 5, "防御 · 格挡", "g1_", { base: { defPct: 3 }, step: { defPct: 0.6 }, bonus: { 3: { block: 3 }, 7: { block: 5 }, 11: { tenacity: 8 } } }),
       tb("g2", "不屈", 30, "生命 · 韧性", "g2_", { base: { hpPct: 4 }, step: { hpPct: 0.8 }, bonus: { 4: { lowHpCut: 4 }, 9: { lowHpCut: 6 }, 13: { tenacity: 10 } } }),
-      tb("g3", "荆棘", 60, "减伤 · 反制", "g3_", { base: { dmgCut: 2 }, step: { dmgCut: 0.3 }, bonus: { 5: { block: 5 }, 10: { tenacity: 8 } } })
+      tb("g3", "荆棘", 60, "反伤 · 反制", "g3_", { base: { thorns: 2 }, step: { thorns: 0.4 }, bonus: { 5: { block: 5 }, 10: { tenacity: 8 } } })
     ] },
 
   { id: "vanguard", name: "⚔️ 先锋", role: "爆发 · 暴击", color: "#ffb86b",
@@ -724,14 +724,14 @@ const BRANCH_SIGN = {
 };
 // ✦ 大天赋 / 终天赋的独有机制词条
 const MAJOR_MECH = {
-  g1: { block: 6 }, g2: { lowHpCut: 6 }, g3: { dmgCut: 3 },
+  g1: { block: 6 }, g2: { lowHpCut: 6 }, g3: { thorns: 6 },
   v1: { critDmg: 12 }, v2: { rageOnKill: 10 }, v3: { doubleStrike: 8 },
   r1: { spdPct: 4 }, r2: { penetrate: 10 }, r3: { chase: 10 },
   m1: { statusResist: 9 }, m2: { statusHit: 9 }, m3: { penetrate: 10 },
   s1: { block: 6 }, s2: { healPct: 5 }, s3: { tenacity: 8 }
 };
 const ULT_MECH = {
-  g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { dmgCut: 8 },
+  g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { thorns: 12 },
   v1: { critDmg: 18 }, v2: { rageOnSkill: 12 }, v3: { chase: 12 },
   r1: { spdPct: 6 }, r2: { penetrate: 15 }, r3: { dualborn: 10 },
   m1: { statusPower: 9 }, m2: { statusHit: 10 }, m3: { statusPower: 10 },
