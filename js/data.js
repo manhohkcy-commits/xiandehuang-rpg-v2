@@ -644,9 +644,8 @@ function chain(prefix, label, spec) {
       if (kind === "minor") { minorN++; const sm = SMALL[key] || {}; Object.keys(sm).forEach((k) => { eff[k] = r1((Number(eff[k]) || 0) + sm[k] * minorN); }); }
       if (kind === "major") { majorN++; const big = (BIG[key] || [])[majorN - 1] || {}; Object.keys(big).forEach((k) => { eff[k] = r1((Number(eff[k]) || 0) + big[k]); }); }
     }
-    const tag = kind === "base" ? "基础·" : kind === "spec" ? "专精·" : kind === "minor" ? "小·" : kind === "major" ? "大·" : "终·";
-    const no = KIND.slice(0, i + 1).filter((k) => k === kind).length;
-    return { id: prefix + (i + 1), name: tag + label + "·" + no, eff, kind };
+    const tag = kind === "base" ? "基础" : kind === "spec" ? "专精" : kind === "minor" ? "小天赋" : kind === "major" ? "大天赋" : "终极";
+    return { id: prefix + (i + 1), name: tag, eff, kind };
   });
 }
 
