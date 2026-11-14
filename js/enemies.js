@@ -438,3 +438,45 @@ const MINE_TIER_FIX = {
   m_auto_mine: "normal", m_d_shield: "normal"
 };
 ENEMIES.forEach((e) => { if (MINE_TIER_FIX[e.id]) e.tier = MINE_TIER_FIX[e.id]; });
+
+// 🎖 精英 / 特色 / 首领的招牌特性
+const ENEMY_SIG = {
+  // 红枫团
+  e_vet_soldier: { stun: 20 },
+  e_vet_archer: { burn: 20 },
+  e_vet_crossbow: { row: true },
+  e_vet_medic: { heal: 25 },
+  e_vet_shield: { shield: 18 },
+  e_high_mage: { aoe: true, silence: 18 },
+  e_bomber: { aoe: true, burn: 15 },
+  e_horn: { buff: { atkPct: 20 } },
+  e_drum: { buff: { atkPct: 15, dmgPct: 10 } },
+  e_mech: { summon: true },
+  e_mech2: { summon: true, shield: 15 },
+  e_chiyu: { aoe: true, burn: 25 },
+  e_tieya: { stun: 30, drain: 30 },
+  e_baishuang: { heal: 20, silence: 25 },
+  e_fengwang: { aoe: true, stun: 20 },
+  // 哈罗德银行
+  b_guard2: { stun: 20 },
+  b_guard_cap2: { shield: 20, stun: 15 },
+  b_cam2: { silence: 25 },
+  b_roy: { aoe: true, stun: 20 },
+  b_benjo: { drain: 35, stun: 25 },
+  b_catherine: { aoe: true, shield: 22 },
+  // 矿采锻造基地
+  m_lead: { stun: 20 },
+  m_auto_crush: { shield: 15 },
+  m_d_lead: { stun: 25 },
+  m_px: { aoe: true, burn: 20 },
+  m_tx: { aoe: true, stun: 25 },
+  b_eva: { aoe: true, burn: 25 },
+  b_harman: { shield: 25, stun: 20 }
+};
+ENEMIES.forEach((en) => {
+  const sig = ENEMY_SIG[en.id];
+  if (!sig) return;
+  (en.skills || []).forEach((s) => {
+    if (s.kind === "skill" || s.kind === "ult") Object.assign(s, sig);
+  });
+});
