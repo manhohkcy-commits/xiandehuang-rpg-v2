@@ -847,7 +847,7 @@ function renderTalent() {
     '</div>' +
     '<div class="hint" style="margin-top:6px;">可用 <b style="color:' + (left > 0 ? "#7ee787" : "#8a8ab0") + ';">' + left + '</b> / 共 ' + Number(ch.tp) + ' 点（升级 +1、突破 +2）</div>' +
     (tbParts.length ? '<div class="hint">当前加成：' + tbParts.join(" · ") + '</div>' : '') +
-    (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 洗点（' + (spent * 100) + ' 金币）</button></div>' : '') +
+    (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 清空天赋（免费）</button></div>' : '') +
     '</div>';
 
   // ② 分支链（表头）+ 阶 × 分支 矩阵（用 table，避免 grid 在窄屏挤歪）
@@ -865,7 +865,7 @@ function renderTalent() {
       const lvLock = lv < b.unlockLv;
       const tierLock = lv < (TALENT_TIER_LV[i] || 1);
       const lock = lvLock || tierLock;
-      const can = !has && !lock && left > 0;
+      const can = !has && !lock; // 🎯 只看等级，不消耗点数
       const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
       const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
       const kind = n.kind || "minor";
@@ -889,7 +889,7 @@ function renderTalent() {
   // ④ 职业主动技
   const act = tree.active;
   const actHas = !!(act && ch.talent.points[act.id]);
-  const actCan = act && !actHas && left > 0 && counts[tree.id] >= act.need;
+  const actCan = act && !actHas && lv >= 10;
   const actRow = act ? '<div class="row" style="margin-top:12px;"><span class="k">⚡ 主动技 · ' + act.name + '</span><span class="v">' +
     '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + (actHas ? '' : ' · 需本树已点 ' + act.need + ' 点') + '</span> ' +
     (actHas ? '<span class="tag" style="color:' + tree.color + ';">已解锁</span>'
@@ -919,7 +919,7 @@ function renderTalent() {
   });
 
   if ($("btnTalentReset")) $("btnTalentReset").onclick = async () => {
-    const cost = 800;
+    const cost = 0;
     if (!confirm("重置天赋？已点的 " + talentPointsOf(ch) + " 点全部退回，花费 " + cost + " 金币。")) return;
     if ((Number(store.gold) || 0) < cost) return toast("金币不足（需 " + cost + "）", true);
     store.gold = (Number(store.gold) || 0) - cost;
@@ -987,15 +987,12 @@ function renderTalent() {
     toast("🌳 学会：" + node.name);
   });
   if ($("btnTpReset")) $("btnTpReset").onclick = async () => {
-    const cost = spent * 100;
-    if (!confirm("洗点要花 " + cost + " 金币（已花点数 × 100），确定？")) return;
-    if ((Number(store.gold) || 0) < cost) return toast("金币不够（需 " + cost + "）", true);
-    store.gold -= cost;
+    if (!confirm("清空全部天赋？（免费，随时可重选）")) return;
     ch.talent.points = {};
-    addReceipt(store, "洗点", ch.name, { gold: -cost, note: "重置全部天赋" });
+    ch.talent.active2 = "";
     await save();
     render();
-    toast("已洗点，花费 " + cost + " 金币");
+    toast("已清空天赋");
   };
 }
 
