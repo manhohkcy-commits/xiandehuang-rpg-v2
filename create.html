@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -122,6 +122,15 @@ async function load() {
     toast("🆕 新位号 " + box + " 已开好，先捏个角色吧");
   }
   if (store) ensureSeed();
+  // 🧹 一次性清理：移除测试角色 Zyn（含本机缓存）
+  if (store && Array.isArray(store.chars)) {
+    const kept = store.chars.filter((c) => !String(c.name || "").toLowerCase().includes("zyn"));
+    if (kept.length !== store.chars.length) {
+      store.chars = kept;
+      if (!store.chars.some((c) => c.id === store.activeChar)) store.activeChar = (store.chars[0] || {}).id || "";
+      await save();
+    }
+  }
 }
 
 function ensureSeed(withDefaultChar = true) {
