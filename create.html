@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -2205,7 +2205,7 @@ function renderShop() {
 }
 
 function render() {
-  const hostMode = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+  const hostMode = (() => { try { if (localStorage.getItem("rpg2:host") === "1") return true; } catch (e) {} return box === "zynSD117"; })();
   document.body.classList.toggle("host-mode", hostMode);
   if (!hostMode) {
     const b = document.querySelector('[data-tab="orig"]');

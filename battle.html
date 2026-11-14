@@ -34,7 +34,7 @@ window.__playOrig = localStorage.getItem("rpg2:playAs") || null;
 // 🤝 同行队伍（最多 5 名友方原创角色，默认托管）
 function partyIds() { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } }
 // 👑 主机标记：只有主机能操控原创角色
-function isHost() { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } }
+function isHost() { try { if (localStorage.getItem("rpg2:host") === "1") return true; } catch (e) {} return readBox() === "zynSD117"; }
 async function sysPost(text) {
   try {
     const r = await cloudGet("__chat");

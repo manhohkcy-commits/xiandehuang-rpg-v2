@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -28,7 +28,7 @@ const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
 const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
 const box = (() => { try { return localStorage.getItem("rpg2:box") || ""; } catch (e) { return ""; } })();
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
-const hostMode = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+const hostMode = (() => { try { if (localStorage.getItem("rpg2:host") === "1") return true; } catch (e) {} return (localStorage.getItem("rpg2:box") || "") === "zynSD117"; })();
 
 let tab = (new URLSearchParams(location.search)).get("tab") || "player";
 let cache = null;
