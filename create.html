@@ -905,7 +905,7 @@ function renderTalent() {
 
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
-    ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span></div>' +
+    ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span> <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
     '<div class="hint">天赋 Lv5 开放；三条分支都从 Lv5 起可用，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
     (actRow ? actRow : '') + act2Row + '</div>';
@@ -916,6 +916,14 @@ function renderTalent() {
     if (t.active) allNodes.push(Object.assign({ tree: t.id }, t.active));
   });
 
+  if ($("btnTalentReset")) $("btnTalentReset").onclick = async () => {
+    const cost = 800;
+    if (!confirm("重置天赋？已点的 " + talentPointsOf(ch) + " 点全部退回，花费 " + cost + " 金币。")) return;
+    if ((Number(store.gold) || 0) < cost) return toast("金币不足（需 " + cost + "）", true);
+    store.gold = (Number(store.gold) || 0) - cost;
+    ch.talent = { points: {}, active2: "" };
+    await save(); render(); toast("🔄 天赋已重置");
+  };
   view().querySelectorAll("[data-act2]").forEach((b) => b.onclick = async () => {
     ch.talent.active2 = b.dataset.act2;
     await save(); render();
