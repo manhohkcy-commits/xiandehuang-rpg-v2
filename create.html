@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>闲得慌RPG v2</title>
-<link rel="stylesheet" href="css/app.css?v=1c101d54">
+<link rel="stylesheet" href="css/app.css?v=64217d6c">
 </head>
 <body>
 <div class="wrap">
@@ -1416,7 +1416,8 @@ function renderOrig() {
 
   view().innerHTML =
     '<div class="tree-tabs">' + tabs + '</div>' +
-    card("🧬 " + esc(oname), '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + '</div>') +
+    card('<span class="avatar ' + (o.rare ? "" : "normal") + '">' + esc((oname || "?").slice(0, 1)) + '</span> ' + esc(oname),
+      '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + '</div>') +
     card("等级",
       '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + (lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
