@@ -24,7 +24,7 @@ import { } from "./js/battle.js?v=273a02ba";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS } from "./js/data.js?v=fbecd1eb";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { stagePower } from "./js/enemies.js?v=5054b7b7";
-import { charFinal, charPower } from "./js/power.js?v=98e38d7a";
+import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js?v=273a02ba";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
@@ -185,7 +185,7 @@ function startBattle(stageId) {
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
   st = createBattle([
-    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0 },
+    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0, traits: combatTraits(ch) },
     { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
   ]);
   st.__stage = s.id;
@@ -549,6 +549,15 @@ function aiTurnIfNeeded() {
     const mult = useSkill ? 150 : 100;
     const r = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg });
     pushLog((useSkill ? "🥋 " : "⚔️ ") + f2.name + (useSkill ? " 技能" : " 普攻") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    {
+      const th = Number((m.traits || {}).thorns) || 0;
+      if (th > 0 && r.dmg > 0 && f2.hp > 0) {
+        const refl = Math.max(1, Math.round(r.dmg * th / 100));
+        f2.hp = Math.max(0, f2.hp - refl);
+        if (f2.hp === 0) f2.alive = false;
+        pushLog("🌵 反伤 → " + f2.name + " " + refl, "line");
+      }
+    }
     commit(st, "foe");
     busy = false;
     if (st.finished) finish();
