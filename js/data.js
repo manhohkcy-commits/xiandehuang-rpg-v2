@@ -618,10 +618,14 @@ const r1 = (n) => Math.round(n * 10) / 10;
 
 function chain(prefix, label, spec) {
   return Array.from({ length: 14 }, (_, i) => {
+    // 小天赋（1-4）/ 大天赋（5、10）/ 终极天赋（14）
+    const kind = i === 13 ? "ultimate" : (i === 4 || i === 9) ? "major" : "minor";
+    const scale = kind === "ultimate" ? 2.2 : kind === "major" ? 1.75 : 1;
     const eff = {};
-    Object.keys(spec.base).forEach((k) => { eff[k] = r1(spec.base[k] + (spec.step[k] || 0) * i); });
+    Object.keys(spec.base).forEach((k) => { eff[k] = r1((spec.base[k] + (spec.step[k] || 0) * i) * scale); });
     if (spec.bonus && spec.bonus[i]) Object.assign(eff, spec.bonus[i]);
-    return { id: prefix + (i + 1), name: label + "·" + CN14[i], eff };
+    const tag = kind === "ultimate" ? "终·" : kind === "major" ? "大·" : "小·";
+    return { id: prefix + (i + 1), name: tag + label + "·" + CN14[i], eff, kind };
   });
 }
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=a0b40bb1";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=58801ba5";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
-import { GRADE, APTITUDE } from "./js/data.js?v=a0b40bb1";
+import { GRADE, APTITUDE } from "./js/data.js?v=58801ba5";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
 
@@ -866,9 +866,13 @@ function renderTalent() {
       const can = !has && !lock && left > 0;
       const mark = has ? "●" : (lock ? "🔒" : (can ? "○" : "·"));
       const col = has ? tree.color : (lock ? "#5a5a78" : (can ? "#cfe6ff" : "#3a3a5c"));
+      const kind = n.kind || "minor";
+      const kindFx = kind === "ultimate" ? "box-shadow:inset 0 0 10px #ffd66633,0 0 8px #ffd66622;"
+        : kind === "major" ? "box-shadow:inset 0 0 8px #c9a0ff2e;"
+        : "";
       return '<td style="padding:2px;">' +
         '<button ' + (can ? 'data-tp="' + n.id + '"' : 'data-prev="' + n.id + '"') + ' style="width:100%;height:66px;padding:3px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:8px;border:1px solid ' +
-        (has ? tree.color : (can ? "#4a6a9a" : "#2f2f4a")) + ';background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';cursor:pointer;" title="点击看完整效果">' +
+        (has ? tree.color : (kind !== "minor" ? (kind === "ultimate" ? "#ffd666" : "#c9a0ff") : (can ? "#4a6a9a" : "#2f2f4a"))) + ';' + kindFx + 'background:' + (has ? tree.color + "22" : "#101020") + ';color:' + col + ';cursor:pointer;" title="点击看完整效果">' +
         '<span style="font-size:12.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + mark + ' ' + n.name + '</span>' +
         '<span style="font-size:11px;line-height:1.2;color:' + (has ? "#cfe6ff" : "#8a97b8") + ';max-height:28px;overflow:hidden;text-align:center;">' + effText(n.eff) + '</span></button></td>';
     }).join("");
