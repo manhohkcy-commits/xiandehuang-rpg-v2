@@ -1,5 +1,5 @@
-// 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=36dd3c54";
+﻿// 闲得慌RPG v2 · 属性与战力（唯一出口）
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=821585a2";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -234,7 +234,7 @@ const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "rage
   "physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct",
   // 第三批：控制 / 机制类也一起汇总（武器、防具、饰品都能出）
   "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash",
-  "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"];
+  "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify", "healPct"];
 
 export function combatTraits(ch) {
   const out = {};

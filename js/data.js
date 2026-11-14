@@ -673,7 +673,7 @@ export const TALENT_TREES = [
     active: { id: "s_act", key: "bless", name: "祝福", cd: 4, need: 10, desc: "恢复 30% 生命" },
     branches: [
       tb("s1", "守护", 5, "生命 · 减伤", "s1_", { base: { hpPct: 3 }, step: { hpPct: 0.7 }, bonus: { 5: { dmgCut: 4 }, 11: { block: 5 } } }),
-      tb("s2", "治愈", 30, "生命 · 回复", "s2_", { base: { hpPct: 4 }, step: { hpPct: 0.6 }, bonus: { 7: { lowHpCut: 6 }, 12: { hpPct: 6 } } }),
+      tb("s2", "治愈", 30, "治疗 · 回复", "s2_", { base: { healPct: 4 }, step: { healPct: 0.8 }, bonus: { 7: { healPct: 3 }, 12: { healPct: 4 } } }),
       tb("s3", "净化", 60, "抗性 · 免疫", "s3_", { base: { resPct: 3 }, step: { resPct: 0.6 }, bonus: { 5: { statusResist: 8 }, 10: { tenacity: 8 }, 13: { statusResist: 10 } } })
     ] }
 ];
@@ -701,7 +701,7 @@ const BRANCH_SIGN = {
   v1: { critRate: 4 }, v2: { rageOnKill: 12 }, v3: { chase: 12 },
   r1: { dualborn: 10 }, r2: { penetrate: 12 }, r3: { doubleStrike: 12 },
   m1: { statusResist: 15 }, m2: { statusHit: 15 }, m3: { penetrate: 15 },
-  s1: { block: 8 }, s2: { lowHpCut: 10 }, s3: { tenacity: 12 }
+  s1: { block: 8 }, s2: { healPct: 10 }, s3: { tenacity: 12 }
 };
 // ✦ 大天赋 / 终天赋的独有机制词条
 const MAJOR_MECH = {
@@ -709,14 +709,14 @@ const MAJOR_MECH = {
   v1: { critDmg: 12 }, v2: { rageOnKill: 10 }, v3: { doubleStrike: 8 },
   r1: { spdPct: 4 }, r2: { penetrate: 10 }, r3: { chase: 10 },
   m1: { statusResist: 12 }, m2: { statusHit: 12 }, m3: { penetrate: 12 },
-  s1: { block: 8 }, s2: { lowHpCut: 10 }, s3: { tenacity: 12 }
+  s1: { block: 8 }, s2: { healPct: 10 }, s3: { tenacity: 12 }
 };
 const ULT_MECH = {
   g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { dmgCut: 8 },
   v1: { critDmg: 18 }, v2: { rageOnSkill: 12 }, v3: { chase: 12 },
   r1: { spdPct: 6 }, r2: { penetrate: 15 }, r3: { dualborn: 10 },
   m1: { statusPower: 12 }, m2: { statusHit: 15 }, m3: { statusPower: 15 },
-  s1: { block: 12 }, s2: { lowHpCut: 15 }, s3: { tenacity: 15 }
+  s1: { block: 12 }, s2: { healPct: 12 }, s3: { tenacity: 15 }
 };
 TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   b.style = BRANCH_STYLE[b.id] || "";
