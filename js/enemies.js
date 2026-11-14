@@ -439,7 +439,7 @@ const CAVE_TIER = {
 const EC = (id, name, role, tier, skillName, mult, desc) => {
   const s = CAVE_TIER[tier] || CAVE_TIER["普通"];
   return {
-    id, name, camp: "修行洞窟", role,
+    id, name, camp: "时代广场商业区", role,
     tier: ({ "普通": "normal", "精英": "elite", "首领": "boss" }[tier] || "normal"),
     desc: desc || "", tags: ["杂兵"], stats: Object.assign({}, s), growth: EG,
     equip: { weapon: "石杖", armor: "苦修袍", armor2: "麻布裤", accessory: "念珠" },
@@ -452,15 +452,18 @@ const EC = (id, name, role, tier, skillName, mult, desc) => {
   };
 };
 const CAVE = [
-  EC("c_golem", "碎石傀儡", "近战", "普通", "石拳", 150, "碎石拼成的傀儡。"),
-  EC("c_bat", "洞窟蝙蝠", "远程", "普通", "音波", 155, "倒挂洞顶的蝙蝠。"),
-  EC("c_monk", "苦修者", "近战", "普通", "苦行棍", 150, "在洞窟里苦修的人。"),
-  EC("c_healer", "苦修僧", "辅助", "普通", "静心咒", 140, "为同伴诵经恢复。"),
-  EC("c_guard", "石壁守卫", "坦克", "普通", "岩壁", 130, "半嵌在石壁里的守卫。"),
-  EC("c_spirit", "灵体术士", "法术", "普通", "魂火", 160, "徘徊的灵体。"),
-  EC("c_priest", "洞窟祭司", "辅助", "精英", "洞窟祝祷", 170, "主持仪式的祭司。"),
-  EC("c_statue", "守窟石像", "坦克", "精英", "石像践踏", 185, "巨大石像。"),
-  EC("c_lord", "洞窟之主 · 石心", "近战", "首领", "地脉崩塌", 255, "洞窟最深处的主人。")
+  EC("c_flyer", "传单员", "近战", "普通", "传单扇击", 145, "见人就塞传单，手速极快。"),
+  EC("c_rider", "外卖骑手", "远程", "普通", "加速冲撞", 160, "电动车在人行道上横冲直撞。"),
+  EC("c_busker", "街头艺人", "远程", "普通", "音浪", 155, "音响开最大，音波能震人。"),
+  EC("c_mascot", "广告人偶", "坦克", "普通", "人偶重压", 135, "厚重的品牌人偶，动作笨重。"),
+  EC("c_promo", "促销员", "辅助", "普通", "喊麦助威", 140, "用喇叭给同伴打气。"),
+  EC("c_security", "商场保安", "近战", "普通", "防暴棍", 150, "商业区的常驻保安。"),
+  EC("c_cleanbot", "清洁机器人", "坦克", "普通", "高压水枪", 140, "扫地机器人改装成的战斗单位。"),
+  EC("c_streamer", "直播网红", "法术", "普通", "流量冲击", 165, "举着自拍杆，靠热搜战斗。"),
+  EC("c_supervisor", "商场主管", "辅助", "精英", "业绩威压", 175, "拿着对讲机调度全场。"),
+  EC("c_captain", "安保队长", "近战", "精英", "防暴盾击", 190, "商业区安保的最高指挥。"),
+  EC("c_drone", "巡逻无人机", "远程", "精英", "追踪射击", 185, "在半空盘旋的安保无人机。"),
+  EC("c_ceo", "商圈大亨 · 范德林", "近战", "首领", "资本重锤", 260, "掌控整片商业区的人，走到哪都有人让路。")
 ];
 ENEMIES.push(...CAVE);
 
@@ -517,5 +520,5 @@ ENEMIES.forEach((en) => {
 });
 
 // 🏅 修行洞窟阶级修正
-const CAVE_TIER_FIX = { c_priest: "elite", c_statue: "elite", c_lord: "boss" };
+const CAVE_TIER_FIX = { c_supervisor: "elite", c_captain: "elite", c_drone: "elite", c_ceo: "boss" };
 ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });

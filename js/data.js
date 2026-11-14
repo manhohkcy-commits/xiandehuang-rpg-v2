@@ -557,39 +557,40 @@ function makeMine() {
 function makeCave() {
   const LV = [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 78];
   const WAVE = [
-    ["c_golem"], ["c_golem", "c_bat"], ["c_monk", "c_bat"], ["c_guard"],
-    ["c_priest"], ["c_spirit", "c_golem"], ["c_healer", "c_monk"], ["c_spirit", "c_bat"],
-    ["c_statue"], ["c_guard", "c_healer"], ["c_monk", "c_monk", "c_bat"],
-    ["c_priest", "c_spirit"], ["c_statue", "c_golem"], ["c_spirit", "c_spirit", "c_bat"],
-    ["c_priest", "c_statue"], ["c_guard", "c_healer", "c_monk"], ["c_statue", "c_statue"],
-    ["c_priest", "c_priest"], ["c_priest", "c_statue", "c_spirit"], ["c_lord"]
+    ["c_flyer"], ["c_flyer", "c_rider"], ["c_busker", "c_rider"], ["c_mascot"],
+    ["c_security"], ["c_promo", "c_flyer"], ["c_cleanbot", "c_busker"], ["c_streamer", "c_rider"],
+    ["c_supervisor"], ["c_captain"], ["c_security", "c_security", "c_promo"],
+    ["c_drone"], ["c_cleanbot", "c_drone"], ["c_streamer", "c_streamer"],
+    ["c_supervisor", "c_captain"], ["c_security", "c_promo", "c_drone"],
+    ["c_drone", "c_drone"], ["c_supervisor", "c_supervisor"], ["c_captain", "c_drone", "c_streamer"],
+    ["c_ceo"]
   ];
-  const NAMES = ["洞窟入口", "蝙蝠回廊", "苦修石阶", "石壁甬道", "祭司厅", "灵火窟", "静心室", "音波深处", "石像前厅", "药石龛", "苦修者群", "祭司与灵", "石像挡路", "双重灵火", "祭司阵", "守卫队列", "双石像", "双祭司", "洞窟尽头", "石心之厅"];
+  const NAMES = ["地铁出口", "人行道", "广告屏广场", "人偶队列", "商场门口", "促销广场", "清洁区", "直播角", "主管巡场", "安保哨卡", "保安阵列", "无人机盘旋", "清洁机库", "双主播", "主管与队长", "混编安保", "双机编队", "双主管", "商场中庭", "顶层办公室"];
   const STORY = [
-    "洞窟入口很窄，风从里面吹出来带着香灰味。",
-    "蝙蝠倒挂在洞顶，翅膀擦过石壁。",
-    "石阶被踩得发亮，上面全是跪痕。",
-    "甬道两侧刻满看不懂的经文。",
-    "祭司厅里点着长明灯。",
-    "灵火在窟里飘，靠近会很冷。",
-    "静心室有人在低声诵经。",
-    "音波在洞窟里来回反弹。",
-    "石像的眼睛似乎动了一下。",
-    "药石龛里堆着修行用的矿药。",
-    "一群苦修者挡住了去路。",
-    "祭司带着灵体一起诵咒。",
-    "石像举起了整条石臂。",
-    "两团灵火同时亮起。",
-    "祭司围成一圈开始祝祷。",
-    "守卫、苦修者排成队列。",
-    "两尊石像并排堵路。",
-    "两个祭司同时举起石杖。",
-    "洞窟尽头全是诵经声。",
-    "石心站在洞窟最深处，整座山洞就是它的身体。"
+    "地铁口人潮涌动，传单塞到手里。",
+    "外卖骑手在人行道上飞速穿行。",
+    "巨大广告屏循环播放，声浪压过一切。",
+    "一排品牌人偶挡在路中间。",
+    "商场门口的保安抬手拦住你。",
+    "促销员举着喇叭喊得比谁都响。",
+    "清洁机器人一边扫地一边冲过来。",
+    "网红举着自拍杆，把镜头对准你。",
+    "主管拿着对讲机，正在调人。",
+    "安保队长从哨卡里走出来。",
+    "整队保安排成一线推进。",
+    "头顶传来无人机的嗡鸣。",
+    "清洁机库的门打开，机器排队驶出。",
+    "两个主播同时开播，音浪叠加。",
+    "主管和队长一起压上来。",
+    "安保、促销、无人机混编堵路。",
+    "两架无人机交叉射击。",
+    "两个主管同时下达指令。",
+    "商场中庭被清空，只剩对手。",
+    "顶层办公室里，范德林转过身来。"
   ];
   return {
-    id: "d_char", name: "修行洞窟", kind: "char", icon: "🧬",
-    desc: "修行者闭关的洞窟，产出角色突破石", type: "daily",
+    id: "d_char", name: "时代广场商业区", kind: "char", icon: "🏙",
+    desc: "商业区的核心地带，产出角色突破素材", type: "daily",
     stages: LV.map((lv, i) => {
       const ids = WAVE[i].slice();
       const tier = i === 19 ? "首领" : i === 9 ? "特色" : i === 4 ? "精英" : "普通";
@@ -598,14 +599,14 @@ function makeCave() {
         id: "char_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + NAMES[i], lv,
         tier, tierLabel: tier,
         story: STORY[i],
-        scene: ["洞窟入口", "蝙蝠回廊", "苦修石阶", "灵火窟", "石心之厅"][Math.min(4, Math.floor(i / 4))],
-        sceneDesc: ["狭窄的洞口，香灰味很重。", "倒挂的蝙蝠与回音。", "被踩亮的石阶与跪痕。", "灵火飘荡，寒气逼人。", "整座洞窟的核心，岩石在呼吸。"][Math.min(4, Math.floor(i / 4))],
-        sceneMods: [{ resPct: 3 }, { spdPct: 3 }, { defPct: 3 }, { resPct: 4 }, { resPct: 5 }][Math.min(4, Math.floor(i / 4))],
-        weather: ["clear", "fog", "night", "ash"][Math.min(3, Math.floor(i / 5))],
+        scene: ["地铁出口", "人行道", "广告屏广场", "商场中庭", "顶层办公室"][Math.min(4, Math.floor(i / 4))],
+        sceneDesc: ["人潮与传单，嘈杂拥挤。", "外卖车与行人混在一起。", "巨屏广告的光晃得眼睛疼。", "商场中庭空旷得反常。", "顶层办公室，落地窗外是整片商业区。"][Math.min(4, Math.floor(i / 4))],
+        sceneMods: [{ spdPct: 3 }, { spdPct: 3, atkPct: 2 }, { critRate: 3 }, { atkPct: 3 }, { atkPct: 5 }][Math.min(4, Math.floor(i / 4))],
+        weather: ["clear", "night", "fog", "sun"][Math.min(3, Math.floor(i / 5))],
         enemies: ids,
         foe: first,
         drop: (() => {
-          const band = i < 7 ? 1 : i < 14 ? 2 : 3; // 初/中/高
+          const band = i < 7 ? 1 : i < 14 ? 2 : 3;
           const cert = i < 5 ? 1 : i < 12 ? 2 : i < 18 ? 3 : 4;
           const o = { ms: {}, md: {}, cert: {} };
           o.ms["ms" + band] = [2 + band, 4 + band + Math.floor(i / 5)];
