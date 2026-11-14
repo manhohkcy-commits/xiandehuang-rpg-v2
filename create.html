@@ -854,6 +854,9 @@ function renderTalent() {
     return '<th style="padding:6px 2px 8px;font-size:13px;color:' + tree.color + ';font-weight:700;border-bottom:1px solid #2f2f4a;text-align:center;">' +
       '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.name + '</div></th>';
   };
+  const act = tree.active;
+  const actHas = !!(act && ch.talent.points[act.id]);
+  const actCan = act && !actHas && lv >= 15;
   const rows = [];
   for (let i = 0; i < TALENT_TIER_LV.length; i++) {
     const cells = branches.map((b) => {
@@ -901,10 +904,7 @@ function renderTalent() {
     '<thead><tr><th></th>' + branches.map(headCell).join("") + '</tr></thead>' +
     '<tbody>' + rows.join("") + '</tbody></table>';
 
-  // ④ 职业主动技
-  const act = tree.active;
-  const actHas = !!(act && ch.talent.points[act.id]);
-  const actCan = act && !actHas && lv >= 15;
+  // ④ 职业主动技（行内已渲染）
   const actRow = act ? '<div class="row" style="margin-top:12px;"><span class="k">⚡ 主动技 · ' + act.name + '</span><span class="v">' +
     '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + '</span> ' +
     (actHas ? '<span class="tag" style="color:' + tree.color + ';">已解锁</span>'
