@@ -246,7 +246,7 @@ function startBattle(stageId, col) {
   if (meU) { meU.__col = Number(col) || 0; meU.__back = !!meU.__col; }
   st.units.filter((u) => u.side === "B").forEach((u, i) => { u.__col = i < 3 ? 0 : 1; u.__back = !!u.__col; });
   st.__stage = s.id;
-  st.__weapon = ch ? (ch.equip.weapon || null) : ((ORIGINAL_GEAR[o0.id] || {}).weapon || null);
+  st.__weapon = ch ? (ch.equip.weapon || null) : (function () { const gw = (ORIGINAL_GEAR[o0.id] || {}).weapon; return gw ? { data: gw } : null; })();
   // 🌦 天气 + 🏞 场地：双方属性叠加
   {
     const env = ENVIRONMENTS[s.weather || "clear"] || ENVIRONMENTS.clear;
