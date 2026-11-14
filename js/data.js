@@ -367,7 +367,12 @@ function makeRedmaple() {
 // 🏦 金币本：哈罗德银行（抢银行）
 function makeHaroldBank() {
   const PLACES = ["银行大厅", "一号柜台", "押运通道", "贵宾室", "地下金库走廊"];
-  const FOES = ["银行保安", "柜台职员", "武装押运", "金库守卫", "金库机兵"];
+  const FOES = [
+    "保安", "前台柜员", "资深保安", "业务柜员",
+    "保安队长", "大堂经理", "资深保安队长",
+    "运钞护卫队队员", "运钞护卫队弩手", "运钞护卫队重盾兵", "运钞护卫队队长",
+    "金库护卫", "金库弩手", "金库重盾兵"
+  ];
   const STORY = [
     "门口的石狮子在打哈欠，保安刚换班。",
     "柜员数钱的手很快，眼睛更快。",
@@ -379,7 +384,7 @@ function makeHaroldBank() {
   const stages = LV.map((lv, i) => {
     const g = Math.pow(1.18, i), mile = (i + 1) % 5 === 0 ? 2 : 1;
     const boss = i === 19;
-    const foeName = boss ? "行长「哈罗德」" : FOES[i % FOES.length];
+    const foeName = boss ? "行长「哈罗德」" : FOES[Math.min(FOES.length - 1, Math.floor(i * FOES.length / 20))];
     const mul = boss ? 2.4 : 1 + Math.floor(i / 10) * 0.15;
     return {
       id: "gold_" + (i + 1),
