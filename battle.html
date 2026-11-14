@@ -323,7 +323,9 @@ function startBattle(stageId, col) {
     };
     // 每个敌人一个独立格：前排 3 格 → 后排 3 格
     const slots = [];
-    for (let col = 0; col < 2; col++) for (let row = 0; row < 3; row++) slots.push({ col, row });
+    // 🪞 中轴对称：先中间行，再上下，形成对称阵列
+    const ROW_ORDER = [1, 0, 2];
+    for (let col = 0; col < 2; col++) ROW_ORDER.forEach((row) => slots.push({ col, row }));
     const used = [];
     const takeSlot = (wantFront) => {
       const idx = slots.findIndex((sl) => !used.includes(sl) && (wantFront ? sl.col === 0 : sl.col === 1));
