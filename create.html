@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -551,10 +551,14 @@ function breakRow(ch) {
 // 🎖️ 资历评级 / 🎯 资质评估 卡片
 function gradeCard(ch) {
   const g = gradeOf(ch), a = aptitudeOf(ch);
-  const nextG = GRADE[GRADE.indexOf(g) + 1] || null;
-  const nextA = APTITUDE[APTITUDE.indexOf(a) + 1] || null;
-  const ms = Number((store.flags || {}).manuscript) || 0;
-  const md = Number((store.flags || {}).medal) || 0;
+  const gi = Math.max(0, GRADE.findIndex((x) => x.key === g.key));
+  const ai = Math.max(1, Number(a.star) || 1);
+  const nextG = GRADE[gi + 1] || null;
+  const nextA = APTITUDE[ai] || null;
+  const gTier = (MAT_TIER.grade[gi + 1] || 1);
+  const aTier = (MAT_TIER.apt[ai] || 1);
+  const ms = matCount("ms", gTier);
+  const md = matCount("md", aTier);
   const canG = nextG && ms >= nextG.cost;
   const canA = nextA && md >= nextA.cost;
   return card("资历与资质",
@@ -562,14 +566,14 @@ function gradeCard(ch) {
       ' <span class="hint">（全属性 ×' + g.mult.toFixed(2) + '）</span></span></div>' +
     (nextG
       ? '<div class="row"><span class="k">升资历 → <b style="color:' + nextG.color + ';">' + nextG.key + '</b></span><span class="v">' +
-        '<span style="color:#ffd666;">📜 ' + nextG.cost + '/有 ' + ms + '</span> ' +
+        '<span style="color:#ffd666;">📜 ' + MAT_TIER.msName[gTier - 1] + ' ' + nextG.cost + '/有 ' + ms + '</span> ' +
         '<button data-grade="1" ' + (canG ? '' : 'disabled') + '>晋升</button></span></div>'
       : '<div class="hint">已到最高资历（红 SS）</div>') +
     '<div class="row" style="margin-top:6px;"><span class="k">资质评估</span><span class="v" style="color:#ffd666;">' + a.star + '★ ' +
       '<span class="hint">（全属性 ×' + a.mult.toFixed(2) + '）</span></span></div>' +
     (nextA
       ? '<div class="row"><span class="k">升资质 → ' + nextA.star + '★</span><span class="v">' +
-        '<span style="color:#ffd666;">🎖️ ' + nextA.cost + '/有 ' + md + '</span> ' +
+        '<span style="color:#ffd666;">🎖️ ' + MAT_TIER.mdName[aTier - 1] + ' ' + nextA.cost + '/有 ' + md + '</span> ' +
         '<button data-apt="1" ' + (canA ? '' : 'disabled') + '>评估</button></span></div>'
       : '<div class="hint">已到最高资质（7★）</div>'));
 }
