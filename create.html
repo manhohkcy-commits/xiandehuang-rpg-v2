@@ -1349,6 +1349,18 @@ function renderOrigCult() {
 }
 
 
+// 🚪 基地 · 到处看看（餐厅 / 酒吧 / 研究所）
+function renderBase() {
+  const place = (icon, title, desc, rows) =>
+    '<div class="card"><div class="card-title">' + icon + " " + title + '</div>' +
+      '<div class="hint" style="margin-bottom:6px;">' + desc + '</div>' + rows + '</div>';
+  view().innerHTML =
+    '<div class="card"><div class="card-title">🚪 到处看看</div><div class="hint">基地里的三个去处，目前只开放参观。</div></div>' +
+    place("🍜", "餐厅", "吃饭能回体力，也能和同伴聊两句。", '<div class="hint">待开放：购买料理、恢复状态。</div>') +
+    place("🍸", "酒吧", "喝一杯，听点消息。", '<div class="hint">待开放：情报、委托、临时增益。</div>') +
+    place("🔬", "研究所", "把材料变成能用的东西。", '<div class="hint">待开放：装备改造、配方研究。</div>');
+}
+
 function renderOrig() {
   if (!ORIGINALS.length) {
     view().innerHTML = card("🧬 原创角色", '<div class="hint">还没有原创角色。等主机端设计并加入游戏后，这里会出现他们的面板。</div>');
