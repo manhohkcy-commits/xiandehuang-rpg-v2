@@ -98,13 +98,15 @@ async function load() {
       } else {
         store = row.store;
         updatedAt = row.updated_at || "";
-        const set = confirm("这个位号还没设口令。要不要现在设一个？（推荐，防止别人用你的档）");
-        if (set) {
-          const p1 = prompt("设置口令（4~20 位）");
-          if (p1 && p1.length >= 4) {
-            store.__pw = await hashPw(p1);
-            await save();
-            toast("口令已设置，请记牢");
+        if (!isHostBox) {
+          const set = confirm("这个位号还没设口令。要不要现在设一个？（推荐，防止别人用你的档）");
+          if (set) {
+            const p1 = prompt("设置口令（4~20 位）");
+            if (p1 && p1.length >= 4) {
+              store.__pw = await hashPw(p1);
+              await save();
+              toast("口令已设置，请记牢");
+            }
           }
         }
       }
