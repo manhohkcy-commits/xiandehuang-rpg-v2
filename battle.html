@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS } from "./js/data.js?v=fbecd1eb";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=fbecd1eb";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { stagePower, enemyAt } from "./js/enemies.js?v=5054b7b7";
 import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
@@ -66,6 +66,39 @@ async function save() {
 }
 
 // ── 选关 ──────────────────────────────────────────────
+function stageNo(s) { const m = String(s.id).match(/(\d+)$/); return m ? Number(m[1]) : 0; }
+function dungeonKey(s) { return String(s.id).split("_")[0]; }
+function clearedFor(s) {
+  const f = (store && store.flags) || {};
+  const map = f.cleared || {};
+  const k = dungeonKey(s);
+  if (map[k] != null) return Number(map[k]) || 0;
+  return k === "exp" ? (Number(f.expCleared) || 0) : 0;
+}
+function dungeonListHtml() {
+  const list = DUNGEONS.filter((d) => d.type === "daily" && d.stages && d.stages.length);
+  return list.map((d) => {
+    const done = Math.min(clearedFor(d.stages[0]), d.stages.length);
+    let h = '<div style="margin-top:10px;"><div style="font-weight:800;font-size:13px;color:#ffd666;">' + d.icon + ' ' + esc(d.name) +
+      ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + done + '/' + d.stages.length + '</span></div>';
+    h += d.stages.map((s) => {
+      const no = stageNo(s), cleared = clearedFor(s), locked = no > cleared + 1;
+      const tier = s.tier || "";
+      const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
+      const env = ENVIRONMENTS[s.weather || "clear"] || { icon: "", name: "" };
+      return '<div class="row" style="' + (locked ? "opacity:.55;" : "") + '"><span class="k">' + esc(s.name) +
+        (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
+        '<div class="hint" style="margin-top:2px;">' + esc(s.story || s.foe.name) + '</div>' +
+        '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
+        ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + ' · 建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
+        '<span class="v">' + (locked
+          ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
+          : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
+    }).join("");
+    return h + '</div>';
+  }).join("");
+}
+
 function hostOrig() {
   try { if (localStorage.getItem("rpg2:host") === "1") return ORIGINALS[0] || null; } catch (e) {}
   return null;
@@ -83,18 +116,7 @@ function renderPick() {
       '<div class="hint">' + (ch ? '攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) : '🧬 原创角色出战') + '</div>' +
     '</div>' +
     '<div class="card"><div class="card-title">选择关卡</div>' +
-      STAGES.map((s) => {
-      const tier = s.tier || "";
-      const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
-      const env = (typeof ENVIRONMENTS !== "undefined" && ENVIRONMENTS[s.weather || "clear"]) || { icon: "", name: "" };
-      const rec = (typeof stagePower === "function") ? stagePower(s) : 0;
-      return '<div class="row"><span class="k">' + esc(s.name) +
-        (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
-        '<div class="hint" style="margin-top:2px;">' + esc(s.story || s.foe.name) + '</div>' +
-        '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
-        ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + (rec ? ' · 建议战力 ' + fmt(rec) : '') + '</div></span>' +
-        '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>';
-    }).join("") +
+      dungeonListHtml() +
     '</div>';
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => renderPrep(b.dataset.stage);
@@ -669,6 +691,13 @@ function finish() {
   const gold = Number(s.gold) || (120 + s.foe.lv * 8);
   const exp = Number(s.exp) || (40 + s.foe.lv * 6);
   store.gold = (Number(store.gold) || 0) + gold;
+  // 🔓 通关进度（每个副本独立）
+  store.flags = store.flags || {};
+  {
+    const k = dungeonKey(s), n = stageNo(s);
+    const map = store.flags.cleared || (store.flags.cleared = {});
+    if (n > (Number(map[k]) || 0)) { map[k] = n; if (k === "exp") store.flags.expCleared = n; pushLog("🔓 已解锁下一关", "line"); }
+  }
   store.exp = (Number(store.exp) || 0) + exp;
   // 🎁 掉落：碎片必掉、强化石必掉、装备按概率
   const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
