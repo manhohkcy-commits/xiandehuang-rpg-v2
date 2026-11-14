@@ -1403,29 +1403,27 @@ function renderOrig() {
 
   view().innerHTML =
     '<div class="tree-tabs">' + tabs + '</div>' +
-    card("🧬 " + esc(o.name) + (o.title ? ' · ' + esc(o.title) : ''),
-      '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + '</div>' +
-      '<div class="row" style="margin-top:8px;"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + '</span></div>' +
+    card("等级",
+      '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + (lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
       '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
       '<div class="hint" style="margin-top:6px;">突破 ' + brk + '/3 · 每次全属性 +3%' +
         (brkNext ? '（下次需突破石 ' + brkNext.b + ' + ' + fmt(brkNext.g) + ' 金）' : '（已满）') + '</div>' +
-      (localStorage.getItem("rpg2:host") === "1"
-        ? '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
-          '<button id="btnOrigBreak" ' + (brkNext ? '' : 'disabled') + '>⚡ 突破</button></div>'
-        : "") +
-      '<div class="hint" style="margin-top:8px;">用这名原创角色打一场战斗可以给他涨经验（每胜 +120）。</div>' +
-      (localStorage.getItem("rpg2:host") === "1"
-      ? '<div style="margin-top:10px;"><button id="btnPlayOrig" style="border-color:#ffb347;color:#ffb347;">⚔️ 用他出战</button></div>'
-      : '<div class="hint" style="margin-top:10px;">👑 仅主机可操控该原创角色（其他玩家可查看 / 同行 / 挑战）</div>')) +
-    card("战斗面板",
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        '<button id="btnOrigLevel"' + ((prog.exp || 0) >= need && lv < CHAR.maxLevel ? '' : ' disabled') + '>🔼 升级到 Lv' + (lv + 1) + '</button>' +
+        '<button id="btnOrigBreak" ' + (brkNext ? '' : 'disabled') + '>⚡ 突破</button>' +
+      '</div>') +
+    card("综合战力",
       '<div style="font-size:24px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>' +
-      '<div class="hint" style="margin-bottom:6px;">综合战力</div>' +
+      '<div class="hint">综合战力</div>') +
+    card("属性（含装备）",
       row("攻击", Math.round(atk)) + row("生命", Math.round(hp)) + row("防御", Math.round(def)) +
       row("法抗", Math.round(res)) + row("速度", Math.round(spd * 10) / 10) +
       row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%")) +
     card("专属装备（" + gearCount + "）",
       gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
+    '<div class="hint" style="margin:8px 2px;">用这名原创角色打一场战斗可以涨经验（每胜 +120）。</div>' +
+    '<div style="margin-bottom:8px;"><button id="btnPlayOrig" style="border-color:#ffb347;color:#ffb347;">⚔️ 用他出战</button></div>' +
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
@@ -1507,6 +1505,15 @@ function renderOrig() {
   if ($("btnPlayOrig")) $("btnPlayOrig").onclick = () => {
     try { localStorage.setItem("rpg2:playAs", o.id); } catch (e) {}
     location.href = "battle.html";
+  };
+  if ($("btnOrigLevel")) $("btnOrigLevel").onclick = async () => {
+    const needNow = CHAR.expNeed(lv);
+    if (lv >= CHAR.maxLevel) return toast("已满级", true);
+    if ((Number(prog.exp) || 0) < needNow) return toast("经验不够（需 " + fmt(needNow) + "）", true);
+    prog.exp = (Number(prog.exp) || 0) - needNow;
+    prog.lv = lv + 1;
+    store.orig[o.id] = prog;
+    await save(); render(); toast("升级！Lv" + (lv + 1));
   };
   if ($("btnOrigBreak")) $("btnOrigBreak").onclick = async () => {
     if (brk >= 3) return;
