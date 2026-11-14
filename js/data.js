@@ -431,6 +431,7 @@ function makeHaroldBank() {
       name: "第 " + (i + 1) + " 关 · " + (boss ? "金库核心" : PLACES[i % PLACES.length]),
       lv, group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       tier, tierLabel: tier,
+      scene: PLACES[i % PLACES.length], sceneDesc: STORY[i % STORY.length], weather: "clear",
       gold: Math.round(320 * g * mile), exp: Math.round(40 * g),
       drop: { shards: [], stone: [], bstone: 0, gearChance: 3 },
       foe: foeOf(foeName, lv, mul),

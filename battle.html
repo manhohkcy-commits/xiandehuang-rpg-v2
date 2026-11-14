@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=feee8c61";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=846d8981";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { stagePower, enemyAt } from "./js/enemies.js?v=08c6a22d";
 import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
@@ -80,7 +80,7 @@ function dungeonListHtml() {
   window.__openD = window.__openD || {};
   return list.map((d) => {
     const done = Math.min(clearedFor(d.stages[0]), d.stages.length);
-    const open = window.__openD[d.id] !== false; // 默认展开
+    const open = window.__openD[d.id] === true; // 默认收起
     let h = '<div class="card" style="margin:10px 0;padding:10px 12px;">' +
       '<div data-dungeon="' + d.id + '" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:800;font-size:13px;color:#ffd666;">' +
       '<span>' + (open ? "▾" : "▸") + '</span>' + d.icon + ' ' + esc(d.name) +
