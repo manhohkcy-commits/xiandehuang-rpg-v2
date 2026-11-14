@@ -653,6 +653,12 @@ export const CONSUMABLES = [
 export const tier = (lv) => (lv <= 50 ? 1 : (lv <= 100 ? 2 : 4));
 export const CULT = {
   maxLevel: 150,
+  eqLv: 20, ct: 3,
+  eqBreak: [
+    { at: 20, cert: 2, gold: 3000 },
+    { at: 25, cert: 2, gold: 6000 },
+    { at: 30, cert: 3, gold: 12000 }
+  ],
   breakNodes: [25, 50, 75, 100, 125, 150],
   breakStone: { 25: 18, 50: 45, 75: 75, 100: 115, 125: 165, 150: 230 },
   gold: (lv) => Math.round(2 * lv * tier(lv)),
