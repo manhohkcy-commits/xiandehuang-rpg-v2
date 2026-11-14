@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=f4be4750";
+import { CULT, RARITY_MULT } from "./data.js?v=a9006411";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -47,15 +47,16 @@ export function refineCheck(it, store) {
   if (!d) return { ok: false, why: "没有装备" };
   const r = Number(d.refine) || 1;
   if (r >= CULT.maxRefine) return { ok: false, why: "精炼已满" };
-  const gold = CULT.refineGold(r), shards = CULT.refineShards(r);
-  if ((Number(store.gold) || 0) < gold) return { ok: false, why: "金币不够", gold, shards };
-  if ((Number((store.flags || {}).shards) || 0) < shards) return { ok: false, why: "碎片不够", gold, shards };
-  return { ok: true, gold, shards, next: r + 1 };
+  const gold = CULT.refineGold(r), stone = CULT.refineStone(r);
+  if ((Number(store.gold) || 0) < gold) return { ok: false, why: "金币不够", gold, stone };
+  if ((Number((store.flags || {}).refineStone) || 0) < stone) return { ok: false, why: "精炼石不够", gold, stone };
+  return { ok: true, gold, stone, next: r + 1 };
 }
 export function refineApply(store, it) {
   const c = refineCheck(it, store);
   if (!c.ok) return c;
   store.gold = (Number(store.gold) || 0) - c.gold;
+  store.flags.refineStone = (Number(store.flags.refineStone) || 0) - (c.stone || 0);
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
   it.data.refine = c.next;

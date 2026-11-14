@@ -21,8 +21,8 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=f4be4750";
-import { makeItem } from "./js/items.js?v=a6c2aa88";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a9006411";
+import { makeItem } from "./js/items.js?v=cda5627f";
 import { stagePower, enemyAt } from "./js/enemies.js?v=f70dc0c6";
 import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
@@ -832,7 +832,9 @@ function finish() {
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
-  const drops = [{ name: "碎片", count: shards }, { name: "强化石", count: stone }];
+  const refine = rnd(dp.refine);
+  store.flags.refineStone = (Number(store.flags.refineStone) || 0) + refine;
+  const drops = [{ name: "碎片", count: shards }, { name: "强化石", count: stone }, { name: "精炼石", count: refine }];
   if (Math.random() * 100 < (dp.gearChance || 0)) {
     const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
     const list = pool[Math.floor(Math.random() * pool.length)];

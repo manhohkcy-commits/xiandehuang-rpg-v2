@@ -488,6 +488,13 @@ function makeSnowfield() {
         weather: "clear",
         enemies: ids,
         foe: first,
+        drop: {
+          shards: [3, 8 + Math.floor(i / 3)],
+          stone: [6, 14 + Math.floor(i / 2)],
+          refine: [1, 2 + Math.floor(i / 5)],
+          bstone: 0,
+          gearChance: 8 + Math.floor(i / 4)
+        },
         gold: Math.round(120 * Math.pow(1.17, i)) + 60,
         exp: Math.round(70 * Math.pow(1.16, i)) + 40,
         drops: [
@@ -520,9 +527,15 @@ function makeMine() {
         sceneDesc: ["矿壁被一层层削下来，碎石不断落下。", "碎岩机轰鸣，地面跟着震动。", "炉火不熄，铁水顺着沟槽流动。", "矿道又窄又热，灯照不到尽头。", "锻造核心悬在炉心，热浪扭曲了空气。"][Math.min(4, Math.floor(i / 4))],
         sceneMods: [{ defPct: 3 }, { atkPct: 3 }, { atkPct: 3, resPct: 2 }, { resPct: 4 }, { atkPct: 5 }][Math.min(4, Math.floor(i / 4))],
         weather: ["clear", "fog", "heat", "ash"][Math.min(3, Math.floor(i / 5))],
-        sceneMods: { defPct: 3 },
         enemies: ids,
         foe: first,
+        drop: {
+          shards: [3, 8 + Math.floor(i / 3)],
+          stone: [6, 14 + Math.floor(i / 2)],
+          refine: [1, 2 + Math.floor(i / 5)],
+          bstone: 0,
+          gearChance: 8 + Math.floor(i / 4)
+        },
         gold: Math.round(100 * Math.pow(1.16, i)) + 50,
         exp: Math.round(60 * Math.pow(1.15, i)) + 30,
         drops: [
@@ -576,6 +589,7 @@ export const CULT = {
   // 🔧 精炼：只提升随机词条数值（每级 +8%）
   maxRefine: 10,
   refineGold: (r) => Math.round(120 * r),
+  refineStone: (r) => 2 + Math.floor((Number(r) || 1) * 1.2),
   refineShards: (r) => Math.round(20 * r),
   // ⬆️ 升阶：R/SR 5★ 可升下一品质；SSR5★ 需「觉醒」到 UR1🔥，UR1🔥 再觉醒到 UR5🔥
   rarityOrder: ["R", "SR", "SSR", "UR"],
