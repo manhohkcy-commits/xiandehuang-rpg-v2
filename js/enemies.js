@@ -1,4 +1,4 @@
-// 🗡 敌人模板（全部 Lv1 基准，按关卡等级缩放）
+﻿// 🗡 敌人模板（全部 Lv1 基准，按关卡等级缩放）
 // stats = Lv1 面板；growth = 每级线性成长率；equip = 显示用装备名；skills = 招式组
 const EG = { atk: 0.07, hp: 0.08, def: 0.06, res: 0.05, spd: 0.02 };
 const EG_E = { atk: 0.075, hp: 0.085, def: 0.065, res: 0.055, spd: 0.02 };
@@ -96,10 +96,10 @@ export const ENEMIES = [
 
 // 🏦 哈罗德银行敌人（普通 / 精英 / 特色 / 首领）
 const BANK_TIER = {
-  "普通": { atk: 20, hp: 210, def: 8, res: 6, spd: 9 },
-  "精英": { atk: 30, hp: 360, def: 15, res: 11, spd: 8 },
-  "特色": { atk: 46, hp: 900, def: 24, res: 17, spd: 9 },
-  "首领": { atk: 62, hp: 1600, def: 32, res: 24, spd: 10 }
+  "普通": { atk: 36, hp: 380, def: 12, res: 9, spd: 9 },
+  "精英": { atk: 54, hp: 650, def: 22, res: 16, spd: 8 },
+  "特色": { atk: 80, hp: 1600, def: 34, res: 24, spd: 9 },
+  "首领": { atk: 105, hp: 2900, def: 44, res: 33, spd: 10 }
 };
 const EB = (id, name, role, tier, skills, desc) => {
   const s = BANK_TIER[tier] || BANK_TIER["普通"];
