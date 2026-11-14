@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -60,6 +60,7 @@ async function gate() {
 }
 function render() {
   const HOST_BOX = "zynSD117";
+  const hostNick = (() => { try { return localStorage.getItem("rpg2:nick") || ""; } catch (e) { return ""; } })();
   try { localStorage.setItem("rpg2:hostBox", HOST_BOX); } catch (e) {}
   const hostBox = HOST_BOX;
   const enc = encodeURIComponent(hostBox);
@@ -82,7 +83,7 @@ function render() {
       '<div class="row"><span class="k">当前位号</span><span class="v">' + (hostBox ? '<b style="color:#ffcf7a;">' + hostBox + '</b>' : '<span class="hint">未设置（游戏入口会落到公用/新位号）</span>') + '</span></div>' +
       '<div style="display:flex;gap:8px;margin-top:6px;"><input id="hostBoxIn" value="' + hostBox + '" placeholder="填你的位号" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;">' +
       '<button id="btnHostBox" style="border-color:#6b4a1e;color:#ffcf7a;">保存</button></div>' +
-      '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;"><span class="hint">账号昵称</span><input id="hostNickIn" value="' + (function(){try{return localStorage.getItem("rpg2:nick")||";}catch(e){return ";}})() + '" placeholder="大厅/聊天显示" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;"><button id="btnHostNick" style="border-color:#6b4a1e;color:#ffcf7a;">保存昵称</button></div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;"><span class="hint">账号昵称</span><input id="hostNickIn" value="' + hostNick + '" placeholder="大厅/聊天显示" style="flex:1;background:#0b0e17;border:1px solid #3a2c14;border-radius:6px;color:#f3e6cf;padding:7px;"><button id="btnHostNick" style="border-color:#6b4a1e;color:#ffcf7a;">保存昵称</button></div>' +
       '<div class="hint" style="margin-top:6px;">设置后，下面的游戏入口都会带上这个位号，直接进你自己的角色。</div>' +
     '</div>' +
     '<div class="card"><div class="card-title" style="color:#ffb347;">🎮 我的游戏（主机操控）</div>' +
