@@ -229,3 +229,8 @@ body.host-mode .card-title::before{background:linear-gradient(180deg,#ffcf7a,#b8
 .rarity-ssr{box-shadow:0 0 0 1px rgba(255,214,102,.35), 0 6px 20px rgba(255,214,102,.12)!important;}
 .rarity-ur{box-shadow:0 0 0 1px rgba(255,107,107,.4), 0 6px 20px rgba(255,107,107,.15)!important;}
 .rarity-sr{box-shadow:0 0 0 1px rgba(201,160,255,.3)!important;}
+
+/* 🏷 稀有标签 */
+.rare-badge{display:inline-block;font-size:10px;letter-spacing:.5px;padding:2px 9px;border-radius:20px;margin-left:8px;vertical-align:middle;
+  background:#16233a;color:#8fd8ff;border:1px solid #2c3d5e;box-shadow:0 0 10px rgba(110,168,254,.12);}
+.rare-badge.gold{background:linear-gradient(135deg,#2a2010,#1a1408);color:#ffcf7a;border-color:#5a4415;box-shadow:0 0 12px rgba(255,179,71,.2);}

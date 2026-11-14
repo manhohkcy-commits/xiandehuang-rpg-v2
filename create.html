@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>闲得慌RPG v2</title>
-<link rel="stylesheet" href="css/app.css?v=64217d6c">
+<link rel="stylesheet" href="css/app.css?v=c6880e77">
 </head>
 <body>
 <div class="wrap">
@@ -1456,13 +1456,13 @@ function renderOrig() {
 
   view().innerHTML =
     '<div class="tree-tabs">' + tabs + '</div>' +
-    card('<span class="avatar ' + (o.rare ? "" : "normal") + '">' + esc((oname || "?").slice(0, 1)) + '</span> ' + esc(oname),
-      '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + '</div>') +
+    card(esc(oname) + ' <span class="rare-badge' + (o.rare ? " gold" : "") + '">' + (o.rare ? "稀有原创" : "普通原创") + '</span>',
+      '<div class="hint">专属装备 · 独立成长</div>') +
     card("等级",
       '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + (lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
       '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
-      '<div class="hint" style="margin-top:6px;">突破 ' + brk + '/3 · 每次全属性 +3%' +
+      '<div class="hint" style="margin-top:6px;">突破 ' + brk + '/5 · 每次全属性 +3%' +
         (brkNext ? '（下次需 Lv' + brkNext.at + ' · 突破石 ' + brkNext.b + ' + ' + fmt(brkNext.g) + ' 金）' : '（已满）') + '</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
         '<button id="btnOrigLevel"' + ((prog.exp || 0) >= need && lv < CHAR.maxLevel ? '' : ' disabled') + '>🔼 升级到 Lv' + (lv + 1) + '</button>' +
