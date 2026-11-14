@@ -701,22 +701,22 @@ export const MAT_TIER = {
 };
 export const GRADE = [
   { key: "D",  name: "白", color: "#d8d8d8", mult: 1.00, cost: 0 },
-  { key: "C",  name: "绿", color: "#7ee787", mult: 1.06, cost: 20 },
-  { key: "B",  name: "蓝", color: "#6ea8fe", mult: 1.13, cost: 50 },
-  { key: "A",  name: "紫", color: "#c9a0ff", mult: 1.22, cost: 120 },
-  { key: "S",  name: "橙", color: "#ffb86b", mult: 1.32, cost: 260 },
-  { key: "SS", name: "红", color: "#ff6b6b", mult: 1.45, cost: 520 }
+  { key: "C",  name: "绿", color: "#7ee787", mult: 1.06, cost: 40 },
+  { key: "B",  name: "蓝", color: "#6ea8fe", mult: 1.13, cost: 120 },
+  { key: "A",  name: "紫", color: "#c9a0ff", mult: 1.22, cost: 300 },
+  { key: "S",  name: "橙", color: "#ffb86b", mult: 1.32, cost: 700 },
+  { key: "SS", name: "红", color: "#ff6b6b", mult: 1.45, cost: 1500 }
 ];
 
 // 🎯 资质评估（1★ ~ 7★）—— 每星全属性 +4%
 export const APTITUDE = [
   { star: 1, mult: 1.00, cost: 0 },
-  { star: 2, mult: 1.04, cost: 30 },
-  { star: 3, mult: 1.08, cost: 70 },
-  { star: 4, mult: 1.13, cost: 150 },
-  { star: 5, mult: 1.18, cost: 300 },
-  { star: 6, mult: 1.24, cost: 600 },
-  { star: 7, mult: 1.30, cost: 1000 }
+  { star: 2, mult: 1.04, cost: 60 },
+  { star: 3, mult: 1.08, cost: 180 },
+  { star: 4, mult: 1.13, cost: 450 },
+  { star: 5, mult: 1.18, cost: 1000 },
+  { star: 6, mult: 1.24, cost: 2200 },
+  { star: 7, mult: 1.30, cost: 4500 }
 ];
 
 // 🎲 建角：基础四项（百分比）与专精四项（绝对值）共用点数
@@ -764,7 +764,7 @@ export const BREAKS = [
   { at: 40,  capTo: 60,  stone: 25,  gold: 6000,  bonus: 3, points: 3 },
   { at: 60,  capTo: 80,  stone: 50,  gold: 14000, bonus: 3, points: 3 },
   { at: 80,  capTo: 100, stone: 90,  gold: 28000, bonus: 3, points: 3 },
-  { at: 100, capTo: 100, stone: 150, gold: 50000, bonus: 3, points: 3 }
+  { at: 100, capTo: 100, stone: 700, gold: 50000, bonus: 3, points: 3 }
 ];
 // 📅 日常任务：每天 3 个，跨天重置
 export const DAILY_QUESTS = [
