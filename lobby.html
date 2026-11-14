@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -62,7 +62,7 @@ function render() {
     $("backLink").href = "create.html?tab=char" + (box ? "&box=" + encodeURIComponent(box) : "");
     $("backLink").textContent = "← 我的角色";
   }
-  const HOST_BOX = "zynFUTA";
+  const HOST_BOX = "zynSD117";
   try { if (hostMode) localStorage.setItem("rpg2:hostBox", HOST_BOX); } catch (e) {}
   const hostBox = HOST_BOX;
   const myBox = hostMode ? hostBox : box;
