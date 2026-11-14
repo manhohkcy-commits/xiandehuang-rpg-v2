@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -25,7 +25,7 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=36dd3c54";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=be9221c9";
 import { GRADE, APTITUDE } from "./js/data.js?v=36dd3c54";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
@@ -893,12 +893,22 @@ function renderTalent() {
     (actHas ? '<span class="tag" style="color:' + tree.color + ';">已解锁</span>'
             : '<button data-tp="' + act.id + '" ' + (actCan ? '' : 'disabled') + '>解锁</button>') + '</span></div>' : '';
 
+  // ⑤ 第二主动技（Lv40）
+  const act2Cur = (ch.talent && ch.talent.active2) || "";
+  const act2Row = '<div class="row" style="margin-top:8px;"><span class="k">⚡ 第二主动技</span><span class="v">' +
+    (lv < 40 ? '<span class="hint">Lv40 解锁</span>' :
+      '<span class="hint">从其他定位里挑一个</span>') + '</span></div>' +
+    (lv < 40 ? '' : '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+      TALENT_TREES.filter((t) => t.active).map((t) =>
+        '<button data-act2="' + t.active.key + '" ' + (act2Cur === t.active.key ? 'style="border-color:#ffb347;color:#ffb347;"' : '') + '>' +
+        t.name + ' · ' + t.active.name + '</button>').join("") + '</div>');
+
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
     ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span></div>' +
     '<div class="hint">天赋 Lv5 开放；三条分支都从 Lv5 起可用，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
-    (actRow ? actRow : '') + '</div>';
+    (actRow ? actRow : '') + act2Row + '</div>';
 
   const allNodes = [];
   TALENT_TREES.forEach((t) => {
@@ -906,6 +916,10 @@ function renderTalent() {
     if (t.active) allNodes.push(Object.assign({ tree: t.id }, t.active));
   });
 
+  view().querySelectorAll("[data-act2]").forEach((b) => b.onclick = async () => {
+    ch.talent.active2 = b.dataset.act2;
+    await save(); render();
+  });
   view().querySelectorAll("[data-tree]").forEach((b) => b.onclick = () => {
     window.__talentTree = b.dataset.tree;
     render();

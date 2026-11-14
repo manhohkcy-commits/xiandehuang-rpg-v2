@@ -38,6 +38,16 @@ export function talentActive(ch) {
   return null;
 }
 
+export function talentActive2(ch) {
+  if (!ch || !ch.talent || !ch.talent.active2) return null;
+  if ((Number(ch.lv) || 1) < 40) return null;
+  const key = ch.talent.active2;
+  for (const t of TALENT_TREES) {
+    if (t.active && t.active.key === key) return Object.assign({ tree: t.id }, t.active);
+  }
+  return null;
+}
+
 // 🎯 本职业已投入点数（主动技解锁门槛用）
 export function talentSpentInTree(ch, treeId) {
   const pts = (ch && ch.talent && ch.talent.points) || {};

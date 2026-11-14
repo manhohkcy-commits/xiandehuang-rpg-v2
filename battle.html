@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -24,7 +24,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, STAGES, STAGE_READY, CHAR, DUNGEONS, ENVI
 import { enemyAt, enemyById, enemyPower, stagePower } from "./js/enemies.js?v=5054b7b7";
 import { ORIGINALS, originalToUnits, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=0167d36b";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
-import { charFinal, charPower, combatTraits, talentActive } from "./js/power.js?v=d92ed317";
+import { charFinal, charPower, combatTraits, talentActive, talentActive2 } from "./js/power.js?v=be9221c9";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, applyStatus, addStatus, isStunned, isSilenced, isDisarmed, canUseSkill, canUseNormal, healUnit, addShield, dispel, hasStatus } from "./js/battle.js?v=273a02ba";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
@@ -395,6 +395,7 @@ async function buildMultiBattle(stageId) {
   st.__myUnit = myUnit;
   st.__weapon = (myUnit && built.units.find((u) => u.id === myUnit) || {}).weapon || null;
   st.__talent = talentActive(activeChar());
+  st.__talent2 = talentActive2(activeChar());
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
@@ -464,6 +465,7 @@ function startOriginal(id) {
   st.__auto = localStorage.getItem("rpg2:auto") === "1";
   st.__weapon = ch.equip.weapon || null;
   st.__talent = talentActive(ch);
+  st.__talent2 = talentActive2(ch);
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
@@ -699,6 +701,7 @@ function startBattle(stageId, prepPos) {
     return w && (w.sName || w.aName) ? w : null;
   })() : (ch.equip.weapon || null);
   st.__talent = playOrig ? null : talentActive(ch);
+  st.__talent2 = playOrig ? null : talentActive2(ch);
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
@@ -1099,7 +1102,10 @@ function renderBattle() {
           (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' +
             (busy || !a || a.id !== "me" || hasStatus(m, "tcd") ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) +
             (hasStatus(m, "tcd") ? " 冷却" : "") + '</button>' : '') +
-          '</div></div>' : '') +
+                    (st.__talent2 ? '<button data-act="talent2" style="flex:1;min-width:110px;height:38px;border-color:#ffb347;color:#ffb347;" ' +
+            (busy || !a || a.id !== "me" || hasStatus(m, "tcd2") ? 'disabled' : '') + '>✨ ' + esc(st.__talent2.name) +
+            (hasStatus(m, "tcd2") ? " 冷却" : ") + '</button>' : '') +
+'</div></div>' : '') +
         (isStunned(m) ? '<div class="hint" style="color:#ffd666;">💫 你被控住了，本回合跳过</div>' : '') +
         (isSilenced(m) ? '<div class="hint" style="color:#ffd666;">🤐 被沉默：不能使用招式和必杀</div>' : '') +
         (isDisarmed(m) ? '<div class="hint" style="color:#ffd666;">🚫 被缴械：本回合只能防御</div>' : '') +
@@ -1176,6 +1182,24 @@ function doAct(kind) {
   if (kind === "normal" && !canUseNormal(m)) return;
   const rounds = [];
 
+  if (kind === "talent2") {
+    const t = st.__talent2;
+    if (!t || hasStatus(m, "tcd2")) return;
+    const subs = [];
+    if (t.key === "wall") { const sv = addShield(st, "me", m.maxHp * 0.3); subs.push("护盾 → " + sv); }
+    else if (t.key === "frenzy") { addStatus(st, "me", "atkUp", 40, 2, "狂战"); subs.push("攻击 +40%（2 回合）"); }
+    else if (t.key === "gale") { m.allowed = (Number(m.allowed) || 1) + 1; subs.push("本回合多行动一次"); }
+    else if (t.key === "arcane") {
+      const r = damage(st, "me", targetId(), { atk: m.atk, mult: 200, critRate: m.critRate, critDmg: m.critDmg, kind: "skill", dmgType: "spell" });
+      subs.push("奥术冲击 " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    } else if (t.key === "bless") { const h = healUnit(st, "me", m.maxHp * 0.3); subs.push("恢复 " + h); }
+    addStatus(st, "me", "tcd2", 0, t.cd, "天赋技2CD");
+    pushLog("✨ " + m.name + "「" + t.name + "」", "act", subs);
+    if (!tryDualborn(m)) commit(st, "me");
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 380);
+    return;
+  }
   if (kind === "talent") {
     const t = st.__talent;
     if (!t || hasStatus(m, "tcd")) return;
