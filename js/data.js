@@ -409,13 +409,7 @@ function makeHaroldBank() {
     "本乔 · 詹": "本乔把运钞车的钥匙挂在腰上，笑得很和气，手里却拎着霰弹枪。",
     "卡法特琳忒": "金库最深处，卡法特琳忒坐在钱堆上：「你们来晚了——利息已经算好了。」"
   };
-  const STORY = [
-    "门口的石狮子在打哈欠，保安刚换班。",
-    "柜员数钱的手很快，眼睛更快。",
-    "押运员把箱子推进通道，枪已上膛。",
-    "厚重的铁门后面，还有一层铁门。",
-    "这里没有风，只有钱的味道。"
-  ];
+  const STORY = ["矿区入口的采岩工刚换班，镐子还热着。","采岩区机器轰鸣，岩壁被一块块削下来。","碎岩平台上堆满碎石，锤声不断。","狙击塔上的红点已经对准了你。","前沿哨卡里走出一个戴袖标的人。","术士的岩缚阵把地面都压低了。","盾墙防区的重盾兵排成一排。","机兵装配区里，自动机兵正被吊装。","碎岩机库的闸门打开，履带压过地面。","地表指挥站把最后的部队都派了出来。","深井入口的升降梯还停在半空。","掘进通道又窄又热，钻头声从深处传来。","深层哨站的士兵举着灯照过来。","术士在通道尽头布下了深岩咒。","深层防线比你想象的厚得多。","指挥室的门开着，里面的人正在等你。","失控区的警报一直在响，没人来关。","采掘者的钻头把整条通道都挖空了。","两台失控机械同时启动。","失控碎岩者-TX 从矿道深处走来，地面随它震动。"];
   const LV = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
   // 名字 → 图鉴敌人 ID
   const NAME2ID = {};
@@ -445,14 +439,7 @@ function makeHaroldBank() {
 // ❄️ 霜落雪原：第三个正式副本
 function makeSnowfield() {
   const LV = [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 78];
-  const WAVE = [
-    ["s_wolf"], ["s_wolf", "s_hunter"], ["s_hunter", "s_wolf"], ["s_guard"],
-    ["s_wolf_alpha"], ["s_mage", "s_wolf"], ["s_guard", "s_hunter"], ["s_mage", "s_hunter"],
-    ["s_wolf_alpha", "s_wolf"], ["s_captain"], ["s_guard", "s_guard", "s_mage"],
-    ["s_wolf_alpha", "s_hunter", "s_mage"], ["s_captain", "s_guard"], ["s_mage", "s_hunter", "s_wolf"],
-    ["s_captain", "s_wolf_alpha"], ["s_guard", "s_hunter", "s_hunter"], ["s_wolf_alpha", "s_wolf_alpha"],
-    ["s_captain", "s_mage", "s_guard"], ["s_wolf_alpha", "s_captain", "s_hunter"], ["s_frostking"]
-  ];
+  const WAVE = [["m_surf_miner"],["m_surf_miner","m_surf_crusher"],["m_surf_crusher","m_guard"],["m_guard","m_sniper"],["m_lead"],["m_mage","m_surf_miner"],["m_shield","m_sniper"],["m_mage","m_auto_mine"],["m_auto_crush"],["m_shield","m_auto_crush"],["m_deep_miner"],["m_deep_miner","m_deep_digger"],["m_d_guard","m_d_sniper"],["m_d_mage","m_d_guard"],["m_d_shield","m_d_sniper"],["m_d_lead"],["m_px"],["m_px","m_d_lead"],["m_px","m_px"],["m_tx"]];
   const STORY = [
     "雪没到膝盖，脚印一直延伸到雾里。",
     "远处有狼在叫，不止一只。",
@@ -475,7 +462,7 @@ function makeSnowfield() {
     "三只头目一起挡路。",
     "霜喉从雪里站起来，整片雪原都安静了。"
   ];
-  const NAMES = ["雪原入口", "狼群小径", "白雾坡", "冰晶隘口", "狼王巢", "霜咒祭坛", "雪原哨站", "寒风口", "围猎圈", "雪原营地", "冰墙阵地", "混编巡队", "队长阵前", "霜咒与箭", "双首冲锋", "守卫阵线", "双狼王", "号令之谷", "三首封锁", "霜喉之巅"];
+  const NAMES = ["矿区入口","采岩区","碎岩平台","狙击塔","前沿哨卡","术士营地","盾墙防区","机兵装配区","碎岩机库","地表指挥站","深井入口","掘进通道","深层哨站","深层术士阵","深层防线","深层指挥室","失控区","采掘者巢","双机暴走","锻造核心"];
   return {
     id: "d_snow", name: "霜落雪原", kind: "snow", icon: "❄️",
     desc: "雪原深处的寒潮源头，产出突破石与金币", type: "daily",
@@ -507,16 +494,9 @@ function makeSnowfield() {
 // 🔨 矿采锻造基地：装备强化素材副本
 function makeMine() {
   const LV = [15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 73];
-  const WAVE = [
-    ["m_worm"], ["m_worm", "m_ghost"], ["m_ghost", "m_blaster"], ["m_golem"],
-    ["m_foreman"], ["m_lava", "m_worm"], ["m_blaster", "m_golem"], ["m_lava", "m_ghost"],
-    ["m_foreman", "m_golem"], ["m_colossus"], ["m_golem", "m_golem", "m_blaster"],
-    ["m_foreman", "m_lava"], ["m_colossus", "m_worm"], ["m_blaster", "m_blaster", "m_ghost"],
-    ["m_foreman", "m_colossus"], ["m_golem", "m_lava", "m_ghost"], ["m_colossus", "m_colossus"],
-    ["m_foreman", "m_foreman"], ["m_foreman", "m_colossus", "m_lava"], ["m_heart"]
-  ];
-  const STORY = ["矿区入口的传送带还在转，矿石源源不断送进车间。","粗炼车间的炉火没熄，墙上挂着成排的锤子。","熔炉区热浪扑面，铁水顺着沟槽流进模具。","锻锤声一下一下，像有什么在敲你的骨头。","火舌精灵从炉口钻出来，围着铁水跳舞。","淬火池冒着白汽，水面上浮着一层铁渣。","成品仓库堆满兵器，全是刚锻出来的。","监工拎着大锤站在车间中央，正在验收。","钢铁巨像从铸模里站起来，熔渣还在往下滴。","铸模阵列开始运作，一排排模具亮起红光。","监工和火灵一起动手，车间温度又高了几度。","巨像推开铁门，整个车间都在震。","铁水从高处浇下来，把退路封死了。","两把大锤同时砸下，火星四溅。","混编工坊里，所有机器同时开动。","两只巨像并排推进，铁皮摩擦声刺耳。","两个监工同时举起重锤。","核心车间的大门打开，热浪冲了出来。","锻造核心悬在炉心上方，跳动着炽白的光。"];
-  const NAMES = ["矿区入口","矿石传送带","粗炼车间","熔炉区","锻锤工坊","火舌炉口","淬火池","成品仓库","锻造监工","钢铁巨像","铸模阵列","监工与火灵","巨像推进","铁水浇铸","双重锤击","混编工坊","双巨像","双监工","核心车间","锻造核心"];
+  const WAVE = [["m_surf_miner"],["m_surf_miner","m_surf_crusher"],["m_surf_crusher","m_guard"],["m_guard","m_sniper"],["m_lead"],["m_mage","m_surf_miner"],["m_shield","m_sniper"],["m_mage","m_auto_mine"],["m_auto_crush"],["m_shield","m_auto_crush"],["m_deep_miner"],["m_deep_miner","m_deep_digger"],["m_d_guard","m_d_sniper"],["m_d_mage","m_d_guard"],["m_d_shield","m_d_sniper"],["m_d_lead"],["m_px"],["m_px","m_d_lead"],["m_px","m_px"],["m_tx"]];
+  const STORY = ["矿区入口的采岩工刚换班，镐子还热着。","采岩区机器轰鸣，岩壁被一块块削下来。","碎岩平台上堆满碎石，锤声不断。","狙击塔上的红点已经对准了你。","前沿哨卡里走出一个戴袖标的人。","术士的岩缚阵把地面都压低了。","盾墙防区的重盾兵排成一排。","机兵装配区里，自动机兵正被吊装。","碎岩机库的闸门打开，履带压过地面。","地表指挥站把最后的部队都派了出来。","深井入口的升降梯还停在半空。","掘进通道又窄又热，钻头声从深处传来。","深层哨站的士兵举着灯照过来。","术士在通道尽头布下了深岩咒。","深层防线比你想象的厚得多。","指挥室的门开着，里面的人正在等你。","失控区的警报一直在响，没人来关。","采掘者的钻头把整条通道都挖空了。","两台失控机械同时启动。","失控碎岩者-TX 从矿道深处走来，地面随它震动。"];
+  const NAMES = ["矿区入口","采岩区","碎岩平台","狙击塔","前沿哨卡","术士营地","盾墙防区","机兵装配区","碎岩机库","地表指挥站","深井入口","掘进通道","深层哨站","深层术士阵","深层防线","深层指挥室","失控区","采掘者巢","双机暴走","锻造核心"];
   return {
     id: "d_gear", name: "矿采锻造基地", kind: "gear", icon: "🔨",
     desc: "采矿、熔炼、锻造一条龙，产出装备强化素材", type: "daily",
