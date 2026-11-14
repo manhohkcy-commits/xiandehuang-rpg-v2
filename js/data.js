@@ -774,7 +774,7 @@ const tb = (id, name, unlockLv, desc, branchKey, spec) => {
 
 export const TALENT_TREES = [
   { id: "guard", name: "🛡️ 守护", role: "坦克 · 减伤", color: "#8fd8ff",
-    active: { id: "g_act", key: "wall", name: "盾墙", cd: 4, need: 10, desc: "获得 30% 生命护盾" },
+    active: { id: "g_act", key: "wall", name: "盾墙", cd: 4, unlockLv: 15, desc: "获得自身最大生命 25% 的护盾（每级 +4%）。Lv5 时 41%。护盾持续到被打破。" },
     branches: [
       tb("g1", "铁壁", 5, "防御 · 格挡", "g1_", { base: { defPct: 3 }, step: { defPct: 0.6 }, bonus: { 3: { block: 3 }, 7: { block: 5 }, 11: { tenacity: 8 } } }),
       tb("g2", "不屈", 30, "生命 · 韧性", "g2_", { base: { hpPct: 4 }, step: { hpPct: 0.8 }, bonus: { 4: { lowHpCut: 4 }, 9: { lowHpCut: 6 }, 13: { tenacity: 10 } } }),
@@ -782,7 +782,7 @@ export const TALENT_TREES = [
     ] },
 
   { id: "vanguard", name: "⚔️ 先锋", role: "爆发 · 暴击", color: "#ffb86b",
-    active: { id: "v_act", key: "frenzy", name: "狂战", cd: 4, need: 10, desc: "攻击 +40%，持续 2 回合" },
+    active: { id: "v_act", key: "frenzy", name: "狂战", cd: 4, unlockLv: 15, desc: "攻击力 +30%，持续 2 回合（每级 +4%）。Lv5 时 +46%。" },
     branches: [
       tb("v1", "突袭", 5, "攻击 · 暴击", "v1_", { base: { atkPct: 3 }, step: { atkPct: 0.6 }, bonus: { 3: { critRate: 2 }, 8: { critDmg: 8 }, 12: { critRate: 3 } } }),
       tb("v2", "战意", 30, "怒气 · 收割", "v2_", { base: { atkPct: 2, rageStart: 1 }, step: { atkPct: 0.4, rageStart: 0.5 }, bonus: { 6: { rageOnKill: 8 }, 12: { rageOnSkill: 10 } } }),
@@ -790,7 +790,7 @@ export const TALENT_TREES = [
     ] },
 
   { id: "ranger", name: "🏹 游侠", role: "速度 · 技巧", color: "#7ee787",
-    active: { id: "r_act", key: "gale", name: "疾风", cd: 4, need: 10, desc: "本回合多行动一次" },
+    active: { id: "r_act", key: "gale", name: "疾风", cd: 4, unlockLv: 15, desc: "下回合额外行动 1 次（Lv3 起 2 次）。额外行动可正常使用招式与必杀。" },
     branches: [
       tb("r1", "疾风", 5, "速度 · 出手", "r1_", { base: { spdPct: 2 }, step: { spdPct: 0.5 }, bonus: { 5: { atkPct: 5 }, 11: { spdPct: 4 } } }),
       tb("r2", "猎手", 30, "穿透 · 暴击", "r2_", { base: { atkPct: 2 }, step: { atkPct: 0.5 }, bonus: { 3: { penetrate: 8 }, 8: { critRate: 3 }, 12: { critDmg: 10 } } }),
@@ -798,7 +798,7 @@ export const TALENT_TREES = [
     ] },
 
   { id: "mage", name: "🔮 术士", role: "法系 · 法抗", color: "#c9a0ff",
-    active: { id: "m_act", key: "arcane", name: "奥术冲击", cd: 4, need: 10, desc: "200% 攻击的无视部分减伤伤害" },
+    active: { id: "m_act", key: "arcane", name: "奥术冲击", cd: 4, unlockLv: 15, desc: "造成 180% 法术伤害（每级 +18%）。Lv5 时 252%，无视目标 20% 法抗。" },
     branches: [
       tb("m1", "冥想", 5, "法抗 · 输出", "m1_", { base: { resPct: 3 }, step: { resPct: 0.6 }, bonus: { 4: { atkPct: 5 }, 10: { hpPct: 6 } } }),
       tb("m2", "元素", 30, "状态 · 强度", "m2_", { base: { statusPower: 3 }, step: { statusPower: 1 }, bonus: { 6: { statusHit: 8 }, 12: { statusPower: 10 } } }),
@@ -806,7 +806,7 @@ export const TALENT_TREES = [
     ] },
 
   { id: "support", name: "✨ 辅佐", role: "治疗 · 防护", color: "#8fd8ff",
-    active: { id: "s_act", key: "bless", name: "祝福", cd: 4, need: 10, desc: "恢复 30% 生命" },
+    active: { id: "s_act", key: "bless", name: "祝福", cd: 4, unlockLv: 15, desc: "恢复自身最大生命 25%（每级 +4%）。Lv5 时 41%。" },
     branches: [
       tb("s1", "守护", 5, "生命 · 减伤", "s1_", { base: { hpPct: 3 }, step: { hpPct: 0.7 }, bonus: { 5: { dmgCut: 4 }, 11: { block: 5 } } }),
       tb("s2", "治愈", 30, "治疗 · 回复", "s2_", { base: { healPct: 2 }, step: { healPct: 0.5 }, bonus: { 7: { healPct: 2 }, 12: { healPct: 2.5 } } }),

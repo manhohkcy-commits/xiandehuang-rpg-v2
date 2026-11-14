@@ -21,12 +21,12 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=ae7d4d9a";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=77fb206b";
 import { makeItem } from "./js/items.js?v=7694fd0b";
 import { stagePower, enemyAt } from "./js/enemies.js?v=f70dc0c6";
-import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
+import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js?v=273a02ba";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=273a02ba";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
@@ -344,6 +344,10 @@ function startBattle(stageId, col, row) {
   }
   st.__waveNo = 1;
   st.__isOrig = !!o0;
+  st.__talent = (ch && talentActive(ch)) ? Object.assign({}, talentActive(ch)) : null;
+  if (st.__talent) st.__talent.lvl = talentActiveLevel(ch, st.__talent.tree);
+  st.__tcd = 0;
+  st.__galePending = 0;
   st.__frost = 0;
   // 布阵：我方 0=前排 1=后排；敌人前排优先
   const meU = st.units.find((u) => u.id === "me");
@@ -662,6 +666,7 @@ function renderBattle() {
       : '<div class="card"><div class="card-title">行动</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
           '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>⚔️ 普攻</button>' +
+          (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' + (st.__tcd > 0 ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) + (st.__tcd > 0 ? " 冷却 " + st.__tcd : "") + '</button>' : '') +
           '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
             '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "招式") + ' ' + (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '%')) + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 ? 'disabled' : '') + '>' +
@@ -701,6 +706,24 @@ function doAct(kind) {
   const wp = (st.__weapon && st.__weapon.data) || {};
   const rounds = [];
 
+  if (kind === "talent") {
+    const t = st.__talent;
+    if (!t || st.__tcd > 0) return;
+    const L = Math.max(1, Number(t.lvl) || 1);
+    const subs = [];
+    if (t.key === "wall") { const sv = addShield ? addShield(st, "me", m.maxHp * (0.25 + 0.04 * (L - 1))) : 0; subs.push("护盾 " + sv); }
+    else if (t.key === "frenzy") { addStatus(st, "me", "atkUp", 30 + 4 * (L - 1), 2, "狂战"); subs.push("攻击 +" + (30 + 4 * (L - 1)) + "%（2 回合）"); }
+    else if (t.key === "gale") { st.__galePending = L >= 3 ? 2 : 1; subs.push("下回合额外行动 " + st.__galePending + " 次"); }
+    else if (t.key === "arcane") { const r = damage(st, "me", foe().id, { atk: m.atk, mult: 180 + 18 * (L - 1), critRate: m.critRate, critDmg: m.critDmg }); subs.push("奥术伤害 " + r.dmg + (r.crit ? " 暴击" : "")); }
+    else if (t.key === "bless") { const h = healUnit ? healUnit(st, "me", m.maxHp * (0.25 + 0.04 * (L - 1))) : 0; subs.push("恢复 " + h); }
+    st.__tcd = Math.max(1, Number(t.cd) - (L >= 3 ? 1 : 0) - (L >= 5 ? 1 : 0));
+    pushLog("✨ " + m.name + "「" + t.name + " Lv" + L + "」", "act", subs);
+    commit(st, "me");
+    if (st.finished && !spawnWave()) finish();
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 380);
+    return;
+  }
   if (kind === "defend") {
     pushLog("🛡️ " + m.name + " 进入防御（本回合减伤 +30%）");
     m.dmgCut = (m.dmgCut || 0) + 30;
