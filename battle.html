@@ -89,7 +89,7 @@ function renderPick() {
     }).join("") +
     '</div>';
   view().querySelectorAll("[data-stage]").forEach((b) => {
-    b.onclick = () => startBattle(b.dataset.stage);
+    b.onclick = () => renderPrep(b.dataset.stage);
   });
 }
 
@@ -178,7 +178,32 @@ async function tryRestore() {
   return true;
 }
 
-function startBattle(stageId) {
+let prepCol = 0;
+function renderPrep(stageId) {
+  const s = STAGES.find((x) => x.id === stageId);
+  if (!s) return;
+  const ch = activeChar();
+  const colTxt = (v) => v === 0 ? "前排（受击多、近战优先打你）" : "后排（受击少、远程优先）";
+  view().innerHTML =
+    '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
+    '<div class="hint">' + esc(s.story || "") + '</div>' +
+    '<div class="hint" style="margin-top:4px;">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
+      (s.tier ? '　|　阶级 ' + s.tier : '') + '</div>' +
+    '<div class="row" style="margin-top:8px;"><span class="k">站位</span><span class="v">' + colTxt(prepCol) + '</span></div>' +
+    '<div style="display:flex;gap:8px;margin-top:6px;">' +
+      '<button data-col="0" style="flex:1;' + (prepCol === 0 ? "border-color:#6ea8fe;color:#6ea8fe;" : "") + '">前排</button>' +
+      '<button data-col="1" style="flex:1;' + (prepCol === 1 ? "border-color:#6ea8fe;color:#6ea8fe;" : "") + '">后排</button>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px;">' +
+      '<button id="prepGo" style="flex:1;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
+      '<button id="prepBack" style="flex:1;">← 返回选关</button>' +
+    '</div></div>';
+  view().querySelectorAll("[data-col]").forEach((b) => b.onclick = () => { prepCol = Number(b.dataset.col); renderPrep(stageId); });
+  $("prepGo").onclick = () => startBattle(stageId, prepCol);
+  $("prepBack").onclick = renderPick;
+}
+
+function startBattle(stageId, col) {
   if (roomId && amHost) { buildMultiBattle(stageId); return; }
   const ch = activeChar();
   const f = charFinal(ch);
@@ -206,6 +231,10 @@ function startBattle(stageId) {
   ].concat(units));
   st.__waves = restWaves;
   st.__waveNo = 1;
+  // 布阵：我方 0=前排 1=后排；敌人前排优先
+  const meU = st.units.find((u) => u.id === "me");
+  if (meU) { meU.__col = Number(col) || 0; meU.__back = !!meU.__col; }
+  st.units.filter((u) => u.side === "B").forEach((u, i) => { u.__col = i < 3 ? 0 : 1; u.__back = !!u.__col; });
   st.__stage = s.id;
   st.__weapon = ch.equip.weapon || null;
   // 🌦 天气 + 🏞 场地：双方属性叠加
