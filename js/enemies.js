@@ -423,9 +423,18 @@ export function enemyAt(id, lv) {
 const SNOW_TIER_FIX = { s_wolf_alpha: "elite", s_captain: "elite", s_frostking: "boss" };
 ENEMIES.forEach((e) => { if (SNOW_TIER_FIX[e.id]) e.tier = SNOW_TIER_FIX[e.id]; });
 
+
+// 👑 矿采锻造基地的首领
+const MINE_BOSSES = [
+  EM("b_eva", "艾登 · 伊娃", "法术", "特色", "岩爆术", 195, "锻造基地的技术主管，用岩土与炉火作战。"),
+  EM("b_harman", "哈曼 · 奥斯肯", "近战", "首领", "锻造之怒", 265, "矿区总负责人，亲手打造了整条生产线，也亲手把它变成武器。")
+];
+ENEMIES.push(...MINE_BOSSES);
+
 // 🏅 修正矿脉敌人的阶级
 const MINE_TIER_FIX = {
-  m_lead: "elite", m_auto_crush: "elite", m_d_lead: "elite", m_px: "elite", m_tx: "boss",
+  b_eva: "special", b_harman: "boss",
+  m_lead: "elite", m_auto_crush: "elite", m_d_lead: "elite", m_px: "elite", m_tx: "elite",
   m_auto_mine: "normal", m_d_shield: "normal"
 };
 ENEMIES.forEach((e) => { if (MINE_TIER_FIX[e.id]) e.tier = MINE_TIER_FIX[e.id]; });

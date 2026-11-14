@@ -409,7 +409,7 @@ function makeHaroldBank() {
     "本乔 · 詹": "本乔把运钞车的钥匙挂在腰上，笑得很和气，手里却拎着霰弹枪。",
     "卡法特琳忒": "金库最深处，卡法特琳忒坐在钱堆上：「你们来晚了——利息已经算好了。」"
   };
-  const STORY = ["矿区入口的采岩工刚换班，镐子还热着。","采岩区机器轰鸣，岩壁被一块块削下来。","碎岩平台上堆满碎石，锤声不断。","狙击塔上的红点已经对准了你。","前沿哨卡里走出一个戴袖标的人。","术士的岩缚阵把地面都压低了。","盾墙防区的重盾兵排成一排。","机兵装配区里，自动机兵正被吊装。","碎岩机库的闸门打开，履带压过地面。","地表指挥站把最后的部队都派了出来。","深井入口的升降梯还停在半空。","掘进通道又窄又热，钻头声从深处传来。","深层哨站的士兵举着灯照过来。","术士在通道尽头布下了深岩咒。","深层防线比你想象的厚得多。","指挥室的门开着，里面的人正在等你。","失控区的警报一直在响，没人来关。","采掘者的钻头把整条通道都挖空了。","两台失控机械同时启动。","失控碎岩者-TX 从矿道深处走来，地面随它震动。"];
+  const STORY = ["矿区入口的采岩工刚换班，镐子还热着。","采岩区机器轰鸣，岩壁被一块块削下来。","碎岩平台上堆满碎石，锤声不断。","狙击塔上的红点已经对准了你。","前沿哨卡里走出一个戴袖标的人。","术士的岩缚阵把地面都压低了。","盾墙防区的重盾兵排成一排。","机兵装配区里，自动机兵正被吊装。","碎岩机库的闸门打开，履带压过地面。","艾登 · 伊娃从指挥站走出来：「样本？还是入侵者？」","深井入口的升降梯还停在半空。","掘进通道又窄又热，钻头声从深处传来。","深层哨站的士兵举着灯照过来。","术士在通道尽头布下了深岩咒。","深层防线比你想象的厚得多。","指挥室的门开着，里面的人正在等你。","失控区的警报一直在响，没人来关。","采掘者的钻头把整条通道都挖空了。","两台失控机械同时启动。","哈曼 · 奥斯肯站在锻造核心前：「这条线是我造的，也是我关的。」"];
   const LV = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
   // 名字 → 图鉴敌人 ID
   const NAME2ID = {};
@@ -439,7 +439,7 @@ function makeHaroldBank() {
 // ❄️ 霜落雪原：第三个正式副本
 function makeSnowfield() {
   const LV = [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 78];
-  const WAVE = [["m_surf_miner"],["m_surf_miner","m_surf_crusher"],["m_surf_crusher","m_guard"],["m_guard","m_sniper"],["m_lead"],["m_mage","m_surf_miner"],["m_shield","m_sniper"],["m_mage","m_auto_mine"],["m_auto_crush"],["m_shield","m_auto_crush"],["m_deep_miner"],["m_deep_miner","m_deep_digger"],["m_d_guard","m_d_sniper"],["m_d_mage","m_d_guard"],["m_d_shield","m_d_sniper"],["m_d_lead"],["m_px"],["m_px","m_d_lead"],["m_px","m_px"],["m_tx"]];
+  const WAVE = [["m_surf_miner"],["m_surf_miner","m_surf_crusher"],["m_surf_crusher","m_guard"],["m_guard","m_sniper"],["m_lead"],["m_mage","m_surf_miner"],["m_shield","m_sniper"],["m_mage","m_auto_mine"],["m_auto_crush"],["b_eva"],["m_deep_miner"],["m_deep_miner","m_deep_digger"],["m_d_guard","m_d_sniper"],["m_d_mage","m_d_guard"],["m_d_shield","m_d_sniper"],["m_d_lead"],["m_px"],["m_px","m_d_lead"],["m_px","m_px"],["b_harman","m_tx"]];
   const STORY = [
     "雪没到膝盖，脚印一直延伸到雾里。",
     "远处有狼在叫，不止一只。",
@@ -494,7 +494,7 @@ function makeSnowfield() {
 // 🔨 矿采锻造基地：装备强化素材副本
 function makeMine() {
   const LV = [15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 73];
-  const WAVE = [["m_surf_miner"],["m_surf_miner","m_surf_crusher"],["m_surf_crusher","m_guard"],["m_guard","m_sniper"],["m_lead"],["m_mage","m_surf_miner"],["m_shield","m_sniper"],["m_mage","m_auto_mine"],["m_auto_crush"],["m_shield","m_auto_crush"],["m_deep_miner"],["m_deep_miner","m_deep_digger"],["m_d_guard","m_d_sniper"],["m_d_mage","m_d_guard"],["m_d_shield","m_d_sniper"],["m_d_lead"],["m_px"],["m_px","m_d_lead"],["m_px","m_px"],["m_tx"]];
+  const WAVE = [["m_surf_miner"],["m_surf_miner","m_surf_crusher"],["m_surf_crusher","m_guard"],["m_guard","m_sniper"],["m_lead"],["m_mage","m_surf_miner"],["m_shield","m_sniper"],["m_mage","m_auto_mine"],["m_auto_crush"],["b_eva"],["m_deep_miner"],["m_deep_miner","m_deep_digger"],["m_d_guard","m_d_sniper"],["m_d_mage","m_d_guard"],["m_d_shield","m_d_sniper"],["m_d_lead"],["m_px"],["m_px","m_d_lead"],["m_px","m_px"],["b_harman","m_tx"]];
   const STORY = ["矿区入口的采岩工刚换班，镐子还热着。","采岩区机器轰鸣，岩壁被一块块削下来。","碎岩平台上堆满碎石，锤声不断。","狙击塔上的红点已经对准了你。","前沿哨卡里走出一个戴袖标的人。","术士的岩缚阵把地面都压低了。","盾墙防区的重盾兵排成一排。","机兵装配区里，自动机兵正被吊装。","碎岩机库的闸门打开，履带压过地面。","地表指挥站把最后的部队都派了出来。","深井入口的升降梯还停在半空。","掘进通道又窄又热，钻头声从深处传来。","深层哨站的士兵举着灯照过来。","术士在通道尽头布下了深岩咒。","深层防线比你想象的厚得多。","指挥室的门开着，里面的人正在等你。","失控区的警报一直在响，没人来关。","采掘者的钻头把整条通道都挖空了。","两台失控机械同时启动。","失控碎岩者-TX 从矿道深处走来，地面随它震动。"];
   const NAMES = ["矿区入口","采岩区","碎岩平台","狙击塔","前沿哨卡","术士营地","盾墙防区","机兵装配区","碎岩机库","地表指挥站","深井入口","掘进通道","深层哨站","深层术士阵","深层防线","深层指挥室","失控区","采掘者巢","双机暴走","锻造核心"];
   return {
