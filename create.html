@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -43,7 +43,7 @@ function toast(msg, bad) {
   clearTimeout(tt); tt = setTimeout(() => { t.style.display = "none"; }, 2200);
 }
 function readBox() {
-  try { if (localStorage.getItem("rpg2:host") === "1") return "zynSD117"; } catch (e) {}
+  try { if (localStorage.getItem("rpg2:host") === "1") return "zynSD117"; if (localStorage.getItem("rpg2:hostBox") === "zynSD117") return "zynSD117"; } catch (e) {}
   const q = new URLSearchParams(location.search);
   if (q.get("box")) return q.get("box");
   const m = /box=([^&]+)/.exec(location.hash || "");
