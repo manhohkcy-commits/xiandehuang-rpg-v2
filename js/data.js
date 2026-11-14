@@ -1,4 +1,4 @@
-﻿// 闲得慌RPG v2 · 数据（纯数据，无逻辑）
+// 闲得慌RPG v2 · 数据（纯数据，无逻辑）
 export const RARITY_MULT = { R: 1, SR: 1.15, SSR: 1.3, UR: 1.5 };
 // 🚧 内容开关：装备选择已开放；关卡内容仍待定（数据保留）
 export const CONTENT_READY = true;
@@ -617,15 +617,17 @@ const CN14 = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "�
 const r1 = (n) => Math.round(n * 10) / 10;
 
 function chain(prefix, label, spec) {
+  // 四类：节点（纯数值）→ 小天赋 → 大天赋（5/10 层）→ 终极（14 层）
+  const KIND = ["node", "minor", "node", "minor", "major", "node", "minor", "node", "minor", "major", "node", "minor", "node", "ultimate"];
+  const SCALE = { node: 1, minor: 1.35, major: 1.75, ultimate: 2.2 };
+  const TAG = { node: "", minor: "小·", major: "大·", ultimate: "终·" };
   return Array.from({ length: 14 }, (_, i) => {
-    // 小天赋（1-4）/ 大天赋（5、10）/ 终极天赋（14）
-    const kind = i === 13 ? "ultimate" : (i === 4 || i === 9) ? "major" : "minor";
-    const scale = kind === "ultimate" ? 2.2 : kind === "major" ? 1.75 : 1;
+    const kind = KIND[i] || "node";
+    const scale = SCALE[kind];
     const eff = {};
     Object.keys(spec.base).forEach((k) => { eff[k] = r1((spec.base[k] + (spec.step[k] || 0) * i) * scale); });
     if (spec.bonus && spec.bonus[i]) Object.assign(eff, spec.bonus[i]);
-    const tag = kind === "ultimate" ? "终·" : kind === "major" ? "大·" : "小·";
-    return { id: prefix + (i + 1), name: tag + label + "·" + CN14[i], eff, kind };
+    return { id: prefix + (i + 1), name: TAG[kind] + label + "·" + CN14[i], eff, kind };
   });
 }
 
