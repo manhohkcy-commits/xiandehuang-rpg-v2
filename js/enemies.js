@@ -308,9 +308,12 @@ export function enemyAt(id, lv) {
   if (!e) return null;
   const L = Math.max(1, Number(lv) || 1);
   const ROLE_SPD = { "远程": 1.15, "坦克": 0.85, "辅助": 1.0, "法术": 1.06 };
+  // 🏅 阶级加成：精英/特色/首领更强
+  const TIER_MUL = { normal: 1.0, elite: 1.2, special: 1.35, boss: 1.5 };
+  const tm = TIER_MUL[e.tier] || 1;
   const k = (key) => {
     let raw = (e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1));
-    if (key !== "spd") raw *= enemyK(L);
+    if (key !== "spd") raw *= enemyK(L) * tm;
     if (key === "spd") {
       raw *= ROLE_SPD[e.role] || 1;
       return Math.round(raw * 10) / 10;
