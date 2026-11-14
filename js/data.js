@@ -617,17 +617,18 @@ const CN14 = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "�
 const r1 = (n) => Math.round(n * 10) / 10;
 
 function chain(prefix, label, spec) {
-  // 四类：节点（纯数值）→ 小天赋 → 大天赋（5/10 层）→ 终极（14 层）
-  const KIND = ["node", "minor", "node", "minor", "major", "node", "minor", "node", "minor", "major", "node", "minor", "node", "minor", "major", "ultimate"];
-  const SCALE = { node: 1, minor: 1.35, major: 1.75, ultimate: 2.2 };
-  const TAG = { node: "", minor: "小·", major: "大·", ultimate: "终·" };
+  // 🎯 每条分支 4 个关键天赋，每个 4 级 = 16 阶
+  const TAL = spec.talents || ["锋芒", "破势", "追击", "处决"];
   return Array.from({ length: 16 }, (_, i) => {
-    const kind = KIND[i] || "node";
-    const scale = SCALE[kind];
+    const ti = Math.floor(i / 4);
+    const rank = (i % 4) + 1;
+    const last = ti === 3 && rank === 4;
+    const kind = last ? "ultimate" : rank === 4 ? "major" : "minor";
+    const scale = 1 + 0.18 * (rank - 1) + 0.12 * ti;
     const eff = {};
     Object.keys(spec.base).forEach((k) => { eff[k] = r1((spec.base[k] + (spec.step[k] || 0) * i) * scale); });
     if (spec.bonus && spec.bonus[i]) Object.assign(eff, spec.bonus[i]);
-    return { id: prefix + (i + 1), name: TAG[kind] + label + "·" + CN14[i], eff, kind };
+    return { id: prefix + (i + 1), name: TAL[ti] + "·Lv" + rank, eff, kind, talent: ti, rank };
   });
 }
 
