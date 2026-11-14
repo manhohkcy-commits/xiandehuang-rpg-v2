@@ -1,4 +1,4 @@
-import { cloudGet, cloudSave } from "./core.js?v=13807141";
+﻿import { cloudGet, cloudSave } from "./core.js?v=13807141";
 import { powerOf } from "./power.js?v=d92ed317";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
@@ -6,7 +6,7 @@ import { powerOf } from "./power.js?v=d92ed317";
 export function originalFinal(o, prog, withGear, withBonus) {
   const useGear = withGear !== false;
   const lv = Number(prog && prog.lv) || 1;
-  const br = Math.min(3, Number(prog && prog.breaks) || 0);
+  const br = Math.min(5, Number(prog && prog.breaks) || 0);
   const k = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
   const s = o.stats || {};
   // 🗡 专属装备加成
