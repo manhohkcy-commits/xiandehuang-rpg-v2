@@ -490,11 +490,11 @@ function makeSnowfield() {
         foe: first,
         drop: {
           shards: [3, 8 + Math.floor(i / 3)],
-          stone: [6, 14 + Math.floor(i / 2)],
-          refine: [1, 2 + Math.floor(i / 5)],
-          shardR: [8, 16 + Math.floor(i / 2)],
-          shardSR: [2, 4 + Math.floor(i / 3)],
-          shardSSR: i === 19 ? [1, 3] : [0, 0],
+          stone: [10, 20 + Math.floor(i / 2)],
+          refine: [4, 8 + Math.floor(i / 3)],
+          shardR: [14, 24 + Math.floor(i / 2)],
+          shardSR: [6, 10 + Math.floor(i / 3)],
+          shardSSR: i === 19 ? [3, 8] : [0, 0],
           bstone: 0,
           gearChance: 8 + Math.floor(i / 4)
         },
@@ -534,11 +534,11 @@ function makeMine() {
         foe: first,
         drop: {
           shards: [3, 8 + Math.floor(i / 3)],
-          stone: [6, 14 + Math.floor(i / 2)],
-          refine: [1, 2 + Math.floor(i / 5)],
-          shardR: [8, 16 + Math.floor(i / 2)],
-          shardSR: [2, 4 + Math.floor(i / 3)],
-          shardSSR: i === 19 ? [1, 3] : [0, 0],
+          stone: [10, 20 + Math.floor(i / 2)],
+          refine: [4, 8 + Math.floor(i / 3)],
+          shardR: [14, 24 + Math.floor(i / 2)],
+          shardSR: [6, 10 + Math.floor(i / 3)],
+          shardSSR: i === 19 ? [3, 8] : [0, 0],
           bstone: 0,
           gearChance: 8 + Math.floor(i / 4)
         },
@@ -597,7 +597,7 @@ export const CULT = {
   refineGold: (r) => Math.round(120 * r),
   shardKey: { R: "shardR", SR: "shardSR", SSR: "shardSSR", UR: "shardUR" },
   shardBase: 60,
-  refineStone: (r) => 2 + Math.floor((Number(r) || 1) * 1.2),
+  refineStone: (r) => 2 + Math.floor((Number(r) || 1) * 0.8),
   refineShards: (r) => Math.round(20 * r),
   // ⬆️ 升阶：R/SR 5★ 可升下一品质；SSR5★ 需「觉醒」到 UR1🔥，UR1🔥 再觉醒到 UR5🔥
   rarityOrder: ["R", "SR", "SSR", "UR"],
