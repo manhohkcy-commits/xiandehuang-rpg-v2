@@ -1383,8 +1383,16 @@ function applyEnemySkill(u, sk, allies, foes, bAtk, bDmg) {
     pushLog("📣 " + u.name + "「" + sk.name + "」全队 " + label + "（3 回合）", "line");
     return;
   }
-  const targets = sk.aoe ? foes : [isRangedUnit(u) ? foes[Math.floor(Math.random() * foes.length)] : foes[0]];
+  const primary = isRangedUnit(u) ? foes[Math.floor(Math.random() * foes.length)] : foes[0];
+  let targets;
+  if (sk.aoe) targets = foes;
+  else if (sk.row) {
+    const row = (primary && primary.__row) || 1;
+    targets = foes.filter((f) => (f.__row || 1) === row);
+    if (!targets.length) targets = [primary];
+  } else targets = [primary];
   const hits = Number(sk.hits) || 1;
+  let drained = 0;
   targets.forEach((t) => {
     let total = 0, crit = false;
     for (let i = 0; i < hits; i++) {
@@ -1393,9 +1401,17 @@ function applyEnemySkill(u, sk, allies, foes, bAtk, bDmg) {
         kind: sk.kind === "normal" ? "normal" : "skill", dmgType: sk.spell ? "spell" : "phys", style: isRangedUnit(u) ? "ranged" : "melee" });
       total += r.dmg; crit = crit || r.crit;
     }
+    drained += total;
     pushLog("👹 " + u.name + "「" + sk.name + "」→ " + t.name + " " + total + (crit ? " 暴击💥" : ""), "line");
     if (sk.burn && t.hp > 0) applyStatus(st, u.id, t.id, "burn", Math.round(u.atk * 0.15), 2, "灼烧");
+    if (sk.stun && t.hp > 0) applyStatus(st, u.id, t.id, "stun", Number(sk.stun) || 25, 1, "眩晕");
+    if (sk.silence && t.hp > 0) applyStatus(st, u.id, t.id, "silence", Number(sk.silence) || 25, 2, "沉默");
   });
+  if (sk.drain && drained > 0 && u.hp > 0) {
+    const heal = Math.max(1, Math.round(drained * (Number(sk.drain) || 50) / 100));
+    healUnit(st, u.id, heal);
+    pushLog("🩸 " + u.name + " 吸血 +" + heal, "line");
+  }
 }
 
 function enemyAct(u) {
