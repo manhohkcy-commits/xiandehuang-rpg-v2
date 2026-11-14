@@ -705,7 +705,7 @@ $("btnSave").onclick = () => save();
       if (got) {
         amHost = got.room.host === box;
         if (!amHost && got.room.state) renderSpectator(got.room.state);
-        if (amHost) { const okRestore = await tryRestore(); }
+        if (amHost) { const okRestore = await tryRestore(); if (!okRestore) renderPick(); }
         setInterval(async () => {
   try { await pullOriginals(); } catch (e) {}
           if (amHost) return;
