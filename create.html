@@ -890,7 +890,7 @@ function renderTalent() {
   const actHas = !!(act && ch.talent.points[act.id]);
   const actCan = act && !actHas && left > 0 && counts[tree.id] >= act.need;
   const actRow = act ? '<div class="row" style="margin-top:12px;"><span class="k">⚡ 主动技 · ' + act.name + '</span><span class="v">' +
-    '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + (actHas ? '' : ' · 需本定位 ' + act.need + ' 点') + '</span> ' +
+    '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + (actHas ? '' : ' · 需本树已点 ' + act.need + ' 点') + '</span> ' +
     (actHas ? '<span class="tag" style="color:' + tree.color + ';">已解锁</span>'
             : '<button data-tp="' + act.id + '" ' + (actCan ? '' : 'disabled') + '>解锁</button>') + '</span></div>' : '';
 
@@ -906,7 +906,7 @@ function renderTalent() {
 
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
-    ' <span class="tag">本定位 ' + counts[tree.id] + ' 点</span> <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
+    ' <span class="tag">本树已点 ' + counts[tree.id] + ' 点</span> <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
     '<div class="hint">天赋 Lv5 开放；三条分支都从 Lv5 起可用，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
     (actRow ? actRow : '') + act2Row + '</div>';
