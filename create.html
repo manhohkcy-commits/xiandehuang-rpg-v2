@@ -1033,10 +1033,13 @@ async function renderRank() {
   });
   const players = Array.from(map.values()).sort((a, b) => b.power - a.power);
   // 🧬 原创角色并入「可游玩角色」总榜
-  const origs = ORIGINALS.map((o) => ({
-    type: "orig", id: o.id, name: o.name, title: o.title || "", role: o.role || "", rare: !!o.rare,
-    power: Number((o.stats || {}).power) || 0
-  }));
+  const origs = ORIGINALS.map((o) => {
+    const prog = (store.orig || {})[o.id] || {};
+    return {
+      type: "orig", id: o.id, name: prog.name || o.name, title: o.title || "", role: o.role || "", rare: !!o.rare,
+      power: originalFinal(o, prog).power
+    };
+  });
   const all = players.map((r) => Object.assign({ type: "player" }, r)).concat(origs).sort((a, b) => b.power - a.power);
   const top = all.slice(0, 20);
 
