@@ -910,7 +910,7 @@ function renderTalent() {
 
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
-    <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
+    ' <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
     '<div class="hint">按等级解锁：Lv5 起每 5 级开一阶，Lv80 全开；点亮不消耗任何资源。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
     (actRow ? actRow : '') + '</div>';
