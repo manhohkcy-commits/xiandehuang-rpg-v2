@@ -1,5 +1,6 @@
 ﻿import { cloudGet, cloudSave } from "./core.js?v=13807141";
 import { powerOf } from "./power.js?v=d92ed317";
+import { GRADE, APTITUDE } from "./data.js?v=2b1030af";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
@@ -7,7 +8,10 @@ export function originalFinal(o, prog, withGear, withBonus) {
   const useGear = withGear !== false;
   const lv = Number(prog && prog.lv) || 1;
   const br = Math.min(5, Number(prog && prog.breaks) || 0);
-  const k = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
+  const gi = Math.max(0, Math.min(GRADE.length - 1, Number(prog && prog.grade) || 0));
+  const ai = Math.max(1, Math.min(APTITUDE.length, Number(prog && prog.apt) || 1));
+  const gMul = (GRADE[gi].mult || 1) * ((APTITUDE[ai - 1] || {}).mult || 1);
+  const k = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br) * gMul;
   const s = o.stats || {};
   // 🗡 专属装备加成
   const g = o.gearObj || {};
