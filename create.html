@@ -1374,6 +1374,7 @@ function renderOrig() {
   const prog = store.orig[o.id] || { lv: 1, exp: 0, breaks: 0 };
   const lv = Number(prog.lv) || 1;
   const brk = Math.min(5, Number(prog.breaks) || 0);
+  const oname = (prog && prog.name) || o.name;
   const need = CHAR.expNeed(lv);
   const pct = Math.min(100, Math.round(((Number(prog.exp) || 0) / need) * 100));
   const fin = originalFinal(o, prog, true, false); // 面板 = 本体 + 装备，不含培养加成
@@ -1415,6 +1416,7 @@ function renderOrig() {
 
   view().innerHTML =
     '<div class="tree-tabs">' + tabs + '</div>' +
+    card("🧬 " + esc(oname), '<div class="hint">' + (o.rare ? "稀有原创" : "普通原创") + '</div>') +
     card("等级",
       '<div class="row"><span class="k">等级</span><span class="v" style="color:#ffd666;font-size:18px;">Lv' + lv + (lv >= CHAR.maxLevel ? ' · 满级' : '') + '</span></div>' +
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
@@ -1450,6 +1452,7 @@ function renderOrig() {
             '<div class="hint">' + (it2.rarity || "") + ' Lv' + (st2.lv || 1) + ' ★' + (st2.star || 1) + '</div>'
             : '<div class="hint">空</div>') + '</div>';
       }).join("") + '</div>') +
+    card("操作", '<button id="btnOrigRename">✏️ 改名字</button>') +
     card("最近收据", receiptsHtml()) +
     card("专属装备（" + gearCount + "）",
       gear || '<div class="hint">这名原创角色还没有写专属装备。</div>') +
@@ -1537,6 +1540,13 @@ function renderOrig() {
   if ($("btnPlayOrig")) $("btnPlayOrig").onclick = () => {
     try { localStorage.setItem("rpg2:playAs", o.id); } catch (e) {}
     location.href = "battle.html";
+  };
+  if ($("btnOrigRename")) $("btnOrigRename").onclick = async () => {
+    const v = prompt("新的名字（最多 12 字）", oname);
+    if (!v) return;
+    prog.name = v.trim().slice(0, 12) || oname;
+    store.orig[o.id] = prog;
+    await save(); render(); toast("已改名");
   };
   if ($("btnOrigLevel")) $("btnOrigLevel").onclick = async () => {
     const needNow = CHAR.expNeed(lv);
