@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./js/data.js?v=2b1030af";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a6c2aa88";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=75531382";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -1508,11 +1508,17 @@ function renderOrig() {
           '</div>';
       })()) +
     card("专精",
-      row("力量", (Number((o.spec || {}).str) || 0)) +
-      row("智力", (Number((o.spec || {}).int) || 0)) +
-      row("技巧", (Number((o.spec || {}).tech) || 0)) +
-      row("敏捷", (Number((o.spec || {}).agi) || 0)) +
-      '<div class="hint" style="margin-top:6px;">专精四维固定，由角色设计决定。</div>') +
+      (() => {
+        const sp = prog.spec || {};
+        const free = Number(prog.free) || 0;
+        const line = (k, label, key) => '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 2px;">' +
+          '<span class="hint">' + label + '</span>' +
+          '<span style="display:flex;align-items:center;gap:6px;"><b>' + (Number((o.spec || {})[k]) || 0) + ' + ' + (Number(sp[key]) || 0) + '</b>' +
+          '<button data-spec="' + key + '"' + (free > 0 ? "" : " disabled") + ' style="padding:1px 8px;">＋</button></span></div>';
+        return line("str", "力量", "str") + line("int", "智力", "intel") + line("tech", "技巧", "tech") + line("agi", "敏捷", "agi") +
+          '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每级 +2）</div>' +
+          '<div class="hint" style="margin-top:2px;">力 +2攻 · 敏 +0.05速 · 智 +1.5抗 · 技 +0.5防</div>';
+      })()) +
     card("装备栏",
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
       Object.keys(SLOTN).map((k) => {
@@ -1531,6 +1537,16 @@ function renderOrig() {
     (o.notes ? card("备注", '<div class="hint">' + esc(o.notes) + '</div>') : "");
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
+  view().querySelectorAll("[data-spec]").forEach((b) => b.onclick = async () => {
+    const k = b.dataset.spec;
+    const free = Number(prog.free) || 0;
+    if (free <= 0) return toast("没有剩余专精点", true);
+    prog.spec = prog.spec || {};
+    prog.spec[k] = (Number(prog.spec[k]) || 0) + 1;
+    prog.free = free - 1;
+    store.orig[o.id] = prog;
+    await save(); render();
+  });
   view().querySelectorAll("[data-eqslot]").forEach((b) => b.onclick = () => {
     const slot = b.dataset.eqslot;
     const it = gg[slot] || {};
@@ -1653,6 +1669,7 @@ function renderOrig() {
     if ((Number(prog.exp) || 0) < needNow) return toast("经验不够（需 " + fmt(needNow) + "）", true);
     prog.exp = (Number(prog.exp) || 0) - needNow;
     prog.lv = lv + 1;
+    prog.free = (Number(prog.free) || 0) + 2;
     store.orig[o.id] = prog;
     await save(); render(); toast("升级！Lv" + (lv + 1));
   };

@@ -1,4 +1,4 @@
-﻿import { cloudGet, cloudSave } from "./core.js?v=13807141";
+import { cloudGet, cloudSave } from "./core.js?v=13807141";
 import { powerOf } from "./power.js?v=d92ed317";
 import { GRADE, APTITUDE } from "./data.js?v=2b1030af";
 
@@ -41,6 +41,12 @@ export function originalFinal(o, prog, withGear, withBonus) {
   ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].forEach((key) => {
     out[key] += Number(bonus[key]) || 0;
   });
+  // 🎯 升级获得的专精点（每点：力+2攻 / 敏+0.05速 / 智+1.5抗 / 技+0.5防）
+  const sp = (prog && prog.spec) || {};
+  out.atk += (Number(sp.str) || 0) * 2;
+  out.spd += (Number(sp.agi) || 0) * 0.05;
+  out.res += (Number(sp.intel) || 0) * 1.5;
+  out.def += (Number(sp.tech) || 0) * 0.5;
   out.power = powerOf(out);
   return out;
 }
