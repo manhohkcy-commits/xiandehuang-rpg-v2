@@ -1,4 +1,4 @@
-// 闲得慌RPG v2 · 数据（纯数据，无逻辑）
+﻿// 闲得慌RPG v2 · 数据（纯数据，无逻辑）
 export const RARITY_MULT = { R: 1, SR: 1.15, SSR: 1.3, UR: 1.5 };
 // 🚧 内容开关：装备选择已开放；关卡内容仍待定（数据保留）
 export const CONTENT_READY = true;
@@ -727,7 +727,6 @@ TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   const major = MAJOR_MECH[b.id];
   if (major) {
     [4, 9].forEach((i) => addEff(b.nodes[i], major));
-    addEff(b.nodes[13], major);
     addEff(b.nodes[13], ULT_MECH[b.id]);
   }
   const last = b.nodes[b.nodes.length - 1];
