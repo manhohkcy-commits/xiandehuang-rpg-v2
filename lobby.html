@@ -56,11 +56,11 @@ function origRows() {
 function render() {
   document.body.classList.toggle("host-mode", hostMode);
   if (hostMode) {
-    $("backLink").href = "studio.html";
-    $("backLink").textContent = "← 主机工作台";
+    $("backLink").href = "create.html?box=" + encodeURIComponent(HOST_BOX) + "&tab=char";
+    $("backLink").textContent = "← 我的原创";
   } else {
-    $("backLink").href = "index.html" + (box ? "?box=" + encodeURIComponent(box) : "");
-    $("backLink").textContent = "← 返回";
+    $("backLink").href = "create.html?tab=char" + (box ? "&box=" + encodeURIComponent(box) : "");
+    $("backLink").textContent = "← 我的角色";
   }
   const HOST_BOX = "zynFUTA";
   try { if (hostMode) localStorage.setItem("rpg2:hostBox", HOST_BOX); } catch (e) {}
