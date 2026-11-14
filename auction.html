@@ -128,8 +128,10 @@ async function unlist(lid) {
 }
 
 async function buy(lid) {
+  // 先拉最新挂单，避免买到已被下架的货
+  try { await loadAll(); } catch (e) {}
   const i = (auc.listings || []).findIndex((l) => l.lid === lid);
-  if (i < 0) return;
+  if (i < 0) return alert("这件已经卖掉了");
   const l = auc.listings[i];
   if (l.box === box) return alert("不能买自己的东西");
   const price = Number(l.price) || 0;
