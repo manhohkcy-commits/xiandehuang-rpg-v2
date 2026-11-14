@@ -881,7 +881,19 @@ function renderTalent() {
       (i + 1) + '阶<div class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + '</div></th>' + cells + '</tr>');
     const ACT_LV = { 2: 1, 6: 2, 10: 3, 14: 4, 15: 5 };
     if (ACT_LV[i] && tree.active) {
-      rows.push('<tr><td colspan="4" style="padding:0 4px 6px;"><div style="border-left:3px solid #c9a0ff;background:#16102a;padding:5px 8px;border-radius:6px;font-size:11px;color:#c9a0ff;">✨ 主动技 Lv' + ACT_LV[i] + '：' + esc(tree.active.name) + ' — ' + esc(tree.active.desc) + '</div></td></tr>');
+      const AL = ACT_LV[i], k = tree.active.key;
+      const val = k === "wall" ? ("护盾 " + (25 + 4 * (AL - 1)) + "% 生命")
+        : k === "frenzy" ? ("攻击 +" + (30 + 4 * (AL - 1)) + "%（2 回合）")
+        : k === "gale" ? ("下回合额外行动 " + (AL >= 3 ? 2 : 1) + " 次")
+        : k === "arcane" ? ("法术伤害 " + (180 + 18 * (AL - 1)) + "%")
+        : ("恢复 " + (25 + 4 * (AL - 1)) + "% 生命");
+      const right = AL === 1
+        ? (actHas ? '<span class="tag" style="border-color:#7ee787;color:#7ee787;">已解锁</span>'
+                  : '<button data-tp="' + tree.active.id + '" ' + (actCan ? '' : 'disabled') + ' style="font-size:10px;padding:1px 8px;">解锁</button>')
+        : '<span class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + ' 自动升级</span>';
+      rows.push('<tr><td colspan="4" style="padding:0 4px 6px;"><div style="display:flex;align-items:center;gap:8px;border-left:3px solid #c9a0ff;background:#16102a;padding:5px 8px;border-radius:6px;font-size:11px;color:#c9a0ff;">' +
+        '<span>✨ 主动技 Lv' + AL + '：' + esc(tree.active.name) + ' — ' + val + '　<span class="hint" style="color:#8a97b8;">CD ' + tree.active.cd + ' 回合</span></span>' +
+        '<span style="margin-left:auto;">' + right + '</span></div></td></tr>');
     }
   }
   const grid = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;">' +
@@ -913,7 +925,7 @@ function renderTalent() {
     ' <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
     '<div class="hint">按等级解锁：Lv5 起每 5 级开一阶，Lv80 全开；点亮不消耗任何资源。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
-    (actRow ? actRow : '') + '</div>';
+    '</div>';
 
   const allNodes = [];
   TALENT_TREES.forEach((t) => {
