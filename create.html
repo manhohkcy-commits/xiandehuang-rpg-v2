@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -127,7 +127,7 @@ async function load() {
 function ensureSeed(withDefaultChar = true) {
   if (!store.flags) store.flags = {};
   if (!store.flags.__seed) {
-    store.gold = 3000; store.flags.stone = 60; store.flags.shards = 20; store.flags.bstone = 5;
+    store.gold = 3000; store.flags.stone = 0; store.flags.shards = 0; store.flags.bstone = 0;
     store.flags.__seed = 1;
   }
   // 📬 欢迎邮件（每个存档一封）
