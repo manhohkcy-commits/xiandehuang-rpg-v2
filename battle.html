@@ -79,7 +79,7 @@ function dungeonListHtml() {
   const list = DUNGEONS.filter((d) => d.type === "daily" && d.stages && d.stages.length);
   return list.map((d) => {
     const done = Math.min(clearedFor(d.stages[0]), d.stages.length);
-    let h = '<div style="margin-top:10px;"><div style="font-weight:800;font-size:13px;color:#ffd666;">' + d.icon + ' ' + esc(d.name) +
+    let h = '<div class="card" style="margin:10px 0;padding:10px 12px;"><div style="font-weight:800;font-size:13px;color:#ffd666;">' + d.icon + ' ' + esc(d.name) +
       ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + done + '/' + d.stages.length + '</span></div>';
     h += d.stages.map((s) => {
       const no = stageNo(s), cleared = clearedFor(s), locked = no > cleared + 1;
@@ -95,7 +95,7 @@ function dungeonListHtml() {
           ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
           : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
     }).join("");
-    return h + '</div>';
+    return h + '</div></div>';
   }).join("");
 }
 
@@ -520,7 +520,7 @@ function gridHtml() {
   for (let r = 0; r < 3; r++) {
     h += cell(pick(A, 1, r)) + cell(pick(A, 0, r)) + cell(pick(B, 0, r)) + cell(pick(B, 1, r));
   }
-  return h + '</div>';
+  return h + '</div></div>';
 }
 
 function renderBattle() {
