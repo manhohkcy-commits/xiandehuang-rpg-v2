@@ -23,7 +23,7 @@ import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } f
 import { } from "./js/battle.js?v=273a02ba";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS } from "./js/data.js?v=fbecd1eb";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
-import { stagePower } from "./js/enemies.js?v=5054b7b7";
+import { stagePower, enemyAt } from "./js/enemies.js?v=5054b7b7";
 import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js?v=273a02ba";
 
@@ -184,10 +184,28 @@ function startBattle(stageId) {
   const f = charFinal(ch);
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
+  const mkFoe = (e, i) => ({
+    id: "foe" + i, name: e.name, side: "B", spd: e.spd, power: 0,
+    hp: e.hp, maxHp: e.hp, atk: e.atk, def: e.def, res: e.res || 0,
+    critRate: 5, critDmg: 150
+  });
+  let foeSpecs = [];
+  if (Array.isArray(s.enemies) && s.enemies.length) {
+    s.enemies.forEach((id) => {
+      const e = enemyAt(id, s.lv);
+      if (e) foeSpecs.push({ name: e.name, spd: e.stats.spd, hp: e.stats.hp, atk: e.stats.atk, def: e.stats.def, res: e.stats.res });
+    });
+  }
+  if (!foeSpecs.length) foeSpecs = [s.foe];
+  const firstWave = foeSpecs.slice(0, 6);
+  const restWaves = [];
+  for (let i = 6; i < foeSpecs.length; i += 6) restWaves.push(foeSpecs.slice(i, i + 6));
+  const units = firstWave.map((e, i) => mkFoe(e, i));
   st = createBattle([
-    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0, traits: combatTraits(ch) },
-    { id: "foe", name: s.foe.name, side: "B", spd: s.foe.spd, power: 0, hp: s.foe.hp, maxHp: s.foe.hp, atk: s.foe.atk, def: s.foe.def, critRate: 5, critDmg: 150 }
-  ]);
+    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0, traits: combatTraits(ch) }
+  ].concat(units));
+  st.__waves = restWaves;
+  st.__waveNo = 1;
   st.__stage = s.id;
   st.__weapon = ch.equip.weapon || null;
   // 🌦 天气 + 🏞 场地：双方属性叠加
@@ -540,7 +558,7 @@ function aiTurnIfNeeded() {
     }
   }  const a = nextActor(st);
   if (!a) return;
-  if (a.id !== "foe") { renderBattle(); return; }
+  if (a.side !== "B") { renderBattle(); return; }
   busy = true;
   setTimeout(() => {
     const f2 = foe(), m = me();
@@ -560,10 +578,25 @@ function aiTurnIfNeeded() {
     }
     commit(st, "foe");
     busy = false;
-    if (st.finished) finish();
+    if (st.finished && !spawnWave()) finish();
     renderBattle();
     setTimeout(aiTurnIfNeeded, 300);
   }, 420);
+}
+
+function spawnWave() {
+  if (!st || !st.__waves || !st.__waves.length) return false;
+  const wave = st.__waves.shift();
+  wave.forEach((e, i) => {
+    st.units.push({
+      id: "foe_w" + st.__waveNo + "_" + i, name: e.name, side: "B", spd: e.spd, power: 0,
+      hp: e.hp, maxHp: e.hp, atk: e.atk, def: e.def, res: e.res || 0, critRate: 5, critDmg: 150
+    });
+  });
+  st.__waveNo = (st.__waveNo || 1) + 1;
+  st.finished = false; st.winner = null;
+  pushLog("🌊 第 " + st.__waveNo + " 波来袭：" + wave.map((x) => x.name).join("、"), "hdr");
+  return true;
 }
 
 function finish() {
