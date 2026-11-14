@@ -569,7 +569,6 @@ function makeMine() {
 export const DUNGEONS = [
   makeRedmaple(),
   makeHaroldBank(),
-  makeSnowfield(),
   makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
   makeMine(),
   { id: "d_tbd", name: "待定日常", kind: "tbd", icon: "❔", desc: "内容待定", type: "daily", stages: [] },

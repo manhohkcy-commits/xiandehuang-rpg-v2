@@ -181,7 +181,6 @@ const BANK = [
      { name: "加息", desc: "半血召唤两名金库护卫", summon: "b_vault", cd: 6 }], "坐在钱堆上，利息已经算好了。")
 ];
 ENEMIES.push(...BANK);
-ENEMIES.push(...SNOW);
 
 // ⚒️ 废弃矿脉：装备素材副本的敌人
 const MINE_TIER = {
