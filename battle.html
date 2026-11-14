@@ -315,19 +315,28 @@ function startBattle(stageId, col) {
   if (meU) { meU.__col = Number(col) || 0; meU.__back = !!meU.__col; }
   {
     const foes = st.units.filter((u) => u.side === "B");
-    const frontRoles = ["近战", "坦克", "特色首领", "首领"];
-    const isFront = (u) => frontRoles.some((r) => String(u.name).indexOf("") === 0) && false;
-    // 用 spec 里的 role 判断（建单位时已带上）
-    foes.forEach((u) => {
-      const spec = foeSpecs.find((s) => s.name === u.name) || {};
-      const role = spec.role || "";
-      const front = frontRoles.indexOf(role) >= 0 || role.indexOf("首领") >= 0;
-      u.__col = front ? 0 : 1;
-      u.__back = !front;
-    });
-    // 每排按顺序排入 3 行
-    [0, 1].forEach((col) => {
-      foes.filter((u) => (u.__col ? 1 : 0) === col).forEach((u, i) => { u.__row = i % 3; });
+    const FRONT = ["近战", "坦克", "首领", "特色首领"];
+    const isFront = (u) => {
+      const spec = foeSpecs.find((x) => x.name === u.name) || {};
+      const role = String(spec.role || "");
+      return FRONT.some((r) => role.indexOf(r) >= 0);
+    };
+    // 每个敌人一个独立格：前排 3 格 → 后排 3 格
+    const slots = [];
+    for (let col = 0; col < 2; col++) for (let row = 0; row < 3; row++) slots.push({ col, row });
+    const used = [];
+    const takeSlot = (wantFront) => {
+      const idx = slots.findIndex((sl) => !used.includes(sl) && (wantFront ? sl.col === 0 : sl.col === 1));
+      const s2 = idx >= 0 ? slots[idx] : slots.find((sl) => !used.includes(sl));
+      if (!s2) return null;
+      used.push(s2);
+      return s2;
+    };
+    const sorted = foes.slice().sort((a, b) => (isFront(b) ? 1 : 0) - (isFront(a) ? 1 : 0));
+    sorted.forEach((u) => {
+      const sl = takeSlot(isFront(u));
+      if (!sl) return;
+      u.__col = sl.col; u.__row = sl.row; u.__back = sl.col === 1;
     });
   }
   st.__stage = s.id;
