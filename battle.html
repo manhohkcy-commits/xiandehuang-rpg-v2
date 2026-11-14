@@ -190,6 +190,21 @@ function startBattle(stageId) {
   ]);
   st.__stage = s.id;
   st.__weapon = ch.equip.weapon || null;
+  // 🌦 天气 + 🏞 场地：双方属性叠加
+  {
+    const env = ENVIRONMENTS[s.weather || "clear"] || ENVIRONMENTS.clear;
+    const mods = Object.assign({}, env.mods || {}, s.sceneMods || {});
+    st.units.forEach((u) => {
+      if (mods.hpPct) { const k = 1 + mods.hpPct / 100; u.maxHp = Math.round(u.maxHp * k); u.hp = Math.round(u.hp * k); }
+      if (mods.atkPct) u.atk = Math.round(u.atk * (1 + mods.atkPct / 100));
+      if (mods.defPct) u.def = Math.round(u.def * (1 + mods.defPct / 100));
+      if (mods.resPct) u.res = Math.round(u.res * (1 + mods.resPct / 100));
+      if (mods.spdPct) u.spd = Math.round(u.spd * (1 + mods.spdPct / 100) * 10) / 10;
+      if (mods.critRate) u.critRate = Math.max(0, (Number(u.critRate) || 0) + mods.critRate);
+    });
+    st.__envName = env.icon + " " + env.name;
+    st.__scene = s.scene || "";
+  }
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
