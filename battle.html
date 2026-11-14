@@ -25,6 +25,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS } from "./js/data.js
 import { makeItem } from "./js/items.js?v=a6c2aa88";
 import { stagePower, enemyAt } from "./js/enemies.js?v=5054b7b7";
 import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
+import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js?v=273a02ba";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
@@ -65,14 +66,21 @@ async function save() {
 }
 
 // ── 选关 ──────────────────────────────────────────────
+function hostOrig() {
+  try { if (localStorage.getItem("rpg2:host") === "1") return ORIGINALS[0] || null; } catch (e) {}
+  return null;
+}
 function renderPick() {
   const ch = activeChar();
-  if (!ch) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
+  const o0 = !ch ? hostOrig() : null;
+  if (!ch && !o0) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
   const f = charFinal(ch);
   view().innerHTML =
     '<div class="card"><div class="card-title">出战</div>' +
-      '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
-      '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>' +
+      (ch
+        ? '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>'
+        : '<div class="row"><span class="k">🧬 ' + esc(o0.name) + '</span><span class="v">Lv1 · 战力 ' + fmt(originalFinal(o0, {}).power) + '</span></div>') +
+      '<div class="hint">' + (ch ? '攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) : '🧬 原创角色出战') + '</div>' +
     '</div>' +
     '<div class="card"><div class="card-title">选择关卡</div>' +
       STAGES.map((s) => {
@@ -206,7 +214,9 @@ function renderPrep(stageId) {
 function startBattle(stageId, col) {
   if (roomId && amHost) { buildMultiBattle(stageId); return; }
   const ch = activeChar();
-  const f = charFinal(ch);
+  const o0 = !ch ? hostOrig() : null;
+  const of = o0 ? originalFinal(o0, {}) : null;
+  const f = ch ? charFinal(ch) : { atk: of.atk, hp: of.hp, def: of.def, res: of.res, spd: of.spd, critRate: of.critRate, critDmg: of.critDmg, dmgCut: 0 };
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
   const mkFoe = (e, i) => ({
@@ -227,7 +237,7 @@ function startBattle(stageId, col) {
   for (let i = 6; i < foeSpecs.length; i += 6) restWaves.push(foeSpecs.slice(i, i + 6));
   const units = firstWave.map((e, i) => mkFoe(e, i));
   st = createBattle([
-    { id: "me", name: ch.name, side: "A", spd: f.spd, power: charPower(ch), hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut, rage: 0, traits: combatTraits(ch) }
+    { id: "me", name: ch ? ch.name : o0.name, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
   ].concat(units));
   st.__waves = restWaves;
   st.__waveNo = 1;
@@ -236,7 +246,7 @@ function startBattle(stageId, col) {
   if (meU) { meU.__col = Number(col) || 0; meU.__back = !!meU.__col; }
   st.units.filter((u) => u.side === "B").forEach((u, i) => { u.__col = i < 3 ? 0 : 1; u.__back = !!u.__col; });
   st.__stage = s.id;
-  st.__weapon = ch.equip.weapon || null;
+  st.__weapon = ch ? (ch.equip.weapon || null) : ((ORIGINAL_GEAR[o0.id] || {}).weapon || null);
   // 🌦 天气 + 🏞 场地：双方属性叠加
   {
     const env = ENVIRONMENTS[s.weather || "clear"] || ENVIRONMENTS.clear;
@@ -684,6 +694,7 @@ function finish() {
 
 $("btnSave").onclick = () => save();
 (async () => {
+  try { await pullOriginals(); } catch (e) {}
   await load();
   // 联机：URL 里带 room → 从房间读状态
   const q = new URLSearchParams(location.search);
@@ -696,6 +707,7 @@ $("btnSave").onclick = () => save();
         if (!amHost && got.room.state) renderSpectator(got.room.state);
         if (amHost) { const okRestore = await tryRestore(); }
         setInterval(async () => {
+  try { await pullOriginals(); } catch (e) {}
           if (amHost) return;
           try {
             const g2 = await getRoom(roomId);
