@@ -515,14 +515,14 @@ function doAct(kind) {
     m.__defBonus = 1;
     commit(st, "me");
   } else if (kind === "ult") {
-    const r = damage(st, "me", "foe", { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg });
+    const r = damage(st, "me", foe().id, { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg });
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     commit(st, "me");
   } else if (kind === "skill") {
     const mult = Number(wp.sMult) || 150;
     const cd = Number(wp.sCd) || 3;
-    const r = damage(st, "me", "foe", { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
+    const r = damage(st, "me", foe().id, { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
     const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "")];
     if (wp.hitStatus && r.dmg > 0) {
       addStatus(st, "foe", wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
@@ -532,7 +532,7 @@ function doAct(kind) {
     setCooldown(st, "me", cd);
     commit(st, "me");
   } else {
-    const r = damage(st, "me", "foe", { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
+    const r = damage(st, "me", foe().id, { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     commit(st, "me");
