@@ -386,18 +386,23 @@ function makeHaroldBank() {
     ["保安队长", "精英"],
     ["保安护卫犬", "精英"],
     ["大堂经理", "精英"],
-    ["资深保安队长", "特色"],
+    ["罗伊 · 哈罗德", "特色"],
     ["运钞护卫队队员", "普通"],
     ["运钞护卫队弩手", "精英"],
     ["运钞护卫队重盾兵", "精英"],
     ["运钞护卫队队长", "精英"],
+    ["本乔 · 詹", "特色"],
     ["反制小队先锋", "精英"],
-    ["反制小队精锐", "特色"],
     ["金库护卫", "精英"],
     ["金库弩手", "精英"],
     ["金库重盾兵", "精英"],
-    ["金库技师", "特色"]
+    ["卡法特琳忒", "首领"]
   ];
+  const BOSS_STORY = {
+    "罗伊 · 哈罗德": "罗伊站在贵宾室门口，礼帽压得很低：「存钱还是取命？」",
+    "本乔 · 詹": "本乔把运钞车的钥匙挂在腰上，笑得很和气，手里却拎着霰弹枪。",
+    "卡法特琳忒": "金库最深处，卡法特琳忒坐在钱堆上：「你们来晚了——利息已经算好了。」"
+  };
   const STORY = [
     "门口的石狮子在打哈欠，保安刚换班。",
     "柜员数钱的手很快，眼睛更快。",
@@ -408,10 +413,10 @@ function makeHaroldBank() {
   const LV = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
   const stages = LV.map((lv, i) => {
     const g = Math.pow(1.18, i), mile = (i + 1) % 5 === 0 ? 2 : 1;
-    const boss = i === 19;
-    const plan = boss ? ["行长「哈罗德」", "首领"] : PLAN[i % PLAN.length];
+    const plan = PLAN[i % PLAN.length];
     const foeName = plan[0], tier = plan[1];
-    const mul = boss ? 2.4 : (tier === "特色" ? 1.6 : tier === "精英" ? 1.25 : 1) + Math.floor(i / 10) * 0.12;
+    const boss = tier === "首领";
+    const mul = (boss ? 2.4 : tier === "特色" ? 1.6 : tier === "精英" ? 1.25 : 1) + Math.floor(i / 10) * 0.12;
     return {
       id: "gold_" + (i + 1),
       name: "第 " + (i + 1) + " 关 · " + (boss ? "金库核心" : PLACES[i % PLACES.length]),
@@ -420,7 +425,7 @@ function makeHaroldBank() {
       gold: Math.round(320 * g * mile), exp: Math.round(40 * g),
       drop: { shards: [], stone: [], bstone: 0, gearChance: 3 },
       foe: foeOf(foeName, lv, mul),
-      story: boss ? "哈罗德亲自站在金库门口，西装笔挺，手里拿着一把金钥匙。" : STORY[i % STORY.length]
+      story: BOSS_STORY[foeName] || STORY[i % STORY.length]
     };
   });
   return { id: "d_gold", name: "哈罗德银行", kind: "gold", icon: "🏦", type: "daily", desc: "抢银行拿金币", stages };
