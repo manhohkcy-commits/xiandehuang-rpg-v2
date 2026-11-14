@@ -307,9 +307,15 @@ export function enemyAt(id, lv) {
   const e = enemyById(id);
   if (!e) return null;
   const L = Math.max(1, Number(lv) || 1);
+  const ROLE_SPD = { "远程": 1.15, "坦克": 0.85, "辅助": 1.0, "法术": 1.06 };
   const k = (key) => {
-    const raw = (e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1)) * enemyK(L);
-    return key === "spd" ? Math.round(raw * 10) / 10 : Math.round(raw);
+    let raw = (e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1));
+    if (key !== "spd") raw *= enemyK(L);
+    if (key === "spd") {
+      raw *= ROLE_SPD[e.role] || 1;
+      return Math.round(raw * 10) / 10;
+    }
+    return Math.round(raw);
   };
   return {
     id: e.id, name: e.name, camp: e.camp, role: e.role, desc: e.desc, lv: L,
