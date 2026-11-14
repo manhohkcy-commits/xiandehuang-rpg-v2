@@ -264,13 +264,17 @@ function startBattle(stageId, col) {
   if (Array.isArray(s.enemies) && s.enemies.length) {
     s.enemies.forEach((id) => {
       const e = enemyAt(id, s.lv);
-      if (e) foeSpecs.push({ name: e.name, spd: e.stats.spd, hp: e.stats.hp, atk: e.stats.atk, def: e.stats.def, res: e.stats.res });
+      if (e) foeSpecs.push({ name: e.name, role: e.role || "", spd: e.stats.spd, hp: e.stats.hp, atk: e.stats.atk, def: e.stats.def, res: e.stats.res });
     });
   }
   if (!foeSpecs.length) foeSpecs = [s.foe];
-  const firstWave = foeSpecs.slice(0, 6);
-  const restWaves = [];
-  for (let i = 6; i < foeSpecs.length; i += 6) restWaves.push(foeSpecs.slice(i, i + 6));
+  const total = foeSpecs.length;
+  const waveCount = Math.max(1, Math.ceil(total / 6));
+  const perWave = Math.ceil(total / waveCount);
+  const waves = [];
+  for (let i = 0; i < total; i += perWave) waves.push(foeSpecs.slice(i, i + perWave));
+  const firstWave = waves.shift() || [];
+  const restWaves = waves;
   const units = firstWave.map((e, i) => mkFoe(e, i));
   // 🤝 同行：把选中的原创角色加进我方
   const partyIds = (window.__party || []).filter((id) => !o0 || id !== o0.id);
@@ -309,7 +313,23 @@ function startBattle(stageId, col) {
   // 布阵：我方 0=前排 1=后排；敌人前排优先
   const meU = st.units.find((u) => u.id === "me");
   if (meU) { meU.__col = Number(col) || 0; meU.__back = !!meU.__col; }
-  st.units.filter((u) => u.side === "B").forEach((u, i) => { u.__col = i < 3 ? 0 : 1; u.__back = !!u.__col; });
+  {
+    const foes = st.units.filter((u) => u.side === "B");
+    const frontRoles = ["近战", "坦克", "特色首领", "首领"];
+    const isFront = (u) => frontRoles.some((r) => String(u.name).indexOf("") === 0) && false;
+    // 用 spec 里的 role 判断（建单位时已带上）
+    foes.forEach((u) => {
+      const spec = foeSpecs.find((s) => s.name === u.name) || {};
+      const role = spec.role || "";
+      const front = frontRoles.indexOf(role) >= 0 || role.indexOf("首领") >= 0;
+      u.__col = front ? 0 : 1;
+      u.__back = !front;
+    });
+    // 每排按顺序排入 3 行
+    [0, 1].forEach((col) => {
+      foes.filter((u) => (u.__col ? 1 : 0) === col).forEach((u, i) => { u.__row = i % 3; });
+    });
+  }
   st.__stage = s.id;
   st.__weapon = ch ? (ch.equip.weapon || null) : (function () { const gw = (ORIGINAL_GEAR[o0.id] || {}).weapon; return gw ? { data: gw } : null; })();
   // 🌦 天气 + 🏞 场地：双方属性叠加
