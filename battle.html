@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -230,7 +230,15 @@ function openEnemyDetail(id, lv) {
 }
 
 function renderPick() {
-  const ch = activeChar();
+  let ch = activeChar();
+  if (!ch && isHost()) {
+    // 🧬 主机没有玩家角色：用占位角色，默认操控原创
+    ch = { id: "__host__", name: "（未建角色）", lv: 1, str: 0, intel: 0, tech: 0, agi: 0, breaks: 0, equip: {}, free: 0 };
+    if (!window.__playOrig && ORIGINALS.length) {
+      const first = ORIGINALS.find((o) => o.camp !== "ally") || ORIGINALS[0];
+      window.__playOrig = first.id;
+    }
+  }
   if (!ch) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
   const f = charFinal(ch);
   const origList = ORIGINALS.filter((o) => o.camp !== "ally");
