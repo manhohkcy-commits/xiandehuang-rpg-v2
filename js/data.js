@@ -289,7 +289,7 @@ function makeDaily(id, name, kind, icon, desc, foeName) {
       group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
       tier: i === 19 ? "首领" : (i === 9 || i === 14) ? "特色" : i === 4 ? "精英" : "普通",
       gold: r.gold, exp: r.exp,
-      foe: foeOf(foeName, lv, (1 + Math.floor(i / 10) * 0.15) * 2.1),
+      foe: foeOf(foeName, lv, (1 + Math.floor(i / 10) * 0.15) * 2.4),
       drop: Object.assign({ shards: [0, 0], stone: [0, 0], bstone: 0, gearChance: 0, manuscript: 0, medal: 0, medalChance: 0 }, r.drop)
     };
   });

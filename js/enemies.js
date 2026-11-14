@@ -297,7 +297,7 @@ function enemyK(lv) {
   for (let i = 1; i < ENEMY_K.length; i++) {
     if (L <= ENEMY_K[i][0]) {
       const [l0, k0] = ENEMY_K[i - 1], [l1, k1] = ENEMY_K[i];
-      return (k0 + (k1 - k0) * (L - l0) / (l1 - l0)) * 0.4;
+      return (k0 + (k1 - k0) * (L - l0) / (l1 - l0)) * 0.52;
     }
   }
   return ENEMY_K[ENEMY_K.length - 1][1];
