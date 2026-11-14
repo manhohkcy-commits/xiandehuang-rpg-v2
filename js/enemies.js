@@ -96,10 +96,10 @@ export const ENEMIES = [
 
 // 🏦 哈罗德银行敌人（普通 / 精英 / 特色 / 首领）
 const BANK_TIER = {
-  "普通": { atk: 36, hp: 380, def: 12, res: 9, spd: 9 },
-  "精英": { atk: 54, hp: 650, def: 22, res: 16, spd: 8 },
-  "特色": { atk: 80, hp: 1600, def: 34, res: 24, spd: 9 },
-  "首领": { atk: 105, hp: 2900, def: 44, res: 33, spd: 10 }
+  "普通": { atk: 46, hp: 500, def: 15, res: 11, spd: 9 },
+  "精英": { atk: 70, hp: 850, def: 28, res: 20, spd: 8 },
+  "特色": { atk: 104, hp: 2100, def: 44, res: 31, spd: 9 },
+  "首领": { atk: 136, hp: 3800, def: 57, res: 43, spd: 10 }
 };
 const EB = (id, name, role, tier, skills, desc) => {
   const s = BANK_TIER[tier] || BANK_TIER["普通"];
