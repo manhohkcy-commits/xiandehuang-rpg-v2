@@ -1364,6 +1364,17 @@ function renderCult() {
     await save(); render();
     toast("🔧 精炼成功：Lv" + r.refine);
   });
+  view().innerHTML += synthHtml();
+  view().querySelectorAll("[data-synth]").forEach((b) => b.onclick = async () => {
+    const [a, b2] = b.dataset.synth.split(">");
+    const f = (store.flags = store.flags || {});
+    const have = Number(f[a]) || 0;
+    if (have < 3) return toast("数量不足", true);
+    f[a] = have - 3;
+    f[b2] = (Number(f[b2]) || 0) + 1;
+    await save(); render();
+    toast("🧪 合成成功");
+  });
   view().querySelectorAll("[data-cultdetail]").forEach((b) => b.onclick = () => {
     const key = b.dataset.cultdetail;
     if (key.indexOf("eq:") === 0) {
@@ -1377,6 +1388,27 @@ function renderCult() {
 }
 
 // ⚒ 原创角色培养（与玩家同构：强化 / 升星 / 精炼 / 升阶 / 觉醒）
+
+// 🧪 材料合成：3 低档 → 1 高档
+const SYNTH_PAIRS = [
+  ["ms1", "ms2", "初级手稿", "中级手稿"],
+  ["ms2", "ms3", "中级手稿", "高级手稿"],
+  ["md1", "md2", "青铜勋章", "白银勋章"],
+  ["md2", "md3", "白银勋章", "黄金勋章"],
+  ["cert1", "cert2", "新手突破证书", "入门突破证书"],
+  ["cert2", "cert3", "入门突破证书", "精英突破证书"],
+  ["cert3", "cert4", "精英突破证书", "大师突破证书"]
+];
+function synthHtml() {
+  const f = store.flags || {};
+  const rows = SYNTH_PAIRS.map(([a, b, na, nb]) => {
+    const have = Number(f[a]) || 0;
+    return '<div class="row"><span class="k">' + na + ' ×3 → ' + nb + ' ×1</span><span class="v">' +
+      '<span class="hint">有 ' + have + '</span> <button data-synth="' + a + '>' + b + '" ' + (have >= 3 ? '' : 'disabled') + '>合成</button></span></div>';
+  }).join("");
+  return card("🧪 材料合成", rows + '<div class="hint">低档材料可 3:1 合成为高档，不会浪费。</div>');
+}
+
 function renderOrigCult() {
   if (!ORIGINALS.length) {
     view().innerHTML = card("⚒ 培养", '<div class="hint">还没有原创角色。</div>');
