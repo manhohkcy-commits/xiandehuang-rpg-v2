@@ -1,4 +1,4 @@
-// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
+﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
 import { CULT, RARITY_MULT } from "./data.js?v=9c37d864";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
@@ -218,7 +218,8 @@ export function dismantle(store, itemId) {
   const stone = Math.max(2, Math.round((Number(d.lv) || 1) * 0.6));
   const rarity = d.born || d.rarity || "R";
   const sKey = (CULT.shardKey || {})[rarity] || "shardR";
-  const shards = Math.max(1, Math.round((Number(d.star) || 1) * 2));
+  const SHARD_BASE = { R: 20, SR: 40, SSR: 80, UR: 160 };
+  const shards = Math.max(1, Math.round((SHARD_BASE[rarity] || 20) * (Number(d.star) || 1)));
   store.items = store.items.filter((x) => x.id !== itemId);
   store.flags = store.flags || {};
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
