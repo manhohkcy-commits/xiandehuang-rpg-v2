@@ -94,6 +94,58 @@ export const ENEMIES = [
     { weapon: "裂地战斧", armor: "铁壁重甲", armor2: "磐石护腿", accessory: "狂怒指环" }, EG_B, "红枫团首领，据说没人见过他全力。")
 ];
 
+// 🏦 哈罗德银行敌人（普通 / 精英 / 特色 / 首领）
+const BANK_TIER = {
+  "普通": { atk: 20, hp: 210, def: 8, res: 6, spd: 9 },
+  "精英": { atk: 30, hp: 360, def: 15, res: 11, spd: 8 },
+  "特色": { atk: 46, hp: 900, def: 24, res: 17, spd: 9 },
+  "首领": { atk: 62, hp: 1600, def: 32, res: 24, spd: 10 }
+};
+const EB = (id, name, role, tier, skills, desc) => {
+  const s = BANK_TIER[tier] || BANK_TIER["普通"];
+  return {
+    id, name, camp: "哈罗德银行", role, tier, desc,
+    stats: Object.assign({}, s), growth: tier === "首领" ? EG_B : tier === "精英" ? EG_E : EG,
+    equip: { weapon: "制式短棍", armor: "银行制服", armor2: "制式长裤", accessory: "员工胸牌" },
+    skills, critRate: 5, critDmg: 150
+  };
+};
+const BANK = [
+  EB("b_guard", "保安", "近战", "普通", [{ name: "警棍挥击", desc: "单体 130% 攻击", mult: 130, cd: 2 }], "银行门口最常见的制服。"),
+  EB("b_guard2", "资深保安", "近战", "精英", [{ name: "列阵突刺", desc: "单体 140% 攻击", mult: 140, cd: 2 }], "站了十年岗，棍子比嘴硬。"),
+  EB("b_guard_cap", "保安队长", "坦克", "精英", [{ name: "铁壁格挡", desc: "本回合减伤 30%", guard: 30, cd: 3 }], "手里有对讲机，也有盾。"),
+  EB("b_guard_cap2", "资深保安队长", "坦克", "特色", [{ name: "盾墙", desc: "本回合减伤 40%", guard: 40, cd: 3 }], "整支保安队的骨头。"),
+  EB("b_teller", "前台柜员", "辅助", "普通", [{ name: "呼叫增援", desc: "全体友军 +8% 攻击", buff: { atkPct: 8 }, cd: 3 }], "微笑服务，手在按警报。"),
+  EB("b_teller2", "业务柜员", "远程", "普通", [{ name: "钢印重击", desc: "单体 120% 攻击", mult: 120, cd: 2 }], "盖章盖出了肌肉。"),
+  EB("b_manager", "大堂经理", "辅助", "精英", [{ name: "安抚", desc: "降低目标攻击 12%", debuff: { atkPct: -12 }, cd: 3 }], "先讲道理，再叫人。"),
+  EB("b_dog", "保安犬", "近战", "普通", [{ name: "撕咬", desc: "单体 110% 攻击", mult: 110, cd: 2 }], "不叫，只咬。"),
+  EB("b_dog2", "保安护卫犬", "近战", "精英", [{ name: "扑倒", desc: "单体 150% 攻击", mult: 150, cd: 3 }], "训过的，专咬小腿。"),
+  EB("b_cam", "见习监控员", "辅助", "普通", [{ name: "标记", desc: "标记目标，全队增伤", mark: true, cd: 3 }], "盯着屏幕，眼睛都不眨。"),
+  EB("b_cam2", "资深监控员", "辅助", "精英", [{ name: "调阅记录", desc: "全体友军 +10% 伤害", buff: { dmgPct: 10 }, cd: 4 }], "你走过的每一步他都看过。"),
+  EB("b_convoy", "运钞护卫队队员", "近战", "普通", [{ name: "押运突刺", desc: "单体 140% 攻击", mult: 140, cd: 2 }], "箱子里比命值钱。"),
+  EB("b_convoy_arc", "运钞护卫队弩手", "远程", "精英", [{ name: "穿甲弩矢", desc: "单体 160% 攻击", mult: 160, cd: 3 }], "从车窗里伸出来的那一支。"),
+  EB("b_convoy_shield", "运钞护卫队重盾兵", "坦克", "精英", [{ name: "盾墙", desc: "本回合减伤 40%", guard: 40, cd: 4 }], "盾后面是钱箱。"),
+  EB("b_convoy_cap", "运钞护卫队队长", "近战", "精英", [{ name: "警戒射击", desc: "全体 90% 攻击", mult: 90, aoe: true, cd: 4 }], "钥匙挂腰上，枪端手里。"),
+  EB("b_counter", "反制小队先锋", "近战", "精英", [{ name: "破阵冲撞", desc: "单体 160% 攻击并眩晕", mult: 160, stun: 25, cd: 4 }], "专治各种冲锋。"),
+  EB("b_counter2", "反制小队精锐", "近战", "特色", [{ name: "压制射击", desc: "单体 180% 攻击并沉默", mult: 180, silence: 30, cd: 4 }], "他们的任务是不让你出手。"),
+  EB("b_vault", "金库护卫", "坦克", "精英", [{ name: "金库壁垒", desc: "全体获得 12% 生命护盾", shieldPct: 12, cd: 4 }], "站在门后，一动不动。"),
+  EB("b_vault_arc", "金库弩手", "远程", "精英", [{ name: "重弩", desc: "单体 180% 攻击", mult: 180, cd: 3 }], "金库走廊只有一条直线。"),
+  EB("b_vault_shield", "金库重盾兵", "坦克", "精英", [{ name: "铁壁格挡", desc: "本回合减伤 35%", guard: 35, cd: 3 }], "金库真正的门。"),
+  EB("b_vault_tech", "金库技工", "辅助", "普通", [{ name: "应急修复", desc: "治疗一名机械友军", heal: 20, cd: 3 }], "修锁的，也修护盾。"),
+  EB("b_vault_tech2", "金库技师", "辅助", "特色", [{ name: "系统超载", desc: "给全体友军加 15% 护盾", shieldPct: 15, cd: 4 }], "让整座金库为他运转。"),
+  EB("b_roy", "罗伊 · 哈罗德", "特色首领", "特色",
+    [{ name: "礼帽戏法", desc: "召唤一个分身", summon: "b_dog", cd: 4 },
+     { name: "存钱还是取命", desc: "单体 220% 攻击", mult: 220, cd: 3 }], "礼帽压得很低，笑意很浅。"),
+  EB("b_benjo", "本乔 · 詹", "特色首领", "特色",
+    [{ name: "霰弹横扫", desc: "全体 110% 攻击", mult: 110, aoe: true, cd: 3 },
+     { name: "运钞车冲撞", desc: "一排 200% 攻击并眩晕", mult: 200, row: true, stun: 30, cd: 4 }], "钥匙挂腰上，笑得很和气。"),
+  EB("b_catherine", "卡法特琳忒", "首领", "首领",
+    [{ name: "催收", desc: "单体 170% 攻击并吸血", mult: 170, drain: 50, cd: 3 },
+     { name: "结算", desc: "全体 160% 攻击", mult: 160, aoe: true, cd: 4 },
+     { name: "加息", desc: "半血召唤两名金库护卫", summon: "b_vault", cd: 6 }], "坐在钱堆上，利息已经算好了。")
+];
+ENEMIES.push(...BANK);
+
 // ⚡ 回怒效率（每次行动获得怒气）与必杀招式（怒气 100 释放）
 const ENEMY_RAGE = {
   e_thug: 25, e_brute: 22, e_soldier: 24, e_archer: 28, e_crossbow: 26,
