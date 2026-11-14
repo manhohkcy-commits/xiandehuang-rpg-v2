@@ -348,6 +348,9 @@ const REDMAPLE_PLAN = [
 ];
 function makeRedmaple() {
   const stages = REDMAPLE_PLAN.map(([lv, ids, exp, story], i) => {
+    // 单人挑战编成：按关卡段限制同场敌人数
+    const CAP = i < 5 ? 2 : i < 10 ? 3 : i < 15 ? 4 : i < 19 ? 6 : 4;
+    ids = ids.slice(0, CAP);
     const first = enemyAt(ids[0], lv);
     const sc = SCENES[REDMAPLE_SCENE_IDX[i]] || SCENES[0];
     const tier = i === 19 ? "首领" : (i === 9 || i === 14) ? "特色" : i === 4 ? "精英" : "普通";
