@@ -21,8 +21,8 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a9006411";
-import { makeItem } from "./js/items.js?v=cda5627f";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=9c37d864";
+import { makeItem } from "./js/items.js?v=680710ae";
 import { stagePower, enemyAt } from "./js/enemies.js?v=f70dc0c6";
 import { charFinal, charPower, combatTraits } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
@@ -833,8 +833,15 @@ function finish() {
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
   const refine = rnd(dp.refine);
+  const shR = rnd(dp.shardR) || 0, shSR = rnd(dp.shardSR) || 0, shSSR = rnd(dp.shardSSR) || 0;
+  store.flags.shardR = (Number(store.flags.shardR) || 0) + shR;
+  store.flags.shardSR = (Number(store.flags.shardSR) || 0) + shSR;
+  store.flags.shardSSR = (Number(store.flags.shardSSR) || 0) + shSSR;
   store.flags.refineStone = (Number(store.flags.refineStone) || 0) + refine;
-  const drops = [{ name: "碎片", count: shards }, { name: "强化石", count: stone }, { name: "精炼石", count: refine }];
+  const drops = [{ name: "强化石", count: stone }, { name: "精炼石", count: refine }];
+  if (shR) drops.push({ name: "R 碎片", count: shR });
+  if (shSR) drops.push({ name: "SR 碎片", count: shSR });
+  if (shSSR) drops.push({ name: "SSR 碎片", count: shSSR });
   if (Math.random() * 100 < (dp.gearChance || 0)) {
     const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
     const list = pool[Math.floor(Math.random() * pool.length)];

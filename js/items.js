@@ -1,5 +1,5 @@
 // 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=a9006411";
+import { CULT, RARITY_MULT } from "./data.js?v=9c37d864";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -145,7 +145,14 @@ export function cultCheck(it, kind, store) {
   }
   if (kind === "star") {
     if ((Number(d.star) || 1) >= CULT.maxStar) return { ok: false, why: "已满星" };
-    return { ok: true, to: (Number(d.star) || 1) + 1, shards: CULT.starShards(Number(d.star) || 1) };
+    {
+      const rarity = d.born || d.rarity || "R";
+      const key = (CULT.shardKey || {})[rarity] || "shardR";
+      const cost = CULT.shardBase * (Number(d.star) || 1);
+      const have = Number((store.flags || {})[key]) || 0;
+      if (have < cost) return { ok: false, why: rarity + " 碎片不够", shards: cost, key, rarity };
+      return { ok: true, to: (Number(d.star) || 1) + 1, shards: cost, key, rarity };
+    }
   }
   return { ok: false, why: "未知类型" };
 }
@@ -164,6 +171,9 @@ export function cultApply(store, it, kind) {
     if (chk.breakStone) store.flags.bstone = (Number(store.flags.bstone) || 0) - chk.breakStone;
     it.data.lv = chk.to;
     return { ok: true, lv: it.data.lv };
+  }
+  if (chk.key && chk.shards) {
+    store.flags[chk.key] = (Number(store.flags[chk.key]) || 0) - chk.shards;
   }
   it.data.star = chk.to;
   return { ok: true, star: it.data.star };
@@ -206,10 +216,13 @@ export function dismantle(store, itemId) {
   if (it.lock) return { ok: false, why: "已锁定，先解锁" };
   const d = it.data || {};
   const stone = Math.max(2, Math.round((Number(d.lv) || 1) * 0.6));
+  const rarity = d.born || d.rarity || "R";
+  const sKey = (CULT.shardKey || {})[rarity] || "shardR";
   const shards = Math.max(1, Math.round((Number(d.star) || 1) * 2));
   store.items = store.items.filter((x) => x.id !== itemId);
   store.flags = store.flags || {};
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
+  store.flags[sKey] = (Number(store.flags[sKey]) || 0) + shards;
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
   return { ok: true, stone, shards };
 }
