@@ -364,9 +364,39 @@ function makeRedmaple() {
   });
   return { id: "d_exp", name: "枫林剿匪", kind: "exp", icon: "🍁", desc: "红枫团盘踞的枫林，剿灭他们换取经验", type: "daily", stages };
 }
+// 🏦 金币本：哈罗德银行（抢银行）
+function makeHaroldBank() {
+  const PLACES = ["银行大厅", "一号柜台", "押运通道", "贵宾室", "地下金库走廊"];
+  const FOES = ["银行保安", "柜台职员", "武装押运", "金库守卫", "金库机兵"];
+  const STORY = [
+    "门口的石狮子在打哈欠，保安刚换班。",
+    "柜员数钱的手很快，眼睛更快。",
+    "押运员把箱子推进通道，枪已上膛。",
+    "厚重的铁门后面，还有一层铁门。",
+    "这里没有风，只有钱的味道。"
+  ];
+  const LV = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
+  const stages = LV.map((lv, i) => {
+    const g = Math.pow(1.18, i), mile = (i + 1) % 5 === 0 ? 2 : 1;
+    const boss = i === 19;
+    const foeName = boss ? "行长「哈罗德」" : FOES[i % FOES.length];
+    const mul = boss ? 2.4 : 1 + Math.floor(i / 10) * 0.15;
+    return {
+      id: "gold_" + (i + 1),
+      name: "第 " + (i + 1) + " 关 · " + (boss ? "金库核心" : PLACES[i % PLACES.length]),
+      lv, group: Math.floor(i / 5) + 1, milestone: (i + 1) % 5 === 0,
+      gold: Math.round(320 * g * mile), exp: Math.round(40 * g),
+      drop: { shards: [], stone: [], bstone: 0, gearChance: 3 },
+      foe: foeOf(foeName, lv, mul),
+      story: boss ? "哈罗德亲自站在金库门口，西装笔挺，手里拿着一把金钥匙。" : STORY[i % STORY.length]
+    };
+  });
+  return { id: "d_gold", name: "哈罗德银行", kind: "gold", icon: "🏦", type: "daily", desc: "抢银行拿金币", stages };
+}
+
 export const DUNGEONS = [
   makeRedmaple(),
-  makeDaily("d_gold", "旧金库", "gold", "💰", "大量金币", "守财奴"),
+  makeHaroldBank(),
   makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
   makeDaily("d_gear", "废弃矿脉", "gear", "⚒️", "装备强化素材", "矿脉蠕虫"),
   { id: "d_tbd", name: "待定日常", kind: "tbd", icon: "❔", desc: "内容待定", type: "daily", stages: [] },
