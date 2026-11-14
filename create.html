@@ -1403,7 +1403,7 @@ function renderOrig() {
     if (it.critDmg) bits.push("暴伤+" + it.critDmg + "%");
     if (it.lifesteal) bits.push("吸血" + it.lifesteal + "%");
     if (it.ultPct) bits.push("必杀+" + it.ultPct + "%");
-    return '<div style="padding:7px 2px;border-bottom:1px dashed #2a2418;">' +
+    return '<div class="' + (it.rarity === "SSR" ? "rarity-ssr" : it.rarity === "SR" ? "rarity-sr" : "") + '" style="padding:7px 6px;border-bottom:1px dashed #2a2418;border-radius:8px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
         '<span style="font-size:12.5px;">' + (GI[k] || "🗡") + ' <b>' + esc(it.name) + '</b> <span class="hint">' + (it.rarity || "") + '</span>' +
         ' <span style="color:#ffd666;font-size:11px;">Lv' + glv + ' ★' + gst2 + '</span></span>' +
