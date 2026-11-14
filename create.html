@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -74,7 +74,9 @@ async function load() {
     const row = await cloudGet(box);
     if (row && row.store && Number(row.store.v) === 2) {
       exists = true;
-      const pw = row.store.__pw || "";
+      let isHostBox = false;
+      try { isHostBox = localStorage.getItem("rpg2:host") === "1"; } catch (e) {}
+      const pw = isHostBox ? "" : (row.store.__pw || "");
       if (pw) {
         // 同一次浏览里记住已通过的口令
         let memo = "";
