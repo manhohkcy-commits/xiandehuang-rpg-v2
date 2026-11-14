@@ -1925,6 +1925,7 @@ function render() {
     // 🧬 主机端：布局与玩家端一致，但角色是「原创角色」
     document.querySelectorAll('[data-tab]').forEach((b) => {
       if (b.dataset.tab === "char") b.textContent = "🧬 原创角色";
+      if (b.dataset.tab === "orig") { b.style.display = "none"; return; }
       b.style.display = "";
     });
     if (tab === "orig") tab = "char";
