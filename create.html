@@ -1281,13 +1281,14 @@ function renderOrigCult() {
   const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
   const res = '<div class="hint" style="margin-bottom:8px;">金币 ' + fmt(store.gold || 0) + ' · 强化石 ' + (store.flags.stone || 0) +
     ' · 碎片 ' + (store.flags.shards || 0) + ' · 突破石 ' + (store.flags.bstone || 0) + '</div>';
+  const GI = { weapon: "🗡", armor: "🛡", armor2: "👖", accessory: "💍" };
   const body = Object.keys(SLOTN).map((slot) => {
     const it = gg[slot] || {};
     if (!it.name) return "";
     const gs = prog.gear[slot] || (prog.gear[slot] = { lv: 1, star: 1 });
     const lv = Number(gs.lv) || 1, star = Number(gs.star) || 1;
     const ref = Number(gs.refine) || 0, adv = Number(gs.advance) || 0, awk = Number(gs.awaken) || 0;
-    return card("🗡 " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
+    return card((GI[slot] || "🗡") + " " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
       '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / ★' + star +
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
@@ -1371,6 +1372,7 @@ function renderOrig() {
   const brkNext = brk < 3 ? BRK_COST[brk] : null;
   const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
   const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const GI = { weapon: "🗡", armor: "🛡", armor2: "👖", accessory: "💍" };
   const gg = ORIGINAL_GEAR[o.id] || o.gearObj || {};
   const gearCount = Object.keys(SLOTN).filter((k) => (gg[k] || {}).name).length;
   const gear = Object.keys(SLOTN).map((k) => {
@@ -1390,7 +1392,7 @@ function renderOrig() {
     if (it.ultPct) bits.push("必杀+" + it.ultPct + "%");
     return '<div style="padding:7px 2px;border-bottom:1px dashed #2a2418;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
-        '<span style="font-size:12.5px;">🗡 <b>' + esc(it.name) + '</b> <span class="hint">' + (it.rarity || "") + '</span>' +
+        '<span style="font-size:12.5px;">' + (GI[k] || "🗡") + ' <b>' + esc(it.name) + '</b> <span class="hint">' + (it.rarity || "") + '</span>' +
         ' <span style="color:#ffd666;font-size:11px;">Lv' + glv + ' ★' + gst2 + '</span></span>' +
         '<span style="display:flex;gap:4px;">' +
           '<button data-og="' + k + ':lv" style="font-size:10.5px;padding:3px 7px;">强化</button>' +
