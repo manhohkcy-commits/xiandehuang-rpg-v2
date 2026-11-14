@@ -442,9 +442,72 @@ function makeHaroldBank() {
   return { id: "d_gold", name: "哈罗德银行", kind: "gold", icon: "🏦", type: "daily", desc: "抢银行拿金币", stages };
 }
 
+// ❄️ 霜落雪原：第三个正式副本
+function makeSnowfield() {
+  const LV = [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 78];
+  const WAVE = [
+    ["s_wolf"], ["s_wolf", "s_hunter"], ["s_hunter", "s_wolf"], ["s_guard"],
+    ["s_wolf_alpha"], ["s_mage", "s_wolf"], ["s_guard", "s_hunter"], ["s_mage", "s_hunter"],
+    ["s_wolf_alpha", "s_wolf"], ["s_captain"], ["s_guard", "s_guard", "s_mage"],
+    ["s_wolf_alpha", "s_hunter", "s_mage"], ["s_captain", "s_guard"], ["s_mage", "s_hunter", "s_wolf"],
+    ["s_captain", "s_wolf_alpha"], ["s_guard", "s_hunter", "s_hunter"], ["s_wolf_alpha", "s_wolf_alpha"],
+    ["s_captain", "s_mage", "s_guard"], ["s_wolf_alpha", "s_captain", "s_hunter"], ["s_frostking"]
+  ];
+  const STORY = [
+    "雪没到膝盖，脚印一直延伸到雾里。",
+    "远处有狼在叫，不止一只。",
+    "箭从雪堆后面射出来，看不见人。",
+    "冰块拼成的人形挡在路口。",
+    "狼王站在尸骨堆上，毛色发白。",
+    "术士的咒文让空气结了霜。",
+    "守卫和猎手配合得很熟练。",
+    "寒气顺着呼吸钻进肺里。",
+    "狼群开始包围。",
+    "雪原队长举着碎冰刀。",
+    "守卫排成一列，像一堵墙。",
+    "混编队伍压了上来。",
+    "队长的刀比刚才更快。",
+    "法术和箭雨交替落下。",
+    "队长带着狼王一起冲。",
+    "守卫护着猎手，很难突破。",
+    "两只狼王同时出现。",
+    "队长的号令在雪原回荡。",
+    "三只头目一起挡路。",
+    "霜喉从雪里站起来，整片雪原都安静了。"
+  ];
+  const NAMES = ["雪原入口", "狼群小径", "白雾坡", "冰晶隘口", "狼王巢", "霜咒祭坛", "雪原哨站", "寒风口", "围猎圈", "雪原营地", "冰墙阵地", "混编巡队", "队长阵前", "霜咒与箭", "双首冲锋", "守卫阵线", "双狼王", "号令之谷", "三首封锁", "霜喉之巅"];
+  return {
+    id: "d_snow", name: "霜落雪原", kind: "snow", icon: "❄️",
+    desc: "雪原深处的寒潮源头，产出突破石与金币", type: "daily",
+    stages: LV.map((lv, i) => {
+      const ids = WAVE[i].slice();
+      const tier = i === 19 ? "首领" : (i === 9 || i === 14) ? "特色" : i === 4 ? "精英" : "普通";
+      const first = enemyAt(ids[0], lv);
+      return {
+        id: "snow_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + NAMES[i], lv,
+        tier, tierLabel: tier,
+        story: STORY[i],
+        scene: "霜落雪原",
+        sceneDesc: "风雪终年不散的白色荒原，寒气会侵蚀体力。",
+        sceneMods: { resPct: 5 },
+        weather: "clear",
+        enemies: ids,
+        foe: first,
+        gold: Math.round(120 * Math.pow(1.17, i)) + 60,
+        exp: Math.round(70 * Math.pow(1.16, i)) + 40,
+        drops: [
+          { name: "突破石", kind: "stone", count: [1, 2 + Math.floor(i / 4)] },
+          { name: "金币", kind: "gold", count: [Math.round(60 * Math.pow(1.15, i)), Math.round(120 * Math.pow(1.15, i))] }
+        ]
+      };
+    })
+  };
+}
+
 export const DUNGEONS = [
   makeRedmaple(),
   makeHaroldBank(),
+  makeSnowfield(),
   makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
   makeDaily("d_gear", "废弃矿脉", "gear", "⚒️", "装备强化素材", "矿脉蠕虫"),
   { id: "d_tbd", name: "待定日常", kind: "tbd", icon: "❔", desc: "内容待定", type: "daily", stages: [] },

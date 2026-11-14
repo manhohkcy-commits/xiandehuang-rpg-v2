@@ -110,6 +110,42 @@ const EB = (id, name, role, tier, skills, desc) => {
     skills, critRate: 5, critDmg: 150
   };
 };
+
+// ❄️ 霜落雪原：第三个正式副本的敌人
+const SNOW_TIER = {
+  "普通": { atk: 34, hp: 280, def: 12, res: 9, spd: 9 },
+  "精英": { atk: 52, hp: 480, def: 20, res: 15, spd: 8 },
+  "特色": { atk: 76, hp: 1200, def: 30, res: 22, spd: 10 },
+  "首领": { atk: 110, hp: 2600, def: 42, res: 32, spd: 11 }
+};
+const ES = (id, name, role, tier, skillName, mult, desc) => {
+  const s = SNOW_TIER[tier] || SNOW_TIER["普通"];
+  return {
+    id, name, camp: "霜落雪原", role,
+    tier: ({ "普通": "normal", "精英": "elite", "特色": "special", "首领": "boss" }[tier] || "normal"),
+    desc: desc || "",
+    tags: ["杂兵"],
+    stats: Object.assign({}, s),
+    growth: EG,
+    equip: { weapon: "霜铁爪", armor: "雪纹皮甲", armor2: "雪纹护腿", accessory: "寒气结晶" },
+    skills: [
+      { kind: "normal", name: "扑击", mult: 100, desc: "普通攻击" },
+      { kind: "skill", name: skillName || "寒霜击", mult: mult || 150, cd: 3, desc: "造成伤害并降低目标速度" },
+      { kind: "ult", name: "极寒爆发", mult: 240, desc: "怒气满时释放的必杀" }
+    ],
+    critRate: 5, critDmg: 150
+  };
+};
+const SNOW = [
+  ES("s_wolf", "雪狼", "近战", "普通", "撕咬", 155, "成群结队的雪原狼，靠速度围猎。"),
+  ES("s_hunter", "雪原猎手", "远程", "普通", "冰矢", 150, "披着白袍的弓箭手，融进雪里就看不见。"),
+  ES("s_guard", "冰晶守卫", "坦克", "普通", "冰墙", 130, "冰块拼成的守卫，动作慢但很硬。"),
+  ES("s_mage", "寒霜术士", "法术", "普通", "霜缚", 160, "念诵寒气咒文的术士。"),
+  ES("s_wolf_alpha", "雪狼王", "近战", "精英", "撕裂", 175, "狼群的首领，比普通雪狼大一圈。"),
+  ES("s_captain", "雪原队长", "坦克", "精英", "碎冰斩", 180, "雪原巡逻队的队长。"),
+  ES("s_frostking", "霜喉", "近战", "首领", "极寒咆哮", 260, "雪原深处的巨兽，呼吸会冻住空气。")
+];
+
 const BANK = [
   EB("b_guard", "保安", "近战", "普通", [{ name: "警棍挥击", desc: "单体 130% 攻击", mult: 130, cd: 2 }], "银行门口最常见的制服。"),
   EB("b_guard2", "资深保安", "近战", "精英", [{ name: "列阵突刺", desc: "单体 140% 攻击", mult: 140, cd: 2 }], "站了十年岗，棍子比嘴硬。"),
@@ -145,6 +181,7 @@ const BANK = [
      { name: "加息", desc: "半血召唤两名金库护卫", summon: "b_vault", cd: 6 }], "坐在钱堆上，利息已经算好了。")
 ];
 ENEMIES.push(...BANK);
+ENEMIES.push(...SNOW);
 
 // ⚡ 回怒效率（每次行动获得怒气）与必杀招式（怒气 100 释放）
 const ENEMY_RAGE = {
@@ -326,3 +363,7 @@ export function enemyAt(id, lv) {
     equip: e.equip, skills: e.skills, rageGain: e.rageGain
   };
 }
+
+// 🏅 修正霜原敌人的阶级（统一后处理会按名字重算，这里覆盖回来）
+const SNOW_TIER_FIX = { s_wolf_alpha: "elite", s_captain: "elite", s_frostking: "boss" };
+ENEMIES.forEach((e) => { if (SNOW_TIER_FIX[e.id]) e.tier = SNOW_TIER_FIX[e.id]; });
