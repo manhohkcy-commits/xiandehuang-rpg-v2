@@ -74,7 +74,7 @@ function renderPick() {
   const ch = activeChar();
   const o0 = !ch ? hostOrig() : null;
   if (!ch && !o0) { view().innerHTML = '<div class="card"><div class="hint">没有角色。先去「我的角色」建一个。</div></div>'; return; }
-  const f = charFinal(ch);
+  const f = ch ? charFinal(ch) : null;
   view().innerHTML =
     '<div class="card"><div class="card-title">出战</div>' +
       (ch
@@ -122,7 +122,7 @@ async function buildMultiBattle(stageId) {
       } catch (e) {}
     }
     if (ch) {
-      const f = charFinal(ch);
+      const f = ch ? charFinal(ch) : null;
       m.char = {
         lv: ch.lv, atk: f.atk, hp: f.hp, def: f.def, res: f.res, spd: f.spd,
         critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut,
