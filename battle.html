@@ -310,6 +310,8 @@ function startBattle(stageId, col) {
     }
   }
   st.__waveNo = 1;
+  st.__isOrig = !!o0;
+  st.__frost = 0;
   // 布阵：我方 0=前排 1=后排；敌人前排优先
   const meU = st.units.find((u) => u.id === "me");
   if (meU) { meU.__col = Number(col) || 0; meU.__back = !!meU.__col; }
@@ -672,7 +674,10 @@ function doAct(kind) {
     m.__defBonus = 1;
     commit(st, "me");
   } else if (kind === "ult") {
-    const r = damage(st, "me", foe().id, { atk: m.atk, mult: 250, critRate: m.critRate, critDmg: m.critDmg });
+    const frost = st.__isOrig ? (Number(st.__frost) || 0) : 0;
+    const ultMult = 250 * (1 + 0.15 * frost);
+    const r = damage(st, "me", foe().id, { atk: m.atk, mult: ultMult, critRate: m.critRate, critDmg: m.critDmg });
+    if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     commit(st, "me");
@@ -690,6 +695,7 @@ function doAct(kind) {
     commit(st, "me");
   } else {
     const r = damage(st, "me", foe().id, { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
+    if (st.__isOrig && r.dmg > 0) { st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1); pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line"); }
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     commit(st, "me");
