@@ -878,10 +878,8 @@ function renderTalent() {
         '<span style="font-size:12.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + mark + ' ' + n.name + '</span>' +
         '<span style="font-size:11px;line-height:1.2;color:' + (has ? "#cfe6ff" : "#8a97b8") + ';max-height:28px;overflow:hidden;text-align:center;">' + effText(n.eff) + '</span></button></td>';
     }).join("");
-    const ACT_NOTE = { 2: "✨ 主动技 Lv1", 6: "✨ 主动技 Lv2", 10: "✨ 主动技 Lv3", 14: "✨ 主动技 Lv4", 15: "✨ 主动技 Lv5" };
-    const actNote = ACT_NOTE[i] ? '<div style="font-size:9.5px;color:#c9a0ff;margin-top:2px;white-space:normal;line-height:1.2;">' + ACT_NOTE[i] + '</div>' : '';
     rows.push('<tr><th style="padding:2px 4px;font-size:12px;color:#a8b0c8;font-weight:600;border-bottom:1px dotted #23233a;white-space:nowrap;text-align:left;">' +
-      (i + 1) + '阶<div class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + '</div>' + actNote + '</th>' + cells + '</tr>');
+      (i + 1) + '阶<div class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + '</div></th>' + cells + '</tr>');
   }
   const grid = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;">' +
     '<colgroup><col style="width:40px;">' + branches.map(() => '<col>').join("") + '</colgroup>' +
