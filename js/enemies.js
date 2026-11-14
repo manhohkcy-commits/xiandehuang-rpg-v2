@@ -105,7 +105,7 @@ const EB = (id, name, role, tier, skills, desc) => {
   const s = BANK_TIER[tier] || BANK_TIER["普通"];
   return {
     id, name, camp: "哈罗德银行", role, tier: ({ "普通": "normal", "精英": "elite", "特色": "special", "首领": "boss" }[tier] || "normal"), desc,
-    stats: Object.assign({}, s), growth: tier === "首领" ? EG_B : tier === "精英" ? EG_E : EG,
+    tags: ["杂兵"], stats: Object.assign({}, s), growth: tier === "首领" ? EG_B : tier === "精英" ? EG_E : EG,
     equip: { weapon: "制式短棍", armor: "银行制服", armor2: "制式长裤", accessory: "员工胸牌" },
     skills, critRate: 5, critDmg: 150
   };
@@ -285,7 +285,7 @@ ENEMIES.forEach((e) => {
        Object.assign({ kind: "skill" }, sk),
        Object.assign({ kind: "ult", rage: 100 }, ult)];
   e.rageGain = ENEMY_RAGE[e.id] || 25;
-  e.tags = ENEMY_TAGS[e.id] || [];
+  e.tags = (ENEMY_TAGS[e.id] || []).concat(e.tags || []);
   e.faction = e.camp;
 });
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
