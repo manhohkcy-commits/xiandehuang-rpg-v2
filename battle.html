@@ -1431,7 +1431,7 @@ function finish() {
   // 🍱 战前准备：吃完这场就没了（胜败都清）
   if (st.__meal) { store.flags = store.flags || {}; store.flags.meal = null; }
   if (st.winner !== "A") { pushLog("💀 战斗失败"); save(); return; }
-  // 🧬 用原创角色出战：经验只给这个原创角色，不动玩家存档
+  // 🧬 用原创角色出战：经验给这个原创角色；金币/掉落/解锁照常给存档
   if (st.__origId) {
     const o = ORIGINALS.find((x) => x.id === st.__origId);
     if (o) {
@@ -1444,16 +1444,13 @@ function finish() {
       store.orig[o.id] = cur;
       pushLog("🧬 " + o.name + " 经验 +" + gain + "（当前 Lv" + cur.lv + (lvUp ? " ↑升级" : "") + "）");
       addReceipt(store, "原创", o.name, { note: "原创角色经验 +" + gain });
-      save();
-      renderBattle();
-      return;
     }
   }
   const s = STAGES.find((x) => x.id === st.__stage) || STAGES[0];
   const gold = Number(s.gold != null ? s.gold : (120 + s.foe.lv * 8));
   const exp = Number(s.exp != null ? s.exp : (40 + s.foe.lv * 6));
   store.gold = (Number(store.gold) || 0) + gold;
-  store.exp = (Number(store.exp) || 0) + exp;
+  if (!st.__origId) store.exp = (Number(store.exp) || 0) + exp; // 原创出战经验只给原创角色
   // 🔓 逐关解锁进度
   store.flags = store.flags || {};
   if (String(s.id).indexOf("exp_") === 0) {

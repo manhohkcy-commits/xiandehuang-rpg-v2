@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -1923,6 +1923,17 @@ function render() {
     if (tab === "orig") tab = "char";
     const sb = $("btnSwitchBox");
     if (sb) sb.style.display = "none";
+    // 🚪 主机专属：到处看看（基地设施）
+    if (!document.querySelector('[data-tab="base"]')) {
+      const nav = document.querySelector(".nav");
+      if (nav) {
+        const b = document.createElement("button");
+        b.setAttribute("data-tab", "base");
+        b.textContent = "🚪 到处看看";
+        b.onclick = () => { tab = "base"; render(); };
+        nav.appendChild(b);
+      }
+    }
   }
   if (!store) {
     view().innerHTML =
@@ -1958,6 +1969,7 @@ function render() {
       view().innerHTML = card("🌳 天赋（原创角色）", '<div class="hint">按玩家端天赋树接入中；解锁阶段待配置。</div>');
       return;
     }
+    if (hostMode && tab === "base") { renderBase(); return; }
     if (tab === "char") renderChar();
     else if (tab === "talent") renderTalent();
     else if (tab === "cult") renderCult();
