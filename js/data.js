@@ -613,15 +613,15 @@ export const SHOP_PRICE = {
 //    节点 need = 需要本树已投入的点数；eff 由 power.js 的 talentBonus() 汇总
 // 🌳 天赋树（职业定位版 · 长链）：5 职业 × 3 分支 × 14 阶 + 职业主动技
 //    分支按等级解锁，阶按 TIER_LV 逐级开放；节点效果按「基础值 + 每阶成长」生成
-const CN14 = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三", "十四"];
+const CN14 = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三", "十四", "十五", "十六"];
 const r1 = (n) => Math.round(n * 10) / 10;
 
 function chain(prefix, label, spec) {
   // 四类：节点（纯数值）→ 小天赋 → 大天赋（5/10 层）→ 终极（14 层）
-  const KIND = ["node", "minor", "node", "minor", "major", "node", "minor", "node", "minor", "major", "node", "minor", "node", "ultimate"];
+  const KIND = ["node", "minor", "node", "minor", "major", "node", "minor", "node", "minor", "major", "node", "minor", "node", "minor", "major", "ultimate"];
   const SCALE = { node: 1, minor: 1.35, major: 1.75, ultimate: 2.2 };
   const TAG = { node: "", minor: "小·", major: "大·", ultimate: "终·" };
-  return Array.from({ length: 14 }, (_, i) => {
+  return Array.from({ length: 16 }, (_, i) => {
     const kind = KIND[i] || "node";
     const scale = SCALE[kind];
     const eff = {};
@@ -747,7 +747,7 @@ TALENT_TREES.forEach((t) => t.branches.forEach((b) => b.nodes.forEach((n) => {
 // ⏳ 天赋成长节奏：三条分支都在天赋开放（Lv5）时一起可用；阶每 5 级开放一阶
 //    分支：Lv5 全开；阶：Lv5 → Lv70
 export const TALENT_BRANCH_LV = [5, 5, 5];
-export const TALENT_TIER_LV = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+export const TALENT_TIER_LV = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
 TALENT_TREES.forEach((t) => (t.branches || []).forEach((b, i) => { b.unlockLv = TALENT_BRANCH_LV[i] || b.unlockLv; }));
 
 // 天赋点获取：每级 1 点，每次突破 +2
