@@ -617,18 +617,24 @@ const CN14 = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "�
 const r1 = (n) => Math.round(n * 10) / 10;
 
 function chain(prefix, label, spec) {
-  // 🎯 每条分支 4 个关键天赋，每个 4 级 = 16 阶
-  const TAL = spec.talents || ["锋芒", "破势", "追击", "处决"];
+  // 🎯 五种格子：基础节点 / 专精节点 / 小天赋 / 大天赋 / 终极
+  const KIND = ["base", "spec", "minor", "base", "spec", "major", "base", "spec", "minor", "base", "spec", "major", "base", "spec", "major", "ultimate"];
+  const SPEC_BY = { g: "str", v: "str", r: "agi", m: "intel", s: "tech" };
+  const specKey = SPEC_BY[String(prefix).charAt(0)] || "str";
+  const SCALE = { base: 1, minor: 1.35, major: 1.75, ultimate: 2.2, spec: 0 };
   return Array.from({ length: 16 }, (_, i) => {
-    const ti = Math.floor(i / 4);
-    const rank = (i % 4) + 1;
-    const last = ti === 3 && rank === 4;
-    const kind = last ? "ultimate" : rank === 4 ? "major" : "minor";
-    const scale = 1 + 0.18 * (rank - 1) + 0.12 * ti;
+    const kind = KIND[i] || "base";
     const eff = {};
-    Object.keys(spec.base).forEach((k) => { eff[k] = r1((spec.base[k] + (spec.step[k] || 0) * i) * scale); });
-    if (spec.bonus && spec.bonus[i]) Object.assign(eff, spec.bonus[i]);
-    return { id: prefix + (i + 1), name: TAL[ti] + "·Lv" + rank, eff, kind, talent: ti, rank };
+    if (kind === "spec") {
+      eff[specKey] = 1 + Math.floor(i / 6);
+    } else {
+      const scale = SCALE[kind];
+      Object.keys(spec.base).forEach((k) => { eff[k] = r1((spec.base[k] + (spec.step[k] || 0) * i) * scale); });
+      if (spec.bonus && spec.bonus[i]) Object.assign(eff, spec.bonus[i]);
+    }
+    const tag = kind === "base" ? "基础·" : kind === "spec" ? "专精·" : kind === "minor" ? "小·" : kind === "major" ? "大·" : "终·";
+    const no = KIND.slice(0, i + 1).filter((k) => k === kind).length;
+    return { id: prefix + (i + 1), name: tag + label + "·" + no, eff, kind };
   });
 }
 

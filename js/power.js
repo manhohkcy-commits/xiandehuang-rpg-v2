@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 属性与战力（唯一出口）
-import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=809fbb51";
+import { CHAR, SLOT_BASE, RARITY_MULT, GRADE, APTITUDE, BIRTH, TALENT_TREES, talentPointsOf, CULT } from "./data.js?v=975c4f1b";
 
 export const gradeOf = (ch) => GRADE.find((g) => g.key === (ch && ch.grade)) || GRADE[0];
 export const aptitudeOf = (ch) => APTITUDE.find((a) => a.star === Number(ch && ch.apt)) || APTITUDE[0];
@@ -183,6 +183,9 @@ export function charFinal(ch) {
   f.def *= 1 + (Number(tb.defPct) || 0) / 100;
   f.res *= 1 + (Number(tb.resPct) || 0) / 100;
   f.spd *= 1 + (Number(tb.spdPct) || 0) / 100;
+  // 🎯 天赋专精节点：直接加专精点
+  f.atk += (Number(tb.str) || 0) * se.str + (Number(tb.intel) || 0) * se.int + (Number(tb.tech) || 0) * se.tech;
+  f.spd += (Number(tb.agi) || 0) * se.agi;
   f.critRate += Number(tb.critRate) || 0;
   f.critDmg += Number(tb.critDmg) || 0;
   f.dmgCut += Number(tb.dmgCut) || 0;
