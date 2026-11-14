@@ -56,7 +56,7 @@ function origRows() {
 function render() {
   document.body.classList.toggle("host-mode", hostMode);
   if (hostMode) {
-    $("backLink").href = "create.html?box=" + encodeURIComponent(HOST_BOX) + "&tab=char";
+    $("backLink").href = "create.html?tab=char";
     $("backLink").textContent = "← 我的原创";
   } else {
     $("backLink").href = "create.html?tab=char" + (box ? "&box=" + encodeURIComponent(box) : "");
