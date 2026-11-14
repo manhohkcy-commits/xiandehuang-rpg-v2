@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拍卖行 · 闲得慌RPG</title>
+<link rel="stylesheet" href="css/app.css?v=c6880e77">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="dot"></span> 闲得慌RPG <span class="hint">· 拍卖行</span></div>
+    <a class="hint" id="backLink" href="lobby.html">← 公共大厅</a>
+  </div>
+  <div id="view"></div>
+  <div class="foot">金币交易 · 成交收 5% 手续费 · 每人最多上架 3 件</div>
+</div>
+<script type="module">
+import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt } from "./js/core.js?v=13807141";
+
+const $ = (id) => document.getElementById(id);
+const view = () => $("view");
+const card = (t, inner) => '<div class="card"><div class="card-title">' + t + '</div>' + inner + '</div>';
+const ABOX = "__auction__";
+const FEE = 0.05, MAX_LIST = 3;
+const box = (() => {
+  try {
+    if (localStorage.getItem("rpg2:host") === "1") return "zynSD117";
+    return localStorage.getItem("rpg2:box") || "";
+  } catch (e) { return ""; }
+})();
+
+let store = null, storeAt = "", auc = null, aucAt = "";
+
+function emptyAuc() { return { v: 2, items: [], chars: [], listings: [], pending: {} }; }
+
+async function loadAll() {
+  if (!box) { view().innerHTML = card("🔨 拍卖行", '<div class="hint">先在大厅或个人页登录账号。</div>'); return false; }
+  const r = await cloudGet(box);
+  store = (r && r.store) || { v: 2, items: [], chars: [], gold: 0, flags: {} };
+  storeAt = (r && r.updated_at) || "";
+  const a = await cloudGet(ABOX);
+  auc = (a && a.store && Array.isArray(a.store.listings)) ? a.store : emptyAuc();
+  aucAt = (a && a.updated_at) || "";
+  if (!Array.isArray(store.items)) store.items = [];
+  if (!store.flags) store.flags = {};
+  // 领取待收款
+  const pend = Number((auc.pending || {})[box] || 0);
+  if (pend > 0) {
+    store.gold = (Number(store.gold) || 0) + pend;
+    auc.pending[box] = 0;
+    await saveStore(); await saveAuc("领取货款");
+    await loadAll();
+    return true;
+  }
+  return true;
+}
+async function saveStore() {
+  const r = await cloudSave(box, store, storeAt, "拍卖");
+  storeAt = (r && r.row && r.row.updated_at) || storeAt;
+}
+async function saveAuc(name) {
+  const r = await cloudSave(ABOX, auc, aucAt, name || "拍卖行");
+  aucAt = (r && r.row && r.row.updated_at) || aucAt;
+}
+
+function render() {
+  if (!store) return;
+  const mine = (auc.listings || []).filter((l) => l.box === box);
+  const others = (auc.listings || []).filter((l) => l.box !== box);
+  const listRow = (l, own) => {
+    const it = l.item || {};
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #1a2438;">' +
+      '<div><b style="font-size:12.5px;">' + esc(it.name || "装备") + '</b> <span class="hint">' + esc(it.rarity || "") +
+      ' Lv' + (it.lv || 1) + (it.star ? ' ★' + it.star : '') + '</span>' +
+      '<div class="hint">卖家：' + esc(l.seller || l.box) + '</div></div>' +
+      '<div style="text-align:right;">' +
+      '<div style="color:#ffd666;font-weight:700;">' + fmt(l.price) + ' 金</div>' +
+      (own ? '<button data-unlist="' + l.lid + '" style="font-size:10.5px;padding:2px 8px;margin-top:3px;">下架</button>'
+           : '<button data-buy="' + l.lid + '" style="font-size:10.5px;padding:2px 8px;margin-top:3px;">购买</button>') +
+      '</div></div>';
+  };
+  const sellable = (store.items || []).filter((it) => it && it.data && !it.equipped);
+  view().innerHTML =
+    card("💰 我的金币", '<div style="font-size:22px;font-weight:800;color:#ffd666;">' + fmt(store.gold || 0) + '</div>' +
+      '<div class="hint">待收款：' + fmt(Number((auc.pending || {})[box] || 0)) + ' 金 · 已上架 ' + mine.length + '/' + MAX_LIST + '</div>') +
+    card("🏷 在售（" + others.length + "）", others.length ? others.map((l) => listRow(l, false)).join("") : '<div class="hint">暂时没有别人挂的东西。</div>') +
+    card("🧺 我的上架（" + mine.length + "）", mine.length ? mine.map((l) => listRow(l, true)).join("") : '<div class="hint">还没上架东西。手续费 5%，成交后钱进「待收款」。</div>') +
+    card("📦 我的仓库", sellable.length
+      ? sellable.map((it) => '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #1a2438;">' +
+        '<div><b style="font-size:12.5px;">' + esc(it.data.name) + '</b> <span class="hint">' + esc(it.data.rarity || "") + ' Lv' + (it.lv || 1) + '</span></div>' +
+        '<div style="display:flex;gap:4px;align-items:center;"><input data-price="' + it.id + '" type="number" min="1" placeholder="价格" style="width:78px;background:#0b0e17;border:1px solid #24304a;border-radius:6px;color:#dbe4f3;padding:4px 6px;">' +
+        '<button data-list="' + it.id + '" style="font-size:10.5px;padding:3px 9px;">上架</button></div></div>').join("")
+      : '<div class="hint">仓库里没有可卖的装备。</div>');
+
+  view().querySelectorAll("[data-buy]").forEach((b) => b.onclick = () => buy(b.dataset.buy));
+  view().querySelectorAll("[data-unlist]").forEach((b) => b.onclick = () => unlist(b.dataset.unlist));
+  view().querySelectorAll("[data-list]").forEach((b) => b.onclick = () => doList(b.dataset.list));
+}
+
+async function doList(itemId) {
+  const mine = (auc.listings || []).filter((l) => l.box === box);
+  if (mine.length >= MAX_LIST) return alert("最多同时上架 " + MAX_LIST + " 件");
+  const price = Number(($('input[data-price="' + itemId + '"]') || {}).value);
+  if (!price || price < 1) return alert("先填价格");
+  const idx = (store.items || []).findIndex((it) => it.id === itemId);
+  if (idx < 0) return;
+  const it = store.items[idx];
+  store.items.splice(idx, 1);
+  const seller = (() => {
+    const chars = store.chars || [];
+    const ch = chars.find((c) => c.id === store.activeChar) || chars[0];
+    return (store.account && store.account.nick) || (ch && ch.name) || box;
+  })();
+  auc.listings.push({ lid: "l" + Date.now().toString(36) + Math.floor(Math.random() * 100), box, seller, item: it, price, at: Date.now() });
+  await saveStore(); await saveAuc("上架");
+  render();
+}
+
+async function unlist(lid) {
+  const i = (auc.listings || []).findIndex((l) => l.lid === lid && l.box === box);
+  if (i < 0) return;
+  const l = auc.listings.splice(i, 1)[0];
+  store.items.push(l.item);
+  await saveStore(); await saveAuc("下架");
+  render();
+}
+
+async function buy(lid) {
+  const i = (auc.listings || []).findIndex((l) => l.lid === lid);
+  if (i < 0) return;
+  const l = auc.listings[i];
+  if (l.box === box) return alert("不能买自己的东西");
+  const price = Number(l.price) || 0;
+  if ((Number(store.gold) || 0) < price) return alert("金币不够");
+  if (!confirm("花 " + fmt(price) + " 金币买「" + l.item.name + "」？")) return;
+  store.gold = (Number(store.gold) || 0) - price;
+  store.items.push(l.item);
+  auc.listings.splice(i, 1);
+  const gain = Math.max(0, Math.floor(price * (1 - FEE)));
+  auc.pending[l.box] = (Number(auc.pending[l.box]) || 0) + gain;
+  await saveStore(); await saveAuc("卖出");
+  render();
+}
+
+(async () => {
+  try {
+    const ok = await loadAll();
+    if (ok) render();
+  } catch (e) {
+    view().innerHTML = card("🔨 拍卖行", '<div class="hint">加载失败：' + esc(e.message || e) + '</div>');
+  }
+})();
+</script>
+</body>
+</html>
