@@ -34,7 +34,7 @@ window.__playOrig = localStorage.getItem("rpg2:playAs") || null;
 // 🤝 同行队伍（最多 5 名友方原创角色，默认托管）
 function partyIds() { try { return JSON.parse(localStorage.getItem("rpg2:party") || "[]"); } catch (e) { return []; } }
 // 👑 主机标记：只有主机能操控原创角色
-function isHost() { try { if (localStorage.getItem("rpg2:host") === "1") return true; } catch (e) {} return readBox() === "zynSD117"; }
+function isHost() { try { if (localStorage.getItem("rpg2:host") === "1") return true; } catch (e) {} try { if (localStorage.getItem("rpg2:hostBox") === "zynSD117" || localStorage.getItem("rpg2:box") === "zynSD117") return true; } catch (e) {} return readBox() === "zynSD117"; }
 async function sysPost(text) {
   try {
     const r = await cloudGet("__chat");
@@ -81,7 +81,7 @@ function strike(st, atkId, defId, opts, hits) {
 }
 
 function readBox() {
-  try { if (localStorage.getItem("rpg2:host") === "1") return "zynSD117"; } catch (e) {}
+  try { if (localStorage.getItem("rpg2:host") === "1") return "zynSD117"; if (localStorage.getItem("rpg2:hostBox") === "zynSD117") return "zynSD117"; } catch (e) {}
   const q = new URLSearchParams(location.search);
   if (q.get("box")) return q.get("box");
   return localStorage.getItem("rpg2:box") || "";
