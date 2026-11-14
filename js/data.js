@@ -349,8 +349,10 @@ function makeRedmaple() {
   const stages = REDMAPLE_PLAN.map(([lv, ids, exp, story], i) => {
     const first = enemyAt(ids[0], lv);
     const sc = SCENES[REDMAPLE_SCENE_IDX[i]] || SCENES[0];
+    const tier = i === 19 ? "首领" : (i === 9 || i === 14) ? "特色" : i === 4 ? "精英" : "普通";
     return {
       id: "exp_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + (REDMAPLE_TITLES[i] || sc.name), lv,
+      tier, tierLabel: tier,
       story: story || "",
       scene: sc.name,
       sceneDesc: sc.desc,
