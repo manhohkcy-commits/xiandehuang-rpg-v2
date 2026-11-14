@@ -246,7 +246,7 @@ async function loadPlayers() {
 }
 
 // 💬 公共频道
-let myName = "玩家";
+let myName = (() => { try { return localStorage.getItem("rpg2:nick") || "玩家"; } catch (e) { return "玩家"; } })();
 const CHAT_BOX = "__chat";
 function chatCard() {
   return card("💬 公共频道", '<div class="hint" id="chatMsg" style="margin-bottom:6px;">读取中…</div>' +
@@ -296,6 +296,7 @@ async function initChat() {
       const chars = (r && r.store && r.store.chars) || [];
       const ch = chars.find((c) => c.id === r.store.activeChar) || chars[0];
       if (ch && ch.name) myName = ch.name;
+      else { try { const nk = (r && r.store && r.store.account && r.store.account.nick) || localStorage.getItem("rpg2:nick"); if (nk) myName = nk; } catch (e) {} }
     }
   } catch (e) {}
   await loadChat();
