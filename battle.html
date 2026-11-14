@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=dc2634d0";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=6f09fe50";
 import { makeItem } from "./js/items.js?v=7694fd0b";
 import { stagePower, enemyAt } from "./js/enemies.js?v=0014f401";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -873,10 +873,16 @@ function finish() {
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
   const refine = rnd(dp.refine);
   const shR = rnd(dp.shardR) || 0, shSR = rnd(dp.shardSR) || 0, shSSR = rnd(dp.shardSSR) || 0;
-  const bst = rnd(dp.bstone) || 0, msN = rnd(dp.manuscript) || 0, mdN = rnd(dp.medal) || 0;
-  store.flags.bstone = (Number(store.flags.bstone) || 0) + bst;
-  store.flags.manuscript = (Number(store.flags.manuscript) || 0) + msN;
-  store.flags.medal = (Number(store.flags.medal) || 0) + mdN;
+  const msN = 0, mdN = 0, bst = 0;
+  const bagAdd = (obj) => {
+    if (!obj) return;
+    Object.keys(obj).forEach((k) => {
+      const n = rnd(obj[k]) || 0;
+      if (!n) return;
+      store.flags[k] = (Number(store.flags[k]) || 0) + n;
+      drops.push({ name: k, count: n });
+    });
+  };
   store.flags.shardR = (Number(store.flags.shardR) || 0) + shR;
   store.flags.shardSR = (Number(store.flags.shardSR) || 0) + shSR;
   store.flags.shardSSR = (Number(store.flags.shardSSR) || 0) + shSSR;
@@ -885,9 +891,7 @@ function finish() {
   if (shR) drops.push({ name: "R 碎片", count: shR });
   if (shSR) drops.push({ name: "SR 碎片", count: shSR });
   if (shSSR) drops.push({ name: "SSR 碎片", count: shSSR });
-  if (bst) drops.push({ name: "突破石", count: bst });
-  if (msN) drops.push({ name: "资历手稿", count: msN });
-  if (mdN) drops.push({ name: "资质勋章", count: mdN });
+  bagAdd(dp.ms); bagAdd(dp.md); bagAdd(dp.cert);
   if (Math.random() * 100 < (dp.gearChance || 0)) {
     const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
     const list = pool[Math.floor(Math.random() * pool.length)];

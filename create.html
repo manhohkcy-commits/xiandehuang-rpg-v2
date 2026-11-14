@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=dc2634d0";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=6f09fe50";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=98e38d7a";
-import { GRADE, APTITUDE } from "./js/data.js?v=dc2634d0";
+import { GRADE, APTITUDE } from "./js/data.js?v=6f09fe50";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=7694fd0b";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
 
@@ -701,9 +701,9 @@ function renderChar() {
     const g = gradeOf(ch), next = GRADE[GRADE.indexOf(g) + 1];
     if (!next) return;
     store.flags = store.flags || {};
-    const ms = Number(store.flags.manuscript) || 0;
+    const ms = matTotal("ms") || 0;
     if (ms < next.cost) return toast("资历手稿不够（需要 " + next.cost + "）", true);
-    store.flags.manuscript = ms - next.cost;
+    matSpend("ms", next.cost);
     ch.grade = next.key;
     addReceipt(store, "晋升", ch.name + " 资历 → " + next.name + " " + next.key, { items: [{ name: "资历手稿", count: -next.cost }] });
     await save(); render();
@@ -713,9 +713,9 @@ function renderChar() {
     const a = aptitudeOf(ch), next = APTITUDE[APTITUDE.indexOf(a) + 1];
     if (!next) return;
     store.flags = store.flags || {};
-    const md = Number(store.flags.medal) || 0;
+    const md = matTotal("md") || 0;
     if (md < next.cost) return toast("资质鉴定勋章不够（需要 " + next.cost + "）", true);
-    store.flags.medal = md - next.cost;
+    matSpend("md", next.cost);
     ch.apt = next.star;
     addReceipt(store, "评估", ch.name + " 资质 → " + next.star + "★", { items: [{ name: "资质鉴定勋章", count: -next.cost }] });
     await save(); render();
@@ -1393,7 +1393,7 @@ function renderOrigCult() {
   const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
   const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
   const res = '<div class="hint" style="margin-bottom:8px;">金币 ' + fmt(store.gold || 0) + ' · 强化石 ' + (store.flags.stone || 0) +
-    ' · 碎片 ' + (store.flags.shards || 0) + ' · 突破石 ' + (store.flags.bstone || 0) + '</div>';
+    ' · 碎片 ' + (store.flags.shards || 0) + ' · 突破石 ' + matTotal("cert") + '</div>';
   const GI = { weapon: "🗡", armor: "🛡", armor2: "👖", accessory: "💍" };
   const body = Object.keys(SLOTN).map((slot) => {
     const it = gg[slot] || {};
@@ -1402,7 +1402,7 @@ function renderOrigCult() {
     const lv = Number(gs.lv) || 1, star = Number(gs.star) || 1;
     const ref = Number(gs.refine) || 0, adv = Number(gs.advance) || 0, awk = Number(gs.awaken) || 0;
     const stN = Number(store.flags.stone) || 0, shN = Number(store.flags.shards) || 0;
-    const bsN = Number(store.flags.bstone) || 0, gN = Number(store.gold) || 0;
+    const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
     const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
     const cRef = { s: 5 + 3 * ref, g: 300 + 200 * ref }, cAdv = { s: 30 + 15 * adv, g: 2000 + 1200 * adv };
     const cAwk = { b: 20 + 15 * awk };
@@ -1462,8 +1462,8 @@ function renderOrigCult() {
       const n = Number(gs.awaken) || 0;
       if (n >= 3) return toast("已满觉醒", true);
       const cb = 20 + 15 * n;
-      if ((store.flags.bstone || 0) < cb) return toast("突破石不足（需 " + cb + "）", true);
-      store.flags.bstone -= cb; gs.awaken = n + 1;
+      if (matTotal("cert") < cb) return toast("突破石不足（需 " + cb + "）", true);
+      matSpend("cert", cb); gs.awaken = n + 1;
       if (!prog.bonus) prog.bonus = {};
       prog.bonus.ultPct = (Number(prog.bonus.ultPct) || 0) + 3;
     }
@@ -1655,7 +1655,7 @@ function renderOrig() {
         const ai = Math.max(1, Math.min(APTITUDE.length, Number(prog.apt) || 1));
         const G = GRADE[gi], A = APTITUDE[ai - 1];
         const nG = GRADE[gi + 1], nA = APTITUDE[ai];
-        const ms = Number(store.flags.manuscript) || 0, md = Number(store.flags.medal) || 0;
+        const ms = matTotal("ms") || 0, md = matTotal("md") || 0;
         const gold = Number(store.gold) || 0;
         const gCost = nG ? { ms: nG.cost, gold: 1000 * (gi + 1) } : null;
         const aCost = nA ? { md: nA.cost, gold: 800 * ai } : null;
@@ -1769,9 +1769,9 @@ function renderOrig() {
       const n = Number(prog.awaken) || 0;
       if (n >= 3) return toast("觉醒已满（3 星）", true);
       const b = 20 + n * 15;
-      if ((store.flags.bstone || 0) < b) return toast("突破石不足（需 " + b + "）", true);
+      if (matTotal("cert") < b) return toast("突破石不足（需 " + b + "）", true);
       if (!prog.bonus) prog.bonus = {};
-      store.flags.bstone -= b;
+      matSpend("cert", b);
       prog.awaken = n + 1;
       prog.bonus.hp = (Number(prog.bonus.hp) || 0) + 40;
       prog.bonus.ultPct = (Number(prog.bonus.ultPct) || 0) + 3;
@@ -1815,11 +1815,11 @@ function renderOrig() {
     const gi = Number(prog.grade) || 0;
     const nG = GRADE[gi + 1];
     if (!nG) return toast("资历已满", true);
-    const ms = Number(store.flags.manuscript) || 0, gold = Number(store.gold) || 0;
+    const ms = matTotal("ms") || 0, gold = Number(store.gold) || 0;
     const cost = 1000 * (gi + 1);
     if (ms < nG.cost) return toast("资历手稿不足（需 " + nG.cost + "）", true);
     if (gold < cost) return toast("金币不足（需 " + fmt(cost) + "）", true);
-    store.flags.manuscript = ms - nG.cost; store.gold = gold - cost;
+    matSpend("ms", nG.cost); store.gold = gold - cost;
     prog.grade = gi + 1; store.orig[o.id] = prog;
     await save(); render(); toast("🎖 资历晋升 → " + nG.key);
   };
@@ -1827,11 +1827,11 @@ function renderOrig() {
     const ai = Number(prog.apt) || 1;
     const nA = APTITUDE[ai];
     if (!nA) return toast("资质已满", true);
-    const md = Number(store.flags.medal) || 0, gold = Number(store.gold) || 0;
+    const md = matTotal("md") || 0, gold = Number(store.gold) || 0;
     const cost = 800 * ai;
     if (md < nA.cost) return toast("资质勋章不足（需 " + nA.cost + "）", true);
     if (gold < cost) return toast("金币不足（需 " + fmt(cost) + "）", true);
-    store.flags.medal = md - nA.cost; store.gold = gold - cost;
+    matSpend("md", nA.cost); store.gold = gold - cost;
     prog.apt = ai + 1; store.orig[o.id] = prog;
     await save(); render(); toast("⭐ 资质评估 → " + (ai + 1) + "★");
   };
@@ -1857,9 +1857,9 @@ function renderOrig() {
     const cost = BRK_COST[brk];
     if (lv < (Number(cost.at) || 0)) return toast("需要 Lv" + cost.at + " 才能突破", true);
     store.flags = store.flags || {};
-    if ((Number(store.flags.bstone) || 0) < cost.b) return toast("突破石不够（需要 " + cost.b + "）", true);
+    if ((matTotal("cert") || 0) < cost.b) return toast("突破石不够（需要 " + cost.b + "）", true);
     if ((Number(store.gold) || 0) < cost.g) return toast("金币不够（需要 " + fmt(cost.g) + "）", true);
-    store.flags.bstone = (Number(store.flags.bstone) || 0) - cost.b;
+    store.flags.bstone = (matTotal("cert") || 0) - cost.b;
     store.gold = (Number(store.gold) || 0) - cost.g;
     store.orig = store.orig || {};
     store.orig[o.id] = Object.assign({}, prog, { breaks: brk + 1 });

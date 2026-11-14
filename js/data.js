@@ -604,11 +604,15 @@ function makeCave() {
         weather: ["clear", "fog", "night", "ash"][Math.min(3, Math.floor(i / 5))],
         enemies: ids,
         foe: first,
-        drop: {
-          bstone: 2 + Math.floor(i / 2),
-          manuscript: [2, 4 + Math.floor(i / 4)],
-          medal: [1, 2 + Math.floor(i / 5)]
-        },
+        drop: (() => {
+          const band = i < 7 ? 1 : i < 14 ? 2 : 3; // 初/中/高
+          const cert = i < 5 ? 1 : i < 12 ? 2 : i < 18 ? 3 : 4;
+          const o = { ms: {}, md: {}, cert: {} };
+          o.ms["ms" + band] = [2 + band, 4 + band + Math.floor(i / 5)];
+          o.md["md" + band] = [1 + Math.floor(band / 2), 2 + band];
+          o.cert["cert" + cert] = [1, 1 + Math.floor(i / 4)];
+          return o;
+        })(),
         gold: Math.round(90 * Math.pow(1.15, i)) + 40,
         exp: Math.round(80 * Math.pow(1.16, i)) + 40
       };
@@ -686,6 +690,15 @@ export const CULT = {
   }
 };
 // 🎖️ 资历评级（白/绿/蓝/紫/橙/红）—— 字母先用 D/C/B/A/S/SS
+// 🧾 角色素材分档：手稿 初/中/高、勋章 青铜/白银/黄金、证书 新手/入门/精英/大师
+export const MAT_TIER = {
+  grade: [1, 1, 2, 3, 3, 3],      // D,C,B,A,S,SS → 需要的档
+  apt: [1, 1, 1, 2, 2, 3, 3],     // ★1..7
+  cert: [0, 1, 2, 3, 4, 4],       // 突破 0..5 次
+  msName: ["初级手稿", "中级手稿", "高级手稿"],
+  mdName: ["青铜勋章", "白银勋章", "黄金勋章"],
+  certName: ["新手突破证书", "入门突破证书", "精英突破证书", "大师突破证书"]
+};
 export const GRADE = [
   { key: "D",  name: "白", color: "#d8d8d8", mult: 1.00, cost: 0 },
   { key: "C",  name: "绿", color: "#7ee787", mult: 1.06, cost: 20 },
