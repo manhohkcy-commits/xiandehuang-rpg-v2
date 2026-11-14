@@ -21,8 +21,9 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES } from "./js/data.js?v=fbecd1eb";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS } from "./js/data.js?v=fbecd1eb";
 import { makeItem } from "./js/items.js?v=a6c2aa88";
+import { stagePower } from "./js/enemies.js?v=5054b7b7";
 import { charFinal, charPower } from "./js/power.js?v=98e38d7a";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus } from "./js/battle.js?v=273a02ba";
 
@@ -74,9 +75,18 @@ function renderPick() {
       '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>' +
     '</div>' +
     '<div class="card"><div class="card-title">选择关卡</div>' +
-      STAGES.map((s) => '<div class="row"><span class="k">' + esc(s.name) +
-        '<div class="hint">' + esc(s.foe.name) + ' Lv' + s.foe.lv + ' · HP ' + fmt(s.foe.hp) + ' · 攻 ' + s.foe.atk + '</div></span>' +
-        '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>').join("") +
+      STAGES.map((s) => {
+      const tier = s.tier || "";
+      const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
+      const env = (typeof ENVIRONMENTS !== "undefined" && ENVIRONMENTS[s.weather || "clear"]) || { icon: "", name: "" };
+      const rec = (typeof stagePower === "function") ? stagePower(s) : 0;
+      return '<div class="row"><span class="k">' + esc(s.name) +
+        (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
+        '<div class="hint" style="margin-top:2px;">' + esc(s.story || s.foe.name) + '</div>' +
+        '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
+        ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + (rec ? ' · 建议战力 ' + fmt(rec) : '') + '</div></span>' +
+        '<span class="v"><button data-stage="' + s.id + '">开战</button></span></div>';
+    }).join("") +
     '</div>';
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => startBattle(b.dataset.stage);
