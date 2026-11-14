@@ -183,6 +183,50 @@ const BANK = [
 ENEMIES.push(...BANK);
 ENEMIES.push(...SNOW);
 
+// ⚒️ 废弃矿脉：装备素材副本的敌人
+const MINE_TIER = {
+  "普通": { atk: 32, hp: 300, def: 16, res: 8, spd: 8 },
+  "精英": { atk: 50, hp: 520, def: 26, res: 14, spd: 7 },
+  "特色": { atk: 72, hp: 1250, def: 36, res: 20, spd: 9 },
+  "首领": { atk: 105, hp: 2800, def: 52, res: 30, spd: 9 }
+};
+const EM = (id, name, role, tier, skillName, mult, desc) => {
+  const s = MINE_TIER[tier] || MINE_TIER["普通"];
+  return {
+    id, name, camp: "废弃矿脉", role,
+    tier: ({ "普通": "normal", "精英": "elite", "特色": "special", "首领": "boss" }[tier] || "normal"),
+    desc: desc || "",
+    tags: ["杂兵"],
+    stats: Object.assign({}, s),
+    growth: EG,
+    equip: { weapon: "矿镐", armor: "矿工皮甲", armor2: "矿工裤", accessory: "矿灯" },
+    skills: [
+      { kind: "normal", name: "挥击", mult: 100, desc: "普通攻击" },
+      { kind: "skill", name: skillName || "碎石击", mult: mult || 150, cd: 3, desc: "造成伤害" },
+      { kind: "ult", name: "崩塌", mult: 240, desc: "怒气满时释放的必杀" }
+    ],
+    critRate: 5, critDmg: 150
+  };
+};
+const MINE = [
+  EM("m_worm", "矿脉蠕虫", "近战", "普通", "钻咬", 150, "从矿壁里钻出来的软体虫，成群活动。"),
+  EM("m_ghost", "矿工亡魂", "近战", "普通", "镐击", 155, "死在矿难里的矿工，还在找出口。"),
+  EM("m_golem", "晶石守卫", "坦克", "普通", "晶壁", 130, "晶石长成的守卫，硬得离谱。"),
+  EM("m_blaster", "爆破矿工", "远程", "普通", "炸药包", 165, "带着炸药下矿的疯子。"),
+  EM("m_lava", "岩浆虫", "法术", "普通", "熔岩喷吐", 160, "在地底岩浆里游动的虫子。"),
+  EM("m_foreman", "矿脉监工", "近战", "精英", "重镐", 180, "拿着重镐的监工，脾气很差。"),
+  EM("m_colossus", "岩石巨像", "坦克", "精英", "地震践踏", 175, "整块岩壁凿成的巨像。"),
+  EM("m_heart", "矿脉之心", "法术", "首领", "地脉脉动", 255, "矿脉深处跳动的晶石核心。")
+];
+ENEMIES.push(...MINE);
+ENEMIES.forEach((x) => {
+  if (x.camp === "废弃矿脉") {
+    if (x.id === "m_foreman" || x.id === "m_colossus") x.tier = "elite";
+    if (x.id === "m_heart") x.tier = "boss";
+  }
+});
+
+
 // ⚡ 回怒效率（每次行动获得怒气）与必杀招式（怒气 100 释放）
 const ENEMY_RAGE = {
   e_thug: 25, e_brute: 22, e_soldier: 24, e_archer: 28, e_crossbow: 26,
@@ -367,3 +411,7 @@ export function enemyAt(id, lv) {
 // 🏅 修正霜原敌人的阶级（统一后处理会按名字重算，这里覆盖回来）
 const SNOW_TIER_FIX = { s_wolf_alpha: "elite", s_captain: "elite", s_frostking: "boss" };
 ENEMIES.forEach((e) => { if (SNOW_TIER_FIX[e.id]) e.tier = SNOW_TIER_FIX[e.id]; });
+
+// 🏅 修正矿脉敌人的阶级
+const MINE_TIER_FIX = { m_blaster: "normal", m_foreman: "elite", m_colossus: "elite", m_heart: "boss" };
+ENEMIES.forEach((e) => { if (MINE_TIER_FIX[e.id]) e.tier = MINE_TIER_FIX[e.id]; });

@@ -504,12 +504,74 @@ function makeSnowfield() {
   };
 }
 
+// ⚒️ 废弃矿脉：装备强化素材副本
+function makeMine() {
+  const LV = [15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 73];
+  const WAVE = [
+    ["m_worm"], ["m_worm", "m_ghost"], ["m_ghost", "m_blaster"], ["m_golem"],
+    ["m_foreman"], ["m_lava", "m_worm"], ["m_blaster", "m_golem"], ["m_lava", "m_ghost"],
+    ["m_foreman", "m_golem"], ["m_colossus"], ["m_golem", "m_golem", "m_blaster"],
+    ["m_foreman", "m_lava"], ["m_colossus", "m_worm"], ["m_blaster", "m_blaster", "m_ghost"],
+    ["m_foreman", "m_colossus"], ["m_golem", "m_lava", "m_ghost"], ["m_colossus", "m_colossus"],
+    ["m_foreman", "m_foreman"], ["m_foreman", "m_colossus", "m_lava"], ["m_heart"]
+  ];
+  const STORY = [
+    "矿洞口塌了一半，风从里面吹出来带着铁锈味。",
+    "矿灯还亮着，人却不见了。",
+    "矿壁上全是指甲抓过的痕迹。",
+    "晶石在黑暗里发着幽幽的光。",
+    "有人拖着镐子在深处走动。",
+    "空气越来越热，脚下开始发烫。",
+    "炸药的引线还在地上冒烟。",
+    "岩浆从裂缝里渗出来。",
+    "监工的身影出现在矿道尽头。",
+    "整面岩壁站了起来。",
+    "晶石守卫排成了一道墙。",
+    "监工带着熔岩虫一起冲。",
+    "巨像的脚步声震落碎石。",
+    "炸药在狭窄矿道里回声很大。",
+    "监工和巨像堵住了去路。",
+    "守卫、岩浆虫和亡魂一起涌来。",
+    "两只巨像并排推进。",
+    "两个监工同时举起重镐。",
+    "矿道尽头全是敌人。",
+    "矿脉之心在深处跳动，整个矿洞都在震。"
+  ];
+  const NAMES = ["塌方矿口", "废弃矿道", "抓痕矿壁", "晶石矿层", "监工矿道", "地热裂隙", "炸药堆", "岩浆渗流", "监工现身", "岩壁巨像", "晶石阵列", "监工与虫", "巨像推进", "炸药回响", "双重围堵", "混编矿队", "双巨像", "双监工", "矿脉尽头", "矿脉之心"];
+  return {
+    id: "d_gear", name: "废弃矿脉", kind: "gear", icon: "⚒️",
+    desc: "塌方多年的老矿，产出装备强化素材", type: "daily",
+    stages: LV.map((lv, i) => {
+      const ids = WAVE[i].slice();
+      const tier = i === 19 ? "首领" : (i === 9 || i === 14) ? "特色" : i === 4 ? "精英" : "普通";
+      const first = enemyAt(ids[0], lv);
+      return {
+        id: "gear_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + NAMES[i], lv,
+        tier, tierLabel: tier,
+        story: STORY[i],
+        scene: "废弃矿脉",
+        sceneDesc: "塌方的矿道，闷热、狭窄，脚下是碎矿石。",
+        sceneMods: { defPct: 3 },
+        weather: "clear",
+        enemies: ids,
+        foe: first,
+        gold: Math.round(100 * Math.pow(1.16, i)) + 50,
+        exp: Math.round(60 * Math.pow(1.15, i)) + 30,
+        drops: [
+          { name: "强化石", kind: "stone", count: [2, 3 + Math.floor(i / 4)] },
+          { name: "金币", kind: "gold", count: [Math.round(50 * Math.pow(1.15, i)), Math.round(110 * Math.pow(1.15, i))] }
+        ]
+      };
+    })
+  };
+}
+
 export const DUNGEONS = [
   makeRedmaple(),
   makeHaroldBank(),
   makeSnowfield(),
   makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
-  makeDaily("d_gear", "废弃矿脉", "gear", "⚒️", "装备强化素材", "矿脉蠕虫"),
+  makeMine(),
   { id: "d_tbd", name: "待定日常", kind: "tbd", icon: "❔", desc: "内容待定", type: "daily", stages: [] },
   {
     id: "d_fest", name: "庆典试炼", kind: "fest", icon: "🏮", desc: "限定 BOSS 挑战（每周 1 次）", type: "event",
