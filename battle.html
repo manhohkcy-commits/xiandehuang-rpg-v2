@@ -224,10 +224,24 @@ function renderPrep(stageId) {
       '<button data-col="0" style="flex:1;' + (prepCol === 0 ? "border-color:#6ea8fe;color:#6ea8fe;" : "") + '">前排</button>' +
       '<button data-col="1" style="flex:1;' + (prepCol === 1 ? "border-color:#6ea8fe;color:#6ea8fe;" : "") + '">后排</button>' +
     '</div>' +
+    (ORIGINALS.length > 1 ? '<div style="margin-top:10px;"><div class="hint" style="font-weight:700;">🤝 同行（最多 4）</div>' +
+      ORIGINALS.slice(1, 6).map((o) => {
+        const on = (window.__party || []).indexOf(o.id) >= 0;
+        return '<button data-party="' + o.id + '" style="font-size:11px;margin:3px 4px 0 0;' + (on ? 'border-color:#7ee787;color:#7ee787;' : '') + '">' +
+          (on ? '✅ ' : '') + esc(o.name) + '</button>';
+      }).join("") + '</div>' : "") +
     '<div style="display:flex;gap:8px;margin-top:12px;">' +
       '<button id="prepGo" style="flex:1;border-color:#ffb347;color:#ffb347;">⚔️ 开战</button>' +
       '<button id="prepBack" style="flex:1;">← 返回选关</button>' +
     '</div></div>';
+  const party = (window.__party = window.__party || []);
+  view().querySelectorAll("[data-party]").forEach((b) => b.onclick = () => {
+    const id = b.dataset.party;
+    const i = party.indexOf(id);
+    if (i >= 0) party.splice(i, 1);
+    else { if (party.length >= 4) return; party.push(id); }
+    renderPrep(stageId);
+  });
   view().querySelectorAll("[data-col]").forEach((b) => b.onclick = () => { prepCol = Number(b.dataset.col); renderPrep(stageId); });
   $("prepGo").onclick = () => startBattle(stageId, prepCol);
   $("prepBack").onclick = renderPick;
@@ -258,10 +272,34 @@ function startBattle(stageId, col) {
   const restWaves = [];
   for (let i = 6; i < foeSpecs.length; i += 6) restWaves.push(foeSpecs.slice(i, i + 6));
   const units = firstWave.map((e, i) => mkFoe(e, i));
+  // 🤝 同行：把选中的原创角色加进我方
+  const partyIds = (window.__party || []).filter((id) => !o0 || id !== o0.id);
+  const allies = partyIds.map((id, i) => {
+    const o = ORIGINALS.find((x) => x.id === id);
+    if (!o) return null;
+    const ofx = originalFinal(o, {});
+    return { id: "ally" + i, name: o.name, side: "A", spd: ofx.spd, power: ofx.power, hp: ofx.hp, maxHp: ofx.hp,
+      atk: ofx.atk, def: ofx.def, critRate: ofx.critRate, critDmg: ofx.critDmg, dmgCut: 0, rage: 0, traits: {}, __auto: true };
+  }).filter(Boolean);
+  units.push(...allies);
+
+  // 👥 人数缩放：队伍越大，敌人越多（数值不变）
+  const extra = allies.length;
+  if (extra > 0) {
+    const base = foeSpecs.slice(0, 6);
+    for (let k = 0; k < extra; k++) foeSpecs.push(base[k % base.length]);
+  }
   st = createBattle([
     { id: "me", name: ch ? ch.name : o0.name, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
   ].concat(units));
   st.__waves = restWaves;
+  if (extra > 0) {
+    const base = foeSpecs.slice(0, 6);
+    for (let k = 0; k < extra; k++) {
+      if (st.__waves.length < 1) st.__waves.push([]);
+      st.__waves[st.__waves.length - 1].push(Object.assign({}, base[k % base.length]));
+    }
+  }
   st.__waveNo = 1;
   // 布阵：我方 0=前排 1=后排；敌人前排优先
   const meU = st.units.find((u) => u.id === "me");
