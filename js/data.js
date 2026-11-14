@@ -261,7 +261,7 @@ export const ACCESSORIES = [
   { id: "c_bell", name: "祈愿铃", rarity: "SR", main: { res: 9, hp: 40 }, desc: "铃舌很轻，摇起来只有自己听得见。" },
   { id: "c_mercy", name: "慈心吊坠", rarity: "SR", main: { hp: 80 }, dmgCut: 2, desc: "链条上挂着一枚小小的木十字。" }
 ];
-import { enemyAt } from "./enemies.js?v=5054b7b7";
+import { enemyAt, ENEMIES } from "./enemies.js?v=5054b7b7";
 const DUNGEON_LEVELS = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
 const foeOf = (name, lv, mul = 1) => ({
   name, lv,
@@ -413,6 +413,9 @@ function makeHaroldBank() {
     "这里没有风，只有钱的味道。"
   ];
   const LV = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 80];
+  // 名字 → 图鉴敌人 ID
+  const NAME2ID = {};
+  ENEMIES.filter((e) => e.camp === "哈罗德银行").forEach((e) => { NAME2ID[e.name] = e.id; });
   const stages = LV.map((lv, i) => {
     const g = Math.pow(1.18, i), mile = (i + 1) % 5 === 0 ? 2 : 1;
     const plan = PLAN[i % PLAN.length];
@@ -427,6 +430,7 @@ function makeHaroldBank() {
       gold: Math.round(320 * g * mile), exp: Math.round(40 * g),
       drop: { shards: [], stone: [], bstone: 0, gearChance: 3 },
       foe: foeOf(foeName, lv, mul),
+      enemies: NAME2ID[foeName] ? [NAME2ID[foeName]] : [],
       story: BOSS_STORY[foeName] || STORY[i % STORY.length]
     };
   });
