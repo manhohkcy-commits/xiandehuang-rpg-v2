@@ -53,17 +53,27 @@ function readBox() {
 
 // 🔁 换位号：清掉本机记忆，回首页重新填
 $("btnSwitchBox").onclick = () => {
-  if (!confirm("换位号？当前位号会从这台设备上退出（存档在云端不会丢），回首页填新位号。")) return;
-  localStorage.removeItem("rpg2:box");
-  try { sessionStorage.removeItem("rpg2:pw:" + box); } catch (e) {}
-  location.href = "index.html";
+  const v = prompt("输入你的账号ID（3~16 位字母/数字/下划线）。\n换了只是切换本机登录的账号，云端存档不会丢。", box || "");
+  if (v === null) return;
+  const s = String(v).trim();
+  if (!/^[A-Za-z0-9_-]{3,16}$/.test(s)) return alert("只能用字母、数字、下划线，长度 3~16");
+  try { localStorage.setItem("rpg2:box", s); sessionStorage.removeItem("rpg2:pw:" + s); } catch (e) {}
+  location.href = "create.html?box=" + encodeURIComponent(s) + "&tab=char";
 };
 
 async function load() {
   box = readBox();
   if (!box) {
-    // 没带位号：自动发一个，别把新人卡在「缺少 box」
-    box = "p" + Math.random().toString(36).slice(2, 8);
+    // 新玩家：自己起账号ID（3~16 位字母/数字/下划线）
+    let id = "";
+    while (!id) {
+      const v = prompt("给自己起个账号ID（3~16 位，字母/数字/下划线）");
+      if (v === null) { view().innerHTML = card("👤 先起个账号ID", '<div class="hint">刷新页面重新开始。</div>'); return; }
+      const s = String(v).trim();
+      if (!/^[A-Za-z0-9_-]{3,16}$/.test(s)) { alert("只能用字母、数字、下划线，长度 3~16"); continue; }
+      id = s;
+    }
+    box = id;
   }
   // 位号记在本机：之后从任何页面进来都不用再带 ?box=
   try { localStorage.setItem("rpg2:box", box); } catch (e) {}
