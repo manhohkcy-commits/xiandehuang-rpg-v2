@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -20,6 +20,7 @@
 <script type="module">
 import { cloudGet, cacheLoad, esc, fmt, gateLoad } from "./js/core.js?v=13807141";
 import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js?v=f9b6158c";
+import { DUNGEONS } from "./js/data.js?v=a0b40bb1";
 
 let box = "", store = null, room = null, roomId = "", seq = 0, timer = 0;
 const $ = (id) => document.getElementById(id);
@@ -131,12 +132,18 @@ function render() {
   }).join("");
 
   const started = room.phase === "fighting" || room.phase === "done" || !!room.state;
-  const battleHref = "battle.html?box=" + encodeURIComponent(box) + "&room=" + encodeURIComponent(room.room);
+  const stageSel = (window.__roomStage || "");
+  const battleHref = "battle.html?box=" + encodeURIComponent(box) + "&room=" + encodeURIComponent(room.room) + (stageSel ? "&stage=" + encodeURIComponent(stageSel) : "");
 
   view().innerHTML =
     '<div class="card"><div class="card-title">房间 ' + esc(room.room) + ' · ' + esc(room.phase) + '</div>' +
       '<div class="hint">房主：' + esc(room.host) + '　|　你是：' + (isHost ? "👑 房主" : "玩家") + '　|　人数 ' + Object.keys(room.members || {}).length + '/4</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        (isHost ? '<select id="roomStage" style="max-width:280px;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:7px;">' +
+          DUNGEONS.filter((d) => d.type === "daily" && d.stages.length).map((d) =>
+            '<optgroup label="' + esc(d.name) + '">' +
+            d.stages.map((s) => '<option value="' + s.id + '">第 ' + (parseInt(String(s.id).split("_")[1], 10)) + ' 关 · Lv' + s.lv + '</option>').join("") +
+            '</optgroup>').join("") + '</select>' : "") +
         '<button id="btnReady">' + (me.ready ? "✅ 已准备（点一下取消）" : "🟢 准备") + '</button>' +
         '<button id="btnStart" ' + (isHost ? '' : 'disabled') + ' style="border-color:#7ee787;color:#7ee787;">⚔️ 开战</button>' +
         (started ? '<button id="btnEnter" style="border-color:#6ea8fe;color:#6ea8fe;">🚪 进入对战 / 观战</button>' : '') +
@@ -148,7 +155,11 @@ function render() {
     '<div class="card"><div class="card-title">成员</div>' + list + '</div>';
 
   $("btnReady").onclick = () => doReady(!me.ready);
-  $("btnStart").onclick = () => { location.href = battleHref; };
+  $("btnStart").onclick = () => {
+    const sel = $("roomStage");
+    const sid = sel ? sel.value : "";
+    location.href = "battle.html?box=" + encodeURIComponent(box) + "&room=" + encodeURIComponent(room.room) + (sid ? "&stage=" + encodeURIComponent(sid) : "");
+  };
   if ($("btnEnter")) $("btnEnter").onclick = () => { location.href = battleHref; };
   $("btnLeave").onclick = doLeave;
   $("btnCopy").onclick = () => {
