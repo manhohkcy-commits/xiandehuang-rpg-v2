@@ -845,8 +845,7 @@ function renderTalent() {
         t.name + ' <span class="tag">' + counts[t.id] + '</span></button>';
     }).join("") +
     '</div>' +
-    '<div class="hint" style="margin-top:6px;">可用 <b style="color:' + (left > 0 ? "#7ee787" : "#8a8ab0") + ';">' + left + '</b> / 共 ' + Number(ch.tp) + ' 点（升级 +1、突破 +2）</div>' +
-    (tbParts.length ? '<div class="hint">当前加成：' + tbParts.join(" · ") + '</div>' : '') +
+        (tbParts.length ? '<div class="hint">当前加成：' + tbParts.join(" · ") + '</div>' : '') +
     (spent > 0 ? '<div style="margin-top:8px;"><button id="btnTpReset">↺ 清空天赋（免费）</button></div>' : '') +
     '</div>';
 
@@ -880,6 +879,10 @@ function renderTalent() {
     }).join("");
     rows.push('<tr><th style="padding:2px 4px;font-size:12px;color:#a8b0c8;font-weight:600;border-bottom:1px dotted #23233a;white-space:nowrap;text-align:left;">' +
       (i + 1) + '阶<div class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + '</div></th>' + cells + '</tr>');
+    const ACT_LV = { 2: 1, 6: 2, 10: 3, 14: 4, 15: 5 };
+    if (ACT_LV[i] && tree.active) {
+      rows.push('<tr><td colspan="4" style="padding:0 4px 6px;"><div style="border-left:3px solid #c9a0ff;background:#16102a;padding:5px 8px;border-radius:6px;font-size:11px;color:#c9a0ff;">✨ 主动技 Lv' + ACT_LV[i] + '：' + esc(tree.active.name) + ' — ' + esc(tree.active.desc) + '</div></td></tr>');
+    }
   }
   const grid = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;">' +
     '<colgroup><col style="width:40px;">' + branches.map(() => '<col>').join("") + '</colgroup>' +
@@ -891,7 +894,7 @@ function renderTalent() {
   const actHas = !!(act && ch.talent.points[act.id]);
   const actCan = act && !actHas && lv >= 15;
   const actRow = act ? '<div class="row" style="margin-top:12px;"><span class="k">⚡ 主动技 · ' + act.name + '</span><span class="v">' +
-    '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + (actHas ? '' : ' · 需本树已点 ' + act.need + ' 点') + '</span> ' +
+    '<span class="hint">' + act.desc + ' · CD ' + act.cd + ' 回合' + '</span> ' +
     (actHas ? '<span class="tag" style="color:' + tree.color + ';">已解锁</span>'
             : '<button data-tp="' + act.id + '" ' + (actCan ? '' : 'disabled') + '>解锁</button>') + '</span></div>' : '';
 
@@ -907,8 +910,8 @@ function renderTalent() {
 
   view().innerHTML = tabs +
     '<div class="card"><div class="card-title" style="color:' + tree.color + ';">' + tree.name + ' · ' + tree.role +
-    ' <span class="tag">本树已点 ' + counts[tree.id] + ' 点</span> <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
-    '<div class="hint">天赋 Lv5 开放；三条分支都从 Lv5 起可用，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
+    <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
+    '<div class="hint">按等级解锁：Lv5 起每 5 级开一阶，Lv80 全开；点亮不消耗任何资源。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
     (actRow ? actRow : '') + '</div>';
 
