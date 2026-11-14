@@ -77,25 +77,32 @@ function clearedFor(s) {
 }
 function dungeonListHtml() {
   const list = DUNGEONS.filter((d) => d.type === "daily" && d.stages && d.stages.length);
+  window.__openD = window.__openD || {};
   return list.map((d) => {
     const done = Math.min(clearedFor(d.stages[0]), d.stages.length);
-    let h = '<div class="card" style="margin:10px 0;padding:10px 12px;"><div style="font-weight:800;font-size:13px;color:#ffd666;">' + d.icon + ' ' + esc(d.name) +
-      ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + done + '/' + d.stages.length + '</span></div>';
-    h += d.stages.map((s) => {
-      const no = stageNo(s), cleared = clearedFor(s), locked = no > cleared + 1;
-      const tier = s.tier || "";
-      const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
-      const env = ENVIRONMENTS[s.weather || "clear"] || { icon: "", name: "" };
-      return '<div class="row" style="' + (locked ? "opacity:.55;" : "") + '"><span class="k">' + esc(s.name) +
-        (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
-        '<div class="hint" style="margin-top:2px;">' + esc(s.story || s.foe.name) + '</div>' +
-        '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
-        ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + ' · 建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
-        '<span class="v">' + (locked
-          ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
-          : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
-    }).join("");
-    return h + '</div></div>';
+    const open = window.__openD[d.id] !== false; // 默认展开
+    let h = '<div class="card" style="margin:10px 0;padding:10px 12px;">' +
+      '<div data-dungeon="' + d.id + '" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:800;font-size:13px;color:#ffd666;">' +
+      '<span>' + (open ? "▾" : "▸") + '</span>' + d.icon + ' ' + esc(d.name) +
+      ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + done + '/' + d.stages.length + '</span>' +
+      '<span class="hint" style="margin-left:auto;font-weight:400;">' + (open ? "收起" : "展开") + '</span></div>';
+    if (open) {
+      h += d.stages.map((s) => {
+        const no = stageNo(s), cleared = clearedFor(s), locked = no > cleared + 1;
+        const tier = s.tier || "";
+        const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
+        const env = ENVIRONMENTS[s.weather || "clear"] || { icon: "", name: "" };
+        return '<div class="row" style="' + (locked ? "opacity:.55;" : "") + '"><span class="k">' + esc(s.name) +
+          (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
+          '<div class="hint" style="margin-top:2px;">' + esc(s.story || s.foe.name) + '</div>' +
+          '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
+          ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + ' · 建议战力 ' + fmt(stagePower(s)) + '</div></span>' +
+          '<span class="v">' + (locked
+            ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
+            : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
+      }).join("");
+    }
+    return h + '</div>';
   }).join("");
 }
 
@@ -118,6 +125,12 @@ function renderPick() {
     '<div class="card"><div class="card-title">选择关卡</div>' +
       dungeonListHtml() +
     '</div>';
+  view().querySelectorAll("[data-dungeon]").forEach((el) => el.onclick = () => {
+    const id = el.dataset.dungeon;
+    window.__openD = window.__openD || {};
+    window.__openD[id] = window.__openD[id] === false ? true : false;
+    renderPick();
+  });
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => renderPrep(b.dataset.stage);
   });
