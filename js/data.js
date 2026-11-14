@@ -701,8 +701,29 @@ const BRANCH_SIGN = {
   m1: { statusResist: 15 }, m2: { statusHit: 15 }, m3: { penetrate: 15 },
   s1: { block: 8 }, s2: { lowHpCut: 10 }, s3: { tenacity: 12 }
 };
+// ✦ 大天赋 / 终天赋的独有机制词条
+const MAJOR_MECH = {
+  g1: { block: 8 }, g2: { lowHpCut: 8 }, g3: { thorns: 12 },
+  v1: { critDmg: 12 }, v2: { rageOnKill: 10 }, v3: { doubleStrike: 8 },
+  r1: { spdPct: 4 }, r2: { penetrate: 10 }, r3: { chase: 10 },
+  m1: { statusResist: 12 }, m2: { statusHit: 12 }, m3: { penetrate: 12 },
+  s1: { block: 8 }, s2: { lowHpCut: 10 }, s3: { tenacity: 12 }
+};
+const ULT_MECH = {
+  g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { thorns: 20 },
+  v1: { critDmg: 18 }, v2: { rageOnSkill: 12 }, v3: { chase: 12 },
+  r1: { spdPct: 6 }, r2: { penetrate: 15 }, r3: { dualborn: 10 },
+  m1: { statusPower: 12 }, m2: { statusHit: 15 }, m3: { statusPower: 15 },
+  s1: { block: 12 }, s2: { lowHpCut: 15 }, s3: { tenacity: 15 }
+};
 TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   b.style = BRANCH_STYLE[b.id] || "";
+  const major = MAJOR_MECH[b.id];
+  if (major) {
+    [4, 9].forEach((i) => { if (b.nodes[i]) Object.assign(b.nodes[i].eff, major); });
+    const ult = b.nodes[13];
+    if (ult) Object.assign(ult.eff, major, ULT_MECH[b.id] || {});
+  }
   const last = b.nodes[b.nodes.length - 1];
   if (last) {
     if (BRANCH_SIGN[b.id]) Object.assign(last.eff, BRANCH_SIGN[b.id]);
