@@ -125,12 +125,21 @@ function weekKey() {
 }
 // 🔒 关卡解锁：通关第 N 关才解锁第 N+1 关
 function stageNo(s) { const m = String(s && s.id).match(/(\d+)$/); return m ? Number(m[1]) : 0; }
+function dungeonKey(s) { return String((s && s.id) || "").split("_")[0]; }
+function clearedFor(s) {
+  const f = store.flags || {};
+  const map = f.cleared || {};
+  const k = dungeonKey(s);
+  if (map[k] != null) return Number(map[k]) || 0;
+  // 兼容旧存档：经验本进度存在 expCleared
+  return k === "exp" ? (Number(f.expCleared) || 0) : 0;
+}
 function expCleared() { return Number((store.flags || {}).expCleared) || 0; }
-function isUnlocked(s) { return stageNo(s) <= expCleared() + 1; }
+function isUnlocked(s) { return stageNo(s) <= clearedFor(s) + 1; }
 
 function dungeonHtml() {
   // 🚧 目前只有「枫林剿匪」设计完成，其他副本先隐藏
-  const dailies = DUNGEONS.filter((d) => d.type === "daily" && d.id === "d_exp");
+  const dailies = DUNGEONS.filter((d) => d.type === "daily" && (d.id === "d_exp" || d.id === "d_gold"));
   const event = null;
   const stageRow = (s) => {
     const no = stageNo(s), locked = !isUnlocked(s);
@@ -152,7 +161,7 @@ function dungeonHtml() {
     }
     const groups = [1, 2, 3, 4].map((g) => d.stages.filter((s) => s.group === g)).filter((arr) => arr.length);
     return '<div class="card"><div class="card-title">' + d.icon + ' ' + esc(d.name) +
-      ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + Math.min(expCleared(), d.stages.length) + '/' + d.stages.length + '</span></div>' +
+      ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + Math.min(d.stages.length ? clearedFor(d.stages[0]) : 0, d.stages.length) + '/' + d.stages.length + '</span></div>' +
       '<div class="hint" style="margin-bottom:6px;">' + esc(d.desc) + '　|　不限次数</div>' +
       groups.map((arr, gi) => '<details style="margin-top:6px;"' + (gi === 0 ? ' open' : '') + '>' +
         '<summary style="cursor:pointer;font-size:12px;color:#8fd8ff;font-weight:700;">第 ' + (gi + 1) + ' 档 · Lv' +
@@ -1470,12 +1479,15 @@ function finish() {
   const exp = Number(s.exp != null ? s.exp : (40 + s.foe.lv * 6));
   store.gold = (Number(store.gold) || 0) + gold;
   if (!st.__origId) store.exp = (Number(store.exp) || 0) + exp; // 原创出战经验只给原创角色
-  // 🔓 逐关解锁进度
+  // 🔓 逐关解锁进度（每个副本独立）
   store.flags = store.flags || {};
-  if (String(s.id).indexOf("exp_") === 0) {
+  {
+    const k = dungeonKey(s);
     const n = stageNo(s);
-    if (n > expCleared()) {
-      store.flags.expCleared = n;
+    const map = store.flags.cleared || (store.flags.cleared = {});
+    if (n > (Number(map[k]) || 0)) {
+      map[k] = n;
+      if (k === "exp") store.flags.expCleared = n;
       pushLog("🔓 已解锁下一关", "line");
       sysPost("🎉 " + (((store.chars || []).find((c) => c.id === store.activeChar) || {}).name || "有人") + " 首次通关「" + s.name + "」");
     }
