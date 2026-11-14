@@ -253,8 +253,9 @@ function renderPick() {
           '<div class="hint">奖励进入你的玩家存档。</div>') +
     '</div>' +
     '<div class="card"><div class="card-title">出战角色</div>' +
-      '<div class="row"><span class="k">🧑 ' + esc(ch.name) + '<div class="hint">我的角色 · Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</div></span>' +
-        '<span class="v"><button data-play="me" ' + (playOrig ? '' : 'style="border-color:#6ea8fe;color:#6ea8fe;"') + '>' + (playOrig ? "选择" : "✅ 出战中") + '</button></span></div>' +
+      (isHost() ? "" :
+        '<div class="row"><span class="k">🧑 ' + esc(ch.name) + '<div class="hint">我的角色 · Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</div></span>' +
+        '<span class="v"><button data-play="me" ' + (playOrig ? '' : 'style="border-color:#6ea8fe;color:#6ea8fe;"') + '>' + (playOrig ? "选择" : "✅ 出战中") + '</button></span></div>') +
       (origList.length
         ? origList.map((o) => {
             const prog = (store.orig && store.orig[o.id]) || { lv: 1, exp: 0 };
@@ -270,13 +271,11 @@ function renderPick() {
           }).join("")
         : '<div class="hint">还没有原创角色（主机端设计好后会出现）。</div>') +
     '</div>' +
+    (isHost() ? "" :
     '<div class="card"><div class="card-title">当前面板</div>' +
-      (playOrig
-        ? (() => { const s = origStats(playOrig); return '<div class="hint">🧬 ' + esc(playOrig.name) + '（原创角色）</div>' +
-            '<div class="row"><span class="k">攻击 / 生命</span><span class="v">' + Math.round(s.atk) + ' / ' + Math.round(s.hp) + '</span></div>' +
-            '<div class="row"><span class="k">防御 / 法抗</span><span class="v">' + Math.round(s.def) + ' / ' + Math.round(s.res) + '</span></div>'; })()
-        : '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
-          '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>') +
+      '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>' +
+      '<div class="hint">攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) + ' · 速度 ' + Math.round(f.spd * 10) / 10 + '</div>' +
+    '</div>') +
     '</div>' +
     (isHost() && ORIGINALS.filter((o) => o.camp === "ally").length
       ? '<div class="card"><div class="card-title">🤝 同行队伍（最多 5，默认托管）</div>' +
