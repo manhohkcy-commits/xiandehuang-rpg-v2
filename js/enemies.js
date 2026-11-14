@@ -289,12 +289,26 @@ ENEMIES.forEach((e) => {
   e.faction = e.camp;
 });
 // 按关卡等级缩放（Lv1 基准 → 目标等级）
+// 📈 等级难度曲线（以中等玩家战力为锚，普通怪 ≈ 0.75P）
+const ENEMY_K = [[5,1.26],[10,1.5],[15,1.69],[20,1.88],[25,2.05],[30,2.22],[35,2.37],[40,2.61],[45,2.76],[50,2.92],[55,3.06],[60,3.36],[65,3.51],[70,3.66],[75,3.8],[80,4.2],[85,4.35],[90,4.51],[95,4.66],[100,4.7]];
+function enemyK(lv) {
+  const L = Math.max(1, Number(lv) || 1);
+  if (L <= ENEMY_K[0][0]) return ENEMY_K[0][1];
+  for (let i = 1; i < ENEMY_K.length; i++) {
+    if (L <= ENEMY_K[i][0]) {
+      const [l0, k0] = ENEMY_K[i - 1], [l1, k1] = ENEMY_K[i];
+      return (k0 + (k1 - k0) * (L - l0) / (l1 - l0)) * 0.4;
+    }
+  }
+  return ENEMY_K[ENEMY_K.length - 1][1];
+}
+
 export function enemyAt(id, lv) {
   const e = enemyById(id);
   if (!e) return null;
   const L = Math.max(1, Number(lv) || 1);
   const k = (key) => {
-    const raw = (e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1));
+    const raw = (e.stats[key] || 0) * (1 + (e.growth[key] || 0) * (L - 1)) * enemyK(L);
     return key === "spd" ? Math.round(raw * 10) / 10 : Math.round(raw);
   };
   return {
