@@ -429,6 +429,41 @@ const MINE_BOSSES = [
   EM("b_eva", "艾登 · 伊娃", "法术", "特色", "岩爆术", 195, "锻造基地的技术主管，用岩土与炉火作战。"),
   EM("b_harman", "哈曼 · 奥斯肯", "近战", "首领", "锻造之怒", 265, "矿区总负责人，亲手打造了整条生产线，也亲手把它变成武器。")
 ];
+
+// 🧬 修行洞窟：角色突破素材副本
+const CAVE_TIER = {
+  "普通": { atk: 30, hp: 320, def: 14, res: 12, spd: 9 },
+  "精英": { atk: 48, hp: 560, def: 24, res: 20, spd: 8 },
+  "首领": { atk: 100, hp: 2600, def: 46, res: 38, spd: 10 }
+};
+const EC = (id, name, role, tier, skillName, mult, desc) => {
+  const s = CAVE_TIER[tier] || CAVE_TIER["普通"];
+  return {
+    id, name, camp: "修行洞窟", role,
+    tier: ({ "普通": "normal", "精英": "elite", "首领": "boss" }[tier] || "normal"),
+    desc: desc || "", tags: ["杂兵"], stats: Object.assign({}, s), growth: EG,
+    equip: { weapon: "石杖", armor: "苦修袍", armor2: "麻布裤", accessory: "念珠" },
+    skills: [
+      { kind: "normal", name: "挥击", mult: 100, desc: "普通攻击" },
+      { kind: "skill", name: skillName || "重击", mult: mult || 150, cd: 3, desc: "造成伤害" },
+      { kind: "ult", name: "洞窟回响", mult: 240, desc: "怒气满时的必杀" }
+    ],
+    critRate: 5, critDmg: 150
+  };
+};
+const CAVE = [
+  EC("c_golem", "碎石傀儡", "近战", "普通", "石拳", 150, "碎石拼成的傀儡。"),
+  EC("c_bat", "洞窟蝙蝠", "远程", "普通", "音波", 155, "倒挂洞顶的蝙蝠。"),
+  EC("c_monk", "苦修者", "近战", "普通", "苦行棍", 150, "在洞窟里苦修的人。"),
+  EC("c_healer", "苦修僧", "辅助", "普通", "静心咒", 140, "为同伴诵经恢复。"),
+  EC("c_guard", "石壁守卫", "坦克", "普通", "岩壁", 130, "半嵌在石壁里的守卫。"),
+  EC("c_spirit", "灵体术士", "法术", "普通", "魂火", 160, "徘徊的灵体。"),
+  EC("c_priest", "洞窟祭司", "辅助", "精英", "洞窟祝祷", 170, "主持仪式的祭司。"),
+  EC("c_statue", "守窟石像", "坦克", "精英", "石像践踏", 185, "巨大石像。"),
+  EC("c_lord", "洞窟之主 · 石心", "近战", "首领", "地脉崩塌", 255, "洞窟最深处的主人。")
+];
+ENEMIES.push(...CAVE);
+
 ENEMIES.push(...MINE_BOSSES);
 
 // 🏅 修正矿脉敌人的阶级
@@ -480,3 +515,7 @@ ENEMIES.forEach((en) => {
     if (s.kind === "skill" || s.kind === "ult") Object.assign(s, sig);
   });
 });
+
+// 🏅 修行洞窟阶级修正
+const CAVE_TIER_FIX = { c_priest: "elite", c_statue: "elite", c_lord: "boss" };
+ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });

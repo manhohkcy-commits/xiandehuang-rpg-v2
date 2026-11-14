@@ -553,10 +553,74 @@ function makeMine() {
   };
 }
 
+// 🧬 修行洞窟：角色突破素材副本
+function makeCave() {
+  const LV = [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 78];
+  const WAVE = [
+    ["c_golem"], ["c_golem", "c_bat"], ["c_monk", "c_bat"], ["c_guard"],
+    ["c_priest"], ["c_spirit", "c_golem"], ["c_healer", "c_monk"], ["c_spirit", "c_bat"],
+    ["c_statue"], ["c_guard", "c_healer"], ["c_monk", "c_monk", "c_bat"],
+    ["c_priest", "c_spirit"], ["c_statue", "c_golem"], ["c_spirit", "c_spirit", "c_bat"],
+    ["c_priest", "c_statue"], ["c_guard", "c_healer", "c_monk"], ["c_statue", "c_statue"],
+    ["c_priest", "c_priest"], ["c_priest", "c_statue", "c_spirit"], ["c_lord"]
+  ];
+  const NAMES = ["洞窟入口", "蝙蝠回廊", "苦修石阶", "石壁甬道", "祭司厅", "灵火窟", "静心室", "音波深处", "石像前厅", "药石龛", "苦修者群", "祭司与灵", "石像挡路", "双重灵火", "祭司阵", "守卫队列", "双石像", "双祭司", "洞窟尽头", "石心之厅"];
+  const STORY = [
+    "洞窟入口很窄，风从里面吹出来带着香灰味。",
+    "蝙蝠倒挂在洞顶，翅膀擦过石壁。",
+    "石阶被踩得发亮，上面全是跪痕。",
+    "甬道两侧刻满看不懂的经文。",
+    "祭司厅里点着长明灯。",
+    "灵火在窟里飘，靠近会很冷。",
+    "静心室有人在低声诵经。",
+    "音波在洞窟里来回反弹。",
+    "石像的眼睛似乎动了一下。",
+    "药石龛里堆着修行用的矿药。",
+    "一群苦修者挡住了去路。",
+    "祭司带着灵体一起诵咒。",
+    "石像举起了整条石臂。",
+    "两团灵火同时亮起。",
+    "祭司围成一圈开始祝祷。",
+    "守卫、苦修者排成队列。",
+    "两尊石像并排堵路。",
+    "两个祭司同时举起石杖。",
+    "洞窟尽头全是诵经声。",
+    "石心站在洞窟最深处，整座山洞就是它的身体。"
+  ];
+  return {
+    id: "d_char", name: "修行洞窟", kind: "char", icon: "🧬",
+    desc: "修行者闭关的洞窟，产出角色突破石", type: "daily",
+    stages: LV.map((lv, i) => {
+      const ids = WAVE[i].slice();
+      const tier = i === 19 ? "首领" : i === 9 ? "特色" : i === 4 ? "精英" : "普通";
+      const first = enemyAt(ids[0], lv);
+      return {
+        id: "char_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + NAMES[i], lv,
+        tier, tierLabel: tier,
+        story: STORY[i],
+        scene: ["洞窟入口", "蝙蝠回廊", "苦修石阶", "灵火窟", "石心之厅"][Math.min(4, Math.floor(i / 4))],
+        sceneDesc: ["狭窄的洞口，香灰味很重。", "倒挂的蝙蝠与回音。", "被踩亮的石阶与跪痕。", "灵火飘荡，寒气逼人。", "整座洞窟的核心，岩石在呼吸。"][Math.min(4, Math.floor(i / 4))],
+        sceneMods: [{ resPct: 3 }, { spdPct: 3 }, { defPct: 3 }, { resPct: 4 }, { resPct: 5 }][Math.min(4, Math.floor(i / 4))],
+        weather: ["clear", "fog", "night", "ash"][Math.min(3, Math.floor(i / 5))],
+        enemies: ids,
+        foe: first,
+        drop: {
+          bstone: 2 + Math.floor(i / 2),
+          shardR: [6, 12 + Math.floor(i / 3)],
+          shardSR: [1, 3 + Math.floor(i / 4)],
+          gearChance: 0
+        },
+        gold: Math.round(90 * Math.pow(1.15, i)) + 40,
+        exp: Math.round(80 * Math.pow(1.16, i)) + 40
+      };
+    })
+  };
+}
+
 export const DUNGEONS = [
   makeRedmaple(),
   makeHaroldBank(),
-  makeDaily("d_char", "修行洞窟", "char", "🧬", "角色突破素材", "洞窟守卫"),
+  makeCave(),
   makeMine(),
   { id: "d_tbd", name: "待定日常", kind: "tbd", icon: "❔", desc: "内容待定", type: "daily", stages: [] },
   {
