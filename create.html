@@ -1905,6 +1905,14 @@ function renderStore() {
   const fl = store.flags || {};
   const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
   const batch = window.__batch || (window.__batch = { on: false, sel: {} });
+  const MAT_ROWS = [
+    ["ms1", "初级手稿"], ["ms2", "中级手稿"], ["ms3", "高级手稿"],
+    ["md1", "青铜勋章"], ["md2", "白银勋章"], ["md3", "黄金勋章"],
+    ["cert1", "新手证书"], ["cert2", "入门证书"], ["cert3", "精英证书"], ["cert4", "大师证书"]
+  ];
+  const matCard = card("🧾 角色素材", '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+    MAT_ROWS.map(([k, n]) => '<span class="tag" style="font-size:11px;">' + n + ' <b style="color:#ffd666;">' + (Number(fl[k]) || 0) + '</b></span>').join("") +
+    '</div><div class="hint" style="margin-top:4px;">突破 ' + (Number(fl.bstone) || 0) + ' · 强化石 ' + (Number(fl.stone) || 0) + ' · 精炼石 ' + (Number(fl.refineStone) || 0) + '</div>');
 
   const filtered = all.filter((it) => F.cat === "all" || it.cat === F.cat);
   const rank = { R: 1, SR: 2, SSR: 3, UR: 4 };
@@ -1938,7 +1946,7 @@ function renderStore() {
     '<div class="row"><span class="k">突破石</span><span class="v">' + fmt(Number(fl.bstone) || 0) + '</span></div>' + '</div>';
 
   if (!filtered.length) {
-    view().innerHTML = tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
+    view().innerHTML = matCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
     bindStoreTool(filtered);
     return;
   }
