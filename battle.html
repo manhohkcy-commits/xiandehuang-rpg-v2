@@ -874,13 +874,18 @@ function finish() {
   const refine = rnd(dp.refine);
   const shR = rnd(dp.shardR) || 0, shSR = rnd(dp.shardSR) || 0, shSSR = rnd(dp.shardSSR) || 0;
   const msN = 0, mdN = 0, bst = 0;
+  const MAT_NAME = {
+    ms1: "初级手稿", ms2: "中级手稿", ms3: "高级手稿",
+    md1: "青铜勋章", md2: "白银勋章", md3: "黄金勋章",
+    cert1: "新手突破证书", cert2: "入门突破证书", cert3: "精英突破证书", cert4: "大师突破证书"
+  };
   const bagAdd = (obj) => {
     if (!obj) return;
     Object.keys(obj).forEach((k) => {
       const n = rnd(obj[k]) || 0;
       if (!n) return;
       store.flags[k] = (Number(store.flags[k]) || 0) + n;
-      drops.push({ name: k, count: n });
+      drops.push({ name: MAT_NAME[k] || k, count: n });
     });
   };
   store.flags.shardR = (Number(store.flags.shardR) || 0) + shR;
