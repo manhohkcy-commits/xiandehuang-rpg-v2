@@ -649,7 +649,7 @@ export const TALENT_TREES = [
     active: { id: "v_act", key: "frenzy", name: "狂战", cd: 4, need: 10, desc: "攻击 +40%，持续 2 回合" },
     branches: [
       tb("v1", "突袭", 5, "攻击 · 暴击", "v1_", { base: { atkPct: 3 }, step: { atkPct: 0.6 }, bonus: { 3: { critRate: 2 }, 8: { critDmg: 8 }, 12: { critRate: 3 } } }),
-      tb("v2", "战意", 30, "怒气 · 收割", "v2_", { base: { atkPct: 2, rageStart: 2 }, step: { atkPct: 0.4, rageStart: 1 }, bonus: { 6: { rageOnKill: 8 }, 12: { rageOnSkill: 10 } } }),
+      tb("v2", "战意", 30, "怒气 · 收割", "v2_", { base: { atkPct: 2, rageStart: 1 }, step: { atkPct: 0.4, rageStart: 0.5 }, bonus: { 6: { rageOnKill: 8 }, 12: { rageOnSkill: 10 } } }),
       tb("v3", "狂暴", 60, "暴击 · 连击", "v3_", { base: { critRate: 1 }, step: { critRate: 0.3 }, bonus: { 4: { critDmg: 8 }, 9: { doubleStrike: 8 }, 13: { chase: 10 } } })
     ] },
 
@@ -665,7 +665,7 @@ export const TALENT_TREES = [
     active: { id: "m_act", key: "arcane", name: "奥术冲击", cd: 4, need: 10, desc: "200% 攻击的无视部分减伤伤害" },
     branches: [
       tb("m1", "冥想", 5, "法抗 · 输出", "m1_", { base: { resPct: 3 }, step: { resPct: 0.6 }, bonus: { 4: { atkPct: 5 }, 10: { hpPct: 6 } } }),
-      tb("m2", "元素", 30, "状态 · 强度", "m2_", { base: { statusPower: 6 }, step: { statusPower: 2 }, bonus: { 6: { statusHit: 8 }, 12: { statusPower: 10 } } }),
+      tb("m2", "元素", 30, "状态 · 强度", "m2_", { base: { statusPower: 3 }, step: { statusPower: 1 }, bonus: { 6: { statusHit: 8 }, 12: { statusPower: 10 } } }),
       tb("m3", "奥术", 60, "穿透 · 禁咒", "m3_", { base: { atkPct: 3 }, step: { atkPct: 0.5 }, bonus: { 5: { penetrate: 8 }, 10: { critDmg: 10 }, 13: { statusResist: 10 } } })
     ] },
 
@@ -701,22 +701,22 @@ const BRANCH_SIGN = {
   v1: { critRate: 4 }, v2: { rageOnKill: 12 }, v3: { chase: 12 },
   r1: { dualborn: 10 }, r2: { penetrate: 12 }, r3: { doubleStrike: 12 },
   m1: { statusResist: 15 }, m2: { statusHit: 15 }, m3: { penetrate: 15 },
-  s1: { block: 8 }, s2: { healPct: 5 }, s3: { tenacity: 12 }
+  s1: { block: 6 }, s2: { healPct: 5 }, s3: { tenacity: 8 }
 };
 // ✦ 大天赋 / 终天赋的独有机制词条
 const MAJOR_MECH = {
-  g1: { block: 8 }, g2: { lowHpCut: 8 }, g3: { dmgCut: 4 },
+  g1: { block: 6 }, g2: { lowHpCut: 6 }, g3: { dmgCut: 3 },
   v1: { critDmg: 12 }, v2: { rageOnKill: 10 }, v3: { doubleStrike: 8 },
   r1: { spdPct: 4 }, r2: { penetrate: 10 }, r3: { chase: 10 },
-  m1: { statusResist: 12 }, m2: { statusHit: 12 }, m3: { penetrate: 12 },
-  s1: { block: 8 }, s2: { healPct: 5 }, s3: { tenacity: 12 }
+  m1: { statusResist: 9 }, m2: { statusHit: 9 }, m3: { penetrate: 10 },
+  s1: { block: 6 }, s2: { healPct: 5 }, s3: { tenacity: 8 }
 };
 const ULT_MECH = {
   g1: { tenacity: 12 }, g2: { lowHpCut: 12 }, g3: { dmgCut: 8 },
   v1: { critDmg: 18 }, v2: { rageOnSkill: 12 }, v3: { chase: 12 },
   r1: { spdPct: 6 }, r2: { penetrate: 15 }, r3: { dualborn: 10 },
-  m1: { statusPower: 12 }, m2: { statusHit: 15 }, m3: { statusPower: 15 },
-  s1: { block: 12 }, s2: { healPct: 8 }, s3: { tenacity: 15 }
+  m1: { statusPower: 9 }, m2: { statusHit: 10 }, m3: { statusPower: 10 },
+  s1: { block: 8 }, s2: { healPct: 8 }, s3: { tenacity: 10 }
 };
 TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   b.style = BRANCH_STYLE[b.id] || "";
@@ -736,6 +736,14 @@ TALENT_TREES.forEach((t) => t.branches.forEach((b) => {
   }
 }));
 
+// 🧮 上限保护：个别词条叠加后过高，统一压到合理区间
+const TALENT_CAP = { chase: 20, doubleStrike: 20, block: 20, tenacity: 20, penetrate: 25, statusPower: 40, statusHit: 25, statusResist: 25, lowHpCut: 15, dmgCut: 20, spdPct: 25, atkPct: 25, hpPct: 30, defPct: 25, resPct: 25, critRate: 12, critDmg: 25, healPct: 32, rageStart: 20 };
+TALENT_TREES.forEach((t) => t.branches.forEach((b) => b.nodes.forEach((n) => {
+  Object.keys(n.eff).forEach((k) => {
+    const cap = TALENT_CAP[k];
+    if (cap != null && Number(n.eff[k]) > cap) n.eff[k] = cap;
+  });
+})));
 // ⏳ 天赋成长节奏：三条分支都在天赋开放（Lv5）时一起可用；阶每 5 级开放一阶
 //    分支：Lv5 全开；阶：Lv5 → Lv70
 export const TALENT_BRANCH_LV = [5, 5, 5];
