@@ -895,8 +895,8 @@ function renderTalent() {
             : '<button data-tp="' + act.id + '" ' + (actCan ? '' : 'disabled') + '>解锁</button>') + '</span></div>' : '';
 
   // ⑤ 第二主动技（Lv40）
-  const act2Cur = (ch.talent && ch.talent.active2) || "";
-  const act2Row = '<div class="row" style="margin-top:8px;"><span class="k">⚡ 第二主动技</span><span class="v">' +
+  const act2Cur = "";
+  const act2Row = '<div style="display:none;"><span class="k">⚡ 第二主动技</span><span class="v">' +
     (lv < 40 ? '<span class="hint">Lv40 解锁</span>' :
       '<span class="hint">从其他定位里挑一个</span>') + '</span></div>' +
     (lv < 40 ? '' : '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
@@ -909,7 +909,7 @@ function renderTalent() {
     ' <span class="tag">本树已点 ' + counts[tree.id] + ' 点</span> <button id="btnTalentReset" style="font-size:10px;padding:1px 8px;margin-left:6px;">🔄 重置天赋</button></div>' +
     '<div class="hint">天赋 Lv5 开放；三条分支都从 Lv5 起可用，14 阶每 5 级开放一阶（Lv5→70）；到等级就能点，未解锁的节点可以点开预览。</div>' +
     (lv < 5 ? '<div class="hint" style="color:#ffd666;">当前 Lv' + lv + '，到 Lv5 才能开始点天赋</div>' : '') + grid +
-    (actRow ? actRow : '') + act2Row + '</div>';
+    (actRow ? actRow : '') + '</div>';
 
   const allNodes = [];
   TALENT_TREES.forEach((t) => {
