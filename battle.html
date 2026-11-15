@@ -812,7 +812,13 @@ function doAct(kind) {
   }
 
   if (st.finished) { finish(); renderBattle(); return; }
-  if (kind !== "ult") m.rage = Math.min(100, (Number(m.rage) || 0) + 25);
+  if (kind !== "ult") {
+    const gain = kind === "skill"
+      ? (Number(wp.sRage) || 10)
+      : (Number(wp.aRage) || 20);
+    m.rage = Math.min(100, (Number(m.rage) || 0) + gain);
+    if (gain) pushLog("⚡ 回怒 +" + gain + "（" + Math.round(m.rage) + "/100）", "line");
+  }
   renderBattle();
   setTimeout(aiTurnIfNeeded, 380);
 }
