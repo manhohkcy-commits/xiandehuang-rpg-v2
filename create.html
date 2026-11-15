@@ -1967,7 +1967,7 @@ function travelerStock() {
     x = (x * 1103515245 + 12345) % 2147483647;
     const idx = Math.abs(x) % pool.length;
     const pick = pool.splice(idx, 1)[0];
-    const base = pick.d.rarity === "SSR" ? 260000 : pick.d.rarity === "SR" ? 72000 : 18000;
+    const base = pick.d.rarity === "SSR" ? 180000 : pick.d.rarity === "SR" ? 48000 : 7000;
     out.push({ key: "tr" + i, cat: pick.cat, def: pick.d, price: base });
   }
   return out;
