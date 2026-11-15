@@ -757,3 +757,28 @@ ENEMIES.forEach((en) => {
       (fx.length ? "，" + fx.join("，") : "") + "。";
   });
 });
+
+// 🏷 其余阵营自动标签（红枫团 / 银行 / 锻造基地）
+const CAMP_SHORT = { "红枫团": "红枫团", "哈罗德银行": "银行", "矿采锻造基地": "锻造基地" };
+const MECH_RE = /机|傀儡|巨像|机器人|自动机|机械/;
+ENEMIES.forEach((en) => {
+  if (en.camp === "时代广场商业区") return;
+  const t = [];
+  t.push(MECH_RE.test(en.name) ? "机械" : "人形");
+  if (CAMP_SHORT[en.camp]) t.push(CAMP_SHORT[en.camp]);
+  if (en.role) t.push(String(en.role).replace("首领·", "").replace("特色首领", "首领"));
+  const fx = new Set();
+  (en.skills || []).forEach((s) => {
+    if (s.shield) fx.add("护盾");
+    if (s.heal) fx.add("治疗");
+    if (s.aoe) fx.add("群攻");
+    if (s.row) fx.add("贯穿");
+    if (s.stun) fx.add("控制");
+    if (s.silence) fx.add("沉默");
+    if (s.burn) fx.add("灼烧");
+  });
+  if (en.tier === "boss") t.push("首领");
+  if (en.tier === "special") t.push("特色");
+  fx.forEach((x) => t.push(x));
+  en.tags = Array.from(new Set(t));
+});
