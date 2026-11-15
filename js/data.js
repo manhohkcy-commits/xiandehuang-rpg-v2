@@ -10,7 +10,7 @@ export const SLOT_BASE = {
 };
 export const WEAPONS = [
   {
-    id: "w_k", name: "暗炎拳套", rarity: "SSR", style: "melee", limited: "26 庆典限定",
+    id: "w_k", name: "究极热动拳套", rarity: "SSR", style: "melee", limited: "26 庆典限定",
     atk: 104, aMult: 100, aHits: 2, uMult: 150, uHits: 2, uShape: "single",
     sName: "秒针", sMult: 92, sHits: 2, sCd: 3, sRage: 14, sShape: "single",
     aName: "刺拳", uName: "连锁驱动", dmgType: "phys",
@@ -1154,7 +1154,7 @@ if (_fest) {
       enemies: ["fest_k"],
       foe: first,
       drop: i === 9 ? { gearChance: 100, themeGear: true, kShard: [11, 22] } : { kShard: [2 + i, 4 + i * 2] },
-      themeGear: i === 9 ? "暗炎拳套" : "",
+      themeGear: i === 9 ? "究极热动拳套" : "",
       gold: 8000 + i * 4000,
       exp: 3200 + i * 1500
     });

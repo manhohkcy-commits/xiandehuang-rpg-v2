@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=43a9c124";
+import { CULT, RARITY_MULT } from "./data.js?v=7a1e1e12";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -181,7 +181,7 @@ export function cultCheck(it, kind, store) {
     if (d.id === "w_kyo" || d.id === "w_k") {
       const need = CULT.shardBase * (Number(d.star) || 1);
       const key = d.id === "w_kyo" ? "kyoShard" : "kShard";
-      const name = d.id === "w_kyo" ? "草薙流古武典碎片" : "暗炎拳套碎片";
+      const name = d.id === "w_kyo" ? "草薙流古武典碎片" : "究极热动拳套碎片";
       const haveK = Number((store.flags || {})[key]) || 0;
       if (haveK < need) return { ok: false, why: name + "不够", shards: need, key, rarity: "专属" };
       return { ok: true, to: (Number(d.star) || 1) + 1, shards: need, key, rarity: "专属" };
