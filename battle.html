@@ -713,6 +713,15 @@ function renderBattle() {
   publishState();
 }
 
+// 多段倍率曲线：总和不变，逐段递增
+function segMults(totalMult, hits) {
+  const n = Math.max(1, hits);
+  const raw = [];
+  for (let i = 0; i < n; i++) raw.push(0.85 + (0.3 * i) / Math.max(1, n - 1));
+  const sum = raw.reduce((a, b) => a + b, 0);
+  return raw.map((w) => Math.round((totalMult * w / sum) * 10) / 10);
+}
+
 function doAct(kind) {
   if (!st || st.finished || busy) return;
   if (st.finished) return;
@@ -755,10 +764,11 @@ function doAct(kind) {
       : [tgt0];
     const uHitsN = Math.max(1, Number(wp.uHits) || 1);
     const perU = (Number(wp.uMult) || 250);
+    const segU = segMults(perU * uHitsN, uHitsN);
     let r = { dmg: 0, crit: false };
     tgts.forEach((t, i) => {
       for (let h = 0; h < uHitsN; h++) {
-        const rr = damage(st, "me", t.id, { atk: m.atk, mult: perU, critRate: m.critRate, critDmg: m.critDmg });
+        const rr = damage(st, "me", t.id, { atk: m.atk, mult: segU[h], critRate: m.critRate, critDmg: m.critDmg });
         r.dmg += rr.dmg; if (rr.crit) r.crit = true;
       }
       if (i > 0) pushLog("💥 连带命中 " + t.name, "line");
@@ -773,12 +783,13 @@ function doAct(kind) {
     const cd = Number(wp.sCd) || 3;
     let r = { dmg: 0, crit: false };
     const segs = [];
+    const segPlan = segMults(per * hits, hits);
     for (let i = 0; i < hits; i++) {
-      const rr = damage(st, "me", foe().id, { atk: m.atk, mult: per, critRate: m.critRate, critDmg: m.critDmg });
+      const rr = damage(st, "me", foe().id, { atk: m.atk, mult: segPlan[i], critRate: m.critRate, critDmg: m.critDmg });
       r.dmg += rr.dmg; if (rr.crit) r.crit = true;
       segs.push(rr.dmg + (rr.crit ? "💥" : ""));
     }
-    const subs = [hits + " 段 × " + per + "% · 合计 " + r.dmg + (r.crit ? "（含暴击）" : "") + (hits > 1 ? " · 分段 " + segs.join(" / ") : "")];
+    const subs = [hits + " 段（" + segPlan.join("/") + "%）· 合计 " + r.dmg + (r.crit ? "（含暴击）" : "") + (hits > 1 ? " · 分段 " + segs.join(" / ") : "")];
     if (wp.hitStatus && r.dmg > 0) {
       addStatus(st, "foe", wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
