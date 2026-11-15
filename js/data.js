@@ -1134,7 +1134,7 @@ if (_fest) {
       id: "fest2_" + (i + 1),
       name: K_TITLES[i],
       lv, tier: "首领", tierLabel: "首领",
-      bossTitle: "冰冷之炎",
+      bossTitle: "墨镜下的火焰",
       story: [
         "武道馆的灯忽然灭了，一个戴墨镜的男人靠在墙边。",
         "「不用热身。」他把墨镜往上推了推。",
