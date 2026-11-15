@@ -24,6 +24,10 @@ const me = localStorage.getItem("rpg2:box") || "zynSD117";
 const myName = localStorage.getItem("rpg2:name") || "无名";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+window.addEventListener("error", (e) => {
+  const v = document.getElementById("view");
+  if (v) v.innerHTML = '<div class="card"><div class="card-title">竞技场加载出错</div><div class="hint">' + String(e.message || e) + '</div></div>';
+});
 let toastT = null;
 function toast(msg, bad) {
   const t = $("toast");
@@ -91,7 +95,7 @@ function dailyUsed(rec) {
 function render() {
   const chars = (store && store.chars) || [];
   const rec = myRec();
-  const myTeam = rec ? rec.team : [];
+  const myTeam = (rec && Array.isArray(rec.team)) ? rec.team : [];
   const others = Object.keys(data.players).filter((k) => k !== me).map((k) => ({ box: k, ...data.players[k] }));
   others.sort((a, b) => b.pts - a.pts);
 
