@@ -958,6 +958,7 @@ export const talentPointsOf = (ch) => {
 
 // 🎉 26 庆典：草薙京 10 关试炼（Lv20 → Lv80）
 const KYO_LV = [20, 27, 33, 40, 47, 53, 60, 67, 73, 80];
+const FEST_TITLES = ["初火之试","外式入门","连段之试","暗拂之炎","百八式","火之意志","草薙之炎","无式","大蛇薙","最终试炼 · 大蛇薙"];
 const festD = DUNGEONS.find((x) => x.id === "d_fest");
 if (festD) {
   Object.assign(festD, {
@@ -966,7 +967,7 @@ if (festD) {
       const first = enemyAt("fest_kyo", lv);
       return {
         id: "fest_" + (i + 1),
-        name: "第 " + (i + 1) + " 试炼 · 草薙京",
+        name: FEST_TITLES[i] || ("第 " + (i + 1) + " 试炼 · 草薙京"),
         lv, tier: "首领", tierLabel: "首领",
         story: [
           "武道馆的木门被推开，草薙京正在热身。",
