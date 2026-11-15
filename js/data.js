@@ -1099,7 +1099,7 @@ ACCESSORIES.push({
 // 🎯 武器专精要求（按类型与品质）
 const REQ_BY = { melee: "str", ranged: "agi", focus: "intel" };
 const REQ_NAME = { str: "力量", agi: "敏捷", intel: "智力", tech: "技巧" };
-const REQ_VAL = { R: 8, SR: 16, SSR: 26, UR: 36 };
+const REQ_VAL = { R: 10, SR: 20, SSR: 32, UR: 44 };
 WEAPONS.forEach((w) => {
   let key = REQ_BY[w.style] || "str";
   if (/匕|双刃|拳套|短刀/.test(w.name)) key = "tech";
