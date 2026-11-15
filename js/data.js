@@ -946,7 +946,7 @@ export const talentPointsOf = (ch) => {
   return Math.max(0, (Number(ch.lv) || 1) - 1) + 2 * Math.max(0, Number(ch.breaks) || 0);
 };
 
-// 🎉 29 庆典：主题限定本（三关挑战）
+// 🎉 26 庆典：主题限定本（三关挑战）
 const FEST_PLAN = [
   { lv: 60, ids: ["bx_cent", "bx_ghost1"], name: "庆典 · 精锐仪仗", tier: "特色" },
   { lv: 70, ids: ["bx_lorne", "bx_seth"], name: "庆典 · 双子主宾", tier: "首领" },
@@ -955,7 +955,7 @@ const FEST_PLAN = [
 const festD = DUNGEONS.find((x) => x.id === "d_fest");
 if (festD) {
   Object.assign(festD, {
-    name: "29 庆典", icon: "🎉", desc: "29 周年限定挑战：三场庆典演出，产出全素材", type: "event",
+    name: "26 庆典", icon: "🎉", desc: "26 周年限定挑战：三场庆典演出，产出全素材", type: "event",
     stages: FEST_PLAN.map((p, i) => {
       const first = enemyAt(p.ids[0], p.lv);
       return {
