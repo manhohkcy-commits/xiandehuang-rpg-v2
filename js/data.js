@@ -10,7 +10,7 @@ export const SLOT_BASE = {
 };
 export const WEAPONS = [
   {
-    id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee",
+    id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee", limited: "26 庆典限定",
     atk: 108, aMult: 115, aHits: 1, uMult: 100,
     desc: "草薙流代代相传的武典，记载着赤炎之拳的完整招式；越战越热，出手便是连段。",
     main: { atk: 108 }, aRage: 28, sRage: 0,

@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=a4e0f1f1";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=a654d7cf";
 import { itemBonus, itemMain, mainKeysOf } from "./js/power.js?v=98e38d7a";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
@@ -133,7 +133,8 @@ function detail(it) {
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
   ov.innerHTML = '<div class="card" style="width:min(480px,92vw);max-height:82vh;overflow:auto;margin:0;border-color:' + rc + ';box-shadow:0 0 22px ' + rc + '55;">' +
     '<div class="card-title" style="color:' + rc + ';font-size:15px;">' + (d.name || "装备") +
-      ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + '</span></div>' +
+      (d.limited ? ' <span class="tag" style="color:#ff9bd2;border-color:#ff9bd2;">🎉 ' + d.limited + '</span>' : "") +
+    ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + '</span></div>' +
     (meta ? '<div class="hint">' + meta + '</div>' : '') +
     (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + d.desc + '</div>' : '') +
     mainBlock +
