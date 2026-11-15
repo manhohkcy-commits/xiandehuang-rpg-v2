@@ -557,8 +557,8 @@ function skillBtnHtml(m) {
 function ultBtnHtml(m) {
   const rage = Number(m.rage) || 0;
   const can = rage >= 100;
-  return '<button data-act="ult" ' + (can ? '' : 'disabled') + ' title="必杀：250% 单体 · 需要 100 怒气（每次行动 +25）">' +
-    '💥 必杀' + (can ? '（250%）' : '（怒气 ' + Math.round(rage) + '/100）') + '</button>';
+  return '<button data-act="ult" ' + (can ? '' : 'disabled') + ' title="必杀：需要 100 怒气（每次行动 +25）">' +
+    '💥 必杀' + (can ? '' : '（怒气 ' + Math.round(rage) + '/100）') + '</button>';
 }
 
 // 📡 联机（步 2）：把战斗状态写进房间，供其他人观战
@@ -755,7 +755,7 @@ function doAct(kind) {
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     commit(st, "me");
   } else if (kind === "skill") {
-    const mult = Number(wp.sMult) || 150;
+    const mult = (Number(wp.sMult) || 150) * (Number(wp.sHits) || 1);
     const cd = Number(wp.sCd) || 3;
     const r = damage(st, "me", foe().id, { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
     const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "")];
@@ -767,7 +767,9 @@ function doAct(kind) {
     setCooldown(st, "me", cd);
     commit(st, "me");
   } else {
-    const r = damage(st, "me", foe().id, { atk: m.atk, mult: 100, critRate: m.critRate, critDmg: m.critDmg });
+    const aMult = Number(wp.aMult) || 100;
+    const aHits = Number(wp.aHits) || 1;
+    const r = damage(st, "me", foe().id, { atk: m.atk, mult: aMult * aHits, critRate: m.critRate, critDmg: m.critDmg });
     if (st.__isOrig && r.dmg > 0) { st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1); pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line"); }
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
