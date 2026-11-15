@@ -21,8 +21,8 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=51d71c10";
-import { makeItem } from "./js/items.js?v=5afadc4c";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=c505b76d";
+import { makeItem } from "./js/items.js?v=a2ce22de";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=d101905c";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
@@ -87,7 +87,7 @@ function rewardText(s) {
   rg("shardSR", "SR碎片");
   rg("shardSSR", "SSR碎片");
   if (s.themeGear) parts.push("🎁 " + s.themeGear);
-  if (dp.kyoShard) parts.push("草薙之炎碎片 " + dp.kyoShard[0] + "~" + dp.kyoShard[1]);
+  if (dp.kyoShard) parts.push("草薙流古武典碎片 " + dp.kyoShard[0] + "~" + dp.kyoShard[1]);
   else if (dp.gearChance) parts.push("装备 " + dp.gearChance + "%");
   return parts.join(" · ");
 }

@@ -988,10 +988,10 @@ if (festD) {
         weather: "night",
         enemies: ["fest_kyo"],
         foe: first,
-        drop: i === 0 ? { gearChance: 100, themeGear: true, kyoShard: [2, 4] } : { kyoShard: [2 + i, 4 + i * 2] },
-        themeGear: i === 0 ? "草薙流古武典" : "",
-        gold: i === 0 ? 0 : 6000 + i * 3500,
-        exp: i === 0 ? 0 : 2500 + i * 1200
+        drop: i === 9 ? { gearChance: 100, themeGear: true, kyoShard: [11, 22] } : { kyoShard: [2 + i, 4 + i * 2] },
+        themeGear: i === 9 ? "草薙流古武典" : "",
+        gold: 6000 + i * 3500,
+        exp: 2500 + i * 1200
       };
     })
   });
