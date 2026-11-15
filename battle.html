@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=f38a47e7";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=199c02f2";
 import { makeItem } from "./js/items.js?v=5afadc4c";
 import { stagePower, enemyAt } from "./js/enemies.js?v=722e20d1";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -86,7 +86,8 @@ function rewardText(s) {
   rg("shardR", "R碎片");
   rg("shardSR", "SR碎片");
   rg("shardSSR", "SSR碎片");
-  if (dp.gearChance) parts.push("装备 " + dp.gearChance + "%");
+  if (s.themeGear) parts.push("🎁 " + s.themeGear);
+  else if (dp.gearChance) parts.push("装备 " + dp.gearChance + "%");
   return parts.join(" · ");
 }
 
@@ -897,7 +898,10 @@ function finish() {
   if (shSR) drops.push({ name: "SR 碎片", count: shSR });
   if (shSSR) drops.push({ name: "SSR 碎片", count: shSSR });
   bagAdd(dp.ms); bagAdd(dp.md); bagAdd(dp.cert);
-  if (Math.random() * 100 < (dp.gearChance || 0)) {
+  if (dp.themeGear && s.themeGear) {
+    store.items.push(makeItem("weapon", { name: s.themeGear, rarity: "UR", atk: 150, critRate: 8, critDmg: 20 }));
+    drops.push({ name: s.themeGear, count: 1 });
+  } else if (Math.random() * 100 < (dp.gearChance || 0)) {
     const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
     const list = pool[Math.floor(Math.random() * pool.length)];
     const def = list[Math.floor(Math.random() * list.length)];

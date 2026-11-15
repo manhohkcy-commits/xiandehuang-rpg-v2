@@ -976,16 +976,10 @@ if (festD) {
         weather: "night",
         enemies: ["fest_kyo"],
         foe: first,
-        drop: {
-          ms: { ms3: [6 + i, 12 + i * 2] },
-          md: { md3: [4 + i, 8 + i] },
-          cert: { cert4: [2 + Math.floor(i / 2), 5 + i] },
-          stone: [30 + i * 6, 60 + i * 10],
-          refine: [8 + i, 16 + i * 2],
-          gearChance: 30 + i * 3
-        },
-        gold: 8000 + i * 4000,
-        exp: 3000 + i * 1500
+        drop: { gearChance: 100, themeGear: true },
+        themeGear: "草薙流·庆典装备（待设计）",
+        gold: 0,
+        exp: 0
       };
     })
   });
