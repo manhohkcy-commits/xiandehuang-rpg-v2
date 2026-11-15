@@ -106,6 +106,7 @@ const F = (window.__ef = window.__ef || { tier: "all", role: "all", theme: "all"
 const appearOf = (id) => DUNGEONS.flatMap((d) => d.stages.filter((s) => (s.enemies || []).indexOf(id) >= 0).map((s) => s.name.split(" · ")[0]));
 // 所有主题（阵营）
 const THEMES = Array.from(new Set(ENEMIES.map((e) => e.faction || e.camp)));
+const THEME_LABEL = { "26 庆典": "🎉 26庆典" };
 // 所有特性标签
 const TAGS = Array.from(new Set(ENEMIES.flatMap((e) => e.tags || []))).slice(0, 12);
 const chip = (type, val, label) => {
@@ -117,7 +118,7 @@ const chip = (type, val, label) => {
 function render() {
   const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
     '<span class="hint">主题</span>' + chip("theme", "all", "全部") +
-    THEMES.map((t) => chip("theme", t, t)).join("") +
+    THEMES.map((t) => chip("theme", t, THEME_LABEL[t] || t)).join("") +
     '<span style="width:8px;"></span><span class="hint">品质</span>' + chip("tier", "all", "全部") +
     TIER_ORDER.map((t) => chip("tier", t, TIER_NAME[t])).join("") +
     '</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">' +
@@ -148,7 +149,7 @@ function render() {
           const s = e.stats;
           return '<button data-enemy="' + e.id + '" style="text-align:left;background:#12182a;border:1px solid ' + RARITY_COLOR[g.t] + '66;border-radius:9px;padding:9px;cursor:pointer;font-family:inherit;">' +
             '<div style="font-size:13px;font-weight:700;color:' + RARITY_COLOR[g.t] + ';">' + esc(e.name) + '</div>' +
-            '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.faction || e.camp) + ' · ' + esc(e.role) + '</div>' +
+            '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(THEME_LABEL[e.faction || e.camp] || e.faction || e.camp) + ' · ' + esc(e.role) + '</div>' +
             '<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap;">' + (e.tags || []).slice(0, 3).map((t) =>
               '<span style="font-size:9px;color:#8fd8ff;border:1px solid #2a3a55;border-radius:4px;padding:0 4px;">' + esc(t) + '</span>').join("") + '</div>' +
             '</button>';
