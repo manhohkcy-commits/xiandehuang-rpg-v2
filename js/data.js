@@ -968,6 +968,7 @@ if (festD) {
       return {
         id: "fest_" + (i + 1),
         name: FEST_TITLES[i] || ("第 " + (i + 1) + " 试炼 · 草薙京"),
+        bossTitle: "赤炎十番 · 草薙流",
         lv, tier: "首领", tierLabel: "首领",
         story: [
           "武道馆的木门被推开，草薙京正在热身。",

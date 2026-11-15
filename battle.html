@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=1107f32c";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=84825320";
 import { makeItem } from "./js/items.js?v=5afadc4c";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=d101905c";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -132,6 +132,7 @@ function dungeonListHtml() {
           const bopen = window.__openB[key] === true;
           h += '<div data-boss="' + key + '" style="cursor:pointer;margin:8px 0 2px;padding:6px 8px;border-left:3px solid #ff9bd2;background:#1a1226;border-radius:6px;font-size:12px;color:#ffd6ec;display:flex;align-items:center;gap:6px;">' +
             '<span>' + (bopen ? "▾" : "▸") + '</span> 👑 ' + esc(bn) +
+            (groups[bn][0] && groups[bn][0].bossTitle ? '<span style="color:#ffb7d5;font-size:11px;">· ' + esc(groups[bn][0].bossTitle) + '</span>' : '') +
             ' <span class="tag" style="border-color:#ff9bd2;color:#ff9bd2;">' + groups[bn].length + ' 关</span>' +
             '<span class="hint" style="margin-left:auto;">' + (bopen ? "收起" : "展开") + '</span></div>';
           if (bopen) h += groups[bn].map(stageRow).join("");
