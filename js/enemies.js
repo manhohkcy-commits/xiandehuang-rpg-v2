@@ -913,3 +913,10 @@ ENEMIES.forEach((en) => {
       (fx.length ? "，" + fx.join("，") : "") + "。";
   });
 });
+
+// 🌀 敌人增益持续时间：首领 3 回合，其他 2 回合
+ENEMIES.forEach((en) => {
+  (en.skills || []).forEach((s) => {
+    if (s.buff && s.buffTurns == null) s.buffTurns = en.tier === "boss" ? 3 : 2;
+  });
+});

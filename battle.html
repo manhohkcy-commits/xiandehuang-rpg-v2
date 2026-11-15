@@ -23,7 +23,7 @@ import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } f
 import { } from "./js/battle.js?v=273a02ba";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=7f62c9ba";
 import { makeItem } from "./js/items.js?v=787a70cb";
-import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=14c02f8e";
+import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=1edd1b53";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=273a02ba";
@@ -907,7 +907,19 @@ function aiTurnIfNeeded() {
     else if (skillS && (Number(f2.cd) || 0) <= 0) { used = skillS; f2.cd = Number(skillS.cd) || 3; label = "技能"; }
     else { f2.rage = Math.min(100, (Number(f2.rage) || 0) + (Number(used && used.rage) || (label === "技能" ? 15 : 20))); }
     if ((Number(f2.cd) || 0) > 0) f2.cd -= 1;
+    // 🌀 增益：临时 buff，持续 buffTurns 回合
+    if (used && used.buff) {
+      const bu = Object.assign({}, used.buff);
+      const turns = Number(used.buffTurns) || 2;
+      f2.__buff = Object.assign({}, f2.__buff || {}, bu, { turns });
+      pushLog("🌀 " + f2.name + " 获得增益（" + turns + " 回合）", "line");
+    }
+    // 回合结束时递减
+    if (f2.__buff && f2.__buff.turns != null) {
+      // 本次已用，下一回合开始递减
+    }
     const mult = Number(used && used.mult) || 100;
+    const atkBuff = 1 + ((f2.__buff && Number(f2.__buff.atkPct)) || 0) / 100;
     const hits = Math.max(1, Number(used && used.hits) || 1);
     const shape = (used && used.shape) || (used && used.aoe ? "all" : "single");
     const dmgType = (used && used.dmgType) || "phys";
@@ -921,7 +933,7 @@ function aiTurnIfNeeded() {
     const segPlan = segMults(mult * hits, hits, used && used.segWeights);
     tgts.forEach((t) => {
       for (let h = 0; h < hits; h++) {
-        const rr = damage(st, "foe", t.id, { atk: f2.atk, mult: segPlan[h], critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
+        const rr = damage(st, "foe", t.id, { atk: f2.atk * atkBuff, mult: segPlan[h], critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
         total += rr.dmg; if (rr.crit) crit = true;
       }
     });
