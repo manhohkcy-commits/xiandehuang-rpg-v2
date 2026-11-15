@@ -505,7 +505,7 @@ function makeSnowfield() {
           shardR: [14, 24 + Math.floor(i / 2)],
           shardSR: [6, 10 + Math.floor(i / 3)],
           shardSSR: i === 19 ? [3, 8] : [0, 0],
-          bstone: 0,
+          bstone: 2 + Math.floor(i / 3),
           gearChance: 8 + Math.floor(i / 4)
         },
         gold: Math.round(120 * Math.pow(1.17, i)) + 60,
@@ -637,9 +637,9 @@ export const CULT = {
   maxLevel: 150,
   eqLv: 20, ct: 3,
   eqBreak: [
-    { at: 20, cert: 2, gold: 3000 },
-    { at: 25, cert: 2, gold: 6000 },
-    { at: 30, cert: 3, gold: 12000 }
+    { at: 20, stone: 10, gold: 3000 },
+    { at: 25, stone: 20, gold: 6000 },
+    { at: 30, stone: 35, gold: 12000 }
   ],
   breakNodes: [25, 50, 75, 100, 125, 150],
   breakStone: { 25: 18, 50: 45, 75: 75, 100: 115, 125: 165, 150: 230 },
@@ -1007,3 +1007,7 @@ const RAGE_MAP = {
   w_aegis: [10, 20], w_purify: [10, 20], w_cross: [20, 10], w_kyo: [18, 14]
 };
 WEAPONS.forEach((w) => { const r = RAGE_MAP[w.id]; if (r) { w.aRage = r[0]; w.sRage = r[1]; } });
+
+// 🔨 装备突破石掉落（锻造基地，按关递增）
+const _gearD = DUNGEONS.find((d) => d.id === "d_gear");
+if (_gearD) _gearD.stages.forEach((s, i) => { s.drop = s.drop || {}; s.drop.bstone = 2 + Math.floor(i / 3); });

@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=c505b76d";
+import { CULT, RARITY_MULT } from "./data.js?v=60cfd238";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -153,11 +153,10 @@ export function cultCheck(it, kind, store) {
     const list = CULT.eqBreak || [];
     const cfg = list[bt];
     if (!cfg) return { ok: false, why: "突破已满" };
-    const key = "cert" + cfg.cert;
-    const have = Number((store.flags || {})[key]) || 0;
-    if (have < 3) return { ok: false, why: "证书不够", key, cert: cfg.cert };
+    const have = Number((store.flags || {}).bstone) || 0;
+    if (have < cfg.stone) return { ok: false, why: "突破石不够", stone: cfg.stone };
     if ((Number(store.gold) || 0) < cfg.gold) return { ok: false, why: "金币不够", gold: cfg.gold };
-    return { ok: true, bt: bt + 1, key, cert: cfg.cert, gold: cfg.gold };
+    return { ok: true, bt: bt + 1, stone: cfg.stone, gold: cfg.gold };
   }
   if (kind === "star") {
     if ((Number(d.star) || 1) >= CULT.maxStar) return { ok: false, why: "已满星" };
@@ -196,7 +195,7 @@ export function cultApply(store, it, kind) {
     return { ok: true, lv: it.data.lv };
   }
   if (kind === "break") {
-    store.flags[chk.key] = (Number(store.flags[chk.key]) || 0) - 3;
+    store.flags.bstone = (Number(store.flags.bstone) || 0) - chk.stone;
     store.gold -= chk.gold;
     it.data.bt = chk.bt;
     return { ok: true, bt: it.data.bt, cap: (CULT.eqLv || 20) + chk.bt * 5 };
