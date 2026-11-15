@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a654d7cf";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=251d24ba";
 import { makeItem } from "./js/items.js?v=5afadc4c";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=426d00bb";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -686,7 +686,7 @@ function renderBattle() {
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button id="btnAgain">🔁 再来一场</button><button id="btnBack">← 返回选关</button></div></div>'
       : '<div class="card"><div class="card-title">行动</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
-          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>⚔️ 普攻</button>' +
+          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>⚔️ 普攻 +' + (Number(wp.aRage) || 20) + '怒</button>' +
           (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' + (st.__tcd > 0 ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) + (st.__tcd > 0 ? " 冷却 " + st.__tcd : "") + '</button>' : '') +
           '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
             '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "招式") + ' ' + (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '%')) + '</button>' +

@@ -13,7 +13,7 @@ export const WEAPONS = [
     id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee", limited: "26 庆典限定",
     atk: 108, aMult: 115, aHits: 1, uMult: 100,
     desc: "草薙流代代相传的武典，记载着赤炎之拳的完整招式；越战越热，出手便是连段。",
-    main: { atk: 108 }, aRage: 28, sRage: 0,
+    main: { atk: 108 }, aRage: 18, sRage: 0,
     aName: "外式·轰斧", uName: "大蛇薙", dmgType: "phys", uHits: 3,
     sName: "百八式·暗拂", sMult: 95, sHits: 2, sCd: 3, sRage: 8, sShape: "single", uShape: "col",
     critRate: 8, critDmg: 25
@@ -157,7 +157,7 @@ const WEAPON_FINAL = {
 };
 // ⚡ 每把武器的回怒效率（普攻 / 技能）
 const WEAPON_RAGE = {
-  w_iron: { aRage: 25, sRage: 0 }, w_bow: { aRage: 22 }, w_wood: { aRage: 25 },
+  w_iron: { aRage: 20, sRage: 0 }, w_bow: { aRage: 22 }, w_wood: { aRage: 25 },
   w_dagger: { aRage: 9 }, w_fist: { aRage: 8 }, w_spear: { aRage: 26 },
   w_sling: { aRage: 20 }, w_hunt: { aRage: 18 }, w_torch: { aRage: 22 }, w_shield: { aRage: 15 },
   w_twin: { aRage: 9, sRage: 6 }, w_axe: { aRage: 26, sRage: 10 }, w_spear2: { aRage: 24, sRage: 12 },
@@ -994,3 +994,14 @@ if (festD) {
     })
   });
 }
+
+// ⚡ 回怒重做：普攻回怒 / 技能回怒（按武器性质）
+const RAGE_MAP = {
+  w_dagger: [24, 6], w_fist: [24, 6], w_twin: [24, 6], w_bow: [24, 6], w_hunt: [24, 6],
+  w_sling: [22, 6], w_longbow: [24, 6],
+  w_iron: [20, 10], w_torch: [20, 10], w_shield: [18, 10], w_wood: [18, 12],
+  w_spear: [14, 16], w_spear2: [14, 16], w_axe: [12, 18],
+  w_firestaff: [12, 18], w_thunder: [12, 18],
+  w_aegis: [10, 20], w_purify: [10, 20], w_cross: [20, 10], w_kyo: [18, 14]
+};
+WEAPONS.forEach((w) => { const r = RAGE_MAP[w.id]; if (r) { w.aRage = r[0]; w.sRage = r[1]; } });
