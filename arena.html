@@ -20,7 +20,12 @@ import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=a52b69d2";
 import { makeItem } from "./js/items.js?v=a1cdc0e5";
 
 const BOX = "__arena";
-const me = localStorage.getItem("rpg2:box") || "zynSD117";
+const me = (() => {
+  try {
+    if (localStorage.getItem("rpg2:host") === "1") return localStorage.getItem("rpg2:hostBox") || "zynSD117";
+    return localStorage.getItem("rpg2:box") || localStorage.getItem("rpg2:hostBox") || "zynSD117";
+  } catch (e) { return "zynSD117"; }
+})();
 const myName = localStorage.getItem("rpg2:name") || "无名";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -210,7 +215,14 @@ function bind() {
 
 (async () => {
   store = await loadStore();
-  if (!store) { $("view").innerHTML = '<div class="card"><div class="hint">没有存档，先建角色</div></div>'; return; }
+  if (!store) {
+    $("view").innerHTML = '<div class="card"><div class="card-title">🏟 竞技场</div><div class="hint">没读到存档（位号 ' + esc(me) + '）。先在个人页建角色，再回来布防。</div><div style="margin-top:8px;"><a href="create.html"><button>去个人页</button></a></div></div>';
+    return;
+  }
+  if (!(store.chars || []).length) {
+    $("view").innerHTML = '<div class="card"><div class="card-title">🏟 竞技场</div><div class="hint">这个位号还没有角色。先去建一个，再来竞技场布防。</div><div style="margin-top:8px;"><a href="create.html"><button>去建角色</button></a></div></div>';
+    return;
+  }
   await loadArena();
   render();
 })();
