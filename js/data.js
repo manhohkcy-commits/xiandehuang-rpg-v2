@@ -11,11 +11,11 @@ export const SLOT_BASE = {
 export const WEAPONS = [
   {
     id: "w_k", name: "究极热动拳套", rarity: "SSR", style: "melee", limited: "26 庆典限定",
-    atk: 104, aMult: 100, aHits: 2, uMult: 150, uHits: 2, uShape: "single",
-    sName: "秒针", sMult: 92, sHits: 2, sCd: 3, sRage: 14, sShape: "single",
-    aName: "刺拳", uName: "连锁驱动", dmgType: "phys",
+    atk: 104, aMult: 100, aHits: 2, uMult: 240, uHits: 1, uShape: "col",
+    sName: "扳机", sMult: 68, sHits: 3, sSegWeights: [0.85, 1.0, 1.15], sCd: 3, sRage: 14, sShape: "single",
+    aName: "刺拳", uName: "热动", dmgType: "phys",
     main: { atk: 104 }, aRage: 20, critRate: 10, critDmg: 22,
-    desc: "缠着赤红火焰的拳套，出拳像秒针一样准。"
+    desc: "缠着赤红火焰的拳套，热动解开手套的那一刻最危险。"
   },
   {
     id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee", limited: "26 庆典限定",
