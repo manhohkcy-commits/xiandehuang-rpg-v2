@@ -1385,6 +1385,23 @@ function renderCult() {
     toast("🔧 精炼成功：Lv" + r.refine);
   });
   view().innerHTML += synthHtml();
+  view().querySelectorAll("[data-travel]").forEach((b) => b.onclick = async () => {
+    if (!travelerOpen()) return toast("旅商还没开摊", true);
+    const stock = travelerStock();
+    const it = stock.find((x) => x.key === b.dataset.travel);
+    if (!it) return toast("货品已轮换", true);
+    const day = new Date().toISOString().slice(0, 10);
+    store.flags.travelerBuys = store.flags.travelerBuys || {};
+    const bought = store.flags.travelerBuys[day] = store.flags.travelerBuys[day] || {};
+    if (bought[it.key]) return toast("今天已经买过了", true);
+    if ((Number(store.gold) || 0) < it.price) return toast("金币不够", true);
+    store.gold -= it.price;
+    store.items.push(makeItem(it.cat, it.def));
+    bought[it.key] = 1;
+    addReceipt(store, "旅商", it.def.name, { gold: -it.price });
+    await save(); render();
+    toast("🛒 买到 " + it.def.name);
+  });
   view().querySelectorAll("[data-synth]").forEach((b) => b.onclick = async () => {
     const [a, b2] = b.dataset.synth.split(">");
     const f = (store.flags = store.flags || {});
@@ -1922,6 +1939,57 @@ function renderOrig() {
   };
 }
 
+
+// 🛒 旅商商车：只在一段时间营业，货品每日轮换，限购
+function travelerOpen(now) {
+  const d = now || new Date();
+  const h = d.getHours() + d.getMinutes() / 60;
+  return (h >= 12 && h < 14) || (h >= 19 && h < 22);
+}
+function travelerNext(now) {
+  const d = now || new Date();
+  const h = d.getHours() + d.getMinutes() / 60;
+  if (h < 12) return "今天 12:00 开摊";
+  if (h < 14) return "营业中（14:00 收摊）";
+  if (h < 19) return "今天 19:00 开摊";
+  if (h < 22) return "营业中（22:00 收摊）";
+  return "明天 12:00 开摊";
+}
+function travelerStock() {
+  const now = new Date();
+  const seed = Number(String(now.getFullYear()) + String(now.getMonth() + 1) + String(now.getDate()));
+  const pool = [].concat(WEAPONS.map((d) => ({ cat: "weapon", d })), ARMORS.map((d) => ({ cat: "armor", d })), ACCESSORIES.map((d) => ({ cat: "accessory", d })));
+  const out = [];
+  let x = seed;
+  for (let i = 0; i < 6 && pool.length; i++) {
+    x = (x * 1103515245 + 12345) % 2147483647;
+    const idx = Math.abs(x) % pool.length;
+    const pick = pool.splice(idx, 1)[0];
+    const base = pick.d.rarity === "SSR" ? 60000 : pick.d.rarity === "SR" ? 22000 : 6000;
+    out.push({ key: "tr" + i, cat: pick.cat, def: pick.d, price: Math.round(base * 1.2) });
+  }
+  return out;
+}
+function travelerCard() {
+  const open = travelerOpen();
+  const stock = travelerStock();
+  const day = new Date().toISOString().slice(0, 10);
+  const bought = (store.flags.travelerBuys || {})[day] || {};
+  const rows = stock.map((it) => {
+    const rc = it.def.rarity === "SSR" ? "#ffd666" : it.def.rarity === "SR" ? "#c9a0ff" : "#6ea8fe";
+    const sold = !!bought[it.key];
+    return '<div class="row"><span class="k">' + esc(it.def.name) +
+      ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (it.def.rarity || "R") + '</span>' +
+      '<div class="hint">' + (it.cat === "weapon" ? "武器" : it.cat === "armor" ? "防具" : "饰品") + '</div></span>' +
+      '<span class="v"><span style="color:#ffd666;">💰 ' + fmt(it.price) + '</span> ' +
+      (sold ? '<span class="hint">今日已购</span>' : '<button data-travel="' + it.key + '" ' + (open ? "" : "disabled") + '>购买</button>') +
+      '</span></div>';
+  }).join("");
+  return card("🛒 旅商商车",
+    '<div class="hint" style="margin-bottom:6px;color:' + (open ? "#7ee787" : "#8a8ab0") + ';">' +
+    (open ? "🟢 营业中：12:00-14:00 / 19:00-22:00" : "🔴 未营业 · " + travelerNext()) + '</div>' + rows);
+}
+
 function renderStore() {
   const ch = activeChar(), all = store.items || [];
   const fl = store.flags || {};
@@ -1968,7 +2036,7 @@ function renderStore() {
     '<div class="row"><span class="k">突破石</span><span class="v">' + fmt(Number(fl.bstone) || 0) + '</span></div>' + '</div>';
 
   if (!filtered.length) {
-    view().innerHTML = matCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
+    view().innerHTML = travelerCard() + matCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
     bindStoreTool(filtered);
     return;
   }
