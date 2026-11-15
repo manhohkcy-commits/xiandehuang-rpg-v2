@@ -1944,16 +1944,18 @@ function renderOrig() {
 function travelerOpen(now) {
   const d = now || new Date();
   const h = d.getHours() + d.getMinutes() / 60;
-  return (h >= 12 && h < 14) || (h >= 19 && h < 22);
+  return (h >= 8 && h < 10) || (h >= 13 && h < 15) || (h >= 20 && h < 22);
 }
 function travelerNext(now) {
   const d = now || new Date();
   const h = d.getHours() + d.getMinutes() / 60;
-  if (h < 12) return "今天 12:00 开摊";
-  if (h < 14) return "营业中（14:00 收摊）";
-  if (h < 19) return "今天 19:00 开摊";
+  if (h < 8) return "今天 08:00 开摊";
+  if (h < 10) return "营业中（10:00 收摊）";
+  if (h < 13) return "今天 13:00 开摊";
+  if (h < 15) return "营业中（15:00 收摊）";
+  if (h < 20) return "今天 20:00 开摊";
   if (h < 22) return "营业中（22:00 收摊）";
-  return "明天 12:00 开摊";
+  return "明天 08:00 开摊";
 }
 function travelerStock() {
   const now = new Date();
@@ -1965,8 +1967,8 @@ function travelerStock() {
     x = (x * 1103515245 + 12345) % 2147483647;
     const idx = Math.abs(x) % pool.length;
     const pick = pool.splice(idx, 1)[0];
-    const base = pick.d.rarity === "SSR" ? 60000 : pick.d.rarity === "SR" ? 22000 : 6000;
-    out.push({ key: "tr" + i, cat: pick.cat, def: pick.d, price: Math.round(base * 1.2) });
+    const base = pick.d.rarity === "SSR" ? 260000 : pick.d.rarity === "SR" ? 72000 : 18000;
+    out.push({ key: "tr" + i, cat: pick.cat, def: pick.d, price: base });
   }
   return out;
 }
@@ -1987,7 +1989,7 @@ function travelerCard() {
   }).join("");
   return card("🛒 旅商商车",
     '<div class="hint" style="margin-bottom:6px;color:' + (open ? "#7ee787" : "#8a8ab0") + ';">' +
-    (open ? "🟢 营业中：12:00-14:00 / 19:00-22:00" : "🔴 未营业 · " + travelerNext()) + '</div>' + rows);
+    (open ? "🟢 营业中：08:00-10:00 / 13:00-15:00 / 20:00-22:00" : "🔴 未营业 · " + travelerNext()) + '</div>' + rows);
 }
 
 function renderStore() {

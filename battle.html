@@ -1014,8 +1014,9 @@ function finish() {
     drops.push({ name: s.themeGear, count: 1 });
   } else if (Math.random() * 100 < (dp.gearChance || 0)) {
     const pool = s.tier >= 3 ? [WEAPONS, ARMORS, ACCESSORIES] : [ARMORS, ACCESSORIES];
-    const list = pool[Math.floor(Math.random() * pool.length)];
-    const def = list[Math.floor(Math.random() * list.length)];
+    const list0 = pool[Math.floor(Math.random() * pool.length)];
+    const list = list0.filter((x) => x.rarity === "R" || x.rarity === "SR");
+    const def = (list.length ? list : list0)[Math.floor(Math.random() * (list.length || list0.length))];
     const cat = pool[0] === WEAPONS && list === WEAPONS ? "weapon" : (list === ARMORS ? "armor" : "accessory");
     store.items.push(makeItem(cat, def));
     drops.push({ name: def.name, count: 1 });
