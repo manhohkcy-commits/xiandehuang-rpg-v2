@@ -10,6 +10,14 @@ export const SLOT_BASE = {
 };
 export const WEAPONS = [
   {
+    id: "w_k", name: "暗炎拳套", rarity: "SSR", style: "melee", limited: "26 庆典限定",
+    atk: 104, aMult: 100, aHits: 2, uMult: 150, uHits: 2, uShape: "single",
+    sName: "秒针", sMult: 92, sHits: 2, sCd: 3, sRage: 14, sShape: "single",
+    aName: "刺拳", uName: "连锁驱动", dmgType: "phys",
+    main: { atk: 104 }, aRage: 20, critRate: 10, critDmg: 22,
+    desc: "缠着赤红火焰的拳套，出拳像秒针一样准。"
+  },
+  {
     id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee", limited: "26 庆典限定",
     atk: 108, aMult: 115, aHits: 1, uMult: 100,
     desc: "草薙流代代相传的武典，记载着赤炎之拳的完整招式；越战越热，出手便是连段。",
@@ -1114,3 +1122,41 @@ WEAPONS.forEach((w) => {
   if (w.desc && w.desc.indexOf("需要") < 0) w.desc = w.desc + "（" + tip + "）";
 });
 export const SPEC_REQ_NAME = REQ_NAME;
+
+// 🎉 26 庆典 · 第二组：K' 十番试炼（Lv40~85）
+const K_LV = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85];
+const K_TITLES = ["初遇", "墨镜", "秒针", "热动", "连锁驱动", "赤炎", "冰与火", "无式之影", "爆炎", "最终试炼 · 连锁驱动"];
+const _fest = DUNGEONS.find((x) => x.id === "d_fest");
+if (_fest) {
+  K_LV.forEach((lv, i) => {
+    const first = enemyAt("fest_k", lv);
+    _fest.stages.push({
+      id: "fest2_" + (i + 1),
+      name: K_TITLES[i],
+      lv, tier: "首领", tierLabel: "首领",
+      bossTitle: "冰冷之炎",
+      story: [
+        "武道馆的灯忽然灭了，一个戴墨镜的男人靠在墙边。",
+        "「不用热身。」他把墨镜往上推了推。",
+        "他的右拳开始发红。",
+        "空气被烤得扭曲。",
+        "连招没有停顿，像秒针一样准。",
+        "赤红的火焰沿着手臂爬到肩膀。",
+        "冰与火在这一刻重叠。",
+        "他摘下了墨镜。",
+        "火光把他整个人吞没。",
+        "「最后一击——看清楚了。」"
+      ][i],
+      scene: "草薙流武道馆",
+      sceneDesc: "木地板、旧匾额，火焰在馆内跳动。",
+      sceneMods: { atkPct: 5 },
+      weather: "night",
+      enemies: ["fest_k"],
+      foe: first,
+      drop: i === 9 ? { gearChance: 100, themeGear: true, kShard: [11, 22] } : { kShard: [2 + i, 4 + i * 2] },
+      themeGear: i === 9 ? "暗炎拳套" : "",
+      gold: 8000 + i * 4000,
+      exp: 3200 + i * 1500
+    });
+  });
+}

@@ -866,3 +866,19 @@ ENEMIES.forEach((en) => {
     if (Number(s.hits) === w.length) s.segWeights = w;
   });
 });
+
+// 🎉 26 庆典 · 第二关：K'
+ENEMIES.push({
+  id: "fest_k", name: "K'", camp: "26 庆典", role: "近战", tier: "boss",
+  desc: "戴着墨镜的男人，右手缠着赤红的火焰。",
+  tags: ["人形", "庆典", "首领", "火焰", "高速"],
+  stats: { atk: 98, hp: 1980, def: 34, res: 32, spd: 15 },
+  growth: { atk: 0.095, hp: 0.09, def: 0.065, res: 0.06, spd: 0.03 },
+  equip: { weapon: "暗炎拳套", armor: "黑色皮夹克", armor2: "战术长裤", accessory: "墨镜" },
+  skills: [
+    { kind: "normal", name: "刺拳", mult: 115, desc: "对单个目标造成 115% 攻击伤害。" },
+    { kind: "skill", name: "秒针", mult: 105, hits: 2, cd: 3, rage: 14, desc: "冷却 3 回合：对单个目标造成 105%×2 段攻击伤害。" },
+    { kind: "ult", name: "连锁驱动", mult: 290, shape: "single", burn: 25, buff: { atkPct: 25 }, rage: 0, desc: "怒气满时释放：对单个目标造成 290% 攻击伤害，附加灼烧 25%，自身攻击 +25%。" }
+  ],
+  critRate: 12, critDmg: 185
+});

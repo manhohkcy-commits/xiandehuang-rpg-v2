@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=2ab25f06";
+import { CULT, RARITY_MULT } from "./data.js?v=e31dc622";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -178,11 +178,13 @@ export function cultCheck(it, kind, store) {
   if (kind === "star") {
     if ((Number(d.star) || 1) >= CULT.maxStar) return { ok: false, why: "已满星" };
     // 🎉 主题限定武器：消耗量与 SSR 相同，但用专属碎片
-    if (d.id === "w_kyo") {
+    if (d.id === "w_kyo" || d.id === "w_k") {
       const need = CULT.shardBase * (Number(d.star) || 1);
-      const haveK = Number((store.flags || {}).kyoShard) || 0;
-      if (haveK < need) return { ok: false, why: "草薙流古武典碎片不够", shards: need, key: "kyoShard", rarity: "专属" };
-      return { ok: true, to: (Number(d.star) || 1) + 1, shards: need, key: "kyoShard", rarity: "专属" };
+      const key = d.id === "w_kyo" ? "kyoShard" : "kShard";
+      const name = d.id === "w_kyo" ? "草薙流古武典碎片" : "暗炎拳套碎片";
+      const haveK = Number((store.flags || {})[key]) || 0;
+      if (haveK < need) return { ok: false, why: name + "不够", shards: need, key, rarity: "专属" };
+      return { ok: true, to: (Number(d.star) || 1) + 1, shards: need, key, rarity: "专属" };
     }
     {
       const rarity = d.born || d.rarity || "R";
