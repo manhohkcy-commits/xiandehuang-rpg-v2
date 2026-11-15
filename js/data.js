@@ -1095,3 +1095,17 @@ ACCESSORIES.push({
   main: { atk: 16, spd: 1 }, critRate: 12, critDmg: 25, atkPct: 6, ragePct: 8,
   desc: "天将亮时最冷，也最容易一击得手。"
 });
+
+// 🎯 武器专精要求（按类型与品质）
+const REQ_BY = { melee: "str", ranged: "agi", focus: "intel" };
+const REQ_NAME = { str: "力量", agi: "敏捷", intel: "智力", tech: "技巧" };
+const REQ_VAL = { R: 8, SR: 16, SSR: 26, UR: 36 };
+WEAPONS.forEach((w) => {
+  let key = REQ_BY[w.style] || "str";
+  if (/匕|双刃|拳套|短刀/.test(w.name)) key = "tech";
+  const val = REQ_VAL[w.rarity] || 8;
+  w.req = { key, val };
+  const tip = "需要" + REQ_NAME[key] + " " + val;
+  if (w.desc && w.desc.indexOf("需要") < 0) w.desc = w.desc + "（" + tip + "）";
+});
+export const SPEC_REQ_NAME = REQ_NAME;

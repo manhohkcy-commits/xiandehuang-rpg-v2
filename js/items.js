@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=0bb0268a";
+import { CULT, RARITY_MULT } from "./data.js?v=163c755d";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -17,6 +17,15 @@ export function equip(store, charId, itemId) {
   if (!ch) return { ok: false, why: "没有这个角色" };
   if (!it) return { ok: false, why: "装备不在仓库" };
   if (!isEquip(it)) return { ok: false, why: "这不是装备" };
+  // 🎯 武器专精要求
+  if (it.cat === "weapon" && it.data && it.data.req) {
+    const need = it.data.req;
+    const have = Number(ch[need.key]) || 0;
+    if (have < need.val) {
+      const NM = { str: "力量", agi: "敏捷", intel: "智力", tech: "技巧" };
+      return { ok: false, why: "专精不足：" + (NM[need.key] || need.key) + " 需要 " + need.val + "（当前 " + have + "）" };
+    }
+  }
   // 🛡 防具按身体部位分格：上装 → armor，下装 → armor2
   let slot = it.cat;
   if (it.cat === "armor") {
