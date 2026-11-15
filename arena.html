@@ -14,7 +14,7 @@
 </div>
 <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:8px 16px;border-radius:20px;background:#1b2740;border:1px solid #6ea8fe;color:#cfe6ff;display:none;z-index:99;"></div>
 <script type="module">
-import { loadSave, save, cloudGet, cloudSave } from "./js/core.js?v=13807141";
+import { cacheLoad, cacheSave, cloudGet, cloudSave } from "./js/core.js?v=13807141";
 import { charFinal, charPower } from "./js/power.js?v=42e16747";
 import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=a52b69d2";
 import { makeItem } from "./js/items.js?v=a1cdc0e5";
@@ -35,6 +35,25 @@ function toast(msg, bad) {
 }
 
 let store = null;
+let updatedAt = null;
+async function loadStore() {
+  let s = null;
+  try { s = cacheLoad(me); } catch (e) {}
+  try {
+    const row = await cloudGet(me);
+    if (row && row.store && Number(row.store.v) === 2) { s = row.store; updatedAt = row.updated_at || null; }
+  } catch (e) {}
+  return s;
+}
+async function saveStore() {
+  if (!store) return;
+  store.__at = Date.now();
+  try { cacheSave(me, store); } catch (e) {}
+  try {
+    const r = await cloudSave(me, store, updatedAt || null, (store.chars && store.chars[0] && store.chars[0].name) || "");
+    if (r && r.ok) updatedAt = (r.row && r.row.updated_at) || updatedAt;
+  } catch (e) {}
+}
 let data = { v: 1, players: {} };   // { box: { name, pts, w, l, team:[...] } }
 
 async function loadArena() {
@@ -153,7 +172,7 @@ function bind() {
       msg = (kind === "shardR" ? "R" : kind === "shardSR" ? "SR" : "SSR") + " 碎片 +" + n;
     }
     data.players[me] = rec;
-    try { await save(); await saveArena(); } catch (e) {}
+    try { await saveStore(); await saveArena(); } catch (e) {}
     toast(msg);
     render();
   });
@@ -186,7 +205,7 @@ function bind() {
 }
 
 (async () => {
-  store = await loadSave();
+  store = await loadStore();
   if (!store) { $("view").innerHTML = '<div class="card"><div class="hint">没有存档，先建角色</div></div>'; return; }
   await loadArena();
   render();
