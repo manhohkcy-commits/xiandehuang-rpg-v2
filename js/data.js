@@ -1083,3 +1083,15 @@ ACCESSORIES.push(
   { id: "c_umbra_mask", name: "幽影面罩", rarity: "SSR", main: { atk: 22, spd: 3 }, dmgCut: 1, desc: "遮住半张脸，气息也一并藏住。" },
   { id: "c_mercy_ring", name: "圣愈指环", rarity: "SSR", main: { hp: 200, res: 16, atk: 10 }, dmgCut: 3, desc: "戴着它，伤口会慢慢合上。" }
 );
+
+// 🎯 专精装：不堆基础四维，走词条特化
+ARMORS.push({
+  id: "a_vigil", name: "守夜胸甲", part: "top", rarity: "SSR",
+  main: { hp: 300 }, defPct: 8, resPct: 8, dmgCut: 8, thorns: 10,
+  desc: "不为硬扛而生，为「挨打也要还手」而生。"
+});
+ACCESSORIES.push({
+  id: "c_dawn", name: "破晓指环", rarity: "SSR",
+  main: { spd: 2 }, critRate: 12, critDmg: 25, atkPct: 6, ragePct: 8,
+  desc: "天将亮时最冷，也最容易一击得手。"
+});
