@@ -946,29 +946,46 @@ export const talentPointsOf = (ch) => {
   return Math.max(0, (Number(ch.lv) || 1) - 1) + 2 * Math.max(0, Number(ch.breaks) || 0);
 };
 
-// 🎉 26 庆典：主题限定 BOSS 战（每关仅 1 名首领，后续可持续新增）
-const FEST_PLAN = [
-  { lv: 60, id: "fest_kyo", name: "草薙京", story: "草薙流武道馆里，草薙京活动着手腕：「庆典？先过我这关。」" },
-  { lv: 70, id: "bx_seth", name: "庆典 · 赛斯", story: "赛斯从人群里消失，下一秒出现在你身后。" },
-  { lv: 80, id: "mb_tenglong", name: "庆典 · 腾龙", story: "终场烟花炸开，腾龙从火光里走了出来。" }
-];
-const STAGE1_SCENE = "草薙流武道馆", STAGE1_DESC = "木地板、旧匾额，火焰在馆内跳动。";
+// 🎉 26 庆典：草薙京 10 关试炼（Lv20 → Lv80）
+const KYO_LV = [20, 27, 33, 40, 47, 53, 60, 67, 73, 80];
 const festD = DUNGEONS.find((x) => x.id === "d_fest");
 if (festD) {
   Object.assign(festD, {
-    name: "26 庆典", icon: "🎉", desc: "26 周年限定 BOSS 战：每关只有一名首领", type: "event",
-    stages: FEST_PLAN.map((p, i) => {
-      const first = enemyAt(p.id, p.lv);
+    name: "26 庆典", icon: "🎉", desc: "26 周年限定 BOSS 战：草薙京十番试炼", type: "event",
+    stages: KYO_LV.map((lv, i) => {
+      const first = enemyAt("fest_kyo", lv);
       return {
-        id: "fest_" + (i + 1), name: p.name, lv: p.lv, tier: "首领", tierLabel: "首领",
-        story: p.story,
-        scene: STAGE1_SCENE, sceneDesc: STAGE1_DESC,
+        id: "fest_" + (i + 1),
+        name: "第 " + (i + 1) + " 试炼 · 草薙京",
+        lv, tier: "首领", tierLabel: "首领",
+        story: [
+          "武道馆的木门被推开，草薙京正在热身。",
+          "他抬了抬下巴：「再来？」",
+          "火苗在指尖跳动。",
+          "馆内的空气开始发烫。",
+          "他开始认真了。",
+          "连段一次比一次快。",
+          "草薙之炎缠上双臂。",
+          "地板被烤出焦痕。",
+          "他收起了笑容。",
+          "「最后一试炼——别让我失望。」"
+        ][i],
+        scene: "草薙流武道馆",
+        sceneDesc: "木地板、旧匾额，火焰在馆内跳动。",
         sceneMods: { atkPct: 5 },
         weather: "night",
-        enemies: [p.id],
+        enemies: ["fest_kyo"],
         foe: first,
-        drop: { ms: { ms3: [8, 14] }, md: { md3: [5, 10] }, cert: { cert4: [4, 8] }, stone: [50, 90], refine: [12, 24], shardR: [40, 60], shardSR: [12, 24], shardSSR: [4, 8], gearChance: 50 },
-        gold: 15000 * (i + 1), exp: 5000 * (i + 1)
+        drop: {
+          ms: { ms3: [6 + i, 12 + i * 2] },
+          md: { md3: [4 + i, 8 + i] },
+          cert: { cert4: [2 + Math.floor(i / 2), 5 + i] },
+          stone: [30 + i * 6, 60 + i * 10],
+          refine: [8 + i, 16 + i * 2],
+          gearChance: 30 + i * 3
+        },
+        gold: 8000 + i * 4000,
+        exp: 3000 + i * 1500
       };
     })
   });
