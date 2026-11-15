@@ -161,7 +161,7 @@ const groups = [
   { cat: "accessory", title: "💍 饰品", list: ACCESSORIES }
 ];
 const RARITIES = ["R", "SR", "SSR", "UR"];
-const F = (window.__eqFilter = window.__eqFilter || { cat: "all", rarity: "all", part: "all" });
+const F = (window.__eqFilter = window.__eqFilter || { cat: "all", rarity: "all", part: "all", theme: "all" });
 const chip = (type, val, label) => {
   const on = F[type] === val;
   return '<button data-f="' + type + ':' + val + '" style="font-size:11px;padding:3px 10px;border-radius:20px;' +
@@ -172,6 +172,7 @@ function render() {
   const shown = (cat) => F.cat === "all" || F.cat === cat;
   const byRarity = (d) => F.rarity === "all" || d.rarity === F.rarity;
   const byPart = (d) => F.part === "all" || d.part === F.part;
+const byTheme = (d) => F.theme === "all" || (F.theme === "limited" ? !!d.limited : !d.limited);
   const bar = '<div class="card" style="padding:8px 10px;"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
     '<span class="hint" style="font-size:10.5px;">类别</span>' +
     chip("cat", "all", "全部") + chip("cat", "weapon", "⚔️武器") + chip("cat", "armor", "🛡️防具") + chip("cat", "accessory", "💍饰品") +
@@ -184,6 +185,7 @@ function render() {
   const CAT_TAG = { weapon: "⚔️ 武器", armor: "🛡️ 防具", accessory: "💍 饰品" };
   const flat = list
     .filter((x) => F.cat === "all" || x.cat === F.cat)
+.filter((x) => byTheme(x.data || {}))
     .filter((x) => byRarity(x.data)).filter((x) => byPart(x.data))
     .sort((a, b) => (RANK[b.data.rarity] || 0) - (RANK[a.data.rarity] || 0) || String(a.data.name).localeCompare(String(b.data.name), "zh"));
   const order = ["UR", "SSR", "SR", "R"].filter((r) => flat.some((x) => x.data.rarity === r));
