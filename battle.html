@@ -23,7 +23,7 @@ import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } f
 import { } from "./js/battle.js?v=273a02ba";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=251d24ba";
 import { makeItem } from "./js/items.js?v=5afadc4c";
-import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=426d00bb";
+import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=07836121";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=273a02ba";
@@ -862,7 +862,7 @@ function aiTurnIfNeeded() {
     let used = normS, label = "普攻";
     if (ultS && (Number(f2.rage) || 0) >= 100) { used = ultS; f2.rage = 0; label = "必杀"; }
     else if (skillS && (Number(f2.cd) || 0) <= 0) { used = skillS; f2.cd = Number(skillS.cd) || 3; label = "技能"; }
-    else { f2.rage = Math.min(100, (Number(f2.rage) || 0) + 25); }
+    else { f2.rage = Math.min(100, (Number(f2.rage) || 0) + (Number(used && used.rage) || (label === "技能" ? 15 : 20))); }
     if ((Number(f2.cd) || 0) > 0) f2.cd -= 1;
     const mult = Number(used && used.mult) || 100;
     const hits = Math.max(1, Number(used && used.hits) || 1);
