@@ -1065,3 +1065,21 @@ if (_gearD) _gearD.stages.forEach((s, i) => { s.drop = s.drop || {}; s.drop.bsto
 const TOY_RAGE = { w_bubble: [22, 12], w_hammer: [14, 16], w_fan: [14, 20], w_toybow: [24, 8], w_tambourine: [10, 22],
   w_thunder2: [18, 12], w_umbra: [22, 10], w_tide: [12, 18] };
 WEAPONS.forEach((w) => { const r = TOY_RAGE[w.id]; if (r) { w.aRage = r[0]; w.sRage = r[1]; } });
+
+// 🛡 SSR 防具 / 饰品（玩家通用）
+ARMORS.push(
+  { id: "a_dragon", name: "龙鳞战甲", part: "top", rarity: "SSR", main: { hp: 460, def: 34 }, dmgCut: 6, desc: "鳞片层层相叠，刀砍上去会滑开。" },
+  { id: "a_sky", name: "苍穹胸甲", part: "top", rarity: "SSR", main: { hp: 420, def: 38 }, dmgCut: 5, desc: "轻得像云，硬得像天。" },
+  { id: "a_star", name: "星辉法袍", part: "top", rarity: "SSR", main: { hp: 380, res: 30, def: 18 }, dmgCut: 4, desc: "袍面缀着细碎的星屑。" },
+  { id: "a_umbra", name: "幽影夜行衣", part: "top", rarity: "SSR", main: { hp: 360, def: 22 }, dmgCut: 5, desc: "穿上后走路几乎没有声音。" },
+  { id: "a_dragon_leg", name: "龙鳞战裤", part: "bottom", rarity: "SSR", main: { hp: 280, def: 20, spd: 2 }, desc: "护住要害，也不妨碍出腿。" },
+  { id: "a_sky_leg", name: "苍穹护腿", part: "bottom", rarity: "SSR", main: { hp: 240, def: 24, spd: 3 }, desc: "轻甲护腿，跑起来像风。" },
+  { id: "a_star_leg", name: "星辉法裙", part: "bottom", rarity: "SSR", main: { hp: 250, res: 22, def: 12 }, desc: "下摆会随着法力流动。" },
+  { id: "a_umbra_leg", name: "幽影绑腿", part: "bottom", rarity: "SSR", main: { hp: 230, def: 14, spd: 4 }, desc: "缠得很紧，跳得更高。" }
+);
+ACCESSORIES.push(
+  { id: "c_dragon_fang", name: "龙牙护符", rarity: "SSR", main: { atk: 28, hp: 120 }, dmgCut: 2, desc: "一颗龙牙磨成的护符，握着会发热。" },
+  { id: "c_star_drop", name: "星辉吊坠", rarity: "SSR", main: { atk: 18, hp: 160, res: 12 }, dmgCut: 2, desc: "吊坠里封着一小片夜空。" },
+  { id: "c_umbra_mask", name: "幽影面罩", rarity: "SSR", main: { atk: 22, spd: 3 }, dmgCut: 1, desc: "遮住半张脸，气息也一并藏住。" },
+  { id: "c_mercy_ring", name: "圣愈指环", rarity: "SSR", main: { hp: 200, res: 16, atk: 10 }, dmgCut: 3, desc: "戴着它，伤口会慢慢合上。" }
+);
