@@ -834,7 +834,7 @@ const ATK_TWEAK = {
   mb_dove: { skill: ["row", 1] }, mb_mg: { skill: ["col", 2] },
   bx_ghost1: { ult: ["row", 3] }, bx_ghost2: { skill: ["col", 2] },
   bx_lorne: { dmgType: "spell" }, bx_seth: { skill: ["single", 2] },
-  mb_tenglong: { ult: ["row", 3] }, fest_kyo: { ult: ["all", 2] }
+  mb_tenglong: { ult: ["row", 3] }, fest_kyo: { ult: ["col", 1] }
 };
 ENEMIES.forEach((en) => {
   const base = ROLE_ATK[en.role] || ROLE_ATK["近战"];
