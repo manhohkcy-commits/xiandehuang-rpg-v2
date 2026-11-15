@@ -1202,3 +1202,26 @@ ACCESSORIES.forEach((c) => {
   if (!c.main) return;
   if (c.main.atk != null) c.main.atk = clampN(c.main.atk, "accAtk", c.rarity);
 });
+
+// 📏 品阶数值重排：每个品阶按线性映射到目标区间（压缩跨度）
+const remap = (arr, get, set, lo, hi) => {
+  const vals = arr.map((x) => Number(get(x)) || 0).filter((v) => v > 0);
+  if (!vals.length) return;
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  arr.forEach((x) => {
+    const v = Number(get(x)) || 0;
+    if (v <= 0) return;
+    const t = mx === mn ? 0.5 : (v - mn) / (mx - mn);
+    set(x, Math.round(lo + (hi - lo) * t));
+  });
+};
+["R", "SR", "SSR"].forEach((r) => {
+  const TGT = { R: [30, 38], SR: [42, 52], SSR: [62, 78] }[r];
+  remap(WEAPONS.filter((w) => w.rarity === r), (w) => w.main && w.main.atk, (w, v) => { w.main.atk = v; }, TGT[0], TGT[1]);
+  const AH = { R: [90, 160], SR: [180, 260], SSR: [290, 380] }[r];
+  remap(ARMORS.filter((a) => a.rarity === r), (a) => a.main && a.main.hp, (a, v) => { a.main.hp = v; }, AH[0], AH[1]);
+  const AD = { R: [4, 10], SR: [10, 18], SSR: [18, 30] }[r];
+  remap(ARMORS.filter((a) => a.rarity === r), (a) => a.main && a.main.def, (a, v) => { a.main.def = v; }, AD[0], AD[1]);
+  const AA = { R: [3, 8], SR: [6, 13], SSR: [12, 22] }[r];
+  remap(ACCESSORIES.filter((c) => c.rarity === r), (c) => c.main && c.main.atk, (c, v) => { c.main.atk = v; }, AA[0], AA[1]);
+});
