@@ -903,7 +903,7 @@ ENEMIES.forEach((en) => {
     const per = Number(s.mult) || 100;
     const total = per * n;
     const fx = FINAL_FX_TEXT(s);
-    const seg = n > 1 ? "（" + n + " 段，每段 " + per + "%，共 " + total + "%）" : "";
+    const seg = n > 1 ? "（" + n + " 段，每段 " + per + "%）" : "";
     if (s.kind === "normal") {
       s.desc = (FINAL_SHAPE[s.shape] || "对单个目标") + "造成 " + total + "% 攻击伤害" + (n > 1 ? "，分 " + n + " 段" : "") + "。";
       return;
