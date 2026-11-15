@@ -946,28 +946,28 @@ export const talentPointsOf = (ch) => {
   return Math.max(0, (Number(ch.lv) || 1) - 1) + 2 * Math.max(0, Number(ch.breaks) || 0);
 };
 
-// 🎉 26 庆典：主题限定本（三关挑战）
+// 🎉 26 庆典：主题限定 BOSS 战（每关仅 1 名首领，后续可持续新增）
 const FEST_PLAN = [
-  { lv: 60, ids: ["bx_cent", "bx_ghost1"], name: "庆典 · 精锐仪仗", tier: "特色" },
-  { lv: 70, ids: ["bx_lorne", "bx_seth"], name: "庆典 · 双子主宾", tier: "首领" },
-  { lv: 80, ids: ["mb_tenglong", "mb_ej", "mb_mg"], name: "庆典 · 终场烟花", tier: "首领" }
+  { lv: 60, id: "bx_lorne", name: "庆典 · 洛恩", story: "洛恩站在庆典舞台中央，笑着抬手：「来，为周年干一杯。」" },
+  { lv: 70, id: "bx_seth", name: "庆典 · 赛斯", story: "赛斯从人群里消失，下一秒出现在你身后。" },
+  { lv: 80, id: "mb_tenglong", name: "庆典 · 腾龙", story: "终场烟花炸开，腾龙从火光里走了出来。" }
 ];
 const festD = DUNGEONS.find((x) => x.id === "d_fest");
 if (festD) {
   Object.assign(festD, {
-    name: "26 庆典", icon: "🎉", desc: "26 周年限定挑战：三场庆典演出，产出全素材", type: "event",
+    name: "26 庆典", icon: "🎉", desc: "26 周年限定 BOSS 战：每关只有一名首领", type: "event",
     stages: FEST_PLAN.map((p, i) => {
-      const first = enemyAt(p.ids[0], p.lv);
+      const first = enemyAt(p.id, p.lv);
       return {
-        id: "fest_" + (i + 1), name: p.name, lv: p.lv, tier: p.tier, tierLabel: p.tier,
-        story: ["仪仗队踏着节拍入场，彩带落了一地。", "两位主宾同时举杯，杯里的东西不太对劲。", "终场烟花升空，三台机械在火光里启动。"][i],
-        scene: "庆典会场", sceneDesc: "挂满灯带与彩旗的会场，烟花不断。",
+        id: "fest_" + (i + 1), name: p.name, lv: p.lv, tier: "首领", tierLabel: "首领",
+        story: p.story,
+        scene: "庆典舞台", sceneDesc: "灯带、彩旗、烟花，舞台中央只有一个人。",
         sceneMods: { atkPct: 5 },
         weather: "night",
-        enemies: p.ids,
+        enemies: [p.id],
         foe: first,
-        drop: { ms: { ms3: [6, 12] }, md: { md3: [4, 8] }, cert: { cert4: [3, 6] }, stone: [40, 80], refine: [10, 20], shardR: [30, 50], shardSR: [10, 20], shardSSR: [3, 6], gearChance: 40 },
-        gold: 12000 * (i + 1), exp: 4000 * (i + 1)
+        drop: { ms: { ms3: [8, 14] }, md: { md3: [5, 10] }, cert: { cert4: [4, 8] }, stone: [50, 90], refine: [12, 24], shardR: [40, 60], shardSR: [12, 24], shardSSR: [4, 8], gearChance: 50 },
+        gold: 15000 * (i + 1), exp: 5000 * (i + 1)
       };
     })
   });
