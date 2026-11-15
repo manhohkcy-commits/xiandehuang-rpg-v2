@@ -442,6 +442,7 @@ function buildCreateScreen() {
     basicLine("hp", "生　命") + basicLine("atk", "攻　击") + basicLine("def", "防　御") + basicLine("res", "法　抗") +
     specLine("str", "力　量") + specLine("intel", "智　力") + specLine("tech", "技　巧") + specLine("agi", "敏　捷") +
     '<div class="g-rest">基础剩余 <b>' + basicFree() + '</b> 点　·　专精剩余 <b>' + free() + '</b> 点' +
+      '<div class="hint" style="margin-top:2px;">提示：专精要分完，武器有专精要求（力量/敏捷/智力/技巧）</div>' +
       ((free() > 0 || basicFree() > 0) ? '（点「参考模板」可一键填满）' : '') + '</div>' +
 
     '<div class="g-sec">四、申请人承诺</div>' +
