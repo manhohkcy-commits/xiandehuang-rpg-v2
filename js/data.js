@@ -1125,7 +1125,7 @@ export const SPEC_REQ_NAME = REQ_NAME;
 
 // 🎉 26 庆典 · 第二组：K' 十番试炼（Lv40~85）
 const K_LV = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85];
-const K_TITLES = ["初遇", "墨镜", "刺拳", "扳机", "乌鸦咬", "热板机", "热动", "链动", "霸焰", "最终试炼 · 热动"];
+const K_TITLES = ["初遇", "墨镜", "刺拳", "扳机", "热板机", "热动", "链动", "霸焰", "深红之星", "最终试炼 · 热动"];
 const _fest = DUNGEONS.find((x) => x.id === "d_fest");
 if (_fest) {
   K_LV.forEach((lv, i) => {

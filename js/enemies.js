@@ -877,7 +877,7 @@ ENEMIES.push({
   equip: { weapon: "暗炎拳套", armor: "黑色皮夹克", armor2: "战术长裤", accessory: "墨镜" },
   skills: [
     { kind: "normal", name: "刺拳", mult: 115, rage: 20, desc: "对单个目标造成 115% 攻击伤害。" },
-    { kind: "skill", name: "扳机 · 乌鸦咬", mult: 100, hits: 2, segWeights: [0.85, 1.15], cd: 3, rage: 14, desc: "冷却 3 回合：先用扳机贴身连打，再以乌鸦咬挑空，两段共 200% 攻击伤害。" },
+    { kind: "skill", name: "扳机", mult: 100, hits: 2, segWeights: [0.85, 1.15], cd: 3, rage: 14, desc: "冷却 3 回合：无视格挡的贴身连打，两段共 200% 攻击伤害。" },
     { kind: "ult", name: "热动", mult: 240, shape: "col", burn: 20, buff: { atkPct: 20 }, rage: 0, desc: "怒气满时释放：解除手套，对整列敌人造成 240% 攻击伤害，附加灼烧 20%，自身攻击 +20%。" }
   ],
   critRate: 12, critDmg: 185
