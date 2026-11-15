@@ -25,9 +25,9 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=a52b69d2";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=98e38d7a";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=42e16747";
 import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=a52b69d2";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=787a70cb";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a1cdc0e5";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -638,12 +638,19 @@ function renderChar() {
     };
   }
   const f = charFinal(ch), pw = charPower(ch);
+  const underSpec = f.__underSpec || null;
+  const warn = underSpec
+    ? '<div class="card" style="border-color:#ff6b6b66;"><div class="hint" style="color:#ff9b9b;font-weight:700;">⚠️ 武器专精不足</div>' +
+      '<div class="hint">需要 ' + ({ str: "力量", agi: "敏捷", intel: "智力", tech: "技巧" }[underSpec.key] || underSpec.key) + ' ' + underSpec.need +
+      '，当前 ' + underSpec.have + '。强行装备：攻击/防御 ×' + underSpec.mul + '%，速度 ×85%。</div></div>'
+    : "";
   const need = CHAR.expNeed(ch.lv);
   const pct = Math.min(100, Math.round(((store.exp || 0) / need) * 100));
   const canLv = ch.lv < CHAR.maxLevel && (store.exp || 0) >= need;
   const spec = Math.round(((ch.str || 0) * CHAR.spec.str + (ch.agi || 0) * CHAR.spec.agi + (ch.intel || 0) * CHAR.spec.intel + (ch.tech || 0) * CHAR.spec.tech) * 10) / 10;
 
   view().innerHTML =
+    (warn || "") +
     card("角色 · 可切换",
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
       store.chars.map((c) => '<button data-char="' + c.id + '" style="padding:6px 10px;border-color:' + (c.id === ch.id ? "#6ea8fe" : "#3a3a5c") + ';' +

@@ -148,6 +148,17 @@ export function itemBonus(it) {
   return out;
 }
 
+export function weaponSpec(ch) {
+  const w = ch && ch.equip && ch.equip.weapon;
+  if (!w || !w.data || !w.data.req) return null;
+  const need = w.data.req;
+  const starUp = 2 * ((Number(w.data.star) || 1) - 1);
+  const btUp = 3 * (Number(w.data.bt) || 0);
+  const needVal = need.val + starUp + btUp;
+  const have = Number(ch[need.key]) || 0;
+  return { key: need.key, need: needVal, have, ok: have >= needVal };
+}
+
 export function charFinal(ch) {
   const lv = Math.max(1, Number(ch && ch.lv) || 1);
   const p = CHAR.perLevel;
@@ -228,6 +239,17 @@ export function charFinal(ch) {
     ["atk", "hp", "def", "res"].forEach((k) => { f[k] = f[k] * mult; });
   }
   Object.keys(f).forEach((k) => { f[k] = Math.round(f[k] * 10) / 10; });
+    // ⚠️ 专精不足：强行装备，属性大幅下降
+  {
+    const sp = weaponSpec(ch);
+    if (sp && !sp.ok) {
+      const miss = sp.need - sp.have;
+      const mul = Math.max(0.45, 1 - miss * 0.03);
+      f.atk *= mul; f.def *= mul * 0.95; f.spd *= 0.85;
+      f.critRate = Math.max(0, f.critRate - 10);
+      f.__underSpec = { key: sp.key, need: sp.need, have: sp.have, mul: Math.round(mul * 100) };
+    }
+  }
   return f;
 }
 

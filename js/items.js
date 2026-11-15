@@ -17,18 +17,6 @@ export function equip(store, charId, itemId) {
   if (!ch) return { ok: false, why: "没有这个角色" };
   if (!it) return { ok: false, why: "装备不在仓库" };
   if (!isEquip(it)) return { ok: false, why: "这不是装备" };
-  // 🎯 武器专精要求
-  if (it.cat === "weapon" && it.data && it.data.req) {
-    const need = it.data.req;
-    const starUp = 2 * ((Number(it.data.star) || 1) - 1);
-    const btUp = 3 * (Number(it.data.bt) || 0);
-    const needVal = need.val + starUp + btUp;
-    const have = Number(ch[need.key]) || 0;
-    if (have < needVal) {
-      const NM = { str: "力量", agi: "敏捷", intel: "智力", tech: "技巧" };
-      return { ok: false, why: "专精不足：" + (NM[need.key] || need.key) + " 需要 " + needVal + "（基础 " + need.val + " + 星级 " + starUp + " + 突破 " + btUp + "，当前 " + have + "）" };
-    }
-  }
   // 🛡 防具按身体部位分格：上装 → armor，下装 → armor2
   let slot = it.cat;
   if (it.cat === "armor") {
