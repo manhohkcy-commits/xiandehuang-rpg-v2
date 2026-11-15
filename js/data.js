@@ -948,7 +948,7 @@ export const talentPointsOf = (ch) => {
 
 // 🎉 26 庆典：主题限定 BOSS 战（每关仅 1 名首领，后续可持续新增）
 const FEST_PLAN = [
-  { lv: 60, id: "bx_lorne", name: "庆典 · 洛恩", story: "洛恩站在庆典舞台中央，笑着抬手：「来，为周年干一杯。」" },
+  { lv: 60, id: "fest_lorne", name: "庆典 · 洛恩", story: "洛恩站在庆典舞台中央，笑着抬手：「来，为周年干一杯。」" },
   { lv: 70, id: "bx_seth", name: "庆典 · 赛斯", story: "赛斯从人群里消失，下一秒出现在你身后。" },
   { lv: 80, id: "mb_tenglong", name: "庆典 · 腾龙", story: "终场烟花炸开，腾龙从火光里走了出来。" }
 ];

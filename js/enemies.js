@@ -782,3 +782,19 @@ ENEMIES.forEach((en) => {
   fx.forEach((x) => t.push(x));
   en.tags = Array.from(new Set(t));
 });
+
+// 🎉 26 庆典 · 第一关 BOSS（专属强化版）
+ENEMIES.push({
+  id: "fest_lorne", name: "庆典 · 洛恩", camp: "26 庆典", role: "辅助", tier: "boss",
+  desc: "周年庆典的主持者，用增幅与圣光维持整场演出。",
+  tags: ["人形", "庆典", "首领", "治疗", "增幅"],
+  stats: { atk: 90, hp: 3150, def: 52, res: 50, spd: 11 },
+  growth: { atk: 0.085, hp: 0.1, def: 0.075, res: 0.07, spd: 0.02 },
+  equip: { weapon: "庆典权杖", armor: "典礼长袍", armor2: "缎面长裤", accessory: "周年纪念章" },
+  skills: [
+    { kind: "normal", name: "权杖轻击", mult: 120, desc: "对单个目标造成 120% 攻击伤害。" },
+    { kind: "skill", name: "增幅祷言", mult: 170, cd: 3, desc: "冷却 3 回合：对单个目标造成 170% 攻击伤害，自身攻击 +30%，治疗自身 25% 生命。", buff: { atkPct: 30 }, heal: 25 },
+    { kind: "ult", name: "圣愈光爆", mult: 240, desc: "怒气满时释放：对全体敌人造成 240% 攻击伤害，获得 25% 生命护盾，治疗自身 20% 生命。", aoe: true, shield: 25, heal: 20 }
+  ],
+  critRate: 6, critDmg: 160
+});
