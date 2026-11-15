@@ -1103,7 +1103,12 @@ const REQ_VAL = { R: 10, SR: 20, SSR: 32, UR: 44 };
 WEAPONS.forEach((w) => {
   let key = REQ_BY[w.style] || "str";
   if (/匕|双刃|拳套|短刀/.test(w.name)) key = "tech";
-  const val = REQ_VAL[w.rarity] || 8;
+  const base = REQ_VAL[w.rarity] || 9;
+  const heavy = /斧|枪|锤|戟|重|巨/.test(w.name);
+  const light = /匕|拳|双刃|短刀|弓|弩|飞刀|面罩/.test(w.name);
+  let val = base + (heavy ? 5 : light ? -5 : 0);
+  if ((Number(w.main && w.main.atk) || 0) >= 85) val += 2;
+  val = Math.max(6, Math.min(46, val));
   w.req = { key, val };
   const tip = "需要" + REQ_NAME[key] + " " + val;
   if (w.desc && w.desc.indexOf("需要") < 0) w.desc = w.desc + "（" + tip + "）";
