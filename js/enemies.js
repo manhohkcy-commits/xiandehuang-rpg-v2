@@ -816,3 +816,35 @@ ENEMIES.forEach((en) => {
     }
   });
 });
+
+// 🎯 敌人攻击形态 / 段数 / 伤害类型
+const ROLE_ATK = {
+  "近战": { normal: ["single", 1], skill: ["single", 1], ult: ["single", 2], dmgType: "phys" },
+  "远程": { normal: ["single", 1], skill: ["row", 2], ult: ["row", 2], dmgType: "phys" },
+  "坦克": { normal: ["single", 1], skill: ["single", 1], ult: ["single", 1], dmgType: "phys" },
+  "法术": { normal: ["single", 1], skill: ["row", 1], ult: ["all", 1], dmgType: "spell" },
+  "辅助": { normal: ["single", 1], skill: ["single", 1], ult: ["all", 1], dmgType: "spell" },
+  "输出": { normal: ["single", 1], skill: ["single", 2], ult: ["single", 3], dmgType: "phys" },
+  "机械输出": { normal: ["single", 1], skill: ["row", 2], ult: ["all", 2], dmgType: "phys" }
+};
+const ATK_TWEAK = {
+  tp_a: { skill: ["row", 2] }, ep_a: { skill: ["col", 2] },
+  tc_a: { skill: ["row", 2] }, ec_a: { skill: ["row", 3] },
+  mb_drone: { skill: ["row", 2] }, mb_hunter: { ult: ["single", 3] },
+  mb_dove: { skill: ["row", 1] }, mb_mg: { skill: ["col", 2] },
+  bx_ghost1: { ult: ["row", 3] }, bx_ghost2: { skill: ["col", 2] },
+  bx_lorne: { dmgType: "spell" }, bx_seth: { skill: ["single", 2] },
+  mb_tenglong: { ult: ["row", 3] }, fest_kyo: { ult: ["all", 2] }
+};
+ENEMIES.forEach((en) => {
+  const base = ROLE_ATK[en.role] || ROLE_ATK["近战"];
+  (en.skills || []).forEach((s) => {
+    const cfg = base[s.kind] || base.normal;
+    if (s.shape == null) s.shape = cfg[0];
+    if (s.hits == null) s.hits = cfg[1];
+    if (s.dmgType == null) s.dmgType = base.dmgType;
+    const tw = ATK_TWEAK[en.id] || {};
+    if (tw[s.kind]) { s.shape = tw[s.kind][0]; s.hits = tw[s.kind][1]; }
+    if (tw.dmgType) s.dmgType = tw.dmgType;
+  });
+});

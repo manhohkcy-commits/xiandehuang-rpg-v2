@@ -16,7 +16,7 @@
   <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
 </div>
 <script type="module">
-import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=bfab9767";
+import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=5697cc7a";
 import { DUNGEONS } from "./js/data.js?v=251d24ba";
 
 const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
@@ -46,6 +46,9 @@ function detail(id, atLv) {
     '<span style="font-size:10.5px;color:#8fd8ff;">' + (sk.mult ? sk.mult + "%" : "") +
     (sk.kind === "ult" ? ' · 怒气100' : (sk.cd ? ' · CD' + sk.cd : "")) +
     (sk.kind === "ult" ? "" : ' · ⚡回怒 +' + (sk.rage == null ? (sk.kind === "skill" ? 15 : 20) : sk.rage)) + '</span></div>' +
+    '<div class="hint" style="margin-top:1px;font-size:10px;color:#7f8aa8;">' +
+    ({ single: "单体", row: "整排", col: "整列", cross: "十字", all: "全体" }[sk.shape] || "单体") +
+    ' · ' + (Number(sk.hits) || 1) + ' 段 · ' + (sk.dmgType === "spell" ? "法术" : "物理") + '</div>' +
     '<div class="hint" style="margin-top:2px;">' + esc(sk.desc || "") +
     ((() => {
       const fx = [];

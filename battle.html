@@ -23,7 +23,7 @@ import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } f
 import { } from "./js/battle.js?v=273a02ba";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=251d24ba";
 import { makeItem } from "./js/items.js?v=5afadc4c";
-import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=bfab9767";
+import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=5697cc7a";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=273a02ba";
@@ -866,11 +866,22 @@ function aiTurnIfNeeded() {
     if ((Number(f2.cd) || 0) > 0) f2.cd -= 1;
     const mult = Number(used && used.mult) || 100;
     const hits = Math.max(1, Number(used && used.hits) || 1);
+    const shape = (used && used.shape) || (used && used.aoe ? "all" : "single");
+    const dmgType = (used && used.dmgType) || "phys";
+    const alliesA = st.units.filter((u) => u.side === "A" && u.hp > 0);
+    const meRow = (m.__row == null ? 1 : m.__row), meCol = m.__col ? 1 : 0;
+    let tgts = [m];
+    if (shape === "all") tgts = alliesA;
+    else if (shape === "row") tgts = alliesA.filter((u) => (u.__row == null ? 1 : u.__row) === meRow);
+    else if (shape === "col") tgts = alliesA.filter((u) => ((u.__col ? 1 : 0) === meCol));
     let total = 0, crit = false;
-    for (let h = 0; h < hits; h++) {
-      const rr = damage(st, "foe", "me", { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg });
-      total += rr.dmg; if (rr.crit) crit = true;
-    }
+    tgts.forEach((t) => {
+      for (let h = 0; h < hits; h++) {
+        const rr = damage(st, "foe", t.id, { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
+        total += rr.dmg; if (rr.crit) crit = true;
+      }
+    });
+    if (tgts.length > 1) pushLog("🎯 命中 " + tgts.length + " 个目标", "line");
     const r = { dmg: total, crit };
     pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + (used && used.name ? "「" + used.name + "」" : "") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     if (used && used.burn) addStatus(st, "foe", "me", "burn", Number(used.burn) || 20, 2, "灼烧");
