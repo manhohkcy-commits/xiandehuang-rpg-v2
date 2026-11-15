@@ -16,7 +16,7 @@
   <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
 </div>
 <script type="module">
-import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=07836121";
+import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=bfab9767";
 import { DUNGEONS } from "./js/data.js?v=251d24ba";
 
 const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
@@ -76,7 +76,12 @@ function detail(id, atLv) {
     sec("① 面板数据") +
     panel(r("攻击", fmt(s.atk)) + r("生命", fmt(s.hp)) + r("防御", fmt(s.def)) + r("法抗", fmt(s.res)) +
       r("速度", s.spd) + r("暴击率", s.critRate + "%") + r("暴击伤害", s.critDmg + "%") +
-      r("回怒效率", "+" + (e.rageGain || 25) + " / 行动")) +
+      r("回怒（普攻/技能）", (() => {
+      const sk = e.skills || [];
+      const n = (sk.find((x) => x.kind === "normal") || {}).rage;
+      const s2 = (sk.find((x) => x.kind === "skill") || {}).rage;
+      return "+" + (n == null ? 20 : n) + " / +" + (s2 == null ? "—" : s2);
+    })())) +
     sec("② 装备") +
     panel(r("武器", esc(e.equip.weapon)) + r("上装", esc(e.equip.armor)) + r("下装", esc(e.equip.armor2)) + r("饰品", esc(e.equip.accessory))) +
     sec("③ 招式组") +

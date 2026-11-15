@@ -799,3 +799,20 @@ ENEMIES.push({
   ],
   critRate: 10, critDmg: 175
 });
+
+// ⚡ 全敌人：按定位配回怒（普攻 / 技能 / 必杀）
+const ROLE_RAGE = {
+  "近战": [22, 14], "远程": [20, 16], "坦克": [18, 12],
+  "法术": [14, 20], "辅助": [12, 22],
+  "首领": [18, 18], "输出": [20, 16], "机械输出": [16, 20]
+};
+ENEMIES.forEach((en) => {
+  const base = ROLE_RAGE[en.role] || [20, 15];
+  const tierAdd = en.tier === "boss" ? 3 : en.tier === "special" ? 2 : en.tier === "elite" ? 1 : 0;
+  (en.skills || []).forEach((s) => {
+    if (s.kind === "ult") { if (s.rage == null) s.rage = 0; return; }
+    if (s.rage == null) {
+      s.rage = s.kind === "skill" ? base[1] + tierAdd : base[0] + tierAdd;
+    }
+  });
+});
