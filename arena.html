@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -74,8 +74,11 @@ async function loadArena() {
 }
 
 async function saveArena() {
-  const r = await cloudGet(BOX);
-  await cloudSave(BOX, data, r && r.updated_at, "竞技场");
+  let r0 = null;
+  try { r0 = await cloudGet(BOX); } catch (e) {}
+  const r = await cloudSave(BOX, data, r0 && r0.updated_at, "竞技场");
+  if (!r || r.ok === false) throw new Error((r && r.reason) || "云端写入失败");
+  return r;
 }
 
 function myRec() {
@@ -180,7 +183,7 @@ function bind() {
     rec.team = [snap];
     rec.name = myName;
     data.players[me] = rec;
-    try { await saveArena(); render(); toast("已用 " + snap.name + " 布防"); } catch (e) { toast("保存失败", true); }
+    try { await saveArena(); render(); toast("已用 " + snap.name + " 布防"); } catch (e) { toast("保存失败：" + (e && e.message || e), true); }
   };
   document.querySelectorAll("[data-fight]").forEach((b) => b.onclick = async () => {
     const rec = myRec();
