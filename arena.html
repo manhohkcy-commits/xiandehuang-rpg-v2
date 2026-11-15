@@ -103,8 +103,8 @@ async function buildCandidates() {
     const origs = await pullOriginals();
     (origs || []).forEach((o) => {
       const prog = (store && store.orig && store.orig[o.id]) || {};
-      const f = originalFinal(o, prog);
-      candidates.push({ name: o.name, lv: prog.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) });
+      const f = originalFinal(o, {});
+      candidates.push({ name: o.name, lv: prog.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0), power: Math.round(f.power || 0) });
     });
   } catch (e) {}
 }
@@ -126,7 +126,7 @@ function snapshot() {
     return { name: act.name, lv: act.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) };
   }
   const c0 = candidates[0];
-  return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd } : null;
+  return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd, power: c0.power } : null;
 }
 
 function powerOf(team) {
@@ -147,7 +147,7 @@ function render() {
 
   const defender = myTeam[0] || null;
   const pick = defender
-    ? '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;"><span>' + esc(defender.name) + '（Lv' + defender.lv + '）</span><span style="color:#6ea8fe;font-weight:700;">战力 ' + Math.round(defender.atk * 2 + defender.hp * 0.5) + '</span></div>'
+    ? '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;"><span>' + esc(defender.name) + '（Lv' + defender.lv + '）</span><span style="color:#6ea8fe;font-weight:700;">战力 ' + Math.round(defender.power != null ? defender.power : (defender.atk * 2 + defender.hp * 0.5)) + '</span></div>'
     : '<div class="hint">还没布防，点下面按钮即可用当前角色布防</div>';
 
   const list = others.length
@@ -195,7 +195,8 @@ function bind() {
     if (!foe) return;
     if (dailyUsed(rec) >= 5) return toast("今日挑战次数已用完（5/5）", true);
     if (rec.day !== today()) { rec.day = today(); rec.used = 0; }
-    const myP = powerOf(rec.team), foeP = powerOf(foe.team || []);
+    const teamPower = (t) => t.reduce((s, x) => s + (x.power != null ? Number(x.power) : (x.atk * 2 + x.hp * 0.5)), 0);
+    const myP = teamPower(rec.team), foeP = teamPower(foe.team || []);
     const luck = 0.85 + Math.random() * 0.3;
     const win = myP * luck >= foeP;
     const pts = win ? 20 : -10;
