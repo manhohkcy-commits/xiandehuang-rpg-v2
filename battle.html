@@ -92,9 +92,9 @@ function rewardText(s) {
 }
 
 function dungeonListHtml() {
-  const list = DUNGEONS.filter((d) => (d.type === "daily" || d.type === "event") && d.stages && d.stages.length);
+  const all = DUNGEONS.filter((d) => (d.type === "daily" || d.type === "event") && d.stages && d.stages.length);
   window.__openD = window.__openD || {};
-  return list.map((d) => {
+  const renderOne = (d) => {
     const done = Math.min(clearedFor(d.stages[0]), d.stages.length);
     const open = window.__openD[d.id] === true; // 默认收起
     let h = '<div class="card" style="margin:10px 0;padding:10px 12px;">' +
@@ -120,7 +120,13 @@ function dungeonListHtml() {
       }).join("");
     }
     return h + '</div>';
-  }).join("");
+  };
+  const daily = all.filter((d) => d.type === "daily");
+  const event = all.filter((d) => d.type === "event");
+  const sec = (title, arr) => arr.length
+    ? '<div style="margin:14px 0 4px;font-size:12px;font-weight:800;color:#8fd8ff;letter-spacing:1px;">' + title + '</div>' + arr.map(renderOne).join("")
+    : "";
+  return sec("📅 日常副本", daily) + sec("🎉 限定主题", event);
 }
 
 function hostOrig() {
