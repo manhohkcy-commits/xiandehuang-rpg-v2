@@ -19,6 +19,37 @@ export const WEAPONS = [
     critRate: 8, critDmg: 25
   },
 
+  // ── 玩具系列 SSR（通用，非限定） ──────────────
+  { id: "w_bubble", name: "泡泡枪", rarity: "SSR", style: "ranged", atk: 72,
+    aMult: 105, aHits: 2, uMult: 220, uShape: "all", uHits: 1,
+    sName: "泡泡连射", sMult: 85, sHits: 2, sCd: 3, sRage: 12, sShape: "single",
+    aName: "泡泡弹", uName: "泡泡风暴", dmgType: "spell",
+    main: { atk: 72 }, aRage: 22, critRate: 6, critDmg: 15,
+    desc: "装洗手液的玩具枪，打出来的泡泡会爆。" },
+  { id: "w_hammer", name: "充气锤", rarity: "SSR", style: "melee", atk: 88,
+    aMult: 130, aHits: 1, uMult: 320, uShape: "single", uHits: 1,
+    sName: "砸扁你", sMult: 200, sHits: 1, sCd: 4, sRage: 16, sShape: "single",
+    aName: "充气挥击", uName: "泰山压顶", dmgType: "phys",
+    main: { atk: 88 }, aRage: 14, critRate: 5, critDmg: 30,
+    desc: "看着软，砸下来一点也不软。" },
+  { id: "w_fan", name: "折扇", rarity: "SSR", style: "focus", atk: 68,
+    aMult: 95, aHits: 1, uMult: 260, uShape: "all", uHits: 1,
+    sName: "扇风", sMult: 175, sHits: 1, sCd: 3, sRage: 20, sShape: "row",
+    aName: "轻扇", uName: "满堂风", dmgType: "spell",
+    main: { atk: 68 }, aRage: 14, critRate: 5, critDmg: 20,
+    desc: "扇面上画着一只哈欠连天的猫。" },
+  { id: "w_toybow", name: "玩具弓", rarity: "SSR", style: "ranged", atk: 70,
+    aMult: 105, aHits: 2, uMult: 280, uShape: "row", uHits: 1,
+    sName: "三连橡筋", sMult: 92, sHits: 3, sCd: 3, sRage: 8, sShape: "single",
+    aName: "橡筋弹", uName: "万箭齐发", dmgType: "phys",
+    main: { atk: 70 }, aRage: 24, critRate: 8, critDmg: 15,
+    desc: "橡筋绑的弓，射速快得离谱。" },
+  { id: "w_tambourine", name: "铃鼓", rarity: "SSR", style: "focus", atk: 62,
+    aMult: 90, aHits: 1, uMult: 210, uShape: "all", uHits: 1,
+    sName: "摇铃助威", sMult: 150, sHits: 1, sCd: 3, sRage: 22, sShape: "single",
+    aName: "敲铃", uName: "全场欢呼", dmgType: "spell",
+    main: { atk: 62 }, aRage: 10, critRate: 4, critDmg: 15,
+    desc: "摇起来很吵，但队友会跟着兴奋。" },
   // ── R 阶（新手档）：只有普攻 + 必杀，没有技能 ──────────
   { id: "w_iron", name: "铁剑", rarity: "R", style: "melee", atk: 5, aMult: 100, aHits: 1, uMult: 260,
     desc: "协会统一配发的制式长剑，没有花哨的机关，胜在称手耐造。" },
@@ -1011,3 +1042,7 @@ WEAPONS.forEach((w) => { const r = RAGE_MAP[w.id]; if (r) { w.aRage = r[0]; w.sR
 // 🔨 装备突破石掉落（锻造基地，按关递增）
 const _gearD = DUNGEONS.find((d) => d.id === "d_gear");
 if (_gearD) _gearD.stages.forEach((s, i) => { s.drop = s.drop || {}; s.drop.bstone = 2 + Math.floor(i / 3); });
+
+// 🔫 玩具 SSR 回怒（普攻 / 技能）
+const TOY_RAGE = { w_bubble: [22, 12], w_hammer: [14, 16], w_fan: [14, 20], w_toybow: [24, 8], w_tambourine: [10, 22] };
+WEAPONS.forEach((w) => { const r = TOY_RAGE[w.id]; if (r) { w.aRage = r[0]; w.sRage = r[1]; } });
