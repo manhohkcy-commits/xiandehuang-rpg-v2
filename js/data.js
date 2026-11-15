@@ -11,12 +11,13 @@ export const SLOT_BASE = {
 export const WEAPONS = [
   {
     id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee",
-    atk: 120, aMult: 110, aHits: 1, uMult: 320,
-    desc: "草薙流代代相传的武典，记载着赤炎之拳。",
-    main: { atk: 120 }, aRage: 25, sRage: 0,
+    atk: 108, aMult: 115, aHits: 1, uMult: 300,
+    desc: "草薙流代代相传的武典，记载着赤炎之拳的完整招式；越战越热，出手便是连段。",
+    main: { atk: 108 }, aRage: 28, sRage: 0,
     aName: "外式·轰斧", uName: "大蛇薙", dmgType: "phys",
-    critRate: 8, critDmg: 20
+    critRate: 8, critDmg: 25
   },
+
   // ── R 阶（新手档）：只有普攻 + 必杀，没有技能 ──────────
   { id: "w_iron", name: "铁剑", rarity: "R", style: "melee", atk: 5, aMult: 100, aHits: 1, uMult: 260,
     desc: "协会统一配发的制式长剑，没有花哨的机关，胜在称手耐造。" },
