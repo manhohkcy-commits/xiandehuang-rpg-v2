@@ -16,6 +16,8 @@
 <script type="module">
 import { loadSave, save, cloudGet, cloudSave } from "./js/core.js?v=13807141";
 import { charFinal, charPower } from "./js/power.js?v=42e16747";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=a52b69d2";
+import { makeItem } from "./js/items.js?v=a1cdc0e5";
 
 const BOX = "__arena";
 const me = localStorage.getItem("rpg2:box") || "zynSD117";
@@ -98,8 +100,12 @@ function render() {
     '<button id="btnSaveTeam" style="margin-top:8px;border-color:#ffd666;color:#ffd666;">保存防守队</button></div>' +
     '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>' +
     '<div class="card"><div class="card-title">🪙 竞技币兑换</div>' +
-    '<div class="row"><span class="k">强化石 ×20<div class="hint">50 竞技币</div></span><span class="v"><button data-shop="stone">兑换</button></span></div>' +
-    '<div class="row"><span class="k">SSR 碎片 ×5<div class="hint">100 竞技币</div></span><span class="v"><button data-shop="ssr">兑换</button></span></div>' +
+    '<div class="row"><span class="k">R 碎片 ×10<div class="hint">30 币</div></span><span class="v"><button data-shop="shardR">兑换</button></span></div>' +
+    '<div class="row"><span class="k">SR 碎片 ×5<div class="hint">90 币</div></span><span class="v"><button data-shop="shardSR">兑换</button></span></div>' +
+    '<div class="row"><span class="k">SSR 碎片 ×2<div class="hint">150 币</div></span><span class="v"><button data-shop="shardSSR">兑换</button></span></div>' +
+    '<div class="row"><span class="k">金币袋（5,000）<div class="hint">40 币</div></span><span class="v"><button data-shop="gold">兑换</button></span></div>' +
+    '<div class="row"><span class="k">随机 R 装备箱<div class="hint">60 币</div></span><span class="v"><button data-shop="boxR">兑换</button></span></div>' +
+    '<div class="row"><span class="k">随机 SR 装备箱<div class="hint">200 币</div></span><span class="v"><button data-shop="boxSR">兑换</button></span></div>' +
     '</div>';
   bind();
 }
@@ -123,15 +129,32 @@ function bind() {
     const rec = myRec();
     if (!rec) return toast("先布防", true);
     const kind = b.dataset.shop;
-    const cost = kind === "stone" ? 50 : kind === "ssr" ? 100 : 120;
+    const PRICE = { shardR: 30, shardSR: 90, shardSSR: 150, gold: 40, boxR: 60, boxSR: 200 };
+    const cost = PRICE[kind] || 0;
     if ((Number(rec.coin) || 0) < cost) return toast("竞技币不够", true);
     rec.coin = (Number(rec.coin) || 0) - cost;
-    if (kind === "stone") store.flags.stone = (Number(store.flags.stone) || 0) + 20;
-    else if (kind === "ssr") store.flags.shardSSR = (Number(store.flags.shardSSR) || 0) + 5;
-    else store.flags.kyoShard = (Number(store.flags.kyoShard) || 0) + 10;
+    let msg = "兑换成功";
+    if (kind === "gold") {
+      store.gold = (Number(store.gold) || 0) + 5000;
+      msg = "金币 +5,000";
+    } else if (kind === "boxR" || kind === "boxSR") {
+      const rar = kind === "boxR" ? "R" : "SR";
+      const pool = [].concat(
+        WEAPONS.filter((x) => x.rarity === rar).map((x) => ["weapon", x]),
+        ARMORS.filter((x) => x.rarity === rar).map((x) => ["armor", x]),
+        ACCESSORIES.filter((x) => x.rarity === rar).map((x) => ["accessory", x])
+      );
+      const pickIt = pool[Math.floor(Math.random() * pool.length)];
+      store.items.push(makeItem(pickIt[0], pickIt[1]));
+      msg = "开出：" + pickIt[1].name;
+    } else {
+      const n = kind === "shardR" ? 10 : kind === "shardSR" ? 5 : 2;
+      store.flags[kind] = (Number(store.flags[kind]) || 0) + n;
+      msg = (kind === "shardR" ? "R" : kind === "shardSR" ? "SR" : "SSR") + " 碎片 +" + n;
+    }
     data.players[me] = rec;
     try { await save(); await saveArena(); } catch (e) {}
-    toast("兑换成功");
+    toast(msg);
     render();
   });
   if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
