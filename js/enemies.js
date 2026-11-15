@@ -519,6 +519,33 @@ ENEMIES.forEach((en) => {
   });
 });
 
+
+// 🏙 时代广场：每个单位的专属招式组（覆盖通用模板）
+const TS_KIT = {
+  c_flyer: { s: "传单连扇", sm: 150, u: "广告轰炸", um: 235, fx: { stun: 15 } },
+  c_rider: { s: "加速冲撞", sm: 165, u: "超时狂奔", um: 240, fx: { burn: 15 } },
+  c_busker: { s: "音浪冲击", sm: 155, u: "全场大合唱", um: 230, fx: { silence: 18 } },
+  c_mascot: { s: "人偶重压", sm: 140, u: "品牌狂欢", um: 220, fx: { shield: 15 } },
+  c_promo: { s: "喊麦助威", sm: 130, u: "限时抢购", um: 210, fx: { buff: { atkPct: 20 } } },
+  c_security: { s: "防暴棍", sm: 155, u: "清场", um: 235, fx: { stun: 20 } },
+  c_cleanbot: { s: "高压水枪", sm: 145, u: "全自动清扫", um: 225, fx: { aoe: true } },
+  c_streamer: { s: "流量冲击", sm: 170, u: "热搜登顶", um: 245, fx: { spellPct: 10 } },
+  c_supervisor: { s: "业绩威压", sm: 160, u: "KPI 考核", um: 230, fx: { buff: { atkPct: 15, dmgPct: 10 } } },
+  c_captain: { s: "防暴盾击", sm: 185, u: "强制驱离", um: 255, fx: { stun: 25 } },
+  c_drone: { s: "追踪射击", sm: 170, u: "空中封锁", um: 240, fx: { aoe: true } },
+  c_ceo: { s: "资本重锤", sm: 200, u: "商业帝国", um: 275, fx: { aoe: true, shield: 20 }, fxS: { shield: 20 } }
+};
+ENEMIES.forEach((en) => {
+  const k = TS_KIT[en.id];
+  if (!k) return;
+  en.equip = { weapon: "对讲机", armor: "商业区制服", armor2: "工装裤", accessory: "员工工牌" };
+  en.skills = [
+    { kind: "normal", name: "挥击", mult: 100, desc: "普通攻击" },
+    Object.assign({ kind: "skill", name: k.s, mult: k.sm, cd: 3, desc: "造成伤害" }, k.fxS || k.fx),
+    Object.assign({ kind: "ult", name: k.u, mult: k.um, desc: "怒气满时释放" }, k.fx)
+  ];
+});
+
 // 🏅 修行洞窟阶级修正
 const CAVE_TIER_FIX = { c_supervisor: "elite", c_captain: "elite", c_drone: "elite", c_ceo: "boss" };
 ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });
