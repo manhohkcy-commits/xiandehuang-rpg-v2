@@ -102,22 +102,43 @@ function dungeonListHtml() {
       '<span>' + (open ? "▾" : "▸") + '</span>' + d.icon + ' ' + esc(d.name) +
       ' <span class="tag">' + d.stages.length + ' 关</span> <span class="tag">已通关 ' + done + '/' + d.stages.length + '</span>' +
       '<span class="hint" style="margin-left:auto;font-weight:400;">' + (open ? "收起" : "展开") + '</span></div>';
-    if (open) {
-      h += d.stages.map((s) => {
-        const no = stageNo(s), cleared = clearedFor(s), locked = no > cleared + 1;
-        const tier = s.tier || "";
-        const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
-        const env = ENVIRONMENTS[s.weather || "clear"] || { icon: "", name: "" };
-        return '<div class="row" style="' + (locked ? "opacity:.55;" : "") + '"><span class="k">' + esc(s.name) +
-          (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
-          '<div class="hint" style="margin-top:2px;">' + esc(s.story || s.foe.name) + '</div>' +
-          '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
-          ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + ' · 建议战力 ' + fmt(stagePower(s)) + '</div>' +
+    const stageRow = (s) => {
+      const no = stageNo(s), cleared = clearedFor(s), locked = no > cleared + 1;
+      const tier = s.tier || "";
+      const tcol = tier === "首领" ? "#ff6b6b" : tier === "特色" ? "#ffb347" : tier === "精英" ? "#c9a0ff" : "#6a6a86";
+      const env = ENVIRONMENTS[s.weather || "clear"] || { icon: "", name: "" };
+      return '<div class="row" style="' + (locked ? "opacity:.55;" : "") + '"><span class="k">' + esc(s.name) +
+        (tier ? ' <span class="tag" style="border-color:' + tcol + ';color:' + tcol + ';">' + tier + '</span>' : '') +
+        '<div class="hint" style="margin-top:2px;">' + esc(s.story || (s.foe && s.foe.name) || "") + '</div>' +
+        '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + esc(s.scene || "") + ' · ' + env.icon + ' ' + env.name +
+        ' · 适配 Lv' + s.lv + '~' + (s.lv + 5) + ' · 建议战力 ' + fmt(stagePower(s)) + '</div>' +
         (rewardText(s) ? '<div class="hint" style="margin-top:2px;color:#ffd666;">🎁 ' + esc(rewardText(s)) + '</div>' : '') + '</span>' +
-          '<span class="v">' + (locked
-            ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
-            : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
-      }).join("");
+        '<span class="v">' + (locked
+          ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
+          : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
+    };
+    if (open) {
+      if (d.type === "event") {
+        window.__openB = window.__openB || {};
+        const groups = {};
+        d.stages.forEach((st) => {
+          const ids = st.enemies || [];
+          const def = ids.length ? enemyById(ids[0]) : null;
+          const bn = (st.bossName || (def && def.name) || "未知 BOSS");
+          (groups[bn] = groups[bn] || []).push(st);
+        });
+        Object.keys(groups).forEach((bn) => {
+          const key = d.id + "|" + bn;
+          const bopen = window.__openB[key] === true;
+          h += '<div data-boss="' + key + '" style="cursor:pointer;margin:8px 0 2px;padding:6px 8px;border-left:3px solid #ff9bd2;background:#1a1226;border-radius:6px;font-size:12px;color:#ffd6ec;display:flex;align-items:center;gap:6px;">' +
+            '<span>' + (bopen ? "▾" : "▸") + '</span> 👑 ' + esc(bn) +
+            ' <span class="tag" style="border-color:#ff9bd2;color:#ff9bd2;">' + groups[bn].length + ' 关</span>' +
+            '<span class="hint" style="margin-left:auto;">' + (bopen ? "收起" : "展开") + '</span></div>';
+          if (bopen) h += groups[bn].map(stageRow).join("");
+        });
+      } else {
+        h += d.stages.map(stageRow).join("");
+      }
     }
     return h + '</div>';
   };
@@ -148,6 +169,12 @@ function renderPick() {
     '<div class="card"><div class="card-title">选择关卡</div>' +
       dungeonListHtml() +
     '</div>';
+  view().querySelectorAll("[data-boss]").forEach((el) => el.onclick = () => {
+    const key = el.dataset.boss;
+    window.__openB = window.__openB || {};
+    window.__openB[key] = window.__openB[key] === true ? false : true;
+    renderPick();
+  });
   view().querySelectorAll("[data-dungeon]").forEach((el) => el.onclick = () => {
     const id = el.dataset.dungeon;
     window.__openD = window.__openD || {};
