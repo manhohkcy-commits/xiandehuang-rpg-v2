@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -758,8 +758,8 @@ function renderChar() {
     store.exp -= need; ch.lv += 1;
     ch.tp = (Number(ch.tp) || 0) + 1;
     bumpDaily(store, "levels");
-    ch.free = (Number(ch.free) || 0) + 2;
-    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: "获得 2 点属性点" });
+    ch.free = (Number(ch.free) || 0) + 1;
+    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: "获得 1 点属性点" });
     await save(); render();
   };
   view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = async () => {
