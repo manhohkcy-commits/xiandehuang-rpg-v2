@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=9a94bebf";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=c47ef725";
 import { makeItem } from "./js/items.js?v=5afadc4c";
 import { stagePower, enemyAt } from "./js/enemies.js?v=7ddd117e";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -748,8 +748,17 @@ function doAct(kind) {
     commit(st, "me");
   } else if (kind === "ult") {
     const frost = st.__isOrig ? (Number(st.__frost) || 0) : 0;
-    const ultMult = 250 * (1 + 0.15 * frost);
-    const r = damage(st, "me", foe().id, { atk: m.atk, mult: ultMult, critRate: m.critRate, critDmg: m.critDmg });
+    const ultMult = ((Number(wp.uMult) || 250) * (Number(wp.uHits) || 1)) * (1 + 0.15 * frost);
+    const tgt0 = foe();
+    const tgts = wp.uShape === "col"
+      ? st.units.filter((u) => u.side === "B" && u.hp > 0 && ((u.__col ? 1 : 0) === (tgt0.__col ? 1 : 0)))
+      : [tgt0];
+    let r = { dmg: 0, crit: false };
+    tgts.forEach((t, i) => {
+      const rr = damage(st, "me", t.id, { atk: m.atk, mult: ultMult, critRate: m.critRate, critDmg: m.critDmg });
+      r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+      if (i > 0) pushLog("💥 连带命中 " + t.name + " " + rr.dmg, "line");
+    });
     if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
