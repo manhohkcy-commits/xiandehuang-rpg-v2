@@ -79,6 +79,7 @@ export function refineApply(store, it) {
 export function promoteCheck(it, store) {
   const d = it && it.data;
   if (!d) return { ok: false, why: "没有装备" };
+  if ((Number(d.bt) || 0) < 1) return { ok: false, why: "先完成 1 次装备突破才能升阶" };
   const haveS = Number((store.flags || {}).shards) || 0;
   const haveG = Number(store.gold) || 0;
   const check = (cost, extra) => {
@@ -158,6 +159,7 @@ export function cultCheck(it, kind, store) {
     };
   }
   if (kind === "break") {
+    if ((Number(d.star) || 1) < CULT.maxStar) return { ok: false, why: "升到 5★ 才能突破" };
     const bt = Number(d.bt) || 0;
     const list = CULT.eqBreak || [];
     const cfg = list[bt];
@@ -169,6 +171,8 @@ export function cultCheck(it, kind, store) {
   }
   if (kind === "star") {
     if ((Number(d.star) || 1) >= CULT.maxStar) return { ok: false, why: "已满星" };
+    const needLv = 4 * (Number(d.star) || 1);
+    if ((Number(d.lv) || 1) < needLv) return { ok: false, why: "强化到 Lv" + needLv + " 才能升星" };
     // 🎉 主题限定武器：消耗量与 SSR 相同，但用专属碎片
     if (d.id === "w_kyo") {
       const need = CULT.shardBase * (Number(d.star) || 1);
