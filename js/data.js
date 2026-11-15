@@ -50,6 +50,24 @@ export const WEAPONS = [
     aName: "杖击", uName: "圣光普照", dmgType: "spell",
     main: { atk: 66 }, aRage: 10, critRate: 4, critDmg: 15,
     desc: "杖顶嵌着温润的圣石，靠近会觉得安心。" },
+  { id: "w_thunder2", name: "雷鸣双戟", rarity: "SSR", style: "melee", atk: 82,
+    aMult: 100, aHits: 2, uMult: 300, uShape: "single", uHits: 2,
+    sName: "雷贯", sMult: 96, sHits: 2, sCd: 3, sRage: 12, sShape: "row",
+    aName: "双戟连击", uName: "万雷轰顶", dmgType: "phys",
+    main: { atk: 82 }, aRage: 18, critRate: 9, critDmg: 20,
+    desc: "双戟交错时会拉出电弧，命中带麻。" },
+  { id: "w_umbra", name: "幽影短弩", rarity: "SSR", style: "ranged", atk: 78,
+    aMult: 105, aHits: 1, uMult: 250, uShape: "col", uHits: 2,
+    sName: "影矢", sMult: 150, sHits: 2, sCd: 3, sRage: 10, sShape: "col",
+    aName: "短弩射击", uName: "幽影贯穿", dmgType: "phys",
+    main: { atk: 78 }, aRage: 22, critRate: 12, critDmg: 25,
+    desc: "无声无光，箭出来时人已经倒了。" },
+  { id: "w_tide", name: "潮汐法典", rarity: "SSR", style: "focus", atk: 80,
+    aMult: 95, aHits: 1, uMult: 210, uShape: "all", uHits: 2,
+    sName: "潮涌", sMult: 120, sHits: 2, sCd: 3, sRage: 18, sShape: "all",
+    aName: "水刃", uName: "怒潮倾覆", dmgType: "spell",
+    main: { atk: 80 }, aRage: 12, critRate: 6, critDmg: 18,
+    desc: "书页会渗出水珠，翻动时像退潮。" },
   // ── R 阶（新手档）：只有普攻 + 必杀，没有技能 ──────────
   { id: "w_iron", name: "铁剑", rarity: "R", style: "melee", atk: 5, aMult: 100, aHits: 1, uMult: 260,
     desc: "协会统一配发的制式长剑，没有花哨的机关，胜在称手耐造。" },
@@ -1044,5 +1062,6 @@ const _gearD = DUNGEONS.find((d) => d.id === "d_gear");
 if (_gearD) _gearD.stages.forEach((s, i) => { s.drop = s.drop || {}; s.drop.bstone = 2 + Math.floor(i / 3); });
 
 // 🔫 玩具 SSR 回怒（普攻 / 技能）
-const TOY_RAGE = { w_bubble: [22, 12], w_hammer: [14, 16], w_fan: [14, 20], w_toybow: [24, 8], w_tambourine: [10, 22] };
+const TOY_RAGE = { w_bubble: [22, 12], w_hammer: [14, 16], w_fan: [14, 20], w_toybow: [24, 8], w_tambourine: [10, 22],
+  w_thunder2: [18, 12], w_umbra: [22, 10], w_tide: [12, 18] };
 WEAPONS.forEach((w) => { const r = TOY_RAGE[w.id]; if (r) { w.aRage = r[0]; w.sRage = r[1]; } });
