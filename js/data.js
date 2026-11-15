@@ -1147,8 +1147,8 @@ if (_fest) {
         "火光把他整个人吞没。",
         "「最后一击——看清楚了。」"
       ][i],
-      scene: "草薙流武道馆",
-      sceneDesc: "木地板、旧匾额，火焰在馆内跳动。",
+      scene: "NESTS 废弃研究所",
+      sceneDesc: "冷白色的长廊，灯管一闪一闪，墙上的编号被划掉了。",
       sceneMods: { atkPct: 5 },
       weather: "night",
       enemies: ["fest_k"],
