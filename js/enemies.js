@@ -451,21 +451,8 @@ const EC = (id, name, role, tier, skillName, mult, desc) => {
     critRate: 5, critDmg: 150
   };
 };
-const CAVE = [
-  EC("c_flyer", "传单员", "近战", "普通", "传单扇击", 145, "见人就塞传单，手速极快。"),
-  EC("c_rider", "外卖骑手", "远程", "普通", "加速冲撞", 160, "电动车在人行道上横冲直撞。"),
-  EC("c_busker", "街头艺人", "远程", "普通", "音浪", 155, "音响开最大，音波能震人。"),
-  EC("c_mascot", "广告人偶", "坦克", "普通", "人偶重压", 135, "厚重的品牌人偶，动作笨重。"),
-  EC("c_promo", "促销员", "辅助", "普通", "喊麦助威", 140, "用喇叭给同伴打气。"),
-  EC("c_security", "商场保安", "近战", "普通", "防暴棍", 150, "商业区的常驻保安。"),
-  EC("c_cleanbot", "清洁机器人", "坦克", "普通", "高压水枪", 140, "扫地机器人改装成的战斗单位。"),
-  EC("c_streamer", "直播网红", "法术", "普通", "流量冲击", 165, "举着自拍杆，靠热搜战斗。"),
-  EC("c_supervisor", "商场主管", "辅助", "精英", "业绩威压", 175, "拿着对讲机调度全场。"),
-  EC("c_captain", "安保队长", "近战", "精英", "防暴盾击", 190, "商业区安保的最高指挥。"),
-  EC("c_drone", "巡逻无人机", "远程", "精英", "追踪射击", 185, "在半空盘旋的安保无人机。"),
-  EC("c_ceo", "商圈大亨 · 范德林", "近战", "首领", "资本重锤", 260, "掌控整片商业区的人，走到哪都有人让路。")
-];
-ENEMIES.push(...CAVE);
+// (CAVE 旧名单已移除)
+
 
 ENEMIES.push(...MINE_BOSSES);
 
@@ -546,6 +533,71 @@ ENEMIES.forEach((en) => {
   ];
 });
 
-// 🏅 修行洞窟阶级修正
-const CAVE_TIER_FIX = { c_supervisor: "elite", c_captain: "elite", c_drone: "elite", c_ceo: "boss" };
+
+// 🏙 时代广场商业区：人形 + 机械两大体系
+const TS_TIER = {
+  "普通": { atk: 32, hp: 300, def: 14, res: 10, spd: 9 },
+  "精英": { atk: 52, hp: 520, def: 24, res: 18, spd: 9 },
+  "特色": { atk: 78, hp: 1400, def: 34, res: 26, spd: 10 },
+  "首领": { atk: 112, hp: 3000, def: 48, res: 36, spd: 11 }
+};
+const ROLE_KIT = {
+  "近战": { s: "突刺", sm: 155, u: "战术冲锋", um: 235, fx: { stun: 15 } },
+  "远程": { s: "弩击", sm: 160, u: "箭雨覆盖", um: 230, fx: { row: true } },
+  "坦克": { s: "盾撞", sm: 140, u: "盾墙推进", um: 220, fx: { shield: 18 } },
+  "法术": { s: "咒术弹", sm: 165, u: "战术法术", um: 240, fx: { silence: 18 } },
+  "机械远程": { s: "扫射", sm: 165, u: "俯冲轰炸", um: 240, fx: { aoe: true } },
+  "机械坦克": { s: "重炮", sm: 170, u: "火力覆盖", um: 250, fx: { aoe: true } },
+  "机械近战": { s: "突袭", sm: 180, u: "猎杀协议", um: 255, fx: { stun: 20 } },
+  "机械法术": { s: "爆破弹", sm: 175, u: "自爆冲锋", um: 260, fx: { aoe: true, burn: 20 } }
+};
+const TS_UNITS = [
+  // 巡逻队
+  ["tp_s", "巡逻队队员", "近战", "普通"], ["tp_a", "巡逻队弩手", "远程", "普通"],
+  ["tp_t", "巡逻队重盾兵", "坦克", "普通"], ["tp_m", "巡逻队术士", "法术", "普通"],
+  // 冲锋队
+  ["tc_s", "冲锋队队员", "近战", "普通"], ["tc_a", "冲锋队弩手", "远程", "普通"],
+  ["tc_t", "冲锋队重盾兵", "坦克", "普通"], ["tc_m", "冲锋队术士", "法术", "普通"],
+  // 精锐巡逻队
+  ["ep_s", "精锐巡逻队队员", "近战", "精英"], ["ep_a", "精锐巡逻队弩手", "远程", "精英"],
+  ["ep_t", "精锐巡逻队重盾兵", "坦克", "精英"], ["ep_m", "精锐巡逻队术士", "法术", "精英"],
+  // 精锐冲锋队
+  ["ec_s", "精锐冲锋队队员", "近战", "精英"], ["ec_a", "精锐冲锋队弩手", "远程", "精英"],
+  ["ec_t", "精锐冲锋队重盾兵", "坦克", "精英"], ["ec_m", "精锐冲锋队术士", "法术", "精英"],
+  // 特色人形
+  ["bx_cent", "精锐重盾百夫长", "坦克", "特色"], ["bx_ghost1", "精锐幽灵弩手", "远程", "特色"],
+  ["bx_ghost2", "精锐幽灵重弩手", "远程", "特色"],
+  // 机械
+  ["mb_drone", "巡逻无人机", "机械远程", "普通"], ["mb_drone2", "改良型无人机", "机械远程", "精英"],
+  ["mb_guard", "御卫-III型", "机械坦克", "精英"], ["mb_hunter", "猎枭-XI型", "机械近战", "精英"],
+  ["mb_dove", "爆鸽-TX型", "机械法术", "精英"],
+  ["mb_ej", "聚能 · 改-EJ型", "机械法术", "特色"], ["mb_mg", "聚爆 · 改-MG型", "机械近战", "特色"]
+];
+const TS = TS_UNITS.map(([id, name, role, tier]) => {
+  const st = Object.assign({}, TS_TIER[tier]);
+  const kit = ROLE_KIT[role] || ROLE_KIT["近战"];
+  const inner = role.replace("机械", "");
+  return {
+    id, name, camp: "时代广场商业区", role: inner,
+    tier: ({ "普通": "normal", "精英": "elite", "特色": "special", "首领": "boss" }[tier] || "normal"),
+    desc: "时代广场的" + (role.indexOf("机械") >= 0 ? "机械单位" : "安保单位") + "。",
+    tags: ["杂兵"],
+    stats: { atk: st.atk, hp: st.hp, def: st.def, res: st.res, spd: role.indexOf("机械") >= 0 ? st.spd + 1 : st.spd },
+    growth: EG,
+    equip: role.indexOf("机械") >= 0
+      ? { weapon: "机械臂", armor: "合金外壳", armor2: "传动组件", accessory: "核心芯片" }
+      : { weapon: "制式武器", armor: "战术制服", armor2: "战术裤", accessory: "战术终端" },
+    skills: [
+      { kind: "normal", name: "挥击", mult: 100, desc: "普通攻击" },
+      Object.assign({ kind: "skill", name: kit.s, mult: kit.sm, cd: 3, desc: "造成伤害" }, kit.fx),
+      Object.assign({ kind: "ult", name: kit.u, mult: kit.um, desc: "怒气满时释放" }, kit.fx)
+    ],
+    critRate: 5, critDmg: 150
+  };
+});
+ENEMIES.push(...TS);
+
+
+// 🏅 时代广场阶级修正
+const CAVE_TIER_FIX = { bx_cent: "special", bx_ghost1: "special", bx_ghost2: "special", mb_ej: "special", mb_mg: "special" };
 ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });

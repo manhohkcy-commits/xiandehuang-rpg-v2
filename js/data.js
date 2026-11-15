@@ -556,38 +556,9 @@ function makeMine() {
 // 🧬 修行洞窟：角色突破素材副本
 function makeCave() {
   const LV = [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 78];
-  const WAVE = [
-    ["c_flyer"], ["c_flyer", "c_rider"], ["c_busker", "c_rider"], ["c_mascot"],
-    ["c_security"], ["c_promo", "c_flyer"], ["c_cleanbot", "c_busker"], ["c_streamer", "c_rider"],
-    ["c_supervisor"], ["c_captain"], ["c_security", "c_security", "c_promo"],
-    ["c_drone"], ["c_cleanbot", "c_drone"], ["c_streamer", "c_streamer"],
-    ["c_supervisor", "c_captain"], ["c_security", "c_promo", "c_drone"],
-    ["c_drone", "c_drone"], ["c_supervisor", "c_supervisor"], ["c_captain", "c_drone", "c_streamer"],
-    ["c_ceo"]
-  ];
-  const NAMES = ["地铁出口", "人行道", "广告屏广场", "人偶队列", "商场门口", "促销广场", "清洁区", "直播角", "主管巡场", "安保哨卡", "保安阵列", "无人机盘旋", "清洁机库", "双主播", "主管与队长", "混编安保", "双机编队", "双主管", "商场中庭", "顶层办公室"];
-  const STORY = [
-    "地铁口人潮涌动，传单塞到手里。",
-    "外卖骑手在人行道上飞速穿行。",
-    "巨大广告屏循环播放，声浪压过一切。",
-    "一排品牌人偶挡在路中间。",
-    "商场门口的保安抬手拦住你。",
-    "促销员举着喇叭喊得比谁都响。",
-    "清洁机器人一边扫地一边冲过来。",
-    "网红举着自拍杆，把镜头对准你。",
-    "主管拿着对讲机，正在调人。",
-    "安保队长从哨卡里走出来。",
-    "整队保安排成一线推进。",
-    "头顶传来无人机的嗡鸣。",
-    "清洁机库的门打开，机器排队驶出。",
-    "两个主播同时开播，音浪叠加。",
-    "主管和队长一起压上来。",
-    "安保、促销、无人机混编堵路。",
-    "两架无人机交叉射击。",
-    "两个主管同时下达指令。",
-    "商场中庭被清空，只剩对手。",
-    "顶层办公室里，范德林转过身来。"
-  ];
+  const WAVE = [["tp_s"],["tp_s","tp_a"],["tp_a","tp_t"],["tp_t","tp_m"],["tc_s"],["tc_s","tc_a"],["tc_t","tc_m"],["tc_s","tc_s","tp_a"],["ep_s"],["ep_s","ep_a"],["ep_t","ep_m"],["ec_s","ec_a"],["ec_t","ec_m"],["ec_s","ec_t"],["bx_cent"],["bx_ghost1","bx_ghost2"],["mb_drone","mb_drone2"],["mb_guard","mb_hunter","mb_dove"],["mb_ej","mb_mg"],["bx_cent","bx_ghost1","bx_ghost2"]];
+  const NAMES = ["广场入口","巡逻线","弩手高台","盾墙哨位","冲锋队集结","冲锋队突进","重盾推进","术士掩护","精锐巡逻","精锐弩线","精锐盾阵","精锐冲锋","精锐重盾","混编精锐","百夫长","幽灵弩组","无人机编队","机械混编","改装机入场","顶层决战"];
+  const STORY = ["广场入口拉起警戒线，巡逻队已经就位。","巡逻队沿着步行街推进。","高台上的弩手已经瞄准。","重盾兵把通道堵死。","冲锋队从侧街包抄过来。","冲锋队一边推进一边射击。","重盾兵顶在最前面。","术士在后面布下咒术。","精锐巡逻队接管了这片区域。","精锐弩手占据了所有高点。","精锐盾阵一层叠一层。","精锐冲锋队开始强攻。","精锐重盾兵把路封死。","精锐部队混编压上。","百夫长举着塔盾走出来。","两个幽灵弩手同时扣下扳机。","无人机编队升空。","御卫、猎枭、爆鸽三台机械同时启动。","两台改装机从地库升上来。","顶层大厅里，所有单位都到齐了。"];
   return {
     id: "d_char", name: "时代广场商业区", kind: "char", icon: "🏙",
     desc: "商业区的核心地带，产出角色突破素材", type: "daily",
@@ -599,8 +570,8 @@ function makeCave() {
         id: "char_" + (i + 1), name: "第 " + (i + 1) + " 关 · " + NAMES[i], lv,
         tier, tierLabel: tier,
         story: STORY[i],
-        scene: ["地铁出口", "人行道", "广告屏广场", "商场中庭", "顶层办公室"][Math.min(4, Math.floor(i / 4))],
-        sceneDesc: ["人潮与传单，嘈杂拥挤。", "外卖车与行人混在一起。", "巨屏广告的光晃得眼睛疼。", "商场中庭空旷得反常。", "顶层办公室，落地窗外是整片商业区。"][Math.min(4, Math.floor(i / 4))],
+        scene: ["广场入口", "巡逻街区", "冲锋街区", "精锐防区", "顶层大厅"][Math.min(4, Math.floor(i / 4))],
+        sceneDesc: ["警戒线、路障与巡逻队。", "步行街被清空，只剩巡逻的人。", "冲锋队从两侧街区推进。", "精锐防区，防线层层叠叠。", "顶层落地窗，整片商业区在脚下。"][Math.min(4, Math.floor(i / 4))],
         sceneMods: [{ spdPct: 3 }, { spdPct: 3, atkPct: 2 }, { critRate: 3 }, { atkPct: 3 }, { atkPct: 5 }][Math.min(4, Math.floor(i / 4))],
         weather: ["clear", "night", "fog", "sun"][Math.min(3, Math.floor(i / 5))],
         enemies: ids,
