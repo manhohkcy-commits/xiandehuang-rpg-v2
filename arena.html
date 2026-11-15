@@ -147,7 +147,7 @@ function render() {
 
   const defender = myTeam[0] || null;
   const pick = defender
-    ? '<div class="hint" style="font-size:12px;">' + esc(defender.name) + '（Lv' + defender.lv + '） · 攻击 ' + defender.atk + ' · 生命 ' + defender.hp + '</div>'
+    ? '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;"><span>' + esc(defender.name) + '（Lv' + defender.lv + '）</span><span style="color:#6ea8fe;font-weight:700;">战力 ' + Math.round(defender.atk * 2 + defender.hp * 0.5) + '</span></div>'
     : '<div class="hint">还没布防，点下面按钮即可用当前角色布防</div>';
 
   const list = others.length
