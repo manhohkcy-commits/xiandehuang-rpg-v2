@@ -365,17 +365,16 @@ ENEMIES.forEach((e) => {
     : /资深|高阶|爆破/.test(e.name) ? "elite" : "normal";
   e.growth = GROWTH_BY(e);
   // 🎯 固定招式结构：普攻 / 技能（部分敌人没有）/ 必杀
+  // 🎯 保留原有招式结构：普攻 / 技能 / 必杀（不丢自定义名称与机制）
   const old = e.skills || [];
-  const sk = old[0] || { name: "猛击", desc: "单体 130% 攻击", mult: 130, cd: 2 };
-  const ult = ENEMY_ULT[e.id] || { name: "全力一击", desc: "单体 200% 攻击", mult: 200 };
-  // 纯杂兵只有普攻 + 必杀，不配技能
   const NO_SKILL = { e_thug: 1, e_brute: 1, e_soldier: 1, e_archer: 1, e_crossbow: 1 };
-  e.skills = NO_SKILL[e.id]
-    ? [{ name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" },
-       Object.assign({ kind: "ult", rage: 100 }, ult)]
-    : [{ name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" },
-       Object.assign({ kind: "skill" }, sk),
-       Object.assign({ kind: "ult", rage: 100 }, ult)];
+  const normal = old.find((s) => s.kind === "normal") || { name: "普攻", desc: "100% 攻击", mult: 100, kind: "normal" };
+  const SKILL_BY_ROLE = { "近战": "强袭", "远程": "精准射击", "坦克": "盾击", "法术": "咒弹", "辅助": "激励" };
+  let skill = old.find((s) => s.kind === "skill");
+  if (!skill) skill = { kind: "skill", name: SKILL_BY_ROLE[e.role] || "重击", mult: e.tier === "boss" ? 190 : e.tier === "elite" ? 165 : 150, cd: 3, desc: "" };
+  const ult = old.find((s) => s.kind === "ult") ||
+    Object.assign({ kind: "ult", rage: 100 }, ENEMY_ULT[e.id] || { name: "全力一击", desc: "单体 200% 攻击", mult: 200 });
+  e.skills = [normal, skill, ult];
   e.rageGain = ENEMY_RAGE[e.id] || 25;
   e.tags = (ENEMY_TAGS[e.id] || []).concat(e.tags || []);
   e.faction = e.camp;
