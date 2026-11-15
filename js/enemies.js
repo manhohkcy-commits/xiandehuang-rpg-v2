@@ -878,7 +878,7 @@ ENEMIES.push({
   skills: [
     { kind: "normal", name: "刺拳", mult: 115, rage: 20, desc: "对单个目标造成 115% 攻击伤害。" },
     { kind: "skill", name: "扳机", mult: 68, hits: 3, segWeights: [0.85, 1.0, 1.15], cd: 3, rage: 14, desc: "冷却 3 回合：扳机起手贴身连打 → 乌鸦咬挑空 → 追击落下，三段共 204% 攻击伤害，无视格挡。" },
-    { kind: "ult", name: "热动", mult: 240, shape: "col", burn: 20, buff: { atkPct: 20 }, rage: 0, desc: "怒气满时释放：解除手套，对整列敌人造成 240% 攻击伤害，附加灼烧 20%，自身攻击 +20%。" }
+    { kind: "ult", name: "热动", mult: 240, shape: "col", buff: { atkPct: 20 }, rage: 0, desc: "怒气满时释放：解除手套，对整列敌人造成 240% 攻击伤害，附加灼烧 20%，自身攻击 +20%。" }
   ],
   critRate: 12, critDmg: 185
 });
