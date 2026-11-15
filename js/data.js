@@ -1225,3 +1225,27 @@ const remap = (arr, get, set, lo, hi) => {
   const AA = { R: [3, 8], SR: [6, 13], SSR: [12, 22] }[r];
   remap(ACCESSORIES.filter((c) => c.rarity === r), (c) => c.main && c.main.atk, (c, v) => { c.main.atk = v; }, AA[0], AA[1]);
 });
+
+// ♾ 每个庆典 BOSS 的「无尽碎片试炼」（可重复挑战，只刷专属碎片）
+const _fest2 = DUNGEONS.find((x) => x.id === "d_fest");
+if (_fest2) {
+  [
+    { id: "fest_11", boss: "fest_kyo", name: "无尽试炼 · 草薙京", lv: 80, bossTitle: "炎之贵公子", shardKey: "kyoShard", story: "武道馆的火不会熄，来多少次都一样。" },
+    { id: "fest2_11", boss: "fest_k", name: "无尽试炼 · K'", lv: 85, bossTitle: "墨镜下的火焰", shardKey: "kShard", story: "研究所的雾散不掉，他也一直站在那里。" }
+  ].forEach((cfg) => {
+    const first = enemyAt(cfg.boss, cfg.lv);
+    _fest2.stages.push({
+      id: cfg.id, name: cfg.name, lv: cfg.lv, tier: "首领", tierLabel: "首领",
+      bossTitle: cfg.bossTitle, repeat: true,
+      story: cfg.story,
+      scene: cfg.boss === "fest_kyo" ? "草薙流武道馆" : "NESTS 废弃研究所",
+      sceneDesc: cfg.boss === "fest_kyo" ? "木地板被烤得发烫，空气在扭曲。" : "断电的走廊漂着冷雾。",
+      sceneMods: cfg.boss === "fest_kyo" ? { atkPct: 6 } : { spdPct: 5 },
+      weather: cfg.boss === "fest_kyo" ? "heat" : "fog",
+      enemies: [cfg.boss],
+      foe: first,
+      drop: (() => { const o = {}; o[cfg.shardKey] = [8, 20]; return o; })(),
+      themeGear: "", gold: 0, exp: 0
+    });
+  });
+}

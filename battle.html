@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=80746797";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a1f21d01";
 import { makeItem } from "./js/items.js?v=787a70cb";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=1edd1b53";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -987,8 +987,8 @@ function finish() {
   store.flags = store.flags || {};
   store.flags.firstClear = store.flags.firstClear || {};
   const isEvent = String(s.id).indexOf("fest") === 0;
-  const rewardOK = !(isEvent && store.flags.firstClear[s.id]);
-  if (isEvent) store.flags.firstClear[s.id] = 1;
+  const rewardOK = !(isEvent && !s.repeat && store.flags.firstClear[s.id]);
+  if (isEvent && !s.repeat) store.flags.firstClear[s.id] = 1;
   const gold = rewardOK ? (Number(s.gold) || (120 + s.foe.lv * 8)) : 0;
   const exp = rewardOK ? (Number(s.exp) || (40 + s.foe.lv * 6)) : 0;
   store.gold = (Number(store.gold) || 0) + gold;
