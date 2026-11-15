@@ -20,10 +20,13 @@ export function equip(store, charId, itemId) {
   // 🎯 武器专精要求
   if (it.cat === "weapon" && it.data && it.data.req) {
     const need = it.data.req;
+    const starUp = 2 * ((Number(it.data.star) || 1) - 1);
+    const btUp = 3 * (Number(it.data.bt) || 0);
+    const needVal = need.val + starUp + btUp;
     const have = Number(ch[need.key]) || 0;
-    if (have < need.val) {
+    if (have < needVal) {
       const NM = { str: "力量", agi: "敏捷", intel: "智力", tech: "技巧" };
-      return { ok: false, why: "专精不足：" + (NM[need.key] || need.key) + " 需要 " + need.val + "（当前 " + have + "）" };
+      return { ok: false, why: "专精不足：" + (NM[need.key] || need.key) + " 需要 " + needVal + "（基础 " + need.val + " + 星级 " + starUp + " + 突破 " + btUp + "，当前 " + have + "）" };
     }
   }
   // 🛡 防具按身体部位分格：上装 → armor，下装 → armor2
@@ -79,7 +82,6 @@ export function refineApply(store, it) {
 export function promoteCheck(it, store) {
   const d = it && it.data;
   if (!d) return { ok: false, why: "没有装备" };
-  if ((Number(d.bt) || 0) < 1) return { ok: false, why: "先完成 1 次装备突破才能升阶" };
   const haveS = Number((store.flags || {}).shards) || 0;
   const haveG = Number(store.gold) || 0;
   const check = (cost, extra) => {
@@ -126,6 +128,11 @@ export function promoteApply(store, it) {
   }
   const oldRarity = it.data.rarity;
   it.data.rarity = c.next;
+  // 🎯 升阶提高专精要求
+  if (c.action === "promote" && it.cat === "weapon" && it.data.req) {
+    const ADD = { SR: 8, SSR: 10, UR: 12 };
+    it.data.req.val = (Number(it.data.req.val) || 0) + (ADD[c.next] || 8);
+  }
   // ⬆️ 升阶缩放：底子 = 当前基础 ÷ 旧系数，升阶后 = 底子 × 新系数
   if (c.action === "promote" && it.data.main) {
     const oldRm = RARITY_MULT[oldRarity] || 1;
@@ -159,7 +166,6 @@ export function cultCheck(it, kind, store) {
     };
   }
   if (kind === "break") {
-    if ((Number(d.star) || 1) < CULT.maxStar) return { ok: false, why: "升到 5★ 才能突破" };
     const bt = Number(d.bt) || 0;
     const list = CULT.eqBreak || [];
     const cfg = list[bt];
@@ -171,8 +177,6 @@ export function cultCheck(it, kind, store) {
   }
   if (kind === "star") {
     if ((Number(d.star) || 1) >= CULT.maxStar) return { ok: false, why: "已满星" };
-    const needLv = 4 * (Number(d.star) || 1);
-    if ((Number(d.lv) || 1) < needLv) return { ok: false, why: "强化到 Lv" + needLv + " 才能升星" };
     // 🎉 主题限定武器：消耗量与 SSR 相同，但用专属碎片
     if (d.id === "w_kyo") {
       const need = CULT.shardBase * (Number(d.star) || 1);
