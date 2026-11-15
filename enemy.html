@@ -33,7 +33,7 @@ function detail(id, atLv) {
   if (!e0) return;
   const showLv = atLv || lv;
   const e = showLv === 1
-    ? { id: e0.id, name: e0.name, camp: e0.camp, role: e0.role, desc: e0.desc, tier: e0.tier, tags: e0.tags, stats: Math.round ? e0.stats : e0.stats, skills: e0.skills, equip: e0.equip, lv: 1 }
+    ? { id: e0.id, name: e0.name, camp: e0.camp, role: e0.role, desc: e0.desc, tier: e0.tier, tags: e0.tags, stats: Object.assign({}, e0.stats, { critRate: e0.critRate != null ? e0.critRate : (e0.stats.critRate || 5), critDmg: e0.critDmg != null ? e0.critDmg : (e0.stats.critDmg || 150) }), skills: e0.skills, equip: e0.equip, lv: 1 }
     : enemyAt(id, showLv);
   const tint = RARITY_COLOR[e0.tier] || "#8a8ab0";
   const s = e.stats;
