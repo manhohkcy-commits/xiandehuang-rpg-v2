@@ -1066,32 +1066,32 @@ const TOY_RAGE = { w_bubble: [22, 12], w_hammer: [14, 16], w_fan: [14, 20], w_to
   w_thunder2: [18, 12], w_umbra: [22, 10], w_tide: [12, 18] };
 WEAPONS.forEach((w) => { const r = TOY_RAGE[w.id]; if (r) { w.aRage = r[0]; w.sRage = r[1]; } });
 
-// 🛡 SSR 防具 / 饰品（带特化词条，不再只堆白值）
+// 🛡 SSR 防具 / 饰品（主属性 + 特化词条）
 ARMORS.push(
-  { id: "a_dragon", name: "龙鳞战甲", part: "top", rarity: "SSR", main: { hp: 320 }, defPct: 6, dmgCut: 6, thorns: 8, desc: "鳞甲会记住每一次撞击，再还回去。" },
-  { id: "a_sky", name: "苍穹胸甲", part: "top", rarity: "SSR", main: { hp: 300, def: 26 }, resPct: 6, dmgCut: 5, desc: "轻甲里灌了风，法抗意外地好。" },
-  { id: "a_star", name: "星辉法袍", part: "top", rarity: "SSR", main: { hp: 260, res: 20 }, resPct: 10, ragePct: 6, desc: "法袍上的星屑会随怒气变亮。" },
-  { id: "a_umbra", name: "幽影夜行衣", part: "top", rarity: "SSR", main: { hp: 280 }, defPct: 4, spd: 2, critRate: 4, desc: "布料的接缝都藏在暗处。" },
-  { id: "a_dragon_leg", name: "龙鳞战裤", part: "bottom", rarity: "SSR", main: { hp: 240 }, defPct: 4, thorns: 5, desc: "护膝的鳞片最厚。" },
-  { id: "a_sky_leg", name: "苍穹护腿", part: "bottom", rarity: "SSR", main: { hp: 220, def: 18 }, spd: 3, dmgCut: 3, desc: "跑起来几乎没有负担。" },
-  { id: "a_star_leg", name: "星辉法裙", part: "bottom", rarity: "SSR", main: { hp: 230 }, resPct: 8, hpPct: 4, desc: "裙摆流动时会带起微光。" },
-  { id: "a_umbra_leg", name: "幽影绑腿", part: "bottom", rarity: "SSR", main: { hp: 200 }, spd: 4, critRate: 3, desc: "缠得紧，落地无声。" }
+  { id: "a_dragon", name: "龙鳞战甲", part: "top", rarity: "SSR", main: { hp: 400, def: 26 }, defPct: 6, dmgCut: 6, thorns: 8, desc: "鳞甲会记住每一次撞击，再还回去。" },
+  { id: "a_sky", name: "苍穹胸甲", part: "top", rarity: "SSR", main: { hp: 380, def: 30 }, resPct: 6, dmgCut: 5, desc: "轻甲里灌了风，法抗意外地好。" },
+  { id: "a_star", name: "星辉法袍", part: "top", rarity: "SSR", main: { hp: 340, res: 24, def: 14 }, resPct: 10, ragePct: 6, desc: "法袍上的星屑会随怒气变亮。" },
+  { id: "a_umbra", name: "幽影夜行衣", part: "top", rarity: "SSR", main: { hp: 320, def: 18 }, defPct: 4, spd: 2, critRate: 4, desc: "布料的接缝都藏在暗处。" },
+  { id: "a_dragon_leg", name: "龙鳞战裤", part: "bottom", rarity: "SSR", main: { hp: 240, def: 18 }, defPct: 4, thorns: 5, desc: "护膝的鳞片最厚。" },
+  { id: "a_sky_leg", name: "苍穹护腿", part: "bottom", rarity: "SSR", main: { hp: 220, def: 20 }, spd: 3, dmgCut: 3, desc: "跑起来几乎没有负担。" },
+  { id: "a_star_leg", name: "星辉法裙", part: "bottom", rarity: "SSR", main: { hp: 230, res: 18 }, resPct: 8, hpPct: 4, desc: "裙摆流动时会带起微光。" },
+  { id: "a_umbra_leg", name: "幽影绑腿", part: "bottom", rarity: "SSR", main: { hp: 200, def: 12 }, spd: 4, critRate: 3, desc: "缠得紧，落地无声。" }
 );
 ACCESSORIES.push(
-  { id: "c_dragon_fang", name: "龙牙护符", rarity: "SSR", main: { hp: 100 }, atkPct: 6, critDmg: 12, desc: "龙牙会放大出手时的力道。" },
-  { id: "c_star_drop", name: "星辉吊坠", rarity: "SSR", main: { atk: 14 }, resPct: 8, ragePct: 8, desc: "吊坠里的夜空会随着怒气翻涌。" },
-  { id: "c_umbra_mask", name: "幽影面罩", rarity: "SSR", main: {}, spd: 3, critRate: 6, atkPct: 4, desc: "看不见脸，也看不清出手。" },
-  { id: "c_mercy_ring", name: "圣愈指环", rarity: "SSR", main: {}, hpPct: 8, dmgCut: 4, atk: 8, desc: "戴着它，伤口会慢慢合上。" }
+  { id: "c_dragon_fang", name: "龙牙护符", rarity: "SSR", main: { atk: 26, hp: 120 }, atkPct: 6, critDmg: 12, desc: "龙牙会放大出手时的力道。" },
+  { id: "c_star_drop", name: "星辉吊坠", rarity: "SSR", main: { atk: 18, hp: 140 }, resPct: 8, ragePct: 8, desc: "吊坠里的夜空会随着怒气翻涌。" },
+  { id: "c_umbra_mask", name: "幽影面罩", rarity: "SSR", main: { atk: 22, spd: 1 }, spd: 3, critRate: 6, atkPct: 4, desc: "看不见脸，也看不清出手。" },
+  { id: "c_mercy_ring", name: "圣愈指环", rarity: "SSR", main: { hp: 180, atk: 10 }, hpPct: 8, dmgCut: 4, desc: "戴着它，伤口会慢慢合上。" }
 );
 
 // 🎯 专精装：不堆基础四维，走词条特化
 ARMORS.push({
   id: "a_vigil", name: "守夜胸甲", part: "top", rarity: "SSR",
-  main: { hp: 300 }, defPct: 8, resPct: 8, dmgCut: 8, thorns: 10,
+  main: { hp: 260, def: 12 }, defPct: 8, resPct: 8, dmgCut: 8, thorns: 10,
   desc: "不为硬扛而生，为「挨打也要还手」而生。"
 });
 ACCESSORIES.push({
   id: "c_dawn", name: "破晓指环", rarity: "SSR",
-  main: { spd: 2 }, critRate: 12, critDmg: 25, atkPct: 6, ragePct: 8,
+  main: { atk: 16, spd: 1 }, critRate: 12, critDmg: 25, atkPct: 6, ragePct: 8,
   desc: "天将亮时最冷，也最容易一击得手。"
 });
