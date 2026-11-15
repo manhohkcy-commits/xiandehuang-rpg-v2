@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=44b74ce3";
+import { CULT, RARITY_MULT } from "./data.js?v=efb97d70";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
