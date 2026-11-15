@@ -143,6 +143,11 @@ function dungeonListHtml() {
         h += d.stages.map(stageRow).join("");
       }
     }
+    if (d.type === "event") {
+      h += '<div class="hint" style="margin-top:8px;color:#8a8ab0;font-size:11px;border-top:1px dashed #2a3350;padding-top:6px;">' +
+        '🎗 本活动为同人致敬《拳皇》（SNK）之作，非官方内容。' +
+        '</div>';
+    }
     return h + '</div>';
   };
   const daily = all.filter((d) => d.type === "daily");
