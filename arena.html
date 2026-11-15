@@ -69,14 +69,17 @@ let data = { v: 1, players: {} };   // { box: { name, pts, w, l, team:[...] } }
 async function loadArena() {
   try {
     const r = await cloudGet(BOX);
-    if (r && r.store && r.store.players) data = r.store;
+    const s = r && r.store;
+    if (s && s.arena && s.arena.players) data = s.arena;
+    else if (s && s.players) data = s;
   } catch (e) { /* 首次为空 */ }
 }
 
 async function saveArena() {
   let r0 = null;
   try { r0 = await cloudGet(BOX); } catch (e) {}
-  const r = await cloudSave(BOX, data, r0 && r0.updated_at, "竞技场");
+  const payload = { v: 2, items: [], chars: [], msgs: [], arena: data };
+  const r = await cloudSave(BOX, payload, r0 && r0.updated_at, "竞技场");
   if (!r || r.ok === false) throw new Error((r && r.reason) || "云端写入失败");
   return r;
 }
