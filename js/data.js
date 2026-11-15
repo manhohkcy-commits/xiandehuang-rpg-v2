@@ -945,3 +945,30 @@ export const talentPointsOf = (ch) => {
   if (!ch) return 0;
   return Math.max(0, (Number(ch.lv) || 1) - 1) + 2 * Math.max(0, Number(ch.breaks) || 0);
 };
+
+// 🎉 29 庆典：主题限定本（三关挑战）
+const FEST_PLAN = [
+  { lv: 60, ids: ["bx_cent", "bx_ghost1"], name: "庆典 · 精锐仪仗", tier: "特色" },
+  { lv: 70, ids: ["bx_lorne", "bx_seth"], name: "庆典 · 双子主宾", tier: "首领" },
+  { lv: 80, ids: ["mb_tenglong", "mb_ej", "mb_mg"], name: "庆典 · 终场烟花", tier: "首领" }
+];
+const festD = DUNGEONS.find((x) => x.id === "d_fest");
+if (festD) {
+  Object.assign(festD, {
+    name: "29 庆典", icon: "🎉", desc: "29 周年限定挑战：三场庆典演出，产出全素材", type: "event",
+    stages: FEST_PLAN.map((p, i) => {
+      const first = enemyAt(p.ids[0], p.lv);
+      return {
+        id: "fest_" + (i + 1), name: p.name, lv: p.lv, tier: p.tier, tierLabel: p.tier,
+        story: ["仪仗队踏着节拍入场，彩带落了一地。", "两位主宾同时举杯，杯里的东西不太对劲。", "终场烟花升空，三台机械在火光里启动。"][i],
+        scene: "庆典会场", sceneDesc: "挂满灯带与彩旗的会场，烟花不断。",
+        sceneMods: { atkPct: 5 },
+        weather: "night",
+        enemies: p.ids,
+        foe: first,
+        drop: { ms: { ms3: [6, 12] }, md: { md3: [4, 8] }, cert: { cert4: [3, 6] }, stone: [40, 80], refine: [10, 20], shardR: [30, 50], shardSR: [10, 20], shardSSR: [3, 6], gearChance: 40 },
+        gold: 12000 * (i + 1), exp: 4000 * (i + 1)
+      };
+    })
+  });
+}
