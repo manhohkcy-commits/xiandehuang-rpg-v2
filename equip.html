@@ -85,10 +85,9 @@ function detail(it) {
     return w.map((x) => Math.round((total * x) / sum) + "%").join(" + ") + "（共 " + total + "%）";
   };
 
-  const rageLabel = (v, hits) => {
-    const n = Number(hits) || 1;
+  const rageLabel = (v) => {
     const b = Number(v) || 0;
-    return n > 1 ? "回怒 " + b + "/段 × " + n + " 段 = " + Math.round(b * n) : "回怒 " + b;
+    return "回怒 +" + b + "（每次行动一次）";
   };
 
   const SHAPE_TXT = { single: "单个目标", row: "整排敌人", col: "整列敌人", all: "全体敌人", cross: "十字范围" };
@@ -170,6 +169,8 @@ const byTheme = (d) => F.theme === "all" || (F.theme === "limited" ? !!d.limited
     chip("rarity", "all", "全部") + RARITIES.map((r) => chip("rarity", r, r)).join("") +
     '<span style="width:8px;"></span><span class="hint" style="font-size:10.5px;">部位</span>' +
     chip("part", "all", "全部") + chip("part", "top", "上装") + chip("part", "bottom", "下装") +
+    '<span style="width:8px;"></span><span class="hint" style="font-size:10.5px;">主题</span>' +
+    chip("theme", "all", "全部") + chip("theme", "normal", "通用") + chip("theme", "limited", "🎉限定") +
     '</div></div>';
   const RANK = { UR: 4, SSR: 3, SR: 2, R: 1 };
   const CAT_TAG = { weapon: "⚔️ 武器", armor: "🛡️ 防具", accessory: "💍 饰品" };
