@@ -19,7 +19,7 @@
 
 <script type="module">
 import { cloudGet, cacheLoad, esc, fmt, gateLoad } from "./js/core.js?v=13807141";
-import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js?v=f9b6158c";
+import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js?v=17f71e85";
 import { DUNGEONS } from "./js/data.js?v=a52b69d2";
 
 let box = "", store = null, room = null, roomId = "", seq = 0, timer = 0;
@@ -68,6 +68,22 @@ async function pull() {
 
 function startPoll() {
   clearInterval(timer);
+  if ($("btnBroadcast")) $("btnBroadcast").onclick = async () => {
+    try {
+      const got = await getRoom(roomId);
+      if (!got) return toast("房间不存在", true);
+      const room = got.room;
+      const n = Object.keys(room.members || {}).length;
+      const stageName = ($("roomStage") && $("roomStage").selectedOptions[0] && $("roomStage").selectedOptions[0].text) || "副本";
+      const text = "📣 组队：房号 " + roomId + " · " + stageName + " · " + n + "/6 人，缺 " + Math.max(0, 6 - n) + " 人";
+      const CHAT = "__chat";
+      const r = await cloudGet(CHAT);
+      const msgs = ((r && r.store && r.store.msgs) || []).slice(-59);
+      msgs.push({ n: room.host || box, t: text, at: Date.now() });
+      await cloudSave(CHAT, { v: 2, items: [], chars: [], msgs }, r && r.updated_at, "公共聊天");
+      toast("已发到公共频道");
+    } catch (e) { toast("广播失败：" + (e && e.message || e), true); }
+  };
   timer = setInterval(pull, 400);
 }
 
@@ -106,7 +122,7 @@ function render() {
   if (!roomId) {
     view().innerHTML =
       '<div class="card"><div class="card-title">联机房间</div>' +
-        '<div class="hint">房主建房后把房号发给朋友；朋友在下面输入房号加入。最多 4 人。</div>' +
+        '<div class="hint">房主建房后把房号发给朋友；朋友在下面输入房号加入。最多 6 人。</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
           '<button id="btnCreate">🏠 建房</button>' +
           '<input id="joinId" placeholder="房号（6 位）" style="width:130px;">' +
@@ -137,6 +153,7 @@ function render() {
 
   view().innerHTML =
     '<div class="card"><div class="card-title">房间 ' + esc(room.room) + ' · ' + esc(room.phase) + '</div>' +
+      '<button id="btnBroadcast" style="margin:6px 0;border-color:#ffb347;color:#ffb347;">📣 发组队到公共频道</button>' +
       '<div class="hint">房主：' + esc(room.host) + '　|　你是：' + (isHost ? "👑 房主" : "玩家") + '　|　人数 ' + Object.keys(room.members || {}).length + '/4</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
         (isHost ? '<select id="roomStage" style="max-width:280px;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:7px;">' +

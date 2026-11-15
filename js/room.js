@@ -68,7 +68,7 @@ export async function joinRoom(id, box, name) {
   if (!got) return { ok: false, reason: "房间不存在" };
   const room = got.room;
   if (room.phase === "fighting") return { ok: false, reason: "已经开打了" };
-  if (Object.keys(room.members || {}).length >= 4 && !room.members[box]) return { ok: false, reason: "房间满了（最多 4 人）" };
+  if (Object.keys(room.members || {}).length >= 6 && !room.members[box]) return { ok: false, reason: "房间满了（最多 6 人）" };
   room.members = room.members || {};
   room.members[box] = room.members[box] || { name: name || "玩家", side: "B", ready: false };
   const r = await putRoom(room, got.updatedAt);
