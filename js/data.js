@@ -948,10 +948,11 @@ export const talentPointsOf = (ch) => {
 
 // 🎉 26 庆典：主题限定 BOSS 战（每关仅 1 名首领，后续可持续新增）
 const FEST_PLAN = [
-  { lv: 60, id: "fest_lorne", name: "庆典 · 洛恩", story: "洛恩站在庆典舞台中央，笑着抬手：「来，为周年干一杯。」" },
+  { lv: 60, id: "fest_kyo", name: "草薙京", story: "草薙流武道馆里，草薙京活动着手腕：「庆典？先过我这关。」" },
   { lv: 70, id: "bx_seth", name: "庆典 · 赛斯", story: "赛斯从人群里消失，下一秒出现在你身后。" },
   { lv: 80, id: "mb_tenglong", name: "庆典 · 腾龙", story: "终场烟花炸开，腾龙从火光里走了出来。" }
 ];
+const STAGE1_SCENE = "草薙流武道馆", STAGE1_DESC = "木地板、旧匾额，火焰在馆内跳动。";
 const festD = DUNGEONS.find((x) => x.id === "d_fest");
 if (festD) {
   Object.assign(festD, {
@@ -961,7 +962,7 @@ if (festD) {
       return {
         id: "fest_" + (i + 1), name: p.name, lv: p.lv, tier: "首领", tierLabel: "首领",
         story: p.story,
-        scene: "庆典舞台", sceneDesc: "灯带、彩旗、烟花，舞台中央只有一个人。",
+        scene: STAGE1_SCENE, sceneDesc: STAGE1_DESC,
         sceneMods: { atkPct: 5 },
         weather: "night",
         enemies: [p.id],

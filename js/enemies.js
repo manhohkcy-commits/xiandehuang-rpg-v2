@@ -798,3 +798,19 @@ ENEMIES.push({
   ],
   critRate: 6, critDmg: 160
 });
+
+// 🎉 26 庆典 · 第一关：草薙流武道馆 · 草薙京
+ENEMIES.push({
+  id: "fest_kyo", name: "草薙京", camp: "26 庆典", role: "近战", tier: "boss",
+  desc: "草薙流武道馆的馆主，赤炎缠身，出手就是连段。",
+  tags: ["人形", "庆典", "首领", "火焰", "爆发"],
+  stats: { atk: 96, hp: 3000, def: 48, res: 46, spd: 14 },
+  growth: { atk: 0.09, hp: 0.095, def: 0.07, res: 0.065, spd: 0.025 },
+  equip: { weapon: "赤炎拳套", armor: "草薙流道服", armor2: "道服裤", accessory: "草薙之炎" },
+  skills: [
+    { kind: "normal", name: "外式·轰斧", mult: 120, desc: "对单个目标造成 120% 攻击伤害。" },
+    { kind: "skill", name: "百八式·暗拂", mult: 180, cd: 3, desc: "冷却 3 回合：对单个目标造成 180% 攻击伤害，附加灼烧 25%（2 回合）。", burn: 25 },
+    { kind: "ult", name: "大蛇薙", mult: 260, desc: "怒气满时释放：对全体敌人造成 260% 攻击伤害，附加灼烧 30%（2 回合），自身攻击 +20%。", aoe: true, burn: 30, buff: { atkPct: 20 } }
+  ],
+  critRate: 10, critDmg: 175
+});
