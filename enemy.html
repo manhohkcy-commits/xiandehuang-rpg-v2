@@ -16,7 +16,7 @@
   <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
 </div>
 <script type="module">
-import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=a7ba47c3";
+import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=d554e7a4";
 import { DUNGEONS } from "./js/data.js?v=0b723ba4";
 
 const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
@@ -43,7 +43,13 @@ function detail(id, atLv) {
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
   const skRow = (sk) => '<div style="padding:6px 9px;border-bottom:1px solid #1a2438;">' +
     '<div style="display:flex;justify-content:space-between;gap:8px;"><b style="font-size:13px;color:#dbe4f3;">' + esc(sk.name) + '</b>' +
-    '<span style="font-size:10.5px;color:#8fd8ff;">' + (sk.mult ? sk.mult + "%" : "") +
+    '<span style="font-size:10.5px;color:#8fd8ff;">' + (sk.mult ? (() => {
+      const n = Math.max(1, Number(sk.hits) || 1);
+      if (n <= 1) return sk.mult + "%";
+      const w = Array.isArray(sk.segWeights) && sk.segWeights.length === n ? sk.segWeights : Array.from({ length: n }, (_, i) => 0.85 + (0.3 * i) / Math.max(1, n - 1));
+      const total = sk.mult * n, sum = w.reduce((a, b) => a + b, 0) || 1;
+      return w.map((x) => Math.round(total * x / sum) + "%").join(" + ") + "（共 " + total + "%）";
+    })() : "") +
     (sk.kind === "ult" ? ' · 怒气100' : (sk.cd ? ' · CD' + sk.cd : "")) +
     (sk.kind === "ult" ? "" : ' · ⚡回怒 +' + (sk.rage == null ? (sk.kind === "skill" ? 15 : 20) : sk.rage)) + '</span></div>' +
     '<div class="hint" style="margin-top:1px;font-size:10px;color:#7f8aa8;">' +

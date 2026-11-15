@@ -874,7 +874,7 @@ ENEMIES.push({
   tags: ["人形", "庆典", "首领", "火焰", "高速"],
   stats: { atk: 98, hp: 1980, def: 34, res: 32, spd: 15 },
   growth: { atk: 0.095, hp: 0.09, def: 0.065, res: 0.06, spd: 0.03 },
-  equip: { weapon: "暗炎拳套", armor: "黑色皮夹克", armor2: "战术长裤", accessory: "墨镜" },
+  equip: { weapon: "究极热动拳套", armor: "黑色皮夹克", armor2: "战术长裤", accessory: "墨镜" },
   skills: [
     { kind: "normal", name: "刺拳", mult: 115, rage: 20, desc: "对单个目标造成 115% 攻击伤害。" },
     { kind: "skill", name: "扳机", mult: 68, hits: 3, segWeights: [0.85, 1.0, 1.15], cd: 3, rage: 14, desc: "冷却 3 回合：扳机起手贴身连打 → 乌鸦咬挑空 → 追击落下，三段共 204% 攻击伤害，无视格挡。" },
