@@ -664,7 +664,10 @@ async function pullIntents() {
         const mult = it.act === "ult" ? 250 : (it.act === "skill" ? (Number(wp.sMult) || 150) : 100);
         const res = damage(st, who.id, other.id, { atk: who.atk, mult, critRate: who.critRate, critDmg: who.critDmg });
         if (it.act === "ult") who.rage = 0;
-        else who.rage = Math.min(100, (Number(who.rage) || 0) + 25);
+        else {
+          const g2 = it.act === "skill" ? (Number(wp.sRage) || 10) : (Number(wp.aRage) || 20);
+          who.rage = Math.min(100, (Number(who.rage) || 0) + g2);
+        }
         if (it.act === "skill" && wp.hitStatus) {
           addStatus(st, other.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
         }
