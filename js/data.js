@@ -1160,3 +1160,14 @@ if (_fest) {
     });
   });
 }
+
+// 🧹 去重：武器/防具/饰品若已有 main，删除与其重复的顶层白值字段（避免重复计算）
+[].concat(WEAPONS, ARMORS, ACCESSORIES).forEach((x) => {
+  if (!x.main) return;
+  Object.keys(x.main).forEach((k) => {
+    if (x[k] != null && Number(x[k]) === Number(x.main[k])) delete x[k];
+  });
+});
+
+// 🧹 武器一律以 main 为准，删除遗留的顶层 atk
+WEAPONS.forEach((w) => { if (w.main && w.main.atk != null) delete w.atk; });
