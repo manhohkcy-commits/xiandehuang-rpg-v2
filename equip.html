@@ -73,12 +73,16 @@ function detail(it) {
   };
   // 🌊 多段倍率拆分：XX% + YY%（共 ZZZ%）
   const CURVE = { 2: [0.6, 0.4], 3: [0.45, 0.35, 0.2], 4: [0.4, 0.3, 0.2, 0.1], 5: [0.3, 0.25, 0.2, 0.15, 0.1] };
-  const splitMult = (mult, hits) => {
-    const n = Number(hits) || 1;
+  const splitMult = (mult, hits, weights) => {
+    const n = Math.max(1, Number(hits) || 1);
     const m = Number(mult) || 100;
     if (n <= 1) return m + "%";
-    const w = CURVE[n] || Array(n).fill(1 / n);
-    return w.map((x) => Math.round(m * x) + "%").join(" + ") + "（共 " + m + "%）";
+    let w;
+    if (Array.isArray(weights) && weights.length === n) w = weights.slice();
+    else { w = []; for (let i = 0; i < n; i++) w.push(0.85 + (0.3 * i) / Math.max(1, n - 1)); }
+    const total = m * n;
+    const sum = w.reduce((a, b) => a + b, 0) || 1;
+    return w.map((x) => Math.round((total * x) / sum) + "%").join(" + ") + "（共 " + total + "%）";
   };
 
   const rageLabel = (v, hits) => {
@@ -106,7 +110,7 @@ function detail(it) {
       ? skCard("技能", d.sName || "—", "辅助", ["辅助", "CD " + (d.sCd || 3)], "",
         [d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
       : (d.sMult
-        ? skCard("技能", d.sName || "—", splitMult(d.sMult, d.sHits),
+        ? skCard("技能", d.sName || "—", splitMult(d.sMult, d.sHits, d.sSegWeights),
           [SHAPE[d.sShape] || "单体", distTxt, dmgTypeTxt], rageLabel(d.sRage || Math.round((Number(d.aRage) || 25) * 0.6), d.sHits),
           (() => {
             const e = [];
