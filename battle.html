@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a1f21d01";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=e144194a";
 import { makeItem } from "./js/items.js?v=787a70cb";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=1edd1b53";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -392,6 +392,10 @@ function startBattle(stageId, col, row) {
   st = createBattle([
     { id: "me", name: ch ? ch.name : o0.name, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
   ].concat(units));
+  // ♾ 无尽试炼：记录回合与累计伤害
+  if (s.endless) {
+    st.__endless = { rounds: Number(s.rounds) || 10, dmg: 0, maxHp: 0 };
+  }
   st.__waves = restWaves;
   if (extra > 0) {
     const base = foeSpecs.slice(0, 6);
@@ -444,6 +448,10 @@ function startBattle(stageId, col, row) {
     });
   }
   st.__stage = s.id;
+  if (st.__endless) {
+    const boss = st.units.filter((u) => u.side === "B").sort((a, b) => b.maxHp - a.maxHp)[0];
+    st.__endless.maxHp = boss ? boss.maxHp : 1;
+  }
   st.__weapon = ch ? (ch.equip.weapon || null) : (function () { const gw = (ORIGINAL_GEAR[o0.id] || {}).weapon; return gw ? { data: gw } : null; })();
   // 🌦 天气 + 🏞 场地：双方属性叠加
   {
@@ -819,6 +827,7 @@ function doAct(kind) {
     tgts.forEach((t, i) => {
       for (let h = 0; h < uHitsN; h++) {
         const rr = damage(st, "me", t.id, { atk: m.atk, mult: segU[h], critRate: m.critRate, critDmg: m.critDmg });
+        if (st.__endless) st.__endless.dmg += rr.dmg;
         r.dmg += rr.dmg; if (rr.crit) r.crit = true;
       }
       if (i > 0) pushLog("💥 连带命中 " + t.name, "line");
@@ -836,6 +845,7 @@ function doAct(kind) {
     const segPlan = segMults(per * hits, hits, wp.sSegWeights);
     for (let i = 0; i < hits; i++) {
       const rr = damage(st, "me", foe().id, { atk: m.atk, mult: segPlan[i], critRate: m.critRate, critDmg: m.critDmg });
+      if (st.__endless) st.__endless.dmg += rr.dmg;
       r.dmg += rr.dmg; if (rr.crit) r.crit = true;
       segs.push(rr.dmg + (rr.crit ? "💥" : ""));
     }
@@ -857,6 +867,11 @@ function doAct(kind) {
     commit(st, "me");
   }
 
+  if (st.__endless && !st.finished && Number(st.round) > st.__endless.rounds) {
+    st.finished = true; st.winner = "A";
+    pushLog("⏱ 试炼结束：累计伤害 " + Math.round(st.__endless.dmg) + " / " + Math.round(st.__endless.maxHp), "hdr");
+    finish(); renderBattle(); return;
+  }
   if (st.finished) { finish(); renderBattle(); return; }
   if (kind !== "ult") {
     const gain = kind === "skill"
@@ -987,6 +1002,20 @@ function finish() {
   store.flags = store.flags || {};
   store.flags.firstClear = store.flags.firstClear || {};
   const isEvent = String(s.id).indexOf("fest") === 0;
+  // ♾ 无尽试炼：按伤害比例给碎片
+  if (s.endless && st.__endless) {
+    const ratio = Math.max(0, Math.min(1.2, st.__endless.dmg / Math.max(1, st.__endless.maxHp)));
+    const gain = Math.max(2, Math.round(ratio * 40));
+    const key = String(s.id).indexOf("fest2") === 0 ? "kShard" : "kyoShard";
+    const name = key === "kShard" ? "究极热动拳套碎片" : "草薙流古武典碎片";
+    store.flags = store.flags || {};
+    store.flags[key] = (Number(store.flags[key]) || 0) + gain;
+    addReceipt(store, "无尽试炼", s.name, { items: [{ name, count: gain }] });
+    st.__reward = { gold: 0, exp: 0, stage: s.name, drops: [{ name, count: gain }] };
+    pushLog("♾ 伤害比 " + Math.round(ratio * 100) + "% → " + name + " +" + gain, "line");
+    save();
+    return;
+  }
   const rewardOK = !(isEvent && !s.repeat && store.flags.firstClear[s.id]);
   if (isEvent && !s.repeat) store.flags.firstClear[s.id] = 1;
   const gold = rewardOK ? (Number(s.gold) || (120 + s.foe.lv * 8)) : 0;

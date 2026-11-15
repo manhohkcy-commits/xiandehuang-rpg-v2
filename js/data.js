@@ -1236,7 +1236,7 @@ if (_fest2) {
     const first = enemyAt(cfg.boss, cfg.lv);
     _fest2.stages.push({
       id: cfg.id, name: cfg.name, lv: cfg.lv, tier: "首领", tierLabel: "首领",
-      bossTitle: cfg.bossTitle, repeat: true,
+      bossTitle: cfg.bossTitle, repeat: true, endless: true, rounds: 10,
       story: cfg.story,
       scene: cfg.boss === "fest_kyo" ? "草薙流武道馆" : "NESTS 废弃研究所",
       sceneDesc: cfg.boss === "fest_kyo" ? "木地板被烤得发烫，空气在扭曲。" : "断电的走廊漂着冷雾。",
@@ -1244,7 +1244,7 @@ if (_fest2) {
       weather: cfg.boss === "fest_kyo" ? "heat" : "fog",
       enemies: [cfg.boss],
       foe: first,
-      drop: (() => { const o = {}; o[cfg.shardKey] = [8, 20]; return o; })(),
+      drop: {},
       themeGear: "", gold: 0, exp: 0
     });
   });
