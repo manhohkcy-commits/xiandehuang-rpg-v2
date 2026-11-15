@@ -10,7 +10,7 @@
 <div class="wrap">
   <div class="nav"><a href="index.html">← 返回</a><span class="tag">竞技场</span>
     <a href="lobby.html" style="margin-left:auto;">🏛 大厅</a></div>
-  <div id="view"></div>
+  <div id="view"><div class="card"><div class="hint">载入竞技场…</div></div></div>
 </div>
 <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:8px 16px;border-radius:20px;background:#1b2740;border:1px solid #6ea8fe;color:#cfe6ff;display:none;z-index:99;"></div>
 <script type="module">
@@ -103,6 +103,26 @@ async function buildCandidates() {
   } catch (e) {}
 }
 
+function currentChar() {
+  const chars = (store && store.chars) || [];
+  if (chars.length) {
+    const act = chars.find((x) => x.id === store.activeChar) || chars[0];
+    return { name: act.name, lv: act.lv || 1 };
+  }
+  const c0 = candidates[0];
+  return c0 ? { name: c0.name, lv: c0.lv } : null;
+}
+function snapshot() {
+  const chars = (store && store.chars) || [];
+  if (chars.length) {
+    const act = chars.find((x) => x.id === store.activeChar) || chars[0];
+    const f = charFinal(act);
+    return { name: act.name, lv: act.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) };
+  }
+  const c0 = candidates[0];
+  return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd } : null;
+}
+
 function powerOf(team) {
   return team.reduce((s, t) => s + t.atk * 2 + t.hp * 0.5, 0);
 }
@@ -120,7 +140,6 @@ function render() {
   others.sort((a, b) => b.pts - a.pts);
 
   const defender = myTeam[0] || null;
-  const cur = currentChar();
   const pick = defender
     ? '<div class="hint" style="font-size:12px;">' + esc(defender.name) + '（Lv' + defender.lv + '） · 攻击 ' + defender.atk + ' · 生命 ' + defender.hp + '</div>'
     : '<div class="hint">还没布防，点下面按钮即可用当前角色布防</div>';
@@ -154,24 +173,6 @@ function render() {
 }
 
 function bind() {
-  function currentChar() {
-    const chars = (store && store.chars) || [];
-    if (chars.length) {
-      const act = chars.find((x) => x.id === store.activeChar) || chars[0];
-      return { name: act.name, lv: act.lv || 1 };
-    }
-    return candidates[0] || null;
-  }
-  function snapshot() {
-    const chars = (store && store.chars) || [];
-    if (chars.length) {
-      const act = chars.find((x) => x.id === store.activeChar) || chars[0];
-      const f = charFinal(act);
-      return { name: act.name, lv: act.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) };
-    }
-    const c0 = candidates[0];
-    return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd } : null;
-  }
   if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
     const snap = snapshot();
     if (!snap) return toast("没有角色", true);
@@ -205,6 +206,7 @@ function bind() {
 }
 
 (async () => {
+  try {
   store = await loadStore();
   if (!store) {
     $("view").innerHTML = '<div class="card"><div class="card-title">🏟 竞技场</div><div class="hint">没读到存档（位号 ' + esc(me) + '）。先在个人页建角色，再回来布防。</div><div style="margin-top:8px;"><a href="create.html"><button>去个人页</button></a></div></div>';
@@ -217,6 +219,9 @@ function bind() {
   }
   await loadArena();
   render();
+  } catch (e) {
+    document.getElementById("view").innerHTML = '<div class="card"><div class="card-title">竞技场初始化失败</div><div class="hint">' + String(e && e.message || e) + '</div></div>';
+  }
 })();
 </script>
 </body>
