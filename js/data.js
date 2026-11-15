@@ -1171,3 +1171,34 @@ if (_fest) {
 
 // 🧹 武器一律以 main 为准，删除遗留的顶层 atk
 WEAPONS.forEach((w) => { if (w.main && w.main.atk != null) delete w.atk; });
+
+// 📏 压缩品阶数值跨度：高品阶封顶，低品阶托底
+const CAP = {
+  weapon: { R: 38, SR: 56, SSR: 106, UR: 120 },
+  armorHp: { R: 160, SR: 280, SSR: 420, UR: 480 },
+  armorDef: { R: 12, SR: 22, SSR: 36, UR: 42 },
+  accAtk: { R: 9, SR: 15, SSR: 26, UR: 30 }
+};
+const FLOOR = { weapon: { R: 26, SR: 44, SSR: 78 }, armorHp: { R: 90, SR: 180, SSR: 300 }, armorDef: { R: 4, SR: 10, SSR: 16 }, accAtk: { R: 3, SR: 6, SSR: 12 } };
+const clampN = (v, kind, rarity) => {
+  const cap = (CAP[kind] || {})[rarity], fl = (FLOOR[kind] || {})[rarity];
+  let n = Number(v) || 0;
+  if (cap != null) n = Math.min(n, cap);
+  if (fl != null) n = Math.max(n, fl);
+  return Math.round(n);
+};
+WEAPONS.forEach((w) => {
+  if (!w.main) return;
+  Object.keys(w.main).forEach((k) => {
+    if (k === "atk") w.main[k] = clampN(w.main[k], "weapon", w.rarity);
+  });
+});
+ARMORS.forEach((a) => {
+  if (!a.main) return;
+  if (a.main.hp != null) a.main.hp = clampN(a.main.hp, "armorHp", a.rarity);
+  if (a.main.def != null) a.main.def = clampN(a.main.def, "armorDef", a.rarity);
+});
+ACCESSORIES.forEach((c) => {
+  if (!c.main) return;
+  if (c.main.atk != null) c.main.atk = clampN(c.main.atk, "accAtk", c.rarity);
+});
