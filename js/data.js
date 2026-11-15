@@ -11,11 +11,11 @@ export const SLOT_BASE = {
 export const WEAPONS = [
   {
     id: "w_kyo", name: "草薙流古武典", rarity: "SSR", style: "melee",
-    atk: 108, aMult: 115, aHits: 1, uMult: 300,
+    atk: 108, aMult: 115, aHits: 1, uMult: 100,
     desc: "草薙流代代相传的武典，记载着赤炎之拳的完整招式；越战越热，出手便是连段。",
     main: { atk: 108 }, aRage: 28, sRage: 0,
-    aName: "外式·轰斧", uName: "大蛇薙", dmgType: "phys",
-    sName: "百八式·暗拂", sMult: 185, sHits: 1, sCd: 3, sRage: 8, sShape: "single", uShape: "col",
+    aName: "外式·轰斧", uName: "大蛇薙", dmgType: "phys", uHits: 3,
+    sName: "百八式·暗拂", sMult: 95, sHits: 2, sCd: 3, sRage: 8, sShape: "single", uShape: "col",
     critRate: 8, critDmg: 25
   },
 

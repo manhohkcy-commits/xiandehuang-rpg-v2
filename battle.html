@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=c47ef725";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a4e0f1f1";
 import { makeItem } from "./js/items.js?v=5afadc4c";
 import { stagePower, enemyAt } from "./js/enemies.js?v=7ddd117e";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
@@ -748,26 +748,37 @@ function doAct(kind) {
     commit(st, "me");
   } else if (kind === "ult") {
     const frost = st.__isOrig ? (Number(st.__frost) || 0) : 0;
-    const ultMult = ((Number(wp.uMult) || 250) * (Number(wp.uHits) || 1)) * (1 + 0.15 * frost);
+    const ultMult = (Number(wp.uMult) || 250) * (1 + 0.15 * frost);
     const tgt0 = foe();
     const tgts = wp.uShape === "col"
       ? st.units.filter((u) => u.side === "B" && u.hp > 0 && ((u.__col ? 1 : 0) === (tgt0.__col ? 1 : 0)))
       : [tgt0];
+    const uHitsN = Math.max(1, Number(wp.uHits) || 1);
+    const perU = (Number(wp.uMult) || 250);
     let r = { dmg: 0, crit: false };
     tgts.forEach((t, i) => {
-      const rr = damage(st, "me", t.id, { atk: m.atk, mult: ultMult, critRate: m.critRate, critDmg: m.critDmg });
-      r.dmg += rr.dmg; if (rr.crit) r.crit = true;
-      if (i > 0) pushLog("💥 连带命中 " + t.name + " " + rr.dmg, "line");
+      for (let h = 0; h < uHitsN; h++) {
+        const rr = damage(st, "me", t.id, { atk: m.atk, mult: perU, critRate: m.critRate, critDmg: m.critDmg });
+        r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+      }
+      if (i > 0) pushLog("💥 连带命中 " + t.name, "line");
     });
     if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
     pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
     commit(st, "me");
   } else if (kind === "skill") {
-    const mult = (Number(wp.sMult) || 150) * (Number(wp.sHits) || 1);
+    const per = Number(wp.sMult) || 150;
+    const hits = Math.max(1, Number(wp.sHits) || 1);
     const cd = Number(wp.sCd) || 3;
-    const r = damage(st, "me", foe().id, { atk: m.atk, mult, critRate: m.critRate, critDmg: m.critDmg });
-    const subs = ["倍率 " + mult + "% · 攻击 " + Math.round(m.atk) + " → 实际 " + r.dmg + (r.crit ? "（暴击）" : "")];
+    let r = { dmg: 0, crit: false };
+    const segs = [];
+    for (let i = 0; i < hits; i++) {
+      const rr = damage(st, "me", foe().id, { atk: m.atk, mult: per, critRate: m.critRate, critDmg: m.critDmg });
+      r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+      segs.push(rr.dmg + (rr.crit ? "💥" : ""));
+    }
+    const subs = [hits + " 段 × " + per + "% · 合计 " + r.dmg + (r.crit ? "（含暴击）" : "") + (hits > 1 ? " · 分段 " + segs.join(" / ") : "")];
     if (wp.hitStatus && r.dmg > 0) {
       addStatus(st, "foe", wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
