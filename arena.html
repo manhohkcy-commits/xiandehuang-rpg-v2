@@ -119,11 +119,11 @@ function render() {
   const others = Object.keys(data.players).filter((k) => k !== me).map((k) => ({ box: k, ...data.players[k] }));
   others.sort((a, b) => b.pts - a.pts);
 
-  const pick = chars.map((c) => {
-    const on = myTeam.some((t) => t.name === c.name);
-    return '<button data-pick="' + esc(c.name) + '" style="border-color:' + (on ? "#6ea8fe" : "#3a3a5c") + ';' +
-      'color:' + (on ? "#cfe6ff" : "#eaeaea") + ';">' + (on ? "● " : "") + esc(c.name) + ' <span class="hint">Lv' + (c.lv || 1) + '</span></button>';
-  }).join("");
+  const defender = myTeam[0] || null;
+  const cur = currentChar();
+  const pick = defender
+    ? '<div class="hint" style="font-size:12px;">' + esc(defender.name) + '（Lv' + defender.lv + '） · 攻击 ' + defender.atk + ' · 生命 ' + defender.hp + '</div>'
+    : '<div class="hint">还没布防，点下面按钮即可用当前角色布防</div>';
 
   const list = others.length
     ? others.map((o) => {
@@ -138,9 +138,9 @@ function render() {
     '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "尚未布防") + '</div>' +
     '<div class="hint">🪙 竞技币 ' + (rec ? rec.coin || 0 : 0) + ' · 今日挑战 ' + dailyUsed(rec) + '/5</div></div>' +
     '<div class="card"><div class="card-title">🛡 我的防守队</div>' +
-    '<div class="hint">选择 1~4 名角色作为防守阵容（朋友挑战的就是这份快照）</div>' +
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' + (pick || '<div class="hint">还没有角色</div>') + '</div>' +
-    '<button id="btnSaveTeam" style="margin-top:8px;border-color:#ffd666;color:#ffd666;">保存防守队</button></div>' +
+    '<div class="hint">直接用当前角色布防，朋友挑战的就是这份快照</div>' +
+    '<div style="margin-top:6px;">' + pick + '</div>' +
+    '<button id="btnSaveTeam" style="margin-top:8px;border-color:#ffd666;color:#ffd666;">🔄 用当前角色布防</button></div>' +
     '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>' +
     '<div class="card"><div class="card-title">🪙 竞技币兑换</div>' +
     '<div class="row"><span class="k">R 碎片 ×10<div class="hint">30 币</div></span><span class="v"><button data-shop="shardR">兑换</button></span></div>' +
@@ -154,56 +154,32 @@ function render() {
 }
 
 function bind() {
-  document.querySelectorAll("[data-pick]").forEach((b) => b.onclick = () => {
-    const rec = myRec() || { name: myName, pts: 0, w: 0, l: 0, team: [] };
-    const nm = b.dataset.pick;
-    const ch = candidates.find((c) => c.name === nm);
-    if (!ch) return;
-    const idx = rec.team.findIndex((t) => t.name === nm);
-    if (idx >= 0) rec.team.splice(idx, 1);
-    else {
-      if (rec.team.length >= 4) return toast("最多 4 人", true);
-      rec.team.push({ name: ch.name, lv: ch.lv, atk: ch.atk, hp: ch.hp, spd: ch.spd });
+  function currentChar() {
+    const chars = (store && store.chars) || [];
+    if (chars.length) {
+      const act = chars.find((x) => x.id === store.activeChar) || chars[0];
+      return { name: act.name, lv: act.lv || 1 };
     }
-    data.players[me] = rec;
-    render();
-  });
-  document.querySelectorAll("[data-shop]").forEach((b) => b.onclick = async () => {
-    const rec = myRec();
-    if (!rec) return toast("先布防", true);
-    const kind = b.dataset.shop;
-    const PRICE = { shardR: 30, shardSR: 90, shardSSR: 150, gold: 40, boxR: 60, boxSR: 200 };
-    const cost = PRICE[kind] || 0;
-    if ((Number(rec.coin) || 0) < cost) return toast("竞技币不够", true);
-    rec.coin = (Number(rec.coin) || 0) - cost;
-    let msg = "兑换成功";
-    if (kind === "gold") {
-      store.gold = (Number(store.gold) || 0) + 5000;
-      msg = "金币 +5,000";
-    } else if (kind === "boxR" || kind === "boxSR") {
-      const rar = kind === "boxR" ? "R" : "SR";
-      const pool = [].concat(
-        WEAPONS.filter((x) => x.rarity === rar).map((x) => ["weapon", x]),
-        ARMORS.filter((x) => x.rarity === rar).map((x) => ["armor", x]),
-        ACCESSORIES.filter((x) => x.rarity === rar).map((x) => ["accessory", x])
-      );
-      const pickIt = pool[Math.floor(Math.random() * pool.length)];
-      store.items.push(makeItem(pickIt[0], pickIt[1]));
-      msg = "开出：" + pickIt[1].name;
-    } else {
-      const n = kind === "shardR" ? 10 : kind === "shardSR" ? 5 : 2;
-      store.flags[kind] = (Number(store.flags[kind]) || 0) + n;
-      msg = (kind === "shardR" ? "R" : kind === "shardSR" ? "SR" : "SSR") + " 碎片 +" + n;
+    return candidates[0] || null;
+  }
+  function snapshot() {
+    const chars = (store && store.chars) || [];
+    if (chars.length) {
+      const act = chars.find((x) => x.id === store.activeChar) || chars[0];
+      const f = charFinal(act);
+      return { name: act.name, lv: act.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) };
     }
-    data.players[me] = rec;
-    try { await saveStore(); await saveArena(); } catch (e) {}
-    toast(msg);
-    render();
-  });
+    const c0 = candidates[0];
+    return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd } : null;
+  }
   if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
-    const rec = myRec();
-    if (!rec || !rec.team || !rec.team.length) return toast("先选人", true);
-    try { await saveArena(); toast("防守队已保存"); } catch (e) { toast("保存失败", true); }
+    const snap = snapshot();
+    if (!snap) return toast("没有角色", true);
+    const rec = myRec() || { name: myName, pts: 0, w: 0, l: 0, coin: 0, team: [] };
+    rec.team = [snap];
+    rec.name = myName;
+    data.players[me] = rec;
+    try { await saveArena(); render(); toast("已用 " + snap.name + " 布防"); } catch (e) { toast("保存失败", true); }
   };
   document.querySelectorAll("[data-fight]").forEach((b) => b.onclick = async () => {
     const rec = myRec();
