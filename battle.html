@@ -984,8 +984,13 @@ function finish() {
   st.__done = true;
   if (st.winner !== "A") { pushLog("💀 战斗失败"); return; }
   const s = STAGES.find((x) => x.id === st.__stage) || STAGES[0];
-  const gold = Number(s.gold) || (120 + s.foe.lv * 8);
-  const exp = Number(s.exp) || (40 + s.foe.lv * 6);
+  store.flags = store.flags || {};
+  store.flags.firstClear = store.flags.firstClear || {};
+  const isEvent = String(s.id).indexOf("fest") === 0;
+  const rewardOK = !(isEvent && store.flags.firstClear[s.id]);
+  if (isEvent) store.flags.firstClear[s.id] = 1;
+  const gold = rewardOK ? (Number(s.gold) || (120 + s.foe.lv * 8)) : 0;
+  const exp = rewardOK ? (Number(s.exp) || (40 + s.foe.lv * 6)) : 0;
   store.gold = (Number(store.gold) || 0) + gold;
   // 🔓 通关进度（每个副本独立）
   store.flags = store.flags || {};
@@ -997,7 +1002,8 @@ function finish() {
   store.exp = (Number(store.exp) || 0) + exp;
   // 🎁 掉落：碎片必掉、强化石必掉、装备按概率
   const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
-  const dp = s.drop || { shards: [5, 8], stone: [1, 2], gearChance: 5 };
+  const dp = rewardOK ? (s.drop || { shards: [5, 8], stone: [1, 2], gearChance: 5 })
+    : { shards: [0, 0], stone: [0, 0], refine: [0, 0], shardR: [0, 0], shardSR: [0, 0], shardSSR: [0, 0], bstone: 0, kyoShard: [0, 0], kShard: [0, 0], gearChance: 0 };
   const shards = rnd(dp.shards), stone = rnd(dp.stone);
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
@@ -1045,6 +1051,7 @@ function finish() {
   }
   addReceipt(store, "战斗", s.name, { gold, items: drops });
   st.__reward = { gold, exp, stage: s.name, drops };
+  if (!rewardOK) pushLog("🎗 重复挑战：本次没有奖励（活动奖励仅首次通关发放）", "line");
   pushLog("🏆 胜利：金币 +" + gold + " · 经验 +" + exp + " · " + drops.map((d) => d.name + "×" + d.count).join("、"));
   save();
 }
