@@ -598,6 +598,48 @@ const TS = TS_UNITS.map(([id, name, role, tier]) => {
 ENEMIES.push(...TS);
 
 
+
+// 👑 时代广场三大首领
+const TS_BOSSES = [
+  {
+    id: "bx_lorne", name: "曼菲斯特 · 洛恩", camp: "时代广场商业区", role: "辅助",
+    tier: "boss", desc: "商业区的幕后协调者，用增幅与治疗维持整条防线。", tags: ["杂兵"],
+    stats: { atk: 88, hp: 3200, def: 46, res: 44, spd: 10 }, growth: EG,
+    equip: { weapon: "权杖", armor: "典礼长袍", armor2: "缎面长裤", accessory: "协会议徽" },
+    skills: [
+      { kind: "normal", name: "权杖轻击", mult: 100, desc: "普通攻击" },
+      { kind: "skill", name: "增幅祷言", mult: 150, cd: 3, desc: "增幅友军并造成伤害", buff: { atkPct: 25 }, heal: 20 },
+      { kind: "ult", name: "圣愈光爆", mult: 220, desc: "治疗全体并造成伤害", heal: 30, shield: 20 }
+    ],
+    critRate: 5, critDmg: 150
+  },
+  {
+    id: "bx_seth", name: "肯迪良 · 赛斯", camp: "时代广场商业区", role: "输出",
+    tier: "boss", desc: "擅长隐匿与强化的刺客型单位，出手就是致命一击。", tags: ["杂兵"],
+    stats: { atk: 132, hp: 2600, def: 38, res: 30, spd: 13 }, growth: EG,
+    equip: { weapon: "消音刃", armor: "潜行服", armor2: "战术紧身裤", accessory: "隐匿装置" },
+    skills: [
+      { kind: "normal", name: "匕首", mult: 100, desc: "普通攻击" },
+      { kind: "skill", name: "隐匿突袭", mult: 190, cd: 3, desc: "隐身接近后重击", stun: 20 },
+      { kind: "ult", name: "强化斩杀", mult: 300, desc: "强化后的致命一击", buff: { atkPct: 20 } }
+    ],
+    critRate: 10, critDmg: 170
+  },
+  {
+    id: "mb_tenglong", name: "腾龙 · 精改-XIII", camp: "时代广场商业区", role: "机械输出",
+    tier: "boss", desc: "改装到第十三版的腾龙机兵，越打越强，能击碎护甲。", tags: ["杂兵"],
+    stats: { atk: 126, hp: 3400, def: 52, res: 32, spd: 11 }, growth: EG,
+    equip: { weapon: "重炮臂", armor: "腾龙装甲", armor2: "推进组件", accessory: "过载核心" },
+    skills: [
+      { kind: "normal", name: "机炮", mult: 100, desc: "普通攻击" },
+      { kind: "skill", name: "碎甲炮击", mult: 195, cd: 3, desc: "击碎护甲并造成伤害", aoe: true, buff: { atkPct: 15 } },
+      { kind: "ult", name: "过载连射", mult: 290, desc: "过载后的连续射击", aoe: true, burn: 20 }
+    ],
+    critRate: 8, critDmg: 160
+  }
+];
+ENEMIES.push(...TS_BOSSES);
+
 // 🏅 时代广场阶级修正
 const CAVE_TIER_FIX = { bx_cent: "special", bx_ghost1: "special", bx_ghost2: "special", mb_ej: "special", mb_mg: "special" };
 ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });
