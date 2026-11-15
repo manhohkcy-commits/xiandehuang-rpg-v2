@@ -236,7 +236,7 @@ async function loadPlayers() {
     msg.textContent = "共 " + rows.length + " 名玩家角色（同名取战力最高）。";
     list.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
       '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>等级</th><th style="text-align:right;">战力</th></tr>' +
-      rows.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === myBox ? "background:#1b2740;" : "") + '">' +
+      rows.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === (hostMode ? "zynSD117" : box) ? "background:#1b2740;" : "") + '">' +
         '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
         '<td style="font-size:12.5px;"><b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
         '<td style="font-size:11px;color:#8a8ab0;">Lv' + r.lv + '</td>' +
