@@ -1230,8 +1230,8 @@ const remap = (arr, get, set, lo, hi) => {
 const _fest2 = DUNGEONS.find((x) => x.id === "d_fest");
 if (_fest2) {
   [
-    { id: "fest_11", boss: "fest_kyo", name: "无尽试炼 · 草薙京", lv: 80, bossTitle: "炎之贵公子", shardKey: "kyoShard", story: "武道馆的火不会熄，来多少次都一样。" },
-    { id: "fest2_11", boss: "fest_k", name: "无尽试炼 · K'", lv: 85, bossTitle: "墨镜下的火焰", shardKey: "kShard", story: "研究所的雾散不掉，他也一直站在那里。" }
+    { id: "fest_11", boss: "fest_kyo", name: "无尽试炼 · 草薙京", lv: 95, bossTitle: "炎之贵公子", shardKey: "kyoShard", story: "武道馆的火不会熄，来多少次都一样。" },
+    { id: "fest2_11", boss: "fest_k", name: "无尽试炼 · K'", lv: 95, bossTitle: "墨镜下的火焰", shardKey: "kShard", story: "研究所的雾散不掉，他也一直站在那里。" }
   ].forEach((cfg) => {
     const first = enemyAt(cfg.boss, cfg.lv);
     _fest2.stages.push({
