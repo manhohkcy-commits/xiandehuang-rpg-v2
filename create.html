@@ -758,8 +758,8 @@ function renderChar() {
     store.exp -= need; ch.lv += 1;
     ch.tp = (Number(ch.tp) || 0) + 1;
     bumpDaily(store, "levels");
-    ch.free = (Number(ch.free) || 0) + 1;
-    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: "获得 1 点属性点" });
+    if (ch.lv % 5 === 0) ch.free = (Number(ch.free) || 0) + 1;
+    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: ch.lv % 5 === 0 ? "获得 1 点属性点" : "本级无属性点（每 5 级 +1）" });
     await save(); render();
   };
   view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = async () => {
@@ -1756,7 +1756,7 @@ function renderOrig() {
             '</span></div>';
         };
         return line("str", "力量", "str") + line("int", "智力", "intel") + line("tech", "技巧", "tech") + line("agi", "敏捷", "agi") +
-          '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每级 +1）</div>' +
+          '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每 5 级 +1，突破 +3）</div>' +
           '<div class="hint" style="margin-top:2px;">力 +2攻 · 敏 +0.05速 · 智 +1.5抗 · 技 +0.5防</div>';
       })()) +
     card("装备栏",
