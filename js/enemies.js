@@ -640,6 +640,43 @@ const TS_BOSSES = [
 ];
 ENEMIES.push(...TS_BOSSES);
 
+
+// 🎯 时代广场：系列与机械单位的特色差异化
+const TS_TWEAK = {
+  // 冲锋队：更凶但更脆
+  tc_s: { atk: 1.15, def: 0.9, fx: { stun: 15 } },
+  tc_a: { atk: 1.15, def: 0.9, fx: { burn: 20 } },
+  tc_t: { atk: 1.15, def: 0.9, fx: { shield: 10 } },
+  tc_m: { atk: 1.15, def: 0.9, fx: { silence: 22 } },
+  // 精锐巡逻：更硬，带护盾
+  ep_s: { def: 1.15, fx: { shield: 15, stun: 18 } },
+  ep_a: { def: 1.15, fx: { row: true, silence: 12 } },
+  ep_t: { def: 1.15, fx: { shield: 25 } },
+  ep_m: { def: 1.15, fx: { silence: 25, heal: 12 } },
+  // 精锐冲锋：破防 + 追击
+  ec_s: { atk: 1.2, fx: { stun: 25, burn: 12 } },
+  ec_a: { atk: 1.2, fx: { row: true, burn: 18 } },
+  ec_t: { atk: 1.2, fx: { shield: 15, stun: 15 } },
+  ec_m: { atk: 1.2, fx: { silence: 30, aoe: true } },
+  // 机械单位
+  mb_drone: { fx: { row: true, stun: 10 } },
+  mb_drone2: { fx: { aoe: true, silence: 15 } },
+  mb_guard: { fx: { shield: 30 } },
+  mb_hunter: { fx: { stun: 30 } },
+  mb_dove: { fx: { aoe: true, burn: 30 } },
+  mb_ej: { fx: { buff: { atkPct: 25 }, aoe: true } },
+  mb_mg: { fx: { aoe: true, burn: 25, buff: { atkPct: 15 } } }
+};
+ENEMIES.forEach((en) => {
+  const t = TS_TWEAK[en.id];
+  if (!t) return;
+  if (t.atk) en.stats.atk = Math.round(en.stats.atk * t.atk);
+  if (t.def) en.stats.def = Math.round(en.stats.def * t.def);
+  en.skills.forEach((s) => {
+    if (s.kind === "skill" || s.kind === "ult") Object.assign(s, t.fx);
+  });
+});
+
 // 🏅 时代广场阶级修正
 const CAVE_TIER_FIX = { bx_cent: "special", bx_ghost1: "special", bx_ghost2: "special", mb_ej: "special", mb_mg: "special" };
 ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });
