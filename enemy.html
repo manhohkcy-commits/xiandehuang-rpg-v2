@@ -16,7 +16,7 @@
   <div class="foot">敌人档案：单位信息 / 面板数据 / 装备 / 招式组</div>
 </div>
 <script type="module">
-import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=00d5a271";
+import { ENEMIES, enemyAt, enemyPower } from "./js/enemies.js?v=2926cdf8";
 import { DUNGEONS } from "./js/data.js?v=d7bec5be";
 
 const RARITY_COLOR = { normal: "#8a8ab0", elite: "#6ea8fe", special: "#c9a0ff", boss: "#ff6b6b" };
@@ -151,8 +151,6 @@ function render() {
             '<div style="font-size:9.5px;color:#8a8ab0;margin-top:2px;">' + esc(e.faction || e.camp) + ' · ' + esc(e.role) + '</div>' +
             '<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap;">' + (e.tags || []).slice(0, 3).map((t) =>
               '<span style="font-size:9px;color:#8fd8ff;border:1px solid #2a3a55;border-radius:4px;padding:0 4px;">' + esc(t) + '</span>').join("") + '</div>' +
-            '<div style="font-size:10px;color:#ffd666;margin-top:5px;">攻 ' + s.atk + ' · 生 ' + s.hp + '</div>' +
-            '<div style="font-size:10px;color:#9aa4b8;margin-top:2px;">防 ' + s.def + ' · 抗 ' + s.res + ' · 速 ' + s.spd + '</div>' +
             '</button>';
         }).join("") + '</div>')).join("")
       : card("没有结果", '<div class="hint">这个筛选下没有敌人</div>'));

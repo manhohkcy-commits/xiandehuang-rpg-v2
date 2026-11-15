@@ -730,3 +730,30 @@ ENEMIES.forEach((en) => {
 // 🏅 时代广场阶级修正
 const CAVE_TIER_FIX = { bx_cent: "special", bx_ghost1: "special", bx_ghost2: "special", mb_ej: "special", mb_mg: "special" };
 ENEMIES.forEach((x) => { if (CAVE_TIER_FIX[x.id]) x.tier = CAVE_TIER_FIX[x.id]; });
+
+// ✍️ 全敌人：统一招式描述（倍率 + 目标 + 机制 + 冷却）
+const ALL_FX_TEXT = (s) => {
+  const t = [];
+  if (s.stun) t.push("有 " + s.stun + "% 概率眩晕目标 1 回合");
+  if (s.silence) t.push("有 " + s.silence + "% 概率沉默目标 2 回合");
+  if (s.burn) t.push("附加灼烧 " + s.burn + "%（2 回合）");
+  if (s.drain) t.push("回复造成伤害的 " + s.drain + "%");
+  if (s.buff && s.buff.atkPct) t.push("自身攻击 +" + s.buff.atkPct + "%");
+  if (s.heal) t.push("治疗自身 " + s.heal + "% 生命");
+  if (s.shield) t.push("获得 " + s.shield + "% 生命护盾");
+  if (s.summon) t.push("召唤援军");
+  return t;
+};
+ENEMIES.forEach((en) => {
+  (en.skills || []).forEach((s) => {
+    const fx = ALL_FX_TEXT(s);
+    if (s.kind === "normal") {
+      s.desc = "对单个目标造成 " + (s.mult || 100) + "% 攻击伤害。";
+      return;
+    }
+    const head = s.kind === "ult" ? "怒气满时释放：" : "冷却 " + (s.cd || 3) + " 回合：";
+    const target = s.aoe ? "对全体敌人" : s.row ? "对整排敌人" : "对单个目标";
+    s.desc = head + target + "造成 " + (s.mult || 150) + "% 攻击伤害" +
+      (fx.length ? "，" + fx.join("，") : "") + "。";
+  });
+});
