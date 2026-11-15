@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=4b64427a";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=4b5f6c0b";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=98e38d7a";
-import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=4b64427a";
+import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=4b5f6c0b";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=d4a44312";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
 
@@ -758,8 +758,8 @@ function renderChar() {
     store.exp -= need; ch.lv += 1;
     ch.tp = (Number(ch.tp) || 0) + 1;
     bumpDaily(store, "levels");
-    if (ch.lv % 5 === 0) ch.free = (Number(ch.free) || 0) + 1;
-    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: ch.lv % 5 === 0 ? "获得 1 点属性点" : "本级无属性点（每 5 级 +1）" });
+    if (ch.lv % 5 === 0) ch.free = (Number(ch.free) || 0) + 2;
+    addReceipt(store, "升级", ch.name + " → Lv" + ch.lv, { note: ch.lv % 5 === 0 ? "获得 2 点属性点" : "本级无属性点（每 5 级 +2）" });
     await save(); render();
   };
   view().querySelectorAll("[data-attr]").forEach((b) => b.onclick = async () => {
@@ -1756,7 +1756,7 @@ function renderOrig() {
             '</span></div>';
         };
         return line("str", "力量", "str") + line("int", "智力", "intel") + line("tech", "技巧", "tech") + line("agi", "敏捷", "agi") +
-          '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每 5 级 +1，突破 +3）</div>' +
+          '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每 5 级 +2，突破 +5）</div>' +
           '<div class="hint" style="margin-top:2px;">力 +2攻 · 敏 +0.05速 · 智 +1.5抗 · 技 +0.5防</div>';
       })()) +
     card("装备栏",

@@ -797,11 +797,11 @@ export const CHAR = {
 
 // ⚡ 突破节点（v2 定稿）：到点必须先突破才能继续升级
 export const BREAKS = [
-  { at: 20,  capTo: 40,  stone: 10,  gold: 2000,  bonus: 3, points: 3 },
-  { at: 40,  capTo: 60,  stone: 25,  gold: 6000,  bonus: 3, points: 3 },
-  { at: 60,  capTo: 80,  stone: 50,  gold: 14000, bonus: 3, points: 3 },
-  { at: 80,  capTo: 100, stone: 90,  gold: 28000, bonus: 3, points: 3 },
-  { at: 100, capTo: 100, stone: 700, gold: 50000, bonus: 3, points: 3 }
+  { at: 20,  capTo: 40,  stone: 10,  gold: 2000,  bonus: 3, points: 5 },
+  { at: 40,  capTo: 60,  stone: 25,  gold: 6000,  bonus: 3, points: 5 },
+  { at: 60,  capTo: 80,  stone: 50,  gold: 14000, bonus: 3, points: 5 },
+  { at: 80,  capTo: 100, stone: 90,  gold: 28000, bonus: 3, points: 5 },
+  { at: 100, capTo: 100, stone: 700, gold: 50000, bonus: 3, points: 5 }
 ];
 // 📅 日常任务：每天 3 个，跨天重置
 export const DAILY_QUESTS = [
