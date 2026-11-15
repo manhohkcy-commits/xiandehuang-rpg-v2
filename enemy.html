@@ -32,7 +32,9 @@ function detail(id, atLv) {
   const e0 = ENEMIES.find((x) => x.id === id);
   if (!e0) return;
   const showLv = atLv || lv;
-  const e = enemyAt(id, showLv);
+  const e = showLv === 1
+    ? { id: e0.id, name: e0.name, camp: e0.camp, role: e0.role, desc: e0.desc, tier: e0.tier, tags: e0.tags, stats: Math.round ? e0.stats : e0.stats, skills: e0.skills, equip: e0.equip, lv: 1 }
+    : enemyAt(id, showLv);
   const tint = RARITY_COLOR[e0.tier] || "#8a8ab0";
   const s = e.stats;
   const r = (k, v) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
