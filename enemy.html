@@ -44,7 +44,8 @@ function detail(id, atLv) {
   const skRow = (sk) => '<div style="padding:6px 9px;border-bottom:1px solid #1a2438;">' +
     '<div style="display:flex;justify-content:space-between;gap:8px;"><b style="font-size:13px;color:#dbe4f3;">' + esc(sk.name) + '</b>' +
     '<span style="font-size:10.5px;color:#8fd8ff;">' + (sk.mult ? sk.mult + "%" : "") +
-    (sk.kind === "ult" ? ' · 怒气100' : (sk.cd ? ' · CD' + sk.cd : "")) + '</span></div>' +
+    (sk.kind === "ult" ? ' · 怒气100' : (sk.cd ? ' · CD' + sk.cd : "")) +
+    (sk.kind === "ult" ? "" : ' · ⚡回怒 +' + (sk.rage == null ? (sk.kind === "skill" ? 15 : 20) : sk.rage)) + '</span></div>' +
     '<div class="hint" style="margin-top:2px;">' + esc(sk.desc || "") +
     ((() => {
       const fx = [];
