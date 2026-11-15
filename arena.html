@@ -62,6 +62,11 @@ function powerOf(team) {
   return team.reduce((s, t) => s + t.atk * 2 + t.hp * 0.5, 0);
 }
 
+function today() { return new Date().toISOString().slice(0, 10); }
+function dailyUsed(rec) {
+  if (!rec) return 0;
+  return rec.day === today() ? (Number(rec.used) || 0) : 0;
+}
 function render() {
   const chars = (store && store.chars) || [];
   const rec = myRec();
@@ -85,12 +90,18 @@ function render() {
 
   $("view").innerHTML =
     '<div class="card"><div class="card-title">🏟 竞技场</div>' +
-    '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "尚未布防") + '</div></div>' +
+    '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "尚未布防") + '</div>' +
+    '<div class="hint">🪙 竞技币 ' + (rec ? rec.coin || 0 : 0) + ' · 今日挑战 ' + dailyUsed(rec) + '/5</div></div>' +
     '<div class="card"><div class="card-title">🛡 我的防守队</div>' +
     '<div class="hint">选择 1~4 名角色作为防守阵容（朋友挑战的就是这份快照）</div>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' + (pick || '<div class="hint">还没有角色</div>') + '</div>' +
     '<button id="btnSaveTeam" style="margin-top:8px;border-color:#ffd666;color:#ffd666;">保存防守队</button></div>' +
-    '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>';
+    '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>' +
+    '<div class="card"><div class="card-title">🪙 竞技币兑换</div>' +
+    '<div class="row"><span class="k">强化石 ×20<div class="hint">50 竞技币</div></span><span class="v"><button data-shop="stone">兑换</button></span></div>' +
+    '<div class="row"><span class="k">SSR 碎片 ×5<div class="hint">100 竞技币</div></span><span class="v"><button data-shop="ssr">兑换</button></span></div>' +
+    '<div class="row"><span class="k">草薙流古武典碎片 ×10<div class="hint">120 竞技币</div></span><span class="v"><button data-shop="kyo">兑换</button></span></div>' +
+    '</div>';
   bind();
 }
 
@@ -109,6 +120,21 @@ function bind() {
     data.players[me] = rec;
     render();
   });
+  document.querySelectorAll("[data-shop]").forEach((b) => b.onclick = async () => {
+    const rec = myRec();
+    if (!rec) return toast("先布防", true);
+    const kind = b.dataset.shop;
+    const cost = kind === "stone" ? 50 : kind === "ssr" ? 100 : 120;
+    if ((Number(rec.coin) || 0) < cost) return toast("竞技币不够", true);
+    rec.coin = (Number(rec.coin) || 0) - cost;
+    if (kind === "stone") store.flags.stone = (Number(store.flags.stone) || 0) + 20;
+    else if (kind === "ssr") store.flags.shardSSR = (Number(store.flags.shardSSR) || 0) + 5;
+    else store.flags.kyoShard = (Number(store.flags.kyoShard) || 0) + 10;
+    data.players[me] = rec;
+    try { await save(); await saveArena(); } catch (e) {}
+    toast("兑换成功");
+    render();
+  });
   if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
     const rec = myRec();
     if (!rec || !rec.team || !rec.team.length) return toast("先选人", true);
@@ -119,12 +145,16 @@ function bind() {
     if (!rec || !rec.team || !rec.team.length) return toast("先保存防守队", true);
     const foe = data.players[b.dataset.fight];
     if (!foe) return;
+    if (dailyUsed(rec) >= 5) return toast("今日挑战次数已用完（5/5）", true);
+    if (rec.day !== today()) { rec.day = today(); rec.used = 0; }
     const myP = powerOf(rec.team), foeP = powerOf(foe.team || []);
     const luck = 0.85 + Math.random() * 0.3;
     const win = myP * luck >= foeP;
     const pts = win ? 20 : -10;
     rec.pts = Math.max(0, (rec.pts || 0) + pts);
     if (win) rec.w = (rec.w || 0) + 1; else rec.l = (rec.l || 0) + 1;
+    rec.used = dailyUsed(rec) + 1;
+    rec.coin = (Number(rec.coin) || 0) + (win ? 10 : 3);
     foe.pts = Math.max(0, (foe.pts || 0) - (win ? 10 : 0));
     data.players[me] = rec;
     try { await saveArena(); } catch (e) {}
