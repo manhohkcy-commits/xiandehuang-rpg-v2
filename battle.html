@@ -21,9 +21,9 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=f9b6158c";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=251d24ba";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=158ad256";
 import { makeItem } from "./js/items.js?v=5afadc4c";
-import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=5697cc7a";
+import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=d101905c";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=98e38d7a";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=273a02ba";
@@ -718,11 +718,12 @@ function renderBattle() {
 }
 
 // 多段倍率曲线：总和不变，逐段递增
-function segMults(totalMult, hits) {
+function segMults(totalMult, hits, weights) {
   const n = Math.max(1, hits);
-  const raw = [];
-  for (let i = 0; i < n; i++) raw.push(0.85 + (0.3 * i) / Math.max(1, n - 1));
-  const sum = raw.reduce((a, b) => a + b, 0);
+  let raw;
+  if (Array.isArray(weights) && weights.length === n) raw = weights.slice();
+  else { raw = []; for (let i = 0; i < n; i++) raw.push(0.85 + (0.3 * i) / Math.max(1, n - 1)); }
+  const sum = raw.reduce((a, b) => a + b, 0) || 1;
   return raw.map((w) => Math.round((totalMult * w / sum) * 10) / 10);
 }
 
@@ -787,7 +788,7 @@ function doAct(kind) {
     const cd = Number(wp.sCd) || 3;
     let r = { dmg: 0, crit: false };
     const segs = [];
-    const segPlan = segMults(per * hits, hits);
+    const segPlan = segMults(per * hits, hits, wp.sSegWeights);
     for (let i = 0; i < hits; i++) {
       const rr = damage(st, "me", foe().id, { atk: m.atk, mult: segPlan[i], critRate: m.critRate, critDmg: m.critDmg });
       r.dmg += rr.dmg; if (rr.crit) r.crit = true;
@@ -875,9 +876,10 @@ function aiTurnIfNeeded() {
     else if (shape === "row") tgts = alliesA.filter((u) => (u.__row == null ? 1 : u.__row) === meRow);
     else if (shape === "col") tgts = alliesA.filter((u) => ((u.__col ? 1 : 0) === meCol));
     let total = 0, crit = false;
+    const segPlan = segMults(mult * hits, hits, used && used.segWeights);
     tgts.forEach((t) => {
       for (let h = 0; h < hits; h++) {
-        const rr = damage(st, "foe", t.id, { atk: f2.atk, mult, critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
+        const rr = damage(st, "foe", t.id, { atk: f2.atk, mult: segPlan[h], critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
         total += rr.dmg; if (rr.crit) crit = true;
       }
     });

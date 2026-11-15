@@ -848,3 +848,21 @@ ENEMIES.forEach((en) => {
     if (tw.dmgType) s.dmgType = tw.dmgType;
   });
 });
+
+// 🎯 多段权重（立体段伤害：前段轻、后段重）
+const SEG_W = {
+  fest_kyo: [0.8, 1.2],
+  bx_ghost1: [0.7, 1.0, 1.3],
+  bx_ghost2: [0.75, 1.25],
+  mb_hunter: [0.6, 0.9, 1.5],
+  mb_tenglong: [0.7, 0.95, 1.35],
+  ec_a: [0.8, 1.0, 1.2],
+  tp_a: [0.85, 1.15]
+};
+ENEMIES.forEach((en) => {
+  const w = SEG_W[en.id];
+  if (!w) return;
+  (en.skills || []).forEach((s) => {
+    if (Number(s.hits) === w.length) s.segWeights = w;
+  });
+});
