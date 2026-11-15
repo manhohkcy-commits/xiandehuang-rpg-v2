@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲得慌RPG v2 · 竞技场</title>
+<link rel="stylesheet" href="css/app.css?v=e0ed2d33">
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="index.html">← 返回</a><span class="tag">竞技场</span>
+    <a href="lobby.html" style="margin-left:auto;">🏛 大厅</a></div>
+  <div id="view"></div>
+</div>
+<div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:8px 16px;border-radius:20px;background:#1b2740;border:1px solid #6ea8fe;color:#cfe6ff;display:none;z-index:99;"></div>
+<script type="module">
+import { loadSave, save, cloudGet, cloudSave } from "./js/core.js?v=13807141";
+import { charFinal, charPower } from "./js/power.js?v=42e16747";
+
+const BOX = "__arena";
+const me = localStorage.getItem("rpg2:box") || "zynSD117";
+const myName = localStorage.getItem("rpg2:name") || "无名";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let toastT = null;
+function toast(msg, bad) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  t.style.borderColor = bad ? "#ff6b6b" : "#6ea8fe";
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.style.display = "none"; }, 1800);
+}
+
+let store = null;
+let data = { v: 1, players: {} };   // { box: { name, pts, w, l, team:[...] } }
+
+async function loadArena() {
+  try {
+    const r = await cloudGet(BOX);
+    if (r && r.store && r.store.players) data = r.store;
+  } catch (e) { /* 首次为空 */ }
+}
+
+async function saveArena() {
+  const r = await cloudGet(BOX);
+  await cloudSave(BOX, data, r && r.updated_at, "竞技场");
+}
+
+function myRec() {
+  return data.players[me] || null;
+}
+
+function teamOf(chars) {
+  return chars.map((c) => {
+    const f = charFinal(c);
+    return { name: c.name, lv: c.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) };
+  });
+}
+
+function powerOf(team) {
+  return team.reduce((s, t) => s + t.atk * 2 + t.hp * 0.5, 0);
+}
+
+function render() {
+  const chars = (store && store.chars) || [];
+  const rec = myRec();
+  const myTeam = rec ? rec.team : [];
+  const others = Object.keys(data.players).filter((k) => k !== me).map((k) => ({ box: k, ...data.players[k] }));
+  others.sort((a, b) => b.pts - a.pts);
+
+  const pick = chars.map((c) => {
+    const on = myTeam.some((t) => t.name === c.name);
+    return '<button data-pick="' + esc(c.name) + '" style="border-color:' + (on ? "#6ea8fe" : "#3a3a5c") + ';' +
+      'color:' + (on ? "#cfe6ff" : "#eaeaea") + ';">' + (on ? "● " : "") + esc(c.name) + ' <span class="hint">Lv' + (c.lv || 1) + '</span></button>';
+  }).join("");
+
+  const list = others.length
+    ? others.map((o) => {
+      const p = powerOf(o.team || []);
+      return '<div class="row"><span class="k">' + esc(o.name) + '<div class="hint">积分 ' + (o.pts || 0) + ' · ' + (o.w || 0) + "胜 " + (o.l || 0) + '负 · 战力 ' + Math.round(p) + '</div></span>' +
+        '<span class="v"><button data-fight="' + esc(o.box) + '">挑战</button></span></div>';
+    }).join("")
+    : '<div class="hint">还没有其他玩家布防，等朋友进来后就会出现在这里。</div>';
+
+  $("view").innerHTML =
+    '<div class="card"><div class="card-title">🏟 竞技场</div>' +
+    '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "尚未布防") + '</div></div>' +
+    '<div class="card"><div class="card-title">🛡 我的防守队</div>' +
+    '<div class="hint">选择 1~4 名角色作为防守阵容（朋友挑战的就是这份快照）</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' + (pick || '<div class="hint">还没有角色</div>') + '</div>' +
+    '<button id="btnSaveTeam" style="margin-top:8px;border-color:#ffd666;color:#ffd666;">保存防守队</button></div>' +
+    '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>';
+  bind();
+}
+
+function bind() {
+  document.querySelectorAll("[data-pick]").forEach((b) => b.onclick = () => {
+    const rec = myRec() || { name: myName, pts: 0, w: 0, l: 0, team: [] };
+    const nm = b.dataset.pick;
+    const ch = store.chars.find((c) => c.name === nm);
+    if (!ch) return;
+    const idx = rec.team.findIndex((t) => t.name === nm);
+    if (idx >= 0) rec.team.splice(idx, 1);
+    else {
+      if (rec.team.length >= 4) return toast("最多 4 人", true);
+      rec.team.push(teamOf([ch])[0]);
+    }
+    data.players[me] = rec;
+    render();
+  });
+  if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
+    const rec = myRec();
+    if (!rec || !rec.team || !rec.team.length) return toast("先选人", true);
+    try { await saveArena(); toast("防守队已保存"); } catch (e) { toast("保存失败", true); }
+  };
+  document.querySelectorAll("[data-fight]").forEach((b) => b.onclick = async () => {
+    const rec = myRec();
+    if (!rec || !rec.team || !rec.team.length) return toast("先保存防守队", true);
+    const foe = data.players[b.dataset.fight];
+    if (!foe) return;
+    const myP = powerOf(rec.team), foeP = powerOf(foe.team || []);
+    const luck = 0.85 + Math.random() * 0.3;
+    const win = myP * luck >= foeP;
+    const pts = win ? 20 : -10;
+    rec.pts = Math.max(0, (rec.pts || 0) + pts);
+    if (win) rec.w = (rec.w || 0) + 1; else rec.l = (rec.l || 0) + 1;
+    foe.pts = Math.max(0, (foe.pts || 0) - (win ? 10 : 0));
+    data.players[me] = rec;
+    try { await saveArena(); } catch (e) {}
+    toast((win ? "🏆 胜利！+" : "💀 失败…") + pts + " 分", !win);
+    render();
+  });
+}
+
+(async () => {
+  store = await loadSave();
+  if (!store) { $("view").innerHTML = '<div class="card"><div class="hint">没有存档，先建角色</div></div>'; return; }
+  await loadArena();
+  render();
+})();
+</script>
+</body>
+</html>
