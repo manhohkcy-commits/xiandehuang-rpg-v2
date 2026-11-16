@@ -54,24 +54,37 @@ function detail(it, slot) {
   const specRows = ["lifesteal", "ultPct"].filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + "%")).join("");
   const styleTxt = it.style === "ranged" ? "远程" : it.style === "focus" ? "法器" : "近战";
   const dmgTxt = it.dmgType === "spell" ? "法术" : "物理";
+  const styleTxt = it.style === "ranged" ? "远程" : it.style === "focus" ? "法器" : "近战";
+  const dmgTxt = it.dmgType === "spell" ? "法术" : "物理";
   const SHAPE_T = { single: "单体", row: "整排", col: "整列", all: "全体", cross: "十字" };
-  const sk = (label, name, mult, hits, shape, cd, rage, desc) => {
-    const tags = [SHAPE_T[shape] || "单体", styleTxt, dmgTxt, hits > 1 ? "×" + hits + " 段" : "", cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""]
-      .filter(Boolean).join(" · ");
-    return '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:8px 10px;margin-bottom:6px;">' +
+  const chip = (t, kind) => {
+    const C = kind === "cd" ? ["#ffb347", "#4a3a1a", "#1a1408"]
+      : kind === "rage" ? ["#c9a0ff", "#3a2a55", "#140f22"]
+      : ["#8fd8ff", "#22375a", "#0b1424"];
+    return '<span style="font-size:9.5px;color:' + C[0] + ';border:1px solid ' + C[1] + ';background:' + C[2] + ';border-radius:4px;padding:0 5px;">' + esc(t) + '</span>';
+  };
+  const sk = (label, name, mult, hits, shape, cd, rage, desc, kindTxt) => {
+    const chips = [];
+    chips.push(chip(SHAPE_T[shape] || "单体"));
+    chips.push(chip(styleTxt));
+    chips.push(chip(dmgTxt));
+    if (hits > 1) chips.push(chip("×" + hits + " 段"));
+    if (cd) chips.push(chip("CD " + cd, "cd"));
+    if (rage != null) chips.push(chip("回怒 +" + rage, "rage"));
+    if (kindTxt) chips.push(chip(kindTxt, "rage"));
+    return '<div style="background:linear-gradient(180deg,#0e1626,#0a101c);border:1px solid #1c2740;border-radius:10px;padding:8px 10px;margin-bottom:7px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
         '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
-        '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
-      '<div class="hint" style="margin-top:3px;font-size:10.5px;">' + tags + '</div>' +
-      '<div class="hint" style="margin-top:4px;">' +
+        '<span style="font-size:13px;font-weight:800;color:' + rc + ';">' + mult + '</span></div>' +
+      '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px;">' + chips.join("") + '</div>' +
+      '<div style="margin-top:6px;padding:5px 8px;border-left:2px solid #2a3a55;color:#9aa4b8;font-size:11px;line-height:1.45;background:#0a111d;border-radius:0 6px 6px 0;">' +
         esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + mult + " 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" + (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
       '</div></div>';
   };
-  const skills = it.sName
-    ? sec("招式组") +
+  const skills = it.sName ? sec("招式组") +
       sk("普攻", it.aName, (it.aMult || 100) + "%", it.aHits || 1, it.aShape || "single", 0, (Number(it.aRage) || 0), it.aDesc) +
       sk("技能", it.sName, (it.sMult || 150) + "%", it.sHits || 1, it.sShape || "single", it.sCd || 3, (Number(it.sRage) || 0), it.sDesc) +
-      sk("必杀", it.uName, (it.uMult || 250) + "% · 怒气100", it.uHits || 1, it.uShape || "single", 0, null, it.uDesc || it.skillDesc)
+      sk("必杀", it.uName, (it.uMult || 250) + "%", it.uHits || 1, it.uShape || "single", 0, null, it.uDesc || it.skillDesc, "怒气 100")
     : "";
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
