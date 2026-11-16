@@ -294,6 +294,7 @@ async function tryRestore() {
 }
 
 let targetId = null;
+window.__pickTgt = (id) => { targetId = id; try { renderBattle(); } catch (e) {} };
 let prepCol = 0;
 let prepRow = 1;
 function renderPrep(stageId) {
@@ -714,7 +715,7 @@ function gridHtml() {
     const rage = Math.max(0, Math.min(100, Math.round(Number(u.rage) || 0)));
     const isTgt = u.side === "B" && targetId === u.id;
     const clickable = u.side === "B" && !dead;
-    return '<div ' + (clickable ? 'data-target="' + u.id + '" ' : '') + 'style="min-height:72px;border:1px solid ' + (isTgt ? "#ffd666" : (u.side === "A" ? "#3d5a8a" : "#7a3b3b")) + ';border-radius:8px;padding:5px;' + (clickable ? "cursor:pointer;" : "") + (dead ? "opacity:.35;" : "") + (isTgt ? "box-shadow:0 0 0 1px #ffd666 inset;" : "") + '">' +
+    return '<div ' + (clickable ? 'data-target="' + u.id + '" onclick="window.__pickTgt(\'' + u.id + '\')" ' : '') + 'style="min-height:72px;border:1px solid ' + (isTgt ? "#ffd666" : (u.side === "A" ? "#3d5a8a" : "#7a3b3b")) + ';border-radius:8px;padding:5px;' + (clickable ? "cursor:pointer;" : "") + (dead ? "opacity:.35;" : "") + (isTgt ? "box-shadow:0 0 0 1px #ffd666 inset;" : "") + '">' +
       '<div style="font-size:11px;font-weight:700;display:flex;justify-content:space-between;gap:4px;">' + esc(u.name) +
       (rage >= 100 ? '<span style="color:#ffd666;font-size:9px;">必杀</span>' : '') + '</div>' +
       '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
