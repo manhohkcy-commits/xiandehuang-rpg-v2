@@ -920,3 +920,12 @@ ENEMIES.forEach((en) => {
     if (s.buff && s.buffTurns == null) s.buffTurns = en.tier === "boss" ? 3 : 2;
   });
 });
+
+
+// ⚖️ BOSS 节奏调整：血量减半、防御/法抗降 40%（避免一场打不完）
+ENEMIES.forEach((en) => {
+  if (en.tier !== "boss" || !en.stats) return;
+  en.stats.hp = Math.max(200, Math.round((Number(en.stats.hp) || 200) * 0.5));
+  en.stats.def = Math.max(1, Math.round((Number(en.stats.def) || 1) * 0.6));
+  en.stats.res = Math.max(1, Math.round((Number(en.stats.res) || 1) * 0.6));
+});
