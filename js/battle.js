@@ -124,8 +124,10 @@ export function damage(st, atkId, defId, opts = {}) {
   let gRes = (Number(def.res) || 0) * 1.5;
   if (opts.dmgType === "spell") gRes *= 1 - Math.min(80, Number(at.spellPen) || 0) / 100;
   else gDef *= 1 - Math.min(80, Number(at.physPen) || 0) / 100;
+  // 等级缩放的防御常数：低级怪不该吃满减伤，高级怪也不该被无视
+  const K = 90 + 7 * (Number(def.lv) || 1);
   const guard = gDef + gRes;
-  raw *= 1 - Math.min(0.8, guard / (guard + 150));
+  raw *= 1 - Math.min(0.8, guard / (guard + K));
   let dmg = Math.max(1, Math.round(raw));
   // 🛡️ 护盾先吸伤
   const sh = Number(def.shield) || 0;

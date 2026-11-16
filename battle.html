@@ -20,13 +20,13 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
-import { } from "./js/battle.js?v=273a02ba";
+import { } from "./js/battle.js?v=6c3d7562";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=cad789fd";
 import { makeItem } from "./js/items.js?v=a1cdc0e5";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=1edd1b53";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=42e16747";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=0167d36b";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=273a02ba";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=6c3d7562";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
@@ -385,7 +385,7 @@ function startBattle(stageId, col, row) {
     const o = ORIGINALS.find((x) => x.id === id);
     if (!o) return null;
     const ofx = originalFinal(o, {});
-    return { id: "ally" + i, name: o.name, side: "A", spd: ofx.spd, power: ofx.power, hp: ofx.hp, maxHp: ofx.hp,
+    return { id: "ally" + i, name: o.name, lv: 1, side: "A", spd: ofx.spd, power: ofx.power, hp: ofx.hp, maxHp: ofx.hp,
       atk: ofx.atk, def: ofx.def, critRate: ofx.critRate, critDmg: ofx.critDmg, dmgCut: 0, rage: 0, traits: {}, __auto: true };
   }).filter(Boolean);
   units.push(...allies);
@@ -397,7 +397,7 @@ function startBattle(stageId, col, row) {
     for (let k = 0; k < extra; k++) foeSpecs.push(base[k % base.length]);
   }
   st = createBattle([
-    { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
+    { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), lv: ch ? ch.lv : 1, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
   ].concat(units));
   // ♾ 无尽试炼：记录回合与累计伤害
   if (s.endless) {
@@ -991,7 +991,7 @@ function spawnWave() {
   const wave = st.__waves.shift();
   wave.forEach((e, i) => {
     st.units.push({
-      id: "foe_w" + st.__waveNo + "_" + i, name: e.name, side: "B", spd: e.spd, power: 0,
+      id: "foe_w" + st.__waveNo + "_" + i, name: e.name, lv: e.lv || 1, side: "B", spd: e.spd, power: 0,
       hp: e.hp, maxHp: e.hp, atk: e.atk, def: e.def, res: e.res || 0, critRate: 5, critDmg: 150
     });
   });
