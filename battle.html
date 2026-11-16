@@ -309,7 +309,7 @@ function renderPrep(stageId) {
     (() => {
       const cell = (col, row) => {
         const on = prepCol === col && prepRow === row;
-        return '<button data-slot="' + col + ':' + row + '" style="min-height:54px;width:100%;' +
+        return '<button data-slot="' + col + ':' + row + '" style="min-height:78px;width:100%;aspect-ratio:1.9/1;' +
           (on ? 'border-color:#ffb347;color:#ffb347;background:#241a08;' : '') + '">' +
           (on ? '🧑 ' + (activeChar() ? activeChar().name : (hostOrig() || {}).name || "你") : "") + '</button>';
       };
