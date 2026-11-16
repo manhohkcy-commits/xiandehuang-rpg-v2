@@ -1264,3 +1264,38 @@ WEAPONS.forEach((w) => {
   w.aRage = 18 + Math.min(6, Math.round((aM - 100) / 15)) + rb * 2;      // 18~32
   w.sRage = 8 + Math.min(6, Math.round((sM - 120) / 30)) + rb;           // 8~18
 });
+
+
+// ⚖️ 武器倍率平衡：把「20 回合平均每回合倍率」统一到品质目标值
+const WP_TARGET = { R: 150, SR: 178, SSR: 215, UR: 245 };
+WEAPONS.forEach((w) => {
+  const target = WP_TARGET[w.rarity] || 178;
+  const aM = (Number(w.aMult) || 100) * (Number(w.aHits) || 1);
+  const sM = (Number(w.sMult) || 0) * (Number(w.sHits) || 1);
+  const uM = (Number(w.uMult) || 250) * (Number(w.uHits) || 1);
+  const cd = Number(w.sCd) || 3;
+  if (!sM) {
+    // 无技能的 R 阶：普攻 100%，必杀按品质给
+    w.aMult = 100; w.aHits = 1; w.uMult = target; w.uHits = 1;
+    return;
+  }
+  let total = 0;
+  for (let t = 1; t <= 20; t++) {
+    if (t % 5 === 0) total += uM;
+    else if (t % cd === 0) total += sM;
+    else total += aM;
+  }
+  const avg = total / 20 || 1;
+  const k = target / avg;
+  const scale = (v, hits) => {
+    const totalV = v * hits * k;
+    const per = Math.max(20, Math.round(totalV / hits / 5) * 5);
+    return { per, total: per * hits };
+  };
+  const a = scale(Number(w.aMult) || 100, Number(w.aHits) || 1);
+  const s = scale(Number(w.sMult) || 150, Number(w.sHits) || 1);
+  const u = scale(Number(w.uMult) || 250, Number(w.uHits) || 1);
+  w.aMult = a.per;
+  w.sMult = s.per;
+  w.uMult = u.per;
+});
