@@ -62,13 +62,14 @@ function detail(it, slot) {
     return '<span style="font-size:9.5px;color:' + C[0] + ';border:1px solid ' + C[1] + ';background:' + C[2] + ';border-radius:4px;padding:0 5px;">' + esc(t) + '</span>';
   };
   const sk = (label, name, mult, hits, shape, cd, rage, desc, kindTxt, weights) => {
-    let segTxt = "";
+    const per = parseFloat(mult) || 100;
+    let multTxt = mult;
     if (hits > 1) {
-      const total = (parseFloat(mult) || 100) * hits;
+      const total = per * hits;
       let w = Array.isArray(weights) && weights.length === hits ? weights.slice() : [];
       if (!w.length) { w = []; for (let i = 0; i < hits; i++) w.push(0.85 + (0.3 * i) / Math.max(1, hits - 1)); }
       const sum = w.reduce((a, b) => a + b, 0) || 1;
-      segTxt = "分段 " + w.map((x) => Math.round((total * x) / sum) + "%").join(" / ") + "（共 " + Math.round(total) + "%）";
+      multTxt = w.map((x) => Math.round((total * x) / sum) + "%").join(" + ") + "（共 " + Math.round(total) + "%）";
     }
     const chips = [];
     chips.push(chip(SHAPE_T[shape] || "单体"));
@@ -81,11 +82,10 @@ function detail(it, slot) {
     return '<div style="background:linear-gradient(180deg,#0e1626,#0a101c);border:1px solid #1c2740;border-radius:10px;padding:8px 10px;margin-bottom:7px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
         '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
-        '<span style="font-size:13px;font-weight:800;color:' + rc + ';">' + mult + '</span></div>' +
+        '<span style="font-size:12.5px;font-weight:800;color:' + rc + ';text-align:right;">' + multTxt + '</span></div>' +
       '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px;">' + chips.join("") + '</div>' +
-      (segTxt ? '<div class="hint" style="margin-top:5px;font-size:10.5px;color:#8fd8ff;">' + segTxt + '</div>' : "") +
       '<div style="margin-top:6px;padding:5px 8px;border-left:2px solid #2a3a55;color:#9aa4b8;font-size:11px;line-height:1.45;background:#0a111d;border-radius:0 6px 6px 0;">' +
-        esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + mult + " 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" + (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
+        esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + Math.round(per * hits) + "% 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" + (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
       '</div></div>';
   };
   const skills = it.sName ? sec("招式组") +
