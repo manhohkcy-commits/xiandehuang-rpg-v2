@@ -759,7 +759,7 @@ function renderBattle() {
           '招式：' + esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "—") + ' · ' +
           (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '% · 冷却 ' +
           (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sCd) || 2)) + ' 回合 　|　 ' +
-          '必杀 250%，每次行动 +25 怒气 　|　 防御：本回合减伤 +30%，持续到你下次行动' +
+          '必杀 ' + (Number(wp.uMult) || 250) + '%，每次行动 +25 怒气 　|　 防御：本回合减伤 +30%，持续到你下次行动' +
         '</div></div>') +
     '<div class="card"><div class="card-title">战斗日志</div><div class="log">' +
       log.map((l) => l.kind === "hdr"
