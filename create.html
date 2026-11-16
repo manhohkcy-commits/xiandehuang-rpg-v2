@@ -2331,9 +2331,10 @@ function renderShop() {
   const tabBar = '<div class="tree-tabs" style="margin-bottom:10px;">' +
     '<button data-shoptab="store"' + (tab === "store" ? ' class="on"' : '') + '>🏪 便利店</button>' +
     '<button data-shoptab="gear"' + (tab === "gear" ? ' class="on"' : '') + '>⚔️ 装备店</button>' +
+    '<button data-shoptab="cart"' + (tab === "cart" ? ' class="on"' : '') + '>🛒 商车</button>' +
     '</div>';
 
-  const storeHtml = travelerCard() + tabBar +
+  const storeHtml = tabBar +
     (store.flags && store.flags.meal
       ? '<div class="card"><div class="card-title">🍱 已准备</div><div class="hint">' + esc(store.flags.meal.name) + '：' + buffText(store.flags.meal) + '（下一场战斗生效）</div></div>'
       : "") +
@@ -2369,7 +2370,7 @@ function renderShop() {
           }).join("")
         : '<div class="hint">仓库里没有可卖的东西</div>');
 
-  view().innerHTML = tab === "store" ? storeHtml : gearHtml;
+  view().innerHTML = tab === "cart" ? (tabBar + travelerCard()) : (tab === "store" ? storeHtml : gearHtml);
   view().querySelectorAll("[data-shoptab]").forEach((b) => b.onclick = () => {
     window.__shopTab = b.dataset.shoptab;
     render();
