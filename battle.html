@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
 import { } from "./js/battle.js?v=273a02ba";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=a52b69d2";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS } from "./js/data.js?v=cad789fd";
 import { makeItem } from "./js/items.js?v=a1cdc0e5";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=1edd1b53";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=42e16747";
@@ -50,7 +50,14 @@ async function load() {
     return;
   }
   store = g.store; updatedAt = g.updatedAt || "";
-  renderPick();
+  window.addEventListener("error", (e) => {
+  const box = document.createElement("div");
+  box.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#2a1215;border:1px solid #ff6b6b;color:#ffb3b3;padding:8px 10px;border-radius:8px;font-size:11px;";
+  box.textContent = "⚠️ 脚本错误：" + (e.message || e) + " @ " + (e.filename || "") + ":" + (e.lineno || 0);
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 12000);
+});
+renderPick();
 }
 
 async function save() {
@@ -284,7 +291,7 @@ let prepCol = 0;
 let prepRow = 1;
 function renderPrep(stageId) {
   const s = STAGES.find((x) => x.id === stageId);
-  if (!s) return;
+  if (!s) { alert("找不到关卡数据：" + stageId); return; }
   const ch = activeChar();
   const colTxt = (v) => v === 0 ? "前排（受击多、近战优先打你）" : "后排（受击少、远程优先）";
   view().innerHTML =

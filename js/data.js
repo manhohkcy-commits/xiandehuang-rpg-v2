@@ -674,7 +674,7 @@ export const DUNGEONS = [
     }]
   }
 ];
-export const STAGES = DUNGEONS.flatMap((d) => d.stages);
+export let STAGES = DUNGEONS.flatMap((d) => d.stages);
 export const CONSUMABLES = [
   // 🏪 便利店日常货（战前准备：下一场战斗生效；limit = 每日限购）
   { id: "p_rice", name: "饭团", desc: "战前吃：生命 +5%", price: 30, meal: { hpPct: 5 }, limit: 5 },
@@ -1249,3 +1249,7 @@ if (_fest2) {
     });
   });
 }
+
+
+// 🔄 STAGES 重新快照（包含后追加的庆典 / 无尽关）
+STAGES = DUNGEONS.flatMap((d) => d.stages || []);
