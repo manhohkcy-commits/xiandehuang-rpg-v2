@@ -597,7 +597,7 @@ function tickStatuses() {
 }
 
 function me() { return st.units.find((u) => u.id === "me"); }
-function foe() { return st.units.find((u) => u.id === "foe"); }
+function foe() { return st.units.find((u) => u.side === "B" && u.hp > 0) || st.units.find((u) => u.side === "B"); }
 
 function skillBtnHtml(m) {
   const wp = (st.__weapon && st.__weapon.data) || {};
