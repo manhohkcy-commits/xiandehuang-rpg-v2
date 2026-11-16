@@ -99,6 +99,10 @@ async function buildCandidates() {
     });
     return;
   }
+  // 原创角色仅主机端可用；玩家端只能用自建角色
+  let isHostMode = false;
+  try { isHostMode = localStorage.getItem("rpg2:host") === "1"; } catch (e) {}
+  if (!isHostMode) return;
   try {
     const origs = await pullOriginals();
     (origs || []).forEach((o) => {
@@ -221,7 +225,7 @@ function bind() {
   }
   await buildCandidates();
   if (!candidates.length) {
-    $("view").innerHTML = '<div class="card"><div class="card-title">🏟 竞技场</div><div class="hint">这个位号还没有可用的角色（玩家角色或原创角色）。先去建一个，再来竞技场布防。</div><div style="margin-top:8px;"><a href="create.html"><button>去建角色</button></a></div></div>';
+    $("view").innerHTML = '<div class="card"><div class="card-title">🏟 竞技场</div><div class="hint">你还没有角色，先去建一个再来布防。</div><div style="margin-top:8px;"><a href="create.html"><button>去建角色</button></a></div></div>';
     return;
   }
   await loadArena();
