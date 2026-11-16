@@ -2104,7 +2104,7 @@ function renderStore() {
     '<div class="row"><span class="k">突破石</span><span class="v">' + fmt(Number(fl.bstone) || 0) + '</span></div>' + '</div>';
 
   if (!filtered.length) {
-    view().innerHTML = travelerCard() + matCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
+    view().innerHTML = matCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
     bindStoreTool(filtered);
     return;
   }
@@ -2333,7 +2333,7 @@ function renderShop() {
     '<button data-shoptab="gear"' + (tab === "gear" ? ' class="on"' : '') + '>⚔️ 装备店</button>' +
     '</div>';
 
-  const storeHtml = tabBar +
+  const storeHtml = travelerCard() + tabBar +
     (store.flags && store.flags.meal
       ? '<div class="card"><div class="card-title">🍱 已准备</div><div class="hint">' + esc(store.flags.meal.name) + '：' + buffText(store.flags.meal) + '（下一场战斗生效）</div></div>'
       : "") +
