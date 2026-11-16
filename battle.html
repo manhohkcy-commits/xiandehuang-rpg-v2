@@ -696,13 +696,17 @@ async function pullIntents() {
 
 function gridHtml() {
   const cell = (u) => {
-    if (!u) return '<div style="min-height:52px;border:1px dashed #2a3350;border-radius:8px;"></div>';
+    if (!u) return '<div style="min-height:72px;border:1px dashed #2a3350;border-radius:8px;"></div>';
     const dead = u.hp <= 0;
     const pct = Math.max(0, Math.round(u.hp / u.maxHp * 100));
-    return '<div style="min-height:52px;border:1px solid ' + (u.side === "A" ? "#3d5a8a" : "#7a3b3b") + ';border-radius:8px;padding:4px;' + (dead ? "opacity:.35;" : "") + '">' +
-      '<div style="font-size:11px;font-weight:700;">' + esc(u.name) + '</div>' +
+    const rage = Math.max(0, Math.min(100, Math.round(Number(u.rage) || 0)));
+    return '<div style="min-height:72px;border:1px solid ' + (u.side === "A" ? "#3d5a8a" : "#7a3b3b") + ';border-radius:8px;padding:5px;' + (dead ? "opacity:.35;" : "") + '">' +
+      '<div style="font-size:11px;font-weight:700;display:flex;justify-content:space-between;gap:4px;">' + esc(u.name) +
+      (rage >= 100 ? '<span style="color:#ffd666;font-size:9px;">必杀</span>' : '') + '</div>' +
       '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="hint" style="font-size:9.5px;">' + fmt(Math.round(u.hp)) + '</div></div>';
+      '<div style="height:3px;background:#1a1f2e;border-radius:3px;margin-top:2px;overflow:hidden;"><i style="display:block;height:100%;width:' + rage + '%;background:linear-gradient(90deg,#c9a0ff,#ff9bd2);"></i></div>' +
+      '<div class="hint" style="font-size:9px;display:flex;justify-content:space-between;">' +
+      '<span>' + fmt(Math.round(u.hp)) + '</span><span style="color:#c9a0ff;">🔥' + rage + '</span></div></div>';
   };
   const A = st.units.filter((u) => u.side === "A");
   const B = st.units.filter((u) => u.side === "B");
