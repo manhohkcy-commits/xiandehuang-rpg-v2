@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -154,7 +154,7 @@ function render() {
   view().innerHTML =
     '<div class="card"><div class="card-title">房间 ' + esc(room.room) + ' · ' + esc(room.phase) + '</div>' +
       '<button id="btnBroadcast" style="margin:6px 0;border-color:#ffb347;color:#ffb347;">📣 发组队到公共频道</button>' +
-      '<div class="hint">房主：' + esc(room.host) + '　|　你是：' + (isHost ? "👑 房主" : "玩家") + '　|　人数 ' + Object.keys(room.members || {}).length + '/4</div>' +
+      '<div class="hint">房主：' + esc(room.host) + '　|　你是：' + (isHost ? "👑 房主" : "玩家") + '　|　人数 ' + Object.keys(room.members || {}).length + '/6</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
         (isHost ? '<select id="roomStage" style="max-width:280px;background:#0b0e17;border:1px solid #24304a;border-radius:8px;color:#dbe4f3;padding:7px;">' +
           DUNGEONS.filter((d) => d.type === "daily" && d.stages.length).map((d) =>
