@@ -107,7 +107,9 @@ function rewardText(s) {
 }
 
 function dungeonListHtml() {
-  const all = DUNGEONS.filter((d) => (d.type === "daily" || d.type === "event") && d.stages && d.stages.length);
+  const pref = (new URLSearchParams(location.search).get("pref") || "").toLowerCase();
+  const all = DUNGEONS.filter((d) => (d.type === "daily" || d.type === "event") && d.stages && d.stages.length)
+    .filter((d) => !pref || (pref === "daily" ? d.type === "daily" : pref === "event" ? d.type === "event" : true));
   window.__openD = window.__openD || {};
   const renderOne = (d) => {
     const done = Math.min(clearedFor(d.stages[0]), d.stages.length);

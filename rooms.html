@@ -74,7 +74,7 @@ function startPoll() {
       if (!got) return toast("房间不存在", true);
       const room = got.room;
       const n = Object.keys(room.members || {}).length;
-      const stageName = ($("roomStage") && $("roomStage").selectedOptions[0] && $("roomStage").selectedOptions[0].text) || "副本";
+      const stageName = ($("roomPref") && $("roomPref").selectedOptions[0] && $("roomPref").selectedOptions[0].text) || "副本";
       const text = "📣 组队：房号 " + roomId + " · " + stageName + " · " + n + "/6 人，缺 " + Math.max(0, 6 - n) + " 人";
       const CHAT = "__chat";
       const r = await cloudGet(CHAT);
