@@ -110,7 +110,8 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
       '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px;">' + metaTags +
         (rageText ? '<span style="font-size:9.5px;color:#c9a0ff;border:1px solid #3a2a55;background:#140f22;border-radius:4px;padding:0 5px;">' + esc(rageText) + '</span>' : "") +
         (fxTags ? '<span style="width:6px;"></span>' + fxTags : "") + '</div>' +
-      (desc ? '<div style="margin-top:6px;padding:5px 8px;border-left:2px solid #2a3a55;color:#9aa4b8;font-size:11px;line-height:1.45;background:#0a111d;border-radius:0 6px 6px 0;">' + esc(desc) + '</div>' : "") +
+      (desc ? (segTxt ? '<div class="hint" style="margin-top:5px;font-size:10.5px;color:#8fd8ff;">' + segTxt + '</div>' : "") +
+      '<div style="margin-top:6px;padding:5px 8px;border-left:2px solid #2a3a55;color:#9aa4b8;font-size:11px;line-height:1.45;background:#0a111d;border-radius:0 6px 6px 0;">' + esc(desc) + '</div>' : "") +
       '</div>';
   };
 
@@ -125,7 +126,15 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
       : ["#8fd8ff", "#22375a", "#0b1424"];
     return '<span style="font-size:9.5px;color:' + C[0] + ';border:1px solid ' + C[1] + ';background:' + C[2] + ';border-radius:4px;padding:0 5px;">' + esc(t) + '</span>';
   };
-  const sk = (label, name, mult, hits, shape, cd, rage, desc, kindTxt) => {
+  const sk = (label, name, mult, hits, shape, cd, rage, desc, kindTxt, weights) => {
+    let segTxt = "";
+    if (hits > 1) {
+      const total = (parseFloat(mult) || 100) * hits;
+      let w = Array.isArray(weights) && weights.length === hits ? weights.slice() : [];
+      if (!w.length) { w = []; for (let i = 0; i < hits; i++) w.push(0.85 + (0.3 * i) / Math.max(1, hits - 1)); }
+      const sum = w.reduce((a, b) => a + b, 0) || 1;
+      segTxt = "分段 " + w.map((x) => Math.round((total * x) / sum) + "%").join(" / ") + "（共 " + Math.round(total) + "%）";
+    }
     const chips = [];
     chips.push(chip(SHAPE_T[shape] || "单体"));
     chips.push(chip(styleTxt));
@@ -146,8 +155,8 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
   const skill = it.cat !== "weapon" ? mech :
     mech + '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">招式组</div>' +
       sk("普攻", d.aName, (d.aMult || 100) + "%", d.aHits || 1, d.aShape || "single", 0, (Number(d.aRage) || 0), d.aDesc) +
-      sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), d.sDesc) +
-      sk("必杀", d.uName, (d.uMult || 250) + "%", d.uHits || 1, d.uShape || "single", 0, null, d.uDesc || d.skillDesc, "怒气 100");
+      sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), d.sDesc, null, d.sSegWeights) +
+      sk("必杀", d.uName, (d.uMult || 250) + "%", d.uHits || 1, d.uShape || "single", 0, null, d.uDesc || d.skillDesc, "怒气 100", d.uSegWeights);
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
