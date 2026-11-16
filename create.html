@@ -1965,7 +1965,7 @@ function travelerNext(now) {
   if (h < 22) return "营业中（22:00 收摊）";
   return "明天 08:00 开摊";
 }
-function travelerStock() {
+function travelerGen() {
   const now = new Date();
   let seed = Number(String(now.getFullYear()) + String(now.getMonth() + 1) + String(now.getDate()));
   const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483647; return Math.abs(seed); };
@@ -2033,6 +2033,31 @@ function travelerStock() {
   }
   return out;
 }
+function travelerStock() {
+  const day = new Date().toISOString().slice(0, 10);
+  store.flags = store.flags || {};
+  let t = store.flags.traveler;
+  if (!t || t.day !== day) {
+    const gen = travelerGen();
+    t = store.flags.traveler = {
+      day,
+      stock: gen.map((x) => ({ key: x.key, cat: x.cat, id: x.def.id, price: x.price, group: x.group }))
+    };
+    try { save(); } catch (e) {}
+  }
+  const pool = [].concat(
+    WEAPONS.map((d) => ["weapon", d]),
+    ARMORS.map((d) => ["armor", d]),
+    ACCESSORIES.map((d) => ["accessory", d])
+  );
+  const out = [];
+  t.stock.forEach((x) => {
+    const hit = pool.find(([c2, d]) => c2 === x.cat && d.id === x.id);
+    if (hit) out.push({ key: x.key, cat: x.cat, def: hit[1], price: x.price, group: x.group });
+  });
+  return out;
+}
+
 function travelerCard() {
   const open = travelerOpen();
   const stock = travelerStock();
