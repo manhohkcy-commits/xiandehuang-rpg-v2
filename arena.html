@@ -19,6 +19,7 @@ import { charFinal, charPower } from "./js/power.js?v=42e16747";
 import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=9c5cda00";
 import { makeItem } from "./js/items.js?v=a1cdc0e5";
 import { pullOriginals, originalFinal } from "./js/originals.js?v=076cb032";
+import { createRoom } from "./js/room.js?v=17f71e85";
 
 const BOX = "__arena";
 const me = (() => {
@@ -165,7 +166,8 @@ function render() {
   $("view").innerHTML =
     '<div class="card"><div class="card-title">🏟 竞技场</div>' +
     '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "尚未布防") + '</div>' +
-    '<div class="hint">🪙 竞技币 ' + (rec ? rec.coin || 0 : 0) + ' · 今日挑战 ' + dailyUsed(rec) + '/5</div></div>' +
+    '<div class="hint">🪙 竞技币 ' + (rec ? rec.coin || 0 : 0) + ' · 今日挑战 ' + dailyUsed(rec) + '/5</div>' +
+    '<button id="btnRoom" style="margin-top:8px;border-color:#7ee787;color:#7ee787;">🏠 开自定义房切磋（可观战）</button></div>' +
     '<div class="card"><div class="card-title">🛡 我的防守队</div>' +
     '<div class="hint">直接用当前角色布防，朋友挑战的就是这份快照</div>' +
     '<div style="margin-top:6px;">' + pick + '</div>' +
@@ -183,6 +185,13 @@ function render() {
 }
 
 function bind() {
+  if ($("btnRoom")) $("btnRoom").onclick = async () => {
+    try {
+      const r = await createRoom(me, myName);
+      if (!r || !r.ok) return toast("建房失败：" + ((r && r.reason) || "未知"), true);
+      location.href = "rooms.html?room=" + encodeURIComponent(r.id) + "&box=" + encodeURIComponent(me);
+    } catch (e) { toast("建房失败：" + (e && e.message || e), true); }
+  };
   if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
     const snap = snapshot();
     if (!snap) return toast("没有角色", true);
