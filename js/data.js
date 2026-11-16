@@ -11,8 +11,8 @@ export const SLOT_BASE = {
 export const WEAPONS = [
   {
     id: "w_k", name: "究极热动拳套", rarity: "SSR", style: "melee", limited: "26 庆典限定",
-    atk: 104, aMult: 100, aHits: 2, uMult: 240, uHits: 1, uShape: "col",
-    sName: "扳机", sMult: 68, sHits: 3, sSegWeights: [0.85, 1.0, 1.15], sCd: 3, sRage: 14, sShape: "single",
+    atk: 104, aMult: 130, aHits: 1, uMult: 340, uHits: 1, uShape: "col",
+    sName: "扳机", sMult: 93, sHits: 3, sSegWeights: [0.85, 1.0, 1.15], sCd: 3, sRage: 10, sShape: "single",
     aName: "刺拳", uName: "热动", dmgType: "phys",
     main: { atk: 104 }, aRage: 20, critRate: 10, critDmg: 22,
     desc: "缠着赤红火焰的拳套，热动解开手套的那一刻最危险。"
