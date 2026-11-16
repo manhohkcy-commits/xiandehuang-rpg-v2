@@ -364,7 +364,7 @@ function startBattle(stageId, col, row) {
       const goOn = confirm("多人房间读取失败（可能已解散或过期）。\n要改为单人开战吗？");
       if (goOn) { roomId = null; amHost = false; startBattle(stageId, col, row); }
     }).catch((e) => {
-      alert("多人开战出错：" + (e && e.message || e));
+      alert("多人开战出错：" + (e && (e.stack || e.message) || e));
     });
     return;
   }
