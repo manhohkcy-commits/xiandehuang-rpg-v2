@@ -722,6 +722,7 @@ function renderBattle() {
   afterCommit();
   const a = nextActor(st);
   const m = me(), f2 = foe();
+  const wp = (st.__weapon && st.__weapon.data) || {};
   const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—"));
 
   const hpBar = (u) => {
@@ -751,7 +752,7 @@ function renderBattle() {
           '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
             '🥋 ' + (m.cd > 0 ? ('冷却 ' + m.cd + ' 回合') : (esc((st.__weapon && st.__weapon.data && st.__weapon.data.sName) || "招式") + ' ' + (Number((st.__weapon && st.__weapon.data && st.__weapon.data.sMult) || 150)) + '%')) + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 ? 'disabled' : '') + '>' +
-            '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' 250%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
+            '💥 必杀' + ((Number(m.rage) || 0) >= 100 ? ' ' + (Number(wp.uMult) || 250) + '%' : ' ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
           '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>🛡️ 防御</button>' +
         '</div>' +
         '<div class="hint" style="margin-top:8px;line-height:1.8;">' +
