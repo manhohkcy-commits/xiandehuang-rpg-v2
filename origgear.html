@@ -68,6 +68,7 @@ function detail(it, slot) {
       sk("普攻", it.aName, (it.aMult || 100) + "%", it.aHits || 1, it.aShape || "single", 0, it.aRage || 0, it.aDesc || "") +
       sk("技能", it.sName, (it.sMult || 150) + "%", it.sHits || 1, it.sShape || "single", it.sCd || 3, it.sRage || 0, it.sDesc || "") +
       sk("必杀", it.uName, (it.uMult || 250) + "% · 怒气100", it.uHits || 1, it.uShape || "single", 0, null, it.uDesc || it.skillDesc || "")
+    : "";
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
   ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;border:1px solid ' + rc + '66;">' +
