@@ -52,17 +52,22 @@ function detail(it, slot) {
   const subRows = ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"]
     .filter((k) => mk.indexOf(k) < 0 && it[k]).map((k) => row(LBL[k], "+" + it[k] + (UNIT[k] || ""))).join("");
   const specRows = ["lifesteal", "ultPct"].filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + "%")).join("");
-  const sk = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
-    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
-    '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
-    '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
-    (extra ? '<div class="hint" style="margin-top:2px;">' + esc(extra) + '</div>' : "") + '</div>';
+  const SHAPE_T = { single: "单体", row: "整排", col: "整列", all: "全体", cross: "十字" };
+  const sk = (label, name, mult, hits, shape, cd, rage, desc) => {
+    const tags = [hits > 1 ? "×" + hits + " 段" : "1 段", SHAPE_T[shape] || "单体", cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""].filter(Boolean).join(" · ");
+    return '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:8px 10px;margin-bottom:6px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
+        '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
+        '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
+      '<div class="hint" style="margin-top:3px;color:#8fd8ff;font-size:10.5px;">' + tags + '</div>' +
+      (desc ? '<div class="hint" style="margin-top:4px;padding-left:6px;border-left:2px solid #2a3a55;">' + esc(desc) + '</div>' : "") +
+      '</div>';
+  };
   const skills = it.sName
     ? sec("招式组") +
-      sk("普攻", it.aName, (it.aMult || 100) + "%", "") +
-      sk("技能", it.sName, it.sMult + "% · CD" + it.sCd, "回怒 " + (it.sRage || 0)) +
-      sk("必杀", it.uName, it.uMult + "% · 怒气100", it.skillDesc || "")
-    : "";
+      sk("普攻", it.aName, (it.aMult || 100) + "%", it.aHits || 1, it.aShape || "single", 0, it.aRage || 0, it.aDesc || "") +
+      sk("技能", it.sName, (it.sMult || 150) + "%", it.sHits || 1, it.sShape || "single", it.sCd || 3, it.sRage || 0, it.sDesc || "") +
+      sk("必杀", it.uName, (it.uMult || 250) + "% · 怒气100", it.uHits || 1, it.uShape || "single", 0, null, it.uDesc || it.skillDesc || "")
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
   ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;border:1px solid ' + rc + '66;">' +
