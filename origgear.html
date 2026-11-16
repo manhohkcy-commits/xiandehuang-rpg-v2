@@ -54,8 +54,6 @@ function detail(it, slot) {
   const specRows = ["lifesteal", "ultPct"].filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + "%")).join("");
   const styleTxt = it.style === "ranged" ? "远程" : it.style === "focus" ? "法器" : "近战";
   const dmgTxt = it.dmgType === "spell" ? "法术" : "物理";
-  const styleTxt = it.style === "ranged" ? "远程" : it.style === "focus" ? "法器" : "近战";
-  const dmgTxt = it.dmgType === "spell" ? "法术" : "物理";
   const SHAPE_T = { single: "单体", row: "整排", col: "整列", all: "全体", cross: "十字" };
   const chip = (t, kind) => {
     const C = kind === "cd" ? ["#ffb347", "#4a3a1a", "#1a1408"]
