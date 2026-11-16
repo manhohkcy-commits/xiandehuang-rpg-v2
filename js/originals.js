@@ -144,10 +144,10 @@ Object.values(ORIGINAL_GEAR || {}).forEach((gear) => {
   Object.values(gear || {}).forEach((it) => {
     if (!it || !it.name) return;
     if (it.aMult != null) {
-      it.aRage = 18 + Math.min(8, Math.round(((Number(it.aMult) || 100) - 100) / 12));
+      it.aRage = 26 + Math.min(8, Math.round(((Number(it.aMult) || 100) - 100) / 12)) + 4;
     }
     if (it.sMult != null) {
-      it.sRage = 9 + Math.min(8, Math.round(((Number(it.sMult) || 150) - 120) / 25));
+      it.sRage = 14 + Math.min(8, Math.round(((Number(it.sMult) || 150) - 120) / 25)) + 3;
     }
   });
 });
