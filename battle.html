@@ -583,8 +583,7 @@ function afterCommit() {
 }
 
 function tickStatuses() {
-  if (!st) return;  ["me", "foe"].forEach((id) => {
-    const u = st.units.find((x) => x.id === id);
+  if (!st) return;  st.units.forEach((u) => {
     if (!u || u.alive === false) return;
     (u.statuses || []).forEach((s) => {
       if (s.key !== "burn") return;
@@ -859,7 +858,7 @@ function doAct(kind) {
     }
     const subs = [hits + " 段（" + segPlan.join("/") + "%）· 合计 " + r.dmg + (r.crit ? "（含暴击）" : "") + (hits > 1 ? " · 分段 " + segs.join(" / ") : "")];
     if (wp.hitStatus && r.dmg > 0) {
-      addStatus(st, "foe", wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
+      addStatus(st, f2.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
     }
     pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act", subs);
@@ -897,7 +896,7 @@ function aiTurnIfNeeded() {
   if (roomId && amHost) {
     // 联机模式：等对手提交；超时 20 秒由房主代打
     const a0 = nextActor(st);
-    if (a0 && a0.id === "foe" && window.__guestControls) {
+    if (a0 && a0.side === "B" && window.__guestControls) {
       if (!window.__waitSince || window.__waitUnit !== a0.id) { window.__waitSince = Date.now(); window.__waitUnit = a0.id; }
       const waited = Date.now() - window.__waitSince;
       if (waited < 20000) { setTimeout(pullIntents, 350); return; }
@@ -959,16 +958,16 @@ function aiTurnIfNeeded() {
     const segPlan = segMults(mult * hits, hits, used && used.segWeights);
     tgts.forEach((t) => {
       for (let h = 0; h < hits; h++) {
-        const rr = damage(st, "foe", t.id, { atk: f2.atk * atkBuff, mult: segPlan[h], critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
+        const rr = damage(st, f2.id, t.id, { atk: f2.atk * atkBuff, mult: segPlan[h], critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
         total += rr.dmg; if (rr.crit) crit = true;
       }
     });
     if (tgts.length > 1) pushLog("🎯 命中 " + tgts.length + " 个目标", "line");
     const r = { dmg: total, crit };
     pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + (used && used.name ? "「" + used.name + "」" : "") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
-    if (used && used.burn) addStatus(st, "foe", "me", "burn", Number(used.burn) || 20, 2, "灼烧");
-    if (used && used.stun) addStatus(st, "foe", "me", "stun", Number(used.stun) || 20, 1, "眩晕");
-    if (used && used.silence) addStatus(st, "foe", "me", "silence", Number(used.silence) || 20, 2, "沉默");
+    if (used && used.burn) addStatus(st, f2.id, "me", "burn", Number(used.burn) || 20, 2, "灼烧");
+    if (used && used.stun) addStatus(st, f2.id, "me", "stun", Number(used.stun) || 20, 1, "眩晕");
+    if (used && used.silence) addStatus(st, f2.id, "me", "silence", Number(used.silence) || 20, 2, "沉默");
     {
       const th = Number((m.traits || {}).thorns) || 0;
       if (th > 0 && r.dmg > 0 && f2.hp > 0) {
@@ -978,7 +977,7 @@ function aiTurnIfNeeded() {
         pushLog("🌵 反伤 → " + f2.name + " " + refl, "line");
       }
     }
-    commit(st, "foe");
+    commit(st, f2.id);
     busy = false;
     if (st.finished && !spawnWave()) finish();
     renderBattle();
