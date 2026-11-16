@@ -861,6 +861,10 @@ function doAct(kind) {
       if (st.__endless) st.__endless.dmg += rr.dmg;
       r.dmg += rr.dmg; if (rr.crit) r.crit = true;
       segs.push(rr.dmg + (rr.crit ? "💥" : ""));
+      if (st.__isOrig && rr.dmg > 0) {
+        st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1);
+        pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line");
+      }
     }
     const subs = [hits + " 段（" + segPlan.join("/") + "%）· 合计 " + r.dmg + (r.crit ? "（含暴击）" : "") + (hits > 1 ? " · 分段 " + segs.join(" / ") : "")];
     if (wp.hitStatus && r.dmg > 0) {
@@ -872,9 +876,18 @@ function doAct(kind) {
     commit(st, "me");
   } else {
     const aMult = Number(wp.aMult) || 100;
-    const aHits = Number(wp.aHits) || 1;
-    const r = damage(st, "me", foe().id, { atk: m.atk, mult: aMult * aHits, critRate: m.critRate, critDmg: m.critDmg });
-    if (st.__isOrig && r.dmg > 0) { st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1); pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line"); }
+    const aHits = Math.max(1, Number(wp.aHits) || 1);
+    const aSeg = segMults(aMult * aHits, aHits, wp.aSegWeights);
+    let r = { dmg: 0, crit: false };
+    for (let i = 0; i < aHits; i++) {
+      const rr = damage(st, "me", foe().id, { atk: m.atk, mult: aSeg[i], critRate: m.critRate, critDmg: m.critDmg });
+      if (st.__endless) st.__endless.dmg += rr.dmg;
+      r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+      if (st.__isOrig && rr.dmg > 0) {
+        st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1);
+        pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line");
+      }
+    }
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
       ["攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
     commit(st, "me");
