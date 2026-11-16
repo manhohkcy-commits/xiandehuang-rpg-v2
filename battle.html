@@ -357,7 +357,17 @@ function renderPrep(stageId) {
 }
 
 function startBattle(stageId, col, row) {
-  if (roomId && amHost) { buildMultiBattle(stageId); return; }
+  if (roomId && amHost) {
+    // 多人开战失败时给提示并回退单人，避免「点了没反应」
+    buildMultiBattle(stageId).then((ok) => {
+      if (ok) return;
+      const goOn = confirm("多人房间读取失败（可能已解散或过期）。\n要改为单人开战吗？");
+      if (goOn) { roomId = null; amHost = false; startBattle(stageId, col, row); }
+    }).catch((e) => {
+      alert("多人开战出错：" + (e && e.message || e));
+    });
+    return;
+  }
   const ch = activeChar();
   const o0 = !ch ? hostOrig() : null;
   const of = o0 ? originalFinal(o0, {}) : null;
