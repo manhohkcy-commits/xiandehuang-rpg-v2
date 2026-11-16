@@ -1039,8 +1039,10 @@ function finish() {
   store.exp = (Number(store.exp) || 0) + exp;
   // 🎁 掉落：碎片必掉、强化石必掉、装备按概率
   const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
-  const dp = rewardOK ? (s.drop || { shards: [5, 8], stone: [1, 2], gearChance: 5 })
-    : { shards: [0, 0], stone: [0, 0], refine: [0, 0], shardR: [0, 0], shardSR: [0, 0], shardSSR: [0, 0], bstone: 0, kyoShard: [0, 0], kShard: [0, 0], gearChance: 0 };
+  const ZERO = { shards: [0, 0], stone: [0, 0], refine: [0, 0], shardR: [0, 0], shardSR: [0, 0], shardSSR: [0, 0], bstone: 0, kyoShard: [0, 0], kShard: [0, 0], gearChance: 0 };
+  const dp = rewardOK
+    ? Object.assign({}, ZERO, { shards: [5, 8], stone: [1, 2], gearChance: 5 }, s.drop || {})
+    : ZERO;
   const shards = rnd(dp.shards), stone = rnd(dp.stone);
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
