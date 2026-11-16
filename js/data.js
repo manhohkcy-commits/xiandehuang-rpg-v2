@@ -1261,8 +1261,8 @@ WEAPONS.forEach((w) => {
   const rb = RAR_BONUS[w.rarity] || 0;
   const aM = Number(w.aMult) || 100;
   const sM = Number(w.sMult) || 150;
-  w.aRage = 18 + Math.min(6, Math.round((aM - 100) / 15)) + rb * 2;      // 18~32
-  w.sRage = 8 + Math.min(6, Math.round((sM - 120) / 30)) + rb;           // 8~18
+  w.aRage = 26 + Math.min(8, Math.round((aM - 100) / 15)) + rb * 3;      // 26~43
+  w.sRage = 14 + Math.min(8, Math.round((sM - 120) / 30)) + rb * 2;      // 14~28
 });
 
 

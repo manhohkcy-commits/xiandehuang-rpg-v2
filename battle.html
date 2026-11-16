@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
 import { } from "./js/battle.js?v=6c3d7562";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=67d5ef8e";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=9c5cda00";
 import { makeItem } from "./js/items.js?v=a1cdc0e5";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=e13271f7";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=42e16747";
@@ -788,6 +788,9 @@ function renderBattle() {
         : '<div class="act">' + esc(l.text) + (l.subs && l.subs.length ? l.subs.map((x) => '<div class="sub">↳ ' + esc(x) + '</div>').join("") : "") + '</div>'
       ).join("") + '</div></div>';
 
+  view().querySelectorAll("[data-target]").forEach((el) => {
+    el.onclick = () => { targetId = el.dataset.target; renderBattle(); };
+  });
   if ($("btnBack")) $("btnBack").onclick = renderPick;
   if ($("btnAgain")) $("btnAgain").onclick = () => startBattle(st.__stage);
   view().querySelectorAll("[data-act]").forEach((b) => { b.onclick = () => doAct(b.dataset.act); });
