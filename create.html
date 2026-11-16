@@ -2013,11 +2013,17 @@ function travelerGen() {
   // A 区：R~SR（7 格）
   const LOW = [{ r: "R", w: 70 }, { r: "SR", w: 30 }];
   for (let i = 0; i < 3; i++) anyOf(pickRarity(LOW));
-  ["weapon", "armor", "armor", "accessory"].forEach((cat) => {
-    const r = pickRarity(LOW);
-    const pool = all.filter(([c2, d]) => c2 === cat && d.rarity === r && !used.has(d.id));
-    if (pool.length) { const [c2, d] = pool[rnd() % pool.length]; used.add(d.id); out.push({ key: "tr" + (n++), cat: c2, def: d, price: priceOf(c2, r), group: "low" }); }
-  });
+  const slotPick = (cat, part, r) => {
+    const pool = all.filter(([c2, d]) => c2 === cat && d.rarity === r && !used.has(d.id) && (!part || d.part === part));
+    if (!pool.length) return;
+    const [c2, d] = pool[rnd() % pool.length];
+    used.add(d.id);
+    out.push({ key: "tr" + (n++), cat: c2, def: d, price: priceOf(c2, r), group: "low" });
+  };
+  slotPick("weapon", null, pickRarity(LOW));
+  slotPick("armor", "top", pickRarity(LOW));
+  slotPick("armor", "bottom", pickRarity(LOW));
+  slotPick("accessory", null, pickRarity(LOW));
 
   // B 区：SR~SSR（1 固定 SSR + 2 随机，可能缺货）
   const HIGH = [{ r: "SR", w: 75 }, { r: "SSR", w: 25 }];
@@ -2253,7 +2259,11 @@ function shelfOf(store) {
     f.shop = {
       day,
       weapons: pickN(WEAPONS, 3).map((x) => x.id),
-      armors: pickN(ARMORS, 2).map((x) => x.id),
+      armors: (() => {
+        const top = pickN(ARMORS.filter((a) => a.part === "top"), 1)[0];
+        const bot = pickN(ARMORS.filter((a) => a.part === "bottom"), 1)[0];
+        return [top, bot].filter(Boolean).map((x) => x.id);
+      })(),
       accessories: pickN(ACCESSORIES, 2).map((x) => x.id),
       bought: []
     };
