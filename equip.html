@@ -116,16 +116,19 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
 
   const SHAPE_T = { single: "单体", row: "整排", col: "整列", all: "全体", cross: "十字" };
   const sk = (label, name, mult, hits, shape, cd, rage, desc) => {
-    const tags = [hits > 1 ? "×" + hits + " 段" : "1 段", SHAPE_T[shape] || "单体", cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""].filter(Boolean).join(" · ");
+    const tags = [SHAPE_T[shape] || "单体", styleTxt, dmgTxt, hits > 1 ? "×" + hits + " 段" : "", cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""]
+      .filter(Boolean).join(" · ");
     return '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:8px 10px;margin-bottom:6px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
         '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
         '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
-      '<div class="hint" style="margin-top:3px;color:#8fd8ff;font-size:10.5px;">' + tags + '</div>' +
-      '<div class="hint" style="margin-top:4px;padding-left:6px;border-left:2px solid #2a3a55;">' +
+      '<div class="hint" style="margin-top:3px;font-size:10.5px;">' + tags + '</div>' +
+      '<div class="hint" style="margin-top:4px;">' +
         esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + mult + " 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" + (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
       '</div></div>';
   };
+  const styleTxt = d.style === "ranged" ? "远程" : d.style === "focus" ? "法器" : "近战";
+  const dmgTxt = d.dmgType === "spell" ? "法术" : "物理";
   const mech = d.mech ? '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">机制说明</div>' +
     '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px 9px;line-height:1.7;color:#9fb0c8;font-size:11px;">' + esc(d.mech) + '</div>' : "";
   const skill = it.cat !== "weapon" ? mech :
