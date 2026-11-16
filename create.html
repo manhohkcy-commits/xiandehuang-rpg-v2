@@ -1967,37 +1967,69 @@ function travelerNext(now) {
 }
 function travelerStock() {
   const now = new Date();
-  const seed = Number(String(now.getFullYear()) + String(now.getMonth() + 1) + String(now.getDate()));
-  let x = seed;
-  const rnd = () => { x = (x * 1103515245 + 12345) % 2147483647; return Math.abs(x); };
-  const priceOf = (rarity) => (rarity === "SSR" ? 180000 : rarity === "SR" ? 48000 : 7000);
-  const pickFrom = (list) => list[rnd() % list.length];
-  const lowR = (list) => list.filter((d) => d.rarity === "R" || d.rarity === "SR");
-  const out = [];
-  let n = 0;
-  const push = (cat, def, group) => {
-    if (!def) return;
-    out.push({ key: "tr" + (n++), cat, def, price: priceOf(def.rarity), group });
+  let seed = Number(String(now.getFullYear()) + String(now.getMonth() + 1) + String(now.getDate()));
+  const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483647; return Math.abs(seed); };
+  const roll = (p) => (rnd() % 100) < p;
+
+  // 🎲 品质权重（R~SR 货架 / SR~SSR 货架）
+  const pickRarity = (table) => {
+    const total = table.reduce((a, b) => a + b.w, 0);
+    let r = rnd() % total;
+    for (const t of table) { if (r < t.w) return t.r; r -= t.w; }
+    return table[table.length - 1].r;
   };
 
-  // A 区：R~SR（7 格：通用 ×3 + 武器 + 上装 + 下装 + 饰品）
-  const wLow = lowR(WEAPONS), topLow = lowR(ARMORS.filter((a) => a.part === "top"));
-  const botLow = lowR(ARMORS.filter((a) => a.part === "bottom")), accLow = lowR(ACCESSORIES);
-  const allLow = [].concat(wLow.map((d) => ["weapon", d]), topLow.map((d) => ["armor", d]), botLow.map((d) => ["armor", d]), accLow.map((d) => ["accessory", d]));
-  for (let i = 0; i < 3; i++) { const p = pickFrom(allLow); push(p[0], p[1], "low"); }
-  push("weapon", pickFrom(wLow), "low");
-  push("armor", pickFrom(topLow), "low");
-  push("armor", pickFrom(botLow), "low");
-  push("accessory", pickFrom(accLow), "low");
+  // 💰 基价：品质 × 种类（武器最贵，饰品其次，防具最便宜）
+  const BASE = { R: { weapon: 9000, armor: 6000, accessory: 7000 }, SR: { weapon: 52000, armor: 36000, accessory: 42000 }, SSR: { weapon: 210000, armor: 160000, accessory: 180000 } };
+  const float = () => 0.85 + (rnd() % 41) / 100;   // 0.85 ~ 1.25 浮动
+  const priceOf = (cat, rarity) => {
+    const base = ((BASE[rarity] || BASE.R)[cat]) || 8000;
+    return Math.round(base * float() / 500) * 500;
+  };
 
-  // B 区：SR~SSR（1 件固定 SSR + 2 件随机，有概率缺货）
-  const allHigh = [].concat(WEAPONS.filter((d) => d.rarity === "SSR"), ARMORS.filter((d) => d.rarity === "SSR").map((d) => ["armor", d]), ACCESSORIES.filter((d) => d.rarity === "SSR").map((d) => ["accessory", d]));
-  const ssrPool = [].concat(WEAPONS.filter((d) => d.rarity === "SSR").map((d) => ["weapon", d]), ARMORS.filter((d) => d.rarity === "SSR").map((d) => ["armor", d]), ACCESSORIES.filter((d) => d.rarity === "SSR").map((d) => ["accessory", d]));
-  if (ssrPool.length && rnd() % 100 < 70) { const p = pickFrom(ssrPool); push(p[0], p[1], "high"); }
-  const highPool = [].concat(WEAPONS.filter((d) => d.rarity !== "R").map((d) => ["weapon", d]), ARMORS.filter((d) => d.rarity !== "R").map((d) => ["armor", d]), ACCESSORIES.filter((d) => d.rarity !== "R").map((d) => ["accessory", d]));
+  const all = [].concat(
+    WEAPONS.map((d) => ["weapon", d]),
+    ARMORS.map((d) => ["armor", d]),
+    ACCESSORIES.map((d) => ["accessory", d])
+  );
+  const used = new Set();
+  const out = [];
+  let n = 0;
+  const take = (cat, rarity, group) => {
+    const pool = all.filter(([c2, d]) => c2 === cat && d.rarity === rarity && !used.has(d.id));
+    if (!pool.length) return;
+    const [c3, d] = pool[rnd() % pool.length];
+    used.add(d.id);
+    out.push({ key: "tr" + (n++), cat: c3, def: d, price: priceOf(c3, rarity), group });
+  };
+  const anyOf = (rarity) => {
+    const pool = all.filter(([, d]) => d.rarity === rarity && !used.has(d.id));
+    if (!pool.length) return;
+    const [c2, d] = pool[rnd() % pool.length];
+    used.add(d.id);
+    out.push({ key: "tr" + (n++), cat: c2, def: d, price: priceOf(c2, rarity), group: "low" });
+  };
+
+  // A 区：R~SR（7 格）
+  const LOW = [{ r: "R", w: 70 }, { r: "SR", w: 30 }];
+  for (let i = 0; i < 3; i++) anyOf(pickRarity(LOW));
+  ["weapon", "armor", "armor", "accessory"].forEach((cat) => {
+    const r = pickRarity(LOW);
+    const pool = all.filter(([c2, d]) => c2 === cat && d.rarity === r && !used.has(d.id));
+    if (pool.length) { const [c2, d] = pool[rnd() % pool.length]; used.add(d.id); out.push({ key: "tr" + (n++), cat: c2, def: d, price: priceOf(c2, r), group: "low" }); }
+  });
+
+  // B 区：SR~SSR（1 固定 SSR + 2 随机，可能缺货）
+  const HIGH = [{ r: "SR", w: 75 }, { r: "SSR", w: 25 }];
+  if (roll(65)) {
+    const pool = all.filter(([, d]) => d.rarity === "SSR" && !used.has(d.id));
+    if (pool.length) { const [c2, d] = pool[rnd() % pool.length]; used.add(d.id); out.push({ key: "tr" + (n++), cat: c2, def: d, price: priceOf(c2, "SSR"), group: "high" }); }
+  }
   for (let i = 0; i < 2; i++) {
-    if (!highPool.length) break;
-    if (rnd() % 100 < 55) { const p = pickFrom(highPool); push(p[0], p[1], "high"); }
+    if (!roll(60)) continue;
+    const r = pickRarity(HIGH);
+    const pool = all.filter(([, d]) => d.rarity === r && !used.has(d.id));
+    if (pool.length) { const [c2, d] = pool[rnd() % pool.length]; used.add(d.id); out.push({ key: "tr" + (n++), cat: c2, def: d, price: priceOf(c2, r), group: "high" }); }
   }
   return out;
 }
