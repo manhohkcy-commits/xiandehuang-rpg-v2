@@ -57,6 +57,12 @@ async function load() {
   document.body.appendChild(box);
   setTimeout(() => box.remove(), 12000);
 });
+view().addEventListener("click", (e) => {
+  const el = e.target.closest("[data-target]");
+  if (!el) return;
+  targetId = el.dataset.target;
+  renderBattle();
+});
 renderPick();
 }
 
@@ -287,6 +293,7 @@ async function tryRestore() {
   return true;
 }
 
+let targetId = null;
 let prepCol = 0;
 let prepRow = 1;
 function renderPrep(stageId) {
@@ -404,6 +411,7 @@ function startBattle(stageId, col, row) {
     st.__endless = { rounds: Number(s.rounds) || 10, dmg: 0, maxHp: 0 };
   }
   st.__waves = restWaves;
+  targetId = null;
   if (extra > 0) {
     const base = foeSpecs.slice(0, 6);
     for (let k = 0; k < extra; k++) {
@@ -596,7 +604,11 @@ function tickStatuses() {
 }
 
 function me() { return st.units.find((u) => u.id === "me"); }
-function foe() { return st.units.find((u) => u.side === "B" && u.hp > 0) || st.units.find((u) => u.side === "B"); }
+function foe() {
+  const sel = targetId ? st.units.find((u) => u.id === targetId && u.side === "B" && u.hp > 0) : null;
+  if (sel) return sel;
+  return st.units.find((u) => u.side === "B" && u.hp > 0) || st.units.find((u) => u.side === "B");
+}
 
 function skillBtnHtml(m) {
   const wp = (st.__weapon && st.__weapon.data) || {};
@@ -700,7 +712,9 @@ function gridHtml() {
     const dead = u.hp <= 0;
     const pct = Math.max(0, Math.round(u.hp / u.maxHp * 100));
     const rage = Math.max(0, Math.min(100, Math.round(Number(u.rage) || 0)));
-    return '<div style="min-height:72px;border:1px solid ' + (u.side === "A" ? "#3d5a8a" : "#7a3b3b") + ';border-radius:8px;padding:5px;' + (dead ? "opacity:.35;" : "") + '">' +
+    const isTgt = u.side === "B" && targetId === u.id;
+    const clickable = u.side === "B" && !dead;
+    return '<div ' + (clickable ? 'data-target="' + u.id + '" ' : '') + 'style="min-height:72px;border:1px solid ' + (isTgt ? "#ffd666" : (u.side === "A" ? "#3d5a8a" : "#7a3b3b")) + ';border-radius:8px;padding:5px;' + (clickable ? "cursor:pointer;" : "") + (dead ? "opacity:.35;" : "") + (isTgt ? "box-shadow:0 0 0 1px #ffd666 inset;" : "") + '">' +
       '<div style="font-size:11px;font-weight:700;display:flex;justify-content:space-between;gap:4px;">' + esc(u.name) +
       (rage >= 100 ? '<span style="color:#ffd666;font-size:9px;">必杀</span>' : '') + '</div>' +
       '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
