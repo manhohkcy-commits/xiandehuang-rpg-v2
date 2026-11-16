@@ -114,18 +114,25 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
       '</div>';
   };
 
-  const skLine = (txt) => '<div class="hint" style="margin:-2px 0 8px 6px;color:#9aa4b8;font-size:10.5px;">' + esc(txt) + '</div>';
-  const skill = it.cat !== "weapon" ? "" :
-    '<div class="hint" style="margin:12px 0 5px;font-weight:700;color:#8fd8ff;letter-spacing:1px;">招式组</div>' +
-    skCard("普攻", d.aName || "", splitMult(Number(d.aMult) || 100, d.aHits), [SHAPE[d.aShape] || "单体", styleText, d.dmgType === "spell" ? "法术" : "物理"], rageLabel(d.aRage), []) +
-    skLine(skDesc(d, "normal", d.aMult, d.aHits)) +
-    (d.sSupport
-      ? skCard("技能", d.sName || "—", "辅助", ["辅助", "CD " + (d.sCd || 3)], "", [d.sSupport === "heal" ? "治疗" : d.sSupport === "shield" ? "护盾" : d.sSupport === "buff" ? "增益" : "驱散"])
-      : (d.sMult
-        ? skCard("技能", d.sName || "—", splitMult(d.sMult, d.sHits, d.sSegWeights), [SHAPE[d.sShape] || "单体", styleText, d.dmgType === "spell" ? "法术" : "物理"], rageLabel(d.sRage || Math.round((Number(d.aRage) || 25) * 0.6)), (() => { const fx = []; if (d.sCd) fx.push("CD " + d.sCd); if (d.sunderBoost) fx.push("破防 " + d.sunderBoost); if (d.penetrate) fx.push("穿透 " + d.penetrate + "%"); if (d.stun) fx.push("眩晕 " + d.stun + "%"); if (d.freeze) fx.push("冰冻"); if (d.silence) fx.push("沉默"); if (d.burn) fx.push("灼烧"); return fx; })()) + skLine(skDesc(d, "skill", d.sMult, d.sHits, d.sCd))
-        : skCard("技能", "", "—", ["R 阶没有技能"], "", []))) +
-    skCard("必杀", d.uName || "", splitMult(Number(d.uMult) || 250, d.uHits), [SHAPE[d.uShape] || "单体", styleText, d.dmgType === "spell" ? "法术" : "物理"], "怒气 100", (() => { const fx = []; if (d.burn) fx.push("灼烧"); if (d.stun) fx.push("眩晕"); return fx; })()) +
-    skLine(skDesc(d, "ult", d.uMult, d.uHits));
+  const SHAPE_T = { single: "单体", row: "整排", col: "整列", all: "全体", cross: "十字" };
+  const sk = (label, name, mult, hits, shape, cd, rage, desc) => {
+    const tags = [hits > 1 ? "×" + hits + " 段" : "1 段", SHAPE_T[shape] || "单体", cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""].filter(Boolean).join(" · ");
+    return '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:8px 10px;margin-bottom:6px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">' +
+        '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
+        '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
+      '<div class="hint" style="margin-top:3px;color:#8fd8ff;font-size:10.5px;">' + tags + '</div>' +
+      '<div class="hint" style="margin-top:4px;padding-left:6px;border-left:2px solid #2a3a55;">' +
+        esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + mult + " 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" + (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
+      '</div></div>';
+  };
+  const mech = d.mech ? '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">机制说明</div>' +
+    '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px 9px;line-height:1.7;color:#9fb0c8;font-size:11px;">' + esc(d.mech) + '</div>' : "";
+  const skill = it.cat !== "weapon" ? mech :
+    mech + '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">招式组</div>' +
+      sk("普攻", d.aName, (d.aMult || 100) + "%", d.aHits || 1, d.aShape || "single", 0, (Number(d.aRage) || 0), d.aDesc) +
+      sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), d.sDesc) +
+      sk("必杀", d.uName, (d.uMult || 250) + "% · 怒气100", d.uHits || 1, d.uShape || "single", 0, null, d.uDesc || d.skillDesc);
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
