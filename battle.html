@@ -243,7 +243,19 @@ async function buildMultiBattle(stageId) {
   }
   // 2) 生成单位
   const built = buildUnits(room, 6);
-  st = createBattle(built.units.map((u) => Object.assign({ power: 0 }, u)));
+  // 多人 PvE：所有玩家都在我方，敌人来自关卡配置
+  built.units.forEach((u) => { u.side = "A"; });
+  const foeUnits = (stg.enemies || []).map((eid, i) => {
+    const e = enemyAt(eid, stg.lv) || {};
+    const stt = e.stats || {};
+    return {
+      id: "foe" + i, name: e.name || ("敌人" + (i + 1)), side: "B", lv: stg.lv, power: 0,
+      hp: stt.hp || 500, maxHp: stt.hp || 500, atk: stt.atk || 50, def: stt.def || 10, res: stt.res || 10,
+      spd: stt.spd || 10, critRate: 5, critDmg: 150, dmgCut: 0, rage: 0,
+      __skills: e.skills || []
+    };
+  });
+  st = createBattle(built.units.concat(foeUnits).map((u) => Object.assign({ power: 0 }, u)));
   st.__stage = stg.id;
   st.__owners = built.owners;
   st.__multi = true;
