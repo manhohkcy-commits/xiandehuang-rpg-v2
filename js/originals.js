@@ -1,6 +1,6 @@
 import { cloudGet, cloudSave } from "./core.js?v=13807141";
 import { powerOf } from "./power.js?v=42e16747";
-import { GRADE, APTITUDE } from "./data.js?v=cad789fd";
+import { GRADE, APTITUDE } from "./data.js?v=cdb1fd93";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
@@ -137,3 +137,17 @@ export function originalToUnits(o, side) {
     critRate: Number(s.critRate) || 5, critDmg: Number(s.critDmg) || 150
   };
 }
+
+
+// ⚡ 专属装备回怒统一（普攻 / 技能）
+Object.values(ORIGINAL_GEAR || {}).forEach((gear) => {
+  Object.values(gear || {}).forEach((it) => {
+    if (!it || !it.name) return;
+    if (it.aMult != null) {
+      it.aRage = 18 + Math.min(8, Math.round(((Number(it.aMult) || 100) - 100) / 12));
+    }
+    if (it.sMult != null) {
+      it.sRage = 9 + Math.min(8, Math.round(((Number(it.sMult) || 150) - 120) / 25));
+    }
+  });
+});

@@ -1253,3 +1253,14 @@ if (_fest2) {
 
 // 🔄 STAGES 重新快照（包含后追加的庆典 / 无尽关）
 STAGES = DUNGEONS.flatMap((d) => d.stages || []);
+
+
+// ⚡ 统一回怒：每把武器普攻/技能都有回怒，随倍率与品质浮动
+const RAR_BONUS = { R: 0, SR: 1, SSR: 2, UR: 3 };
+WEAPONS.forEach((w) => {
+  const rb = RAR_BONUS[w.rarity] || 0;
+  const aM = Number(w.aMult) || 100;
+  const sM = Number(w.sMult) || 150;
+  w.aRage = 18 + Math.min(6, Math.round((aM - 100) / 15)) + rb * 2;      // 18~32
+  w.sRage = 8 + Math.min(6, Math.round((sM - 120) / 30)) + rb;           // 8~18
+});

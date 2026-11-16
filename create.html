@@ -24,11 +24,11 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=cad789fd";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=cdb1fd93";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=42e16747";
-import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=cad789fd";
+import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=cdb1fd93";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a1cdc0e5";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=0167d36b";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=9a495101";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 const $ = (id) => document.getElementById(id);
@@ -253,7 +253,7 @@ function showItemDetail(it) {
   const rc = RARITY_COLOR[d.rarity] || "#8a8ab0";
 
   const GROUPS = [
-    { title: "基础与加成", keys: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },
+    { title: "副属性", keys: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },
     { title: "专精", keys: ["str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"] },
     { title: "伤害类型", keys: ["physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"] },
     { title: "战斗词条", keys: ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "block", "tenacity", "lowHpCut", "statusPower", "statusHit", "statusResist", "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash", "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify"] }

@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=cad789fd";
+import { WEAPONS, ARMORS, ACCESSORIES } from "./js/data.js?v=cdb1fd93";
 import { itemBonus, itemMain, mainKeysOf } from "./js/power.js?v=42e16747";
 
 const RARITY_COLOR = { R: "#6ea8fe", SR: "#c9a0ff", SSR: "#ffd666", UR: "#ff6b6b" };
@@ -47,7 +47,7 @@ function detail(it) {
     : "";
   const keys = Object.keys(NAMES).filter((k) => Number(subB[k]) > 0);
   const groups = [
-    { t: "基础与加成", ks: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },
+    { t: "副属性", ks: ["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct"] },
     { t: "专精", ks: ["str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"] },
     { t: "伤害类型", ks: ["physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"] },
     { t: "战斗词条", ks: keys.filter((k) => !["atk", "hp", "def", "res", "spd", "atkPct", "hpPct", "defPct", "resPct", "critRate", "critDmg", "dmgCut", "thorns", "ragePct", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct", "physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct"].includes(k)) }
