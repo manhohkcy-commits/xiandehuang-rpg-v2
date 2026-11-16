@@ -739,6 +739,8 @@ function renderBattle() {
       queueHtml2() + gridHtml() +
       '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + m.hp + '/' + m.maxHp + '</span></div>' + hpBar(m) +
       '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + f2.hp + '/' + f2.maxHp + '</span></div>' + hpBar(f2) +
+    (st.__isOrig ? '<div class="row"><span class="k">❄️ 霜印</span><span class="v" style="color:#8fd8ff;">' +
+      (Number(st.__frost) || 0) + ' / 5　（普攻 +1 · 必杀每层 +15%）</span></div>' : "") +
     '</div>' +
     (st.finished ? '<div class="card"><div class="card-title">' + (st.winner === "A" ? "🏆 胜利" : "💀 失败") + '</div>' +
       (st.winner === "A" && st.__reward
