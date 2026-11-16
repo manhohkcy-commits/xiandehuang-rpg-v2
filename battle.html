@@ -167,8 +167,8 @@ function dungeonListHtml() {
 }
 
 function hostOrig() {
-  try { if (localStorage.getItem("rpg2:host") === "1") return ORIGINALS[0] || null; } catch (e) {}
-  return null;
+  // 没有玩家角色时，允许直接用原创角色出战（主机/朋友端都适用）
+  return (typeof ORIGINALS !== "undefined" && ORIGINALS && ORIGINALS.length) ? ORIGINALS[0] : null;
 }
 function renderPick() {
   const ch = activeChar();
@@ -397,7 +397,7 @@ function startBattle(stageId, col, row) {
     for (let k = 0; k < extra; k++) foeSpecs.push(base[k % base.length]);
   }
   st = createBattle([
-    { id: "me", name: ch ? ch.name : o0.name, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
+    { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : {} }
   ].concat(units));
   // ♾ 无尽试炼：记录回合与累计伤害
   if (s.endless) {
