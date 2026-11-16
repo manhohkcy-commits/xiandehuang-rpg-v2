@@ -72,8 +72,7 @@ function detail(it, slot) {
     (it.style || it.dmgType ? '<div class="hint" style="margin-top:2px;">' +
       [(it.style === "ranged" ? "远程" : it.style === "focus" ? "法器" : "近战"), it.dmgType === "spell" ? "法术" : "物理"].join(" · ") + '</div>' : "") +
     (mainRows ? '<div class="hint" style="margin:8px 0 5px;color:#ffd666;font-weight:700;">主属性（部位基础）</div>' + panel(mainRows) : "") +
-    (subRows ? sec("副属性") + panel(subRows) : "") +
-    (specRows ? sec("战斗词条") + panel(specRows) : "") +
+    ((subRows || specRows) ? sec("副属性") + panel(subRows + specRows) : "") +
     (it.mech ? sec("机制说明") + '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px 9px;line-height:1.7;color:#9fb0c8;font-size:12px;">' + esc(it.mech) + '</div>' : "") +
     skills +
     '<div style="margin-top:10px;"><button id="ogClose" style="width:100%;">关闭</button></div></div>';
