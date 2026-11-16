@@ -60,7 +60,10 @@ function detail(it, slot) {
         '<b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
         '<span style="font-size:12px;font-weight:700;color:' + rc + ';">' + mult + '</span></div>' +
       '<div class="hint" style="margin-top:3px;color:#8fd8ff;font-size:10.5px;">' + tags + '</div>' +
-      (desc ? '<div class="hint" style="margin-top:4px;padding-left:6px;border-left:2px solid #2a3a55;">' + esc(desc) + '</div>' : "") +
+      '<div class="hint" style="margin-top:4px;padding-left:6px;border-left:2px solid #2a3a55;">' +
+        esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + mult + " 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" +
+          (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
+      '</div>' +
       '</div>';
   };
   const skills = it.sName
