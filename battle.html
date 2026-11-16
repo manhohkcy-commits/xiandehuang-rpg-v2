@@ -1077,13 +1077,7 @@ function finish() {
     store.orig = store.orig || {};
     const prog = store.orig[st.__origId] || (store.orig[st.__origId] = { lv: 1, exp: 0, breaks: 0 });
     prog.lv = Number(prog.lv) || 1;
-    prog.exp = (Number(prog.exp) || 0) + exp;
-    let ups = 0;
-    while (prog.lv < (CHAR.maxLevel || 100) && prog.exp >= CHAR.expNeed(prog.lv)) {
-      prog.exp -= CHAR.expNeed(prog.lv);
-      prog.lv += 1; ups += 1;
-    }
-    if (ups) pushLog("🧬 " + (st.__isOrigName || "原创角色") + " 升到 Lv" + prog.lv, "line");
+    prog.exp = (Number(prog.exp) || 0) + exp;   // 只累积经验，升级由玩家在角色页手动点
   }
   // 🎁 掉落：碎片必掉、强化石必掉、装备按概率
   const rnd = (a) => a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1));
