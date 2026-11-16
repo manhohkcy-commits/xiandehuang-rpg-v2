@@ -617,7 +617,12 @@ function tickStatuses() {
   });
 }
 
-function me() { return st.units.find((u) => u.id === "me"); }
+function me() {
+  return st.units.find((u) => u.id === "me")
+    || (st.__myUnit ? st.units.find((u) => u.id === st.__myUnit) : null)
+    || st.units.find((u) => u.side === "A" && u.hp > 0)
+    || st.units.find((u) => u.side === "A");
+}
 function foe() {
   const sel = targetId ? st.units.find((u) => u.id === targetId && u.side === "B" && u.hp > 0) : null;
   if (sel) return sel;
