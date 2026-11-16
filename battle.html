@@ -955,7 +955,8 @@ function aiTurnIfNeeded() {
   if (a.side !== "B") { renderBattle(); return; }
   busy = true;
   setTimeout(() => {
-    const f2 = foe(), m = me();
+    const f2 = st.units.find((u) => u.id === a.id) || foe();
+    const m = me();
     clearDefend(f2);
     const sk = f2.__skills || [];
     const ultS = sk.find((s) => s.kind === "ult");
