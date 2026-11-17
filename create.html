@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=39881793";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=5cb86ce3";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=42e16747";
-import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=39881793";
+import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=5cb86ce3";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=ee4aa808";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=076cb032";
 
@@ -1392,7 +1392,17 @@ function renderCult() {
     if (isEquip(it)) entries.push({ key: "it:" + it.id, d: it.data || {}, where: "仓库", id: it.id, lock: !!it.lock });
   });
 
-  const resolve = (key) => (key.indexOf("eq:") === 0 ? { data: ch.equip[key.slice(3)] } : findItem(store, key.slice(3)));
+  const resolve = (key) => {
+    if (key.indexOf("eq:") === 0) {
+      const raw = ch.equip[key.slice(3)];
+      if (!raw) return null;
+      // 兼容两种存法：直接存 def / 存成 { data: def }
+      return raw.data ? raw : { data: raw };
+    }
+    const it = findItem(store, key.slice(3));
+    if (it && it.data && it.data.data) return { id: it.id, cat: it.cat, data: it.data.data };
+    return it;
+  };
 
   const row = (e) => {
     const it = resolve(e.key);

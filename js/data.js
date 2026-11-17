@@ -1340,3 +1340,13 @@ DUNGEONS.forEach((du) => {
     else s.drop.shardSSR = [0, 0];
   });
 })();
+
+// 🔧 精炼石产出减半（避免堆积）
+(() => {
+  const g = DUNGEONS.find((x) => x.id === "d_gear");
+  if (!g) return;
+  g.stages.forEach((s) => {
+    const r = s.drop && s.drop.refine;
+    if (Array.isArray(r) && r[1] > 0) s.drop.refine = [Math.max(1, Math.round(r[0] / 2)), Math.max(1, Math.round(r[1] / 2))];
+  });
+})();
