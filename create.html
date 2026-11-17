@@ -1622,7 +1622,7 @@ function renderOrigCult() {
     const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
     const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
     const cRef = { r: 2 + ref, g: 300 + 200 * ref };
-  const ADV_COST = { R: { s: 300, g: 6000 }, SR: { s: 600, g: 12000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
+  const ADV_COST = { R: { s: 200, g: 2000 }, SR: { s: 500, g: 6000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
   const cAdv = ADV_COST[it.rarity || "SSR"] || ADV_COST.SSR;
     const cAwk = { s: [150, 250, 400][awk] || 400, k: [3, 5, 8][awk] || 8 };   // UC 觉醒：碎片 + 觉醒石
     const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
@@ -1680,7 +1680,7 @@ function renderOrigCult() {
     } else if (act === "advance") {
       const n = Number(gs.advance) || 0;
       if (n >= 1) return toast("已升阶", true);
-      const _advTable = { R: { s: 300, g: 6000 }, SR: { s: 600, g: 12000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
+      const _advTable = { R: { s: 200, g: 2000 }, SR: { s: 500, g: 6000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
       const _advNow = _advTable[_gdef.rarity || "SSR"] || _advTable.SSR;
       const cs = _advNow.s, cg = _advNow.g;
       if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);
