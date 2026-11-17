@@ -311,22 +311,27 @@ export function enemyPower(e) {
   return Math.round((s.atk || 0) * 16 + (s.hp || 0) + (s.def || 0) * 7 + (s.res || 0) * 5 +
     (s.spd || 0) * 28 + (e.critRate || 5) * 16 + (e.critDmg || 150) * 5);
 }
-// 🏯 关卡建议战力：该关全部敌人（含增援/波次）的战力总和
-// 🏯 关卡建议战力：以「同等级裸角色」为基准，按敌人数量/阶级给难度系数
-// 之前是把敌人战力直接相加，高等级会虚高到同级的 10 倍以上
+// 🏯 关卡建议战力：按「时期」预估玩家应有水平（默认 SR 套装 + 同期资历/资质/专精）
+// 时期系数：新手 1.2 → 成长 1.6 → 进阶 2.2 → 中期 2.8 → 后期 3.4 → 终局 4.2
 export function stagePower(stage) {
   if (!stage) return 0;
   const L = Math.max(1, Number(stage.lv) || 1);
   const baseAtk = 60 + 6 * (L - 1), baseHp = 500 + 40 * (L - 1);
   const baseDef = 20 + 2 * (L - 1), baseRes = 15 + 1.5 * (L - 1);
   const baseSpd = 10 + 0.1 * (L - 1);
-  const base = baseAtk * 16 + baseHp + baseDef * 7 + baseRes * 5 + baseSpd * 28 + 5 * 16 + 150 * 5;
+  const naked = baseAtk * 16 + baseHp + baseDef * 7 + baseRes * 5 + baseSpd * 28 + 5 * 16 + 150 * 5;
+  const eraMul =
+    L <= 10 ? 1.2 :
+    L <= 20 ? 1.6 :
+    L <= 40 ? 2.2 :
+    L <= 60 ? 2.8 :
+    L <= 80 ? 3.4 : 4.2;
   const ids = (stage.enemies && stage.enemies.length) ? stage.enemies : [];
   const n = Math.max(1, ids.length);
-  const tierMul = stage.tier === "首领" ? 1.55 : stage.tier === "特色" ? 1.35 : stage.tier === "精英" ? 1.18 : 1;
-  // 典型装备加成约 2.2 倍同级裸角色；敌人越多系数越高
-  const k = (0.55 + 0.15 * (n - 1)) * tierMul;
-  return Math.round(base * 2.2 * k / 10) * 10;
+  const tierMul = stage.tier === "首领" ? 1.15 : stage.tier === "特色" ? 1.10 : stage.tier === "精英" ? 1.05 : 1;
+  // 敌人数越多越难，但幅度温和（0.92 ~ 1.08）
+  const countMul = Math.min(1.08, 0.92 + 0.05 * (n - 1));
+  return Math.round(naked * eraMul * tierMul * countMul / 100) * 100;
 }
 // 📊 数值重定：以「平均 Lv1 角色」为基准（攻 144 / 生 850 / 防 29 / 抗 22 / 速 11）
 const ENEMY_STATS = {
