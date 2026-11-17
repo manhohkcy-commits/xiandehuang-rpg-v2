@@ -268,21 +268,48 @@ async function loadPlayers() {
         const f = charFinal(ch);
         const eq = ch.equip || {};
         const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+        const rowv = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+        const panelv = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+        const secv = (t) => '<div class="hint" style="font-size:11px;color:#8fd8ff;font-weight:700;letter-spacing:1px;margin:10px 0 5px;">' + t + '</div>';
+        const basic = ch.basic || {};
+        const abil = [];
+        Object.keys(SLOT).forEach((k) => {
+          const d = eq[k] && eq[k].data;
+          if (!d) return;
+          if (d.critRate) abil.push("暴击 +" + d.critRate + "%");
+          if (d.critDmg) abil.push("暴伤 +" + d.critDmg + "%");
+          if (d.dmgCut) abil.push("减伤 +" + d.dmgCut + "%");
+          if (d.thorns) abil.push("反伤 +" + d.thorns + "%");
+          if (d.lifesteal) abil.push("吸血 +" + d.lifesteal + "%");
+          if (d.atkPct) abil.push("攻击 +" + d.atkPct + "%");
+          if (d.hpPct) abil.push("生命 +" + d.hpPct + "%");
+        });
         const gear = Object.keys(SLOT).map((k) => {
-          const it = eq[k] && eq[k].data;
-          return '<div class="row"><span class="k">' + SLOT[k] + '</span><span class="v">' + (it ? esc(it.name) + ' <span class="hint">' + (it.rarity || "") + '</span>' : '<span class="hint">—</span>') + '</span></div>';
+          const d = eq[k] && eq[k].data;
+          return '<div class="row"><span class="k">' + (d ? (d.rarity === "SSR" ? "🌟 " : "") + esc(d.name) : '<span class="hint">—</span>') +
+            '<div class="hint">' + (d ? [(d.main && d.main.atk) ? "攻击 +" + d.main.atk : "", (d.main && d.main.hp) ? "生命 +" + d.main.hp : ""].filter(Boolean).join(" · ") : "") + '</div></span>' +
+            '<span class="v hint">' + SLOT[k] + '</span></div>';
         }).join("");
+        const wp = eq.weapon && eq.weapon.data;
+        const skills = wp
+          ? rowv("普攻", esc(wp.aName || "—") + " · " + (wp.aMult || 100) + "%") +
+            rowv("技能", esc(wp.sName || "—") + " · " + (wp.sMult || 150) + "% · CD" + (wp.sCd || 3)) +
+            rowv("必杀", esc(wp.uName || "—") + " · " + (wp.uMult || 250) + "%")
+          : '<div class="hint" style="padding:6px 9px;">未装备武器</div>';
         const ov = document.createElement("div");
-        ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
-        ov.innerHTML = '<div class="card" style="width:min(420px,92vw);max-height:84vh;overflow:auto;margin:0;">' +
-          '<div class="card-title">' + esc(ch.name) + ' <span class="tag">Lv' + (ch.lv || 1) + '</span></div>' +
+        ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+        ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;margin:0;">' +
+          '<div class="card-title" style="font-size:18px;">' + esc(ch.name) + ' <span class="tag">Lv' + (ch.lv || 1) + '</span></div>' +
           '<div class="hint">战力 ' + fmt(charPower(ch)) + ' · 位号 ' + esc(bx) + '</div>' +
-          '<div class="row"><span class="k">攻击</span><span class="v">' + Math.round(f.atk) + '</span></div>' +
-          '<div class="row"><span class="k">生命</span><span class="v">' + Math.round(f.hp) + '</span></div>' +
-          '<div class="row"><span class="k">防御 / 法抗</span><span class="v">' + Math.round(f.def) + ' / ' + Math.round(f.res) + '</span></div>' +
-          '<div class="row"><span class="k">速度 / 暴击</span><span class="v">' + Math.round(f.spd) + ' · ' + Math.round(f.critRate) + '%</span></div>' +
-          '<div class="hint" style="margin-top:8px;color:#8fd8ff;font-weight:700;">装备</div>' + gear +
+          secv("① 基础面板") + panelv(rowv("攻击", Math.round(f.atk)) + rowv("生命", fmt(Math.round(f.hp))) + rowv("防御", Math.round(f.def)) +
+            rowv("法抗", Math.round(f.res)) + rowv("速度", Math.round(f.spd * 10) / 10) + rowv("暴击率", Math.round(f.critRate) + "%") + rowv("暴击伤害", Math.round(f.critDmg) + "%")) +
+          secv("② 专精面板") + panelv(rowv("基础四维", "生命 " + (basic.hp || 0) + " · 攻击 " + (basic.atk || 0) + " · 防御 " + (basic.def || 0) + " · 法抗 " + (basic.res || 0)) +
+            rowv("专精四项", "力量 " + (ch.str || 0) + " · 智力 " + (ch.intel || 0) + " · 技巧 " + (ch.tech || 0) + " · 敏捷 " + (ch.agi || 0))) +
+          secv("③ 其他属性（装备词条）") + panelv(abil.length ? abil.map((t) => '<div class="hint" style="padding:6px 9px;border-bottom:1px solid #1a2438;color:#8fd8ff;">' + t + '</div>').join("") : '<div class="hint" style="padding:6px 9px;">没有额外词条</div>') +
+          secv("④ 装备栏") + panelv(gear) +
+          secv("⑤ 招式一览") + panelv(skills) +
           '<button id="plClose" style="width:100%;margin-top:10px;">关闭</button></div>';
+
         document.body.appendChild(ov);
         ov.querySelector("#plClose").onclick = () => ov.remove();
         ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
