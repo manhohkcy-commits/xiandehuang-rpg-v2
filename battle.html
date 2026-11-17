@@ -308,7 +308,24 @@ async function tryRestore() {
 }
 
 let targetId = null;
-window.__pickTgt = (id) => { targetId = id; try { renderBattle(); } catch (e) {} };
+window.__pickTgt = (id) => {
+  try {
+    const wpn = (st && st.__weapon && st.__weapon.data) || {};
+    const melee = (wpn.style || "melee") === "melee";
+    const alive = (st.units || []).filter((u) => u.side === "B" && u.hp > 0);
+    const tgt = alive.find((u) => u.id === id);
+    if (melee && tgt) {
+      const colOf = (u) => (u.__col ? 1 : 0);
+      const frontCol = Math.min.apply(null, alive.map(colOf));
+      if (colOf(tgt) > frontCol) {
+        alert("近战只能攻击前排：先把前排敌人清掉");
+        return;
+      }
+    }
+  } catch (e) {}
+  targetId = id;
+  try { renderBattle(); } catch (e) {}
+};
 let prepCol = 0;
 let prepRow = 1;
 function renderPrep(stageId) {
@@ -636,8 +653,18 @@ function me() {
     || st.units.find((u) => u.side === "A");
 }
 function foe() {
-  const sel = targetId ? st.units.find((u) => u.id === targetId && u.side === "B" && u.hp > 0) : null;
+  const wpn = (st.__weapon && st.__weapon.data) || {};
+  const melee = (wpn.style || "melee") === "melee";
+  const aliveB = st.units.filter((u) => u.side === "B" && u.hp > 0);
+  const colOf = (u) => (u.__col ? 1 : 0);
+  const frontCol = aliveB.length ? Math.min.apply(null, aliveB.map(colOf)) : 0;
+  let sel = targetId ? aliveB.find((u) => u.id === targetId) : null;
+  if (sel && melee && colOf(sel) > frontCol) sel = null;   // 近战不能越位
   if (sel) return sel;
+  if (melee && aliveB.length) {
+    const front = aliveB.find((u) => colOf(u) === frontCol);
+    if (front) return front;
+  }
   return st.units.find((u) => u.side === "B" && u.hp > 0) || st.units.find((u) => u.side === "B");
 }
 
