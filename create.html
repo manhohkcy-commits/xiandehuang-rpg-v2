@@ -1581,12 +1581,13 @@ function renderOrigCult() {
     const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
     const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
     const cRef = { r: 2 + ref, g: 300 + 200 * ref }, cAdv = { s: 30 + 15 * adv, g: 2000 + 1200 * adv };
-    const cAwk = { b: 20 + 15 * awk };
+    const cAwk = { s: 20 + 15 * awk, k: 1 + awk };   // 碎片 + 觉醒石
     const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
     const okStar = star < ORIG_GEAR_CULT.maxStar && shN >= cStar.s && gN >= cStar.g;
     const okRef = refN >= cRef.r && gN >= cRef.g;
     const okAdv = adv < 5 && shN >= cAdv.s && gN >= cAdv.g;
-    const okAwk = awk < 3 && bsN >= cAwk.b;
+    const awkN = Number(store.flags.awakenStone) || 0;
+  const okAwk = awk < 3 && shN >= cAwk.s && awkN >= cAwk.k;
     return card((GI[slot] || "🗡") + " " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
       '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / ★' + star +
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
@@ -1598,7 +1599,7 @@ function renderOrigCult() {
         '<button data-og="' + slot + ':refine"' + ' disabled style="opacity:.45;">精炼（未开放）</button>' +
         '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + '>升阶 ' + (it.rarity || "SSR") + '→' + ((it.rarity === "UR") ? "UR🔥" : ({ SSR: "UR", SR: "SSR", R: "SR" })[it.rarity] || "UR") +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAdv.s + ' / 金 ' + fmt(cAdv.g) + '）</button>' +
-        '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + '（证书 ' + cAwk.b + '）</button>' +
+        '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAwk.s + ' + 觉醒石 ' + cAwk.k + '）</button>' +
       '</div>');
   }).join("");
   view().innerHTML = '<div class="tree-tabs">' + tabs + '</div>' + res + (body || card("⚒ 培养", '<div class="hint">这名角色还没有专属装备。</div>'));
@@ -1643,9 +1644,13 @@ function renderOrigCult() {
     } else {
       const n = Number(gs.awaken) || 0;
       if (n >= 3) return toast("已满觉醒", true);
-      const cb = 20 + 15 * n;
-      if (matTotal("cert") < cb) return toast("证书不足（需 " + cb + "）", true);
-      matSpend("cert", cb); gs.awaken = n + 1;
+      const cbS = 20 + 15 * n, cbK = 1 + n;
+      if (_sHave() < cbS) return toast("碎片不足（需 " + cbS + "）", true);
+      const awN = Number(store.flags.awakenStone) || 0;
+      if (awN < cbK) return toast("觉醒石不足（需 " + cbK + "，暂未开放产出）", true);
+      store.flags[_sKey] = _sHave() - cbS;
+      store.flags.awakenStone = awN - cbK;
+      gs.awaken = n + 1;
       if (!prog.bonus) prog.bonus = {};
       prog.bonus.ultPct = (Number(prog.bonus.ultPct) || 0) + 3;
     }
