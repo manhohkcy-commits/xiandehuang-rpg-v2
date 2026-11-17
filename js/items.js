@@ -271,7 +271,13 @@ export function dismantle(store, itemId) {
 
 export function sellPrice(it) {
   const d = (it && it.data) || {};
-  return Math.round((40 + (Number(d.lv) || 1) * 6 + ((Number(d.star) || 1) - 1) * 60) * 0.5);
+  const BASE = { R: 1200, SR: 4000, SSR: 12000, UR: 30000 };
+  const base = BASE[d.rarity] || 1000;
+  const lvMul = 1 + 0.04 * ((Number(d.lv) || 1) - 1);
+  const starMul = 1 + 0.10 * ((Number(d.star) || 1) - 1);
+  const btMul = 1 + 0.15 * (Number(d.bt) || 0);
+  const refineMul = 1 + 0.05 * ((Number(d.refine) || 1) - 1);
+  return Math.round(base * lvMul * starMul * btMul * refineMul * 0.4);
 }
 export function sell(store, itemId) {
   const it = findItem(store, itemId);
