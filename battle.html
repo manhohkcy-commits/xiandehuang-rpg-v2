@@ -409,7 +409,8 @@ function startBattle(stageId, col, row) {
       id: "foe" + i, name: e.name, side: "B", spd: e.spd, power: 0,
       hp: e.hp, maxHp: e.hp, atk: e.atk, def: e.def, res: e.res || 0,
       critRate: 5, critDmg: 150, cd: 0, rage: 0,
-      __skills: def.skills || e.skills || []
+      __skills: def.skills || e.skills || [],
+      allowed: 0, acted: 0
     };
   };
   let foeSpecs = [];
@@ -870,6 +871,7 @@ function segMults(totalMult, hits, weights) {
 
 function doAct(kind) {
   if (!st || st.finished || busy) return;
+  if (st.__tcd > 0) st.__tcd -= 1;   // 天赋主动技冷却随玩家回合递减
   if (st.finished) return;
   const a = nextActor(st);
   if (!a || a.id !== "me") return;
