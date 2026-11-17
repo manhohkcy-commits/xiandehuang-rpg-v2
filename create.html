@@ -1917,8 +1917,8 @@ function renderOrig() {
         const aCost = nA ? { md: nA.cost, gold: 800 * ai } : null;
         const canG = gCost && ms >= gCost.ms && gold >= gCost.gold;
         const canA = aCost && md >= aCost.md && gold >= aCost.gold;
-        return row("资历评级", G.key + "（全属性 ×" + (G.mult || 1).toFixed(2) + "）") +
-          row("资质评估", ai + "★（全属性 ×" + (A.mult || 1).toFixed(2) + "）") +
+        return '<div class="row"><span class="k">资历评级</span><span class="v" style="color:' + (G.color || "#dbe4f3") + ';font-weight:800;">' + G.key + "（全属性 ×" + (G.mult || 1).toFixed(2) + '）</span></div>' +
+          '<div class="row"><span class="k">资质评估</span><span class="v" style="color:#c9a0ff;font-weight:800;">' + ai + "★（全属性 ×" + (A.mult || 1).toFixed(2) + '）</span></div>' +
           '<div class="hint" style="margin-top:6px;">手稿 ' + ms + ' · 勋章 ' + md + '</div>' +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
           (nG ? '<button id="btnOrigGrade"' + (canG ? '' : ' disabled') + '>晋升 → ' + nG.key + '（手稿 ' + gCost.ms + ' · ' + fmt(gCost.gold) + ' 金）</button>'
