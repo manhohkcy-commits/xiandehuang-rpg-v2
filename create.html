@@ -1620,23 +1620,29 @@ function renderOrigCult() {
   const refN = Number(store.flags.refineStone) || 0;
   const stN = Number(store.flags.stone) || 0;
     const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
-    const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
+    const _bt = Number((prog.gear && prog.gear[slot] && prog.gear[slot].bt) || 0);
+    const _cap = (ORIG_GEAR_CULT.maxLv || 20) + _bt * 5;
+    const cLv = { s: 2 + 2 * lv, g: 60 * lv }, cStar = { s: 60 * star, g: 300 * star };
+    const BREAK_G = [{ s: 10, g: 3000 }, { s: 20, g: 6000 }, { s: 35, g: 12000 }];
+    const cBtk = BREAK_G[_bt] || null;
+    const okBtk = !!cBtk && lv >= _cap && stN >= cBtk.s && gN >= cBtk.g;
     const cRef = { r: 2 + ref, g: 300 + 200 * ref };
   const ADV_COST = { R: { s: 200, g: 2000 }, SR: { s: 500, g: 6000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
   const cAdv = ADV_COST[it.rarity || "SSR"] || ADV_COST.SSR;
     const cAwk = { s: [150, 250, 400][awk] || 400, k: [3, 5, 8][awk] || 8 };   // UC 觉醒：碎片 + 觉醒石
-    const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
+    const okLv = lv < _cap && stN >= cLv.s && gN >= cLv.g;
     const okStar = star < ORIG_GEAR_CULT.maxStar && shN >= cStar.s && gN >= cStar.g;
     const okRef = refN >= cRef.r && gN >= cRef.g;
     const okAdv = adv < 1 && shN >= cAdv.s && gN >= cAdv.g;
     const awkN = Number(store.flags.awakenStone) || 0;
   const okAwk = adv >= 1 && awk < 3 && shN >= cAwk.s && awkN >= cAwk.k;
     return card((GI[slot] || "🗡") + " " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
-      '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / ★' + star +
+      '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / 上限 ' + _cap + '（突破 ' + _bt + '/3） / ★' + star +
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) +
           '（强化石 ' + cLv.s + ' / 金 ' + fmt(cLv.g) + '）</button>' +
+        (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (20 + (_bt + 1) * 5) + '）</button>' : '') +
         '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
         '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '（精炼石 ' + cRef.r + '）</button>' +
@@ -1657,6 +1663,18 @@ function renderOrigCult() {
     const gs = prog.gear[slot] || (prog.gear[slot] = { lv: 1, star: 1 });
     if (!store.flags) store.flags = {};
     const gold = () => Number(store.gold) || 0;
+    if (act === "breakG") {
+      const bt = Number(gs.bt) || 0;
+      const list = [{ s: 10, g: 3000 }, { s: 20, g: 6000 }, { s: 35, g: 12000 }];
+      const cfg = list[bt];
+      if (!cfg) return toast("突破已满", true);
+      if ((Number(gs.lv) || 1) < 20 + bt * 5) return toast("先强化到当前上限", true);
+      if ((Number(store.flags.stone) || 0) < cfg.s) return toast("强化石不足（需 " + cfg.s + "）", true);
+      if (gold() < cfg.g) return toast("金币不足", true);
+      store.flags.stone -= cfg.s; store.gold -= cfg.g; gs.bt = bt + 1;
+      await save(); render(); toast("🔓 突破成功：上限 " + (20 + (bt + 1) * 5));
+      return;
+    }
     if (act === "lv") {
       const lv = Number(gs.lv) || 1;
       if (lv >= ORIG_GEAR_CULT.maxLv) return toast("已满级", true);
