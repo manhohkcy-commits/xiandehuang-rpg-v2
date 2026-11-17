@@ -1724,6 +1724,24 @@ function origBreakdown(o, prog) {
   const ai = Math.max(1, Math.min(APTITUDE.length, Number(prog.apt) || 1));
   const lvk = (1 + 0.04 * (lv - 1)) * (1 + 0.03 * br);
   const gm = (GRADE[gi].mult || 1) * ((APTITUDE[ai - 1] || {}).mult || 1);
+  {
+    const _allowGrow = Math.floor((Number(prog.lv) || 1) / 5) * 2 + (Number(prog.breaks) || 0) * 5;
+    const _keys = ["str", "intel", "tech", "agi"];
+    if (!prog.spec) prog.spec = {};
+    let _spent = _keys.reduce((a, k) => a + (Number(prog.spec[k]) || 0), 0) + (Number(prog.free) || 0);
+    if (_spent > _allowGrow) {
+      let over = _spent - _allowGrow;
+      while (over > 0) {
+        const k = _keys.slice().sort((a, b) => (Number(prog.spec[b]) || 0) - (Number(prog.spec[a]) || 0))[0];
+        const v = Number(prog.spec[k]) || 0;
+        if (v <= 0) break;
+        const cut = Math.min(v, over);
+        prog.spec[k] = v - cut; over -= cut;
+      }
+      prog.free = Math.max(0, _allowGrow - _keys.reduce((a, k) => a + (Number(prog.spec[k]) || 0), 0));
+      try { save(); } catch (e) {}
+    }
+  }
   const sp = prog.spec || {};
   const SPEC = { atk: (Number(sp.str) || 0) * 2, spd: (Number(sp.agi) || 0) * 0.05, res: (Number(sp.intel) || 0) * 1.5, def: (Number(sp.tech) || 0) * 0.5 };
   const g = ORIGINAL_GEAR[o.id] || {};
