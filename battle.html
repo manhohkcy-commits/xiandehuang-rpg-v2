@@ -110,7 +110,7 @@ function rewardText(s) {
   rg("shardR", "R碎片");
   rg("shardSR", "SR碎片");
   rg("shardSSR", "SSR碎片");
-  rg("bstone", "突破石");
+  if (Number(dp.bstone) > 0) parts.push("突破石 " + dp.bstone);
   const sub = (obj, names) => {
     if (!obj || typeof obj !== "object") return;
     Object.keys(obj).forEach((k) => {
@@ -257,6 +257,14 @@ function renderPick() {
       };
       store.flags = store.flags || {};
       const drops = [];
+      if (Number(dp.bstone) > 0) {
+        store.flags.bstone = (Number(store.flags.bstone) || 0) + Number(dp.bstone);
+        drops.push({ name: "突破石", count: Number(dp.bstone) });
+      }
+      if (Number(dp.bstone) > 0) {
+        store.flags.bstone = (Number(store.flags.bstone) || 0) + Number(dp.bstone);
+        drops.push({ name: "突破石", count: Number(dp.bstone) });
+      }
       ["shards", "stone", "refine", "shardR", "shardSR", "shardSSR"].forEach((k) => {
         const n = rnd(dp[k]);
         if (!n) return;
@@ -1298,6 +1306,7 @@ function finish() {
     ? Object.assign({}, ZERO, { shards: [5, 8], stone: [1, 2], gearChance: 5 }, s.drop || {})
     : ZERO;
   const shards = rnd(dp.shards), stone = rnd(dp.stone);
+  const bstGain = Number(dp.bstone) || 0;
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
@@ -1326,6 +1335,7 @@ function finish() {
   if (exp) drops.push({ name: "经验", count: exp });
   if (stone) drops.push({ name: "强化石", count: stone });
   if (refine) drops.push({ name: "精炼石", count: refine });
+  if (bstGain) { store.flags.bstone = (Number(store.flags.bstone) || 0) + bstGain; drops.push({ name: "突破石", count: bstGain }); }
   if (shR) drops.push({ name: "R 碎片", count: shR });
   if (shSR) drops.push({ name: "SR 碎片", count: shSR });
   if (shSSR) drops.push({ name: "SSR 碎片", count: shSSR });
