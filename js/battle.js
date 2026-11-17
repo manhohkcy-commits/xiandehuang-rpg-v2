@@ -146,6 +146,13 @@ export function damage(st, atkId, defId, opts = {}) {
   }
   def.hp = Math.max(0, def.hp - dmg);
   if (def.hp === 0) def.alive = false;
+  // 🩸 吸血：按造成伤害回血（上限不超最大生命）
+  let heal = 0;
+  const lsPct = Number(at.lifesteal) || 0;
+  if (lsPct > 0 && dmg > 0 && atk.alive !== false) {
+    heal = Math.max(1, Math.round(dmg * lsPct / 100));
+    atk.hp = Math.min(Number(atk.maxHp) || atk.hp + heal, atk.hp + heal);
+  }
   // 🌵 反伤：按受到伤害的百分比回敬攻击者
   if (Number(dt.thorns) > 0 && dmg > 0 && atk.alive !== false) {
     const back = Math.max(1, Math.round(dmg * Number(dt.thorns) / 100));
@@ -156,7 +163,7 @@ export function damage(st, atkId, defId, opts = {}) {
   if (def.hp === 0 && Number(at.rageOnKill) > 0) {
     atk.rage = Math.min(100, (Number(atk.rage) || 0) + Number(at.rageOnKill));
   }
-  return { dmg, crit, killed: def.hp === 0 };
+  return { dmg, crit, killed: def.hp === 0, heal };
 }
 export function setCooldown(st, unitId, cd) {
   const u = st.units.find((x) => x.id === String(unitId));

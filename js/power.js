@@ -138,7 +138,7 @@ export function itemBonus(it) {
   // 🎯 副属性成长：升星 +5%/星、精炼 +8%/级，只作用于随机词条（data.__affix）
   const subMul = (1 + 0.05 * ((Number(d.star) || 1) - 1)) * (1 + 0.08 * ((Number(d.refine) || 1) - 1));
   const affix = Array.isArray(d.__affix) ? d.__affix : [];
-  ["dmgCut", "thorns", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"].forEach((k) => {
+  ["dmgCut", "thorns", "lifesteal", "atkPct", "hpPct", "defPct", "resPct", "ragePct", "critDmg", "critRate", "spd", "res", "def", "hp", "atk", "str", "intel", "tech", "agi", "strPct", "intelPct", "techPct", "agiPct"].forEach((k) => {
     const v = (Number(d[k]) || 0) * breakMul * (affix.indexOf(k) >= 0 ? subMul : 1);
     if (v) out[k] = (out[k] || 0) + v;
   });
@@ -267,7 +267,7 @@ const COMBAT_KEYS = ["cdReduce", "rageOnSkill", "rageOnKill", "rageStart", "rage
   "physPct", "spellPct", "normalPct", "skillPct", "ultPct", "physPen", "spellPen", "meleePct", "rangedPct", "focusPct",
   // 第三批：控制 / 机制类也一起汇总（武器、防具、饰品都能出）
   "penetrate", "doubleStrike", "chase", "counter", "dualborn", "charge", "reverse", "fate", "splash",
-  "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify", "healPct", "thorns"];
+  "stun", "silence", "freeze", "noheal", "disarm", "taunt", "purify", "healPct", "thorns", "lifesteal"];
 
 export function combatTraits(ch) {
   const out = {};
