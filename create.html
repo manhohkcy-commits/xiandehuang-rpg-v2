@@ -935,6 +935,8 @@ function renderTalent() {
       const n = b.nodes[i];
       if (!n) return '<td></td>';
       const bSpent = talentSpentInBranch(ch, tree.id, b.id);
+  const otherBranchUsed = (tree.branches || []).filter((x) => x.id !== b.id).some((x) => talentSpentInBranch(ch, tree.id, x.id) > 0);
+  const branchLocked = bSpent === 0 && otherBranchUsed;
       const has = !!ch.talent.points[n.id];
       const lvLock = lv < b.unlockLv;
       const tierLock = lv < (TALENT_TIER_LV[i] || 1);
@@ -1060,6 +1062,15 @@ function renderTalent() {
     const node = allNodes.find((n) => n.id === b.dataset.tp);
     if (!node) return;
     if (spent >= Number(ch.tp)) return toast("天赋点不够", true);
+  {
+    const t0 = TALENT_TREES.find((x) => x.id === node.tree);
+    if (t0) {
+      const myBr = (t0.branches || []).find((b) => (b.nodes || []).some((n) => n.id === node.id));
+      const otherSpent = (t0.branches || []).filter((b) => !myBr || b.id !== myBr.id)
+        .some((b) => talentSpentInBranch(ch, t0.id, b.id) > 0);
+      if (otherSpent) return toast("分支已锁定：同一棵树只能专精一条分支（先清空天赋再换）", true);
+    }
+  }
     if (node.need != null && talentSpentInTree(ch, node.tree) < node.need) return toast("本定位点数不够（需 " + node.need + "）", true);
     if (node.unlockLv == null) {
       const t = TALENT_TREES.find((x) => x.id === node.tree);
