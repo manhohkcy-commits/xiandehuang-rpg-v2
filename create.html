@@ -1606,6 +1606,9 @@ function renderOrigCult() {
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
   view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
     const parts = b.dataset.og.split(":");
+    const _gdef = (ORIGINAL_GEAR[o.id] || o.gearObj || {})[parts[0]] || {};
+    const _sKey = ({ R: "shardR", SR: "shardSR", SSR: "shardSSR", UR: "shardSSR" })[_gdef.rarity || "SSR"] || "shardSR";
+    const _sHave = () => Number(store.flags[_sKey]) || 0;
     const slot = parts[0], act = parts[1];
     const gs = prog.gear[slot] || (prog.gear[slot] = { lv: 1, star: 1 });
     if (!store.flags) store.flags = {};
@@ -1614,29 +1617,29 @@ function renderOrigCult() {
       const lv = Number(gs.lv) || 1;
       if (lv >= ORIG_GEAR_CULT.maxLv) return toast("已满级", true);
       const cs = ORIG_GEAR_CULT.lvStone(lv), cg = ORIG_GEAR_CULT.lvGold(lv);
-      if ((store.flags.stone || 0) < cs) return toast("强化石不足（需 " + cs + "）", true);
+      if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);
       if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
       store.flags.stone -= cs; store.gold -= cg; gs.lv = lv + 1;
     } else if (act === "star") {
       const star = Number(gs.star) || 1;
       if (star >= ORIG_GEAR_CULT.maxStar) return toast("已满星", true);
       const cs = ORIG_GEAR_CULT.starShards(star), cg = ORIG_GEAR_CULT.starGold(star);
-      if ((store.flags.shards || 0) < cs) return toast("碎片不足（需 " + cs + "）", true);
+      if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);
       if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
-      store.flags.shards -= cs; store.gold -= cg; gs.star = star + 1;
+      store.flags[_sKey] = _sHave() - cs; store.gold -= cg; gs.star = star + 1;
     } else if (act === "refine") {
       const n = Number(gs.refine) || 0;
       const cs = 5 + 3 * n, cg = 300 + 200 * n;
-      if ((store.flags.shards || 0) < cs) return toast("碎片不足（需 " + cs + "）", true);
+      if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);
       if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
-      store.flags.shards -= cs; store.gold -= cg; gs.refine = n + 1;
+      store.flags[_sKey] = _sHave() - cs; store.gold -= cg; gs.refine = n + 1;
     } else if (act === "advance") {
       const n = Number(gs.advance) || 0;
       if (n >= 5) return toast("已满阶", true);
       const cs = 30 + 15 * n, cg = 2000 + 1200 * n;
-      if ((store.flags.stone || 0) < cs) return toast("强化石不足（需 " + cs + "）", true);
+      if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);
       if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
-      store.flags.stone -= cs; store.gold -= cg; gs.advance = n + 1;
+      store.flags[_sKey] = _sHave() - cs; store.gold -= cg; gs.advance = n + 1;
     } else {
       const n = Number(gs.awaken) || 0;
       if (n >= 3) return toast("已满觉醒", true);
