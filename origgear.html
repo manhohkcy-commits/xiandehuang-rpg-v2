@@ -90,7 +90,7 @@ function detail(it, slot) {
   };
   const skills = it.sName ? sec("招式组") +
       sk("普攻", it.aName, (it.aMult || 100) + "%", it.aHits || 1, it.aShape || "single", 0, (Number(it.aRage) || 0), it.aDesc) +
-      sk("技能", it.sName, (it.sMult || 150) + "%", it.sHits || 1, it.sShape || "single", it.sCd || 3, (Number(it.sRage) || 0), it.sDesc, null, it.sSegWeights) +
+      ((it.sMult) ? sk("技能", it.sName, (it.sMult || 150) + "%", it.sHits || 1, it.sShape || "single", it.sCd || 3, (Number(it.sRage) || 0), it.sDesc, null, it.sSegWeights) : "") +
       sk("必杀", it.uName, (it.uMult || 250) + "%", it.uHits || 1, it.uShape || "single", 0, null, it.uDesc || it.skillDesc, "怒气 100", it.uSegWeights)
     : "";
   const ov = document.createElement("div");

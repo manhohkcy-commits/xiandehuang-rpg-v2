@@ -156,7 +156,7 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
   const skill = it.cat !== "weapon" ? mech :
     mech + '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">招式组</div>' +
       sk("普攻", d.aName, (d.aMult || 100) + "%", d.aHits || 1, d.aShape || "single", 0, (Number(d.aRage) || 0), d.aDesc) +
-      sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), d.sDesc, null, d.sSegWeights) +
+      ((d.sMult) ? sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), d.sDesc, null, d.sSegWeights) : "") +
       sk("必杀", d.uName, (d.uMult || 250) + "%", d.uHits || 1, d.uShape || "single", 0, null, d.uDesc || d.skillDesc, "怒气 100", d.uSegWeights);
 
   const ov = document.createElement("div");
