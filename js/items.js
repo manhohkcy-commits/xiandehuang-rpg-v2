@@ -72,8 +72,9 @@ export function promoteCheck(it, store) {
   if (!d) return { ok: false, why: "没有装备" };
   // 🎯 升阶消耗「该装备初始品质」的碎片（R→R碎片 / SR→SR碎片 / SSR→SSR碎片）
   const born = d.born || d.rarity || "R";
-  const key = ({ R: "shardR", SR: "shardSR", SSR: "shardSSR", UR: "shardSSR" })[born] || "shardR";
-  const labelMap = { shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片" };
+  const isKyo = d.id === "w_kyo", isK = d.id === "w_k";
+  const key = isKyo ? "kyoShard" : isK ? "kShard" : (({ R: "shardR", SR: "shardSR", SSR: "shardSSR", UR: "shardSSR" })[born] || "shardR");
+  const labelMap = { shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片", kyoShard: "草薙流古武典碎片", kShard: "究极热动拳套碎片" };
   const haveS = Number((store.flags || {})[key]) || 0;
   const haveG = Number(store.gold) || 0;
   const check = (cost, extra) => {
