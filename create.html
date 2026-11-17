@@ -1128,6 +1128,8 @@ function renderTalent() {
 // 🧬 原创角色卡（排行榜点开）
 function openOrigCard(o) {
   const s = o.stats || {};
+  const _prog = (window.__ORIG_PROG || {})[o.id] || (store.orig || {})[o.id] || {};
+  const _fin = originalFinal(o, _prog);
   const tint = o.rare ? "#ffb347" : "#8a8ab0";
   const row = (k, v, strong) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
     '<span class="hint">' + k + '</span><span style="font-weight:' + (strong ? "700" : "600") + ';color:' + (strong ? tint : "#dbe4f3") + ';font-size:13px;">' + v + '</span></div>';
@@ -1167,12 +1169,12 @@ function openOrigCard(o) {
     '<div style="display:flex;align-items:center;gap:8px;">' +
       '<div style="font-size:21px;font-weight:800;color:' + tint + ';">' + esc(o.name) + '</div>' +
       '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';">' + (o.rare ? "稀有" : "普通") + '</span>' +
-      '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:3px 11px;font-size:11px;color:' + tint + ';">⚔️ 战力 <b style="font-size:13px;">' + fmt(s.power || 0) + '</b></span></div>' +
+      '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:3px 11px;font-size:11px;color:' + tint + ';">Lv' + (Number(_prog.lv) || 1) + '　⚔️ 战力 <b style="font-size:13px;">' + fmt(_fin.power || 0) + '</b></span></div>' +
     '<div class="hint" style="margin:3px 0 2px;">' + esc(o.title || "无称号") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
     (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#9fb0c8;">' + esc(o.desc) + '</div>' : "") +
     sec("① 面板数据") +
-    panel(row("攻击", fmt(s.atk), true) + row("生命", fmt(s.hp), true) + row("防御", fmt(s.def)) + row("法抗", fmt(s.res)) +
-      row("速度", s.spd) + row("暴击率", (s.critRate || 5) + "%") + row("暴击伤害", (s.critDmg || 150) + "%")) +
+    panel(row("攻击", fmt(Math.round(_fin.atk)), true) + row("生命", fmt(Math.round(_fin.hp)), true) + row("防御", Math.round(_fin.def)) + row("法抗", Math.round(_fin.res)) +
+      row("速度", Math.round(_fin.spd * 10) / 10) + row("暴击率", Math.round(_fin.critRate) + "%") + row("暴击伤害", Math.round(_fin.critDmg) + "%")) +
     sec("② 加点") +
     panel(row("基础", "生命 " + ((o.basic || {}).hp || 0) + " · 攻击 " + ((o.basic || {}).atk || 0) + " · 防御 " + ((o.basic || {}).def || 0) + " · 法抗 " + ((o.basic || {}).res || 0)) +
       row("专精", "力量 " + ((o.spec || {}).str || 0) + " · 智力 " + ((o.spec || {}).int || 0) + " · 技巧 " + ((o.spec || {}).tech || 0) + " · 敏捷 " + ((o.spec || {}).agi || 0))) +
@@ -1211,8 +1213,16 @@ async function renderRank() {
   });
   const players = Array.from(map.values()).sort((a, b) => b.power - a.power);
   // 🧬 原创角色并入「可游玩角色」总榜
+  if (!window.__ORIG_PROG) {
+    window.__ORIG_PROG = (store.orig || {});
+    try {
+      const hr = await cloudGet("zynSD117");
+      const hp = hr && hr.store && hr.store.orig;
+      if (hp && Object.keys(hp).length) window.__ORIG_PROG = hp;
+    } catch (e) {}
+  }
   const origs = ORIGINALS.map((o) => {
-    const prog = (store.orig || {})[o.id] || {};
+    const prog = (window.__ORIG_PROG || {})[o.id] || (store.orig || {})[o.id] || {};
     return {
       type: "orig", id: o.id, name: prog.name || o.name, title: o.title || "", role: o.role || "", rare: !!o.rare,
       power: originalFinal(o, prog).power
