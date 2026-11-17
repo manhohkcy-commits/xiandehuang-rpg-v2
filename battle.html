@@ -99,6 +99,18 @@ function rewardText(s) {
   rg("shardR", "R碎片");
   rg("shardSR", "SR碎片");
   rg("shardSSR", "SSR碎片");
+  rg("bstone", "突破石");
+  const sub = (obj, names) => {
+    if (!obj || typeof obj !== "object") return;
+    Object.keys(obj).forEach((k) => {
+      const a = obj[k];
+      if (!Array.isArray(a) || !a[1]) return;
+      parts.push((names[k] || k) + " " + a[0] + "~" + a[1]);
+    });
+  };
+  sub(dp.ms, { ms1: "初级手稿", ms2: "中级手稿", ms3: "高级手稿" });
+  sub(dp.md, { md1: "青铜勋章", md2: "白银勋章", md3: "黄金勋章" });
+  sub(dp.cert, { cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" });
   if (s.themeGear) parts.push("🎁 " + s.themeGear);
   if (dp.kShard) parts.push("究极热动拳套碎片 " + dp.kShard[0] + "~" + dp.kShard[1]);
   if (dp.kyoShard) parts.push("草薙流古武典碎片 " + dp.kyoShard[0] + "~" + dp.kyoShard[1]);
