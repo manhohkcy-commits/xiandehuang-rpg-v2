@@ -1309,3 +1309,22 @@ DUNGEONS.forEach((du) => {
     dp.gearChance = Math.max(0, Math.round(dp.gearChance * 0.35));
   });
 });
+
+
+// 🧽 掉落整理：删掉停用的旧碎片；证书按关卡严格分档
+(() => {
+  const gear = DUNGEONS.find((x) => x.id === "d_gear");
+  if (gear) gear.stages.forEach((s) => { if (s.drop) delete s.drop.shards; });
+
+  const mat = DUNGEONS.find((x) => x.id === "d_char");
+  if (mat) {
+    mat.stages.forEach((s, i) => {
+      if (!s.drop) return;
+      const n = i + 1;
+      const tier = n <= 7 ? "cert1" : n <= 13 ? "cert2" : n <= 17 ? "cert3" : "cert4";
+      const range = { cert1: [1, 2], cert2: [1, 3], cert3: [1, 4], cert4: [1, 5] }[tier];
+      s.drop.cert = {};
+      s.drop.cert[tier] = range;
+    });
+  }
+})();
