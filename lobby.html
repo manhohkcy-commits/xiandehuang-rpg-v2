@@ -32,6 +32,12 @@ const hostMode = (() => { try { if (localStorage.getItem("rpg2:host") === "1") r
 
 let tab = (new URLSearchParams(location.search)).get("tab") || "player";
 let cache = null;
+(async () => {
+  try {
+    const r = await cloudGet("zynSD117");
+    ORIG_PROG = (r && r.store && r.store.orig) || {};
+  } catch (e) {}
+})();
 
 function playerRows(rows) {
   const map = new Map();
@@ -50,7 +56,7 @@ function playerRows(rows) {
 
 function origRows() {
   return ORIGINALS.slice().sort((a, b) => (Number((b.stats || {}).power) || 0) - (Number((a.stats || {}).power) || 0))
-    .map((o) => ({ o, final: originalFinal(o, {}), lv: 1 }));
+    .map((o) => ({ o, final: originalFinal(o, ORIG_PROG[o.id] || {}), lv: (ORIG_PROG[o.id] || {}).lv || 1 }));
 }
 
 function render() {
@@ -121,7 +127,7 @@ function render() {
   view().querySelectorAll("[data-orig]").forEach((tr) => tr.onclick = () => {
     const o = ORIGINALS.find((x) => x.id === tr.dataset.orig);
     if (!o) return;
-    const f = originalFinal(o, {});
+    const f = originalFinal(o, ORIG_PROG[o.id] || {});
     const g = ORIGINAL_GEAR[o.id] || o.gearObj || {};
     const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
     const tint = o.rare ? "#ffb347" : "#8a8ab0";
@@ -289,6 +295,7 @@ async function loadPlayers() {
 
 // 💬 公共频道
 let myName = (() => { try { return localStorage.getItem("rpg2:nick") || "玩家"; } catch (e) { return "玩家"; } })();
+let ORIG_PROG = {};
 const CHAT_BOX = "__chat";
 function chatCard() {
   const quick = ["求组队", "缺输出", "缺前排", "带新人", "收材料", "来打本"];
