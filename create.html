@@ -1265,7 +1265,7 @@ async function renderRank() {
           top.map((r, i) => {
             const isOrig = r.type === "orig";
             const nameCell = isOrig
-              ? '<b style="color:#ffb347;">' + esc(r.name) + '</b>' + (r.title ? ' <span class="hint">' + esc(r.title) + '</span>' : '') + (r.rare ? ' <span class="tag">稀有</span>' : '')
+              ? '<b style="color:' + (r.color || "#ffb347") + ';">' + esc(r.name) + '</b> <span class="tag" style="border-color:#ffb347;color:#ffb347;">原创</span>' + (r.rare ? ' <span class="tag">稀有</span>' : '')
               : '<b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '');
             return '<tr' + (isOrig ? ' data-origcard="' + r.id + '"' : ' data-rankbox="' + r.box + '"') + ' style="border-top:1px dashed #23233a;cursor:pointer;' +
               (r.type === "player" && r.box === meBox ? "background:#1b2740;" : "") + '">' +
@@ -1646,26 +1646,6 @@ function renderOrigCult() {
   view().innerHTML = '<div class="tree-tabs">' + tabs + '</div>' + res + (body || card("⚒ 培养", '<div class="hint">这名角色还没有专属装备。</div>'));
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
-  if (view().querySelector("[data-ograd]")) view().querySelector("[data-ograd]").onclick = async () => {
-    const gi = Math.max(0, GRADE.findIndex((g) => g.key === (prog.grade || "D")));
-    const gNext = GRADE[gi + 1];
-    if (!gNext) return toast("资历已满", true);
-    if (matTotal("ms") < gNext.cost) return toast("手稿不够（需 " + gNext.cost + "）", true);
-    if ((Number(store.gold) || 0) < gNext.cost * 10) return toast("金币不够", true);
-    matSpend("ms", gNext.cost); store.gold -= gNext.cost * 10;
-    prog.grade = gNext.key; store.orig[o.id] = prog;
-    await save(); render(); toast("🎖️ 资历 → " + gNext.key);
-  };
-  if (view().querySelector("[data-oapt]")) view().querySelector("[data-oapt]").onclick = async () => {
-    const ai = Math.max(1, Number(prog.apt) || 1);
-    const aNext = APTITUDE[ai];
-    if (!aNext) return toast("资质已满", true);
-    if (matTotal("md") < aNext.cost) return toast("勋章不够（需 " + aNext.cost + "）", true);
-    if ((Number(store.gold) || 0) < aNext.cost * 5) return toast("金币不够", true);
-    matSpend("md", aNext.cost); store.gold -= aNext.cost * 5;
-    prog.apt = ai + 1; store.orig[o.id] = prog;
-    await save(); render(); toast("🎯 资质 → " + (ai + 1) + "★");
-  };
   view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
     const parts = b.dataset.og.split(":");
     const _gdef = (ORIGINAL_GEAR[o.id] || o.gearObj || {})[parts[0]] || {};
@@ -1915,24 +1895,6 @@ function renderOrig() {
         return '<button id="btnOrigBreak" style="border-color:' + (okB ? "#ffb347" : "#3a3a5c") + ';color:' + (okB ? "#ffb347" : "#6a6a86") + ';' + (okB ? '' : 'opacity:.55;') + '">⚡ 突破</button>';
       })() +
       '</div>') +
-    (() => {
-      const gi = Math.max(0, GRADE.findIndex((g) => g.key === (prog.grade || "D")));
-      const ai = Math.max(1, Number(prog.apt) || 1);
-      const gNext = GRADE[gi + 1] || null;
-      const aNext = APTITUDE[ai] || null;
-      const gCost = gNext ? { ms: gNext.cost, gold: gNext.cost * 10 } : null;
-      const aCost = aNext ? { md: aNext.cost, gold: aNext.cost * 5 } : null;
-      const canG = !!gNext && matTotal("ms") >= gCost.ms && (Number(store.gold) || 0) >= gCost.gold;
-      const canA = !!aNext && matTotal("md") >= aCost.md && (Number(store.gold) || 0) >= aCost.gold;
-      return card("🎖️ 资历 · 资质",
-        '<div class="row"><span class="k">资历</span><span class="v" style="color:' + (GRADE[gi].color || "#dbe4f3") + ';">' + GRADE[gi].key + " · " + GRADE[gi].name + '（全属性 ×' + GRADE[gi].mult + '）</span></div>' +
-        (gNext ? '<div class="hint">晋升 → ' + gNext.key + " · " + gNext.name + '（手稿 ' + gCost.ms + ' / 金 ' + fmt(gCost.gold) + '）</div>' +
-          '<button data-ograd="1"' + (canG ? '' : ' style="opacity:.45;"') + '>晋升资历</button>' : '<div class="hint">资历已满</div>') +
-        '<div class="row" style="margin-top:10px;"><span class="k">资质</span><span class="v" style="color:#c9a0ff;">' + ai + '★（全属性 ×' + (APTITUDE[ai - 1].mult) + '）</span></div>' +
-        (aNext ? '<div class="hint">评估 → ' + (ai + 1) + '★（勋章 ' + aCost.md + ' / 金 ' + fmt(aCost.gold) + '）</div>' +
-          '<button data-oapt="1"' + (canA ? '' : ' style="opacity:.45;"') + '>提升资质</button>' : '<div class="hint">资质已满</div>')
-      );
-    })() +
     card("综合战力",
       '<div style="font-size:24px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>' +
       '<div class="hint">综合战力</div>') +
