@@ -173,7 +173,7 @@ function render() {
         '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:3px 11px;font-size:11px;color:' + tint + ';">⚔️ 战力 <b style="font-size:13px;">' + fmt(f.power) + '</b></span></div>' +
       '<div class="hint" style="font-size:11px;color:' + tint + ';font-weight:700;letter-spacing:1px;margin:10px 0 5px;">① 基础面板</div>' +
       panel(row("攻击", Math.round(f.atk)) + row("生命", fmt(Math.round(f.hp))) + row("防御", Math.round(f.def)) +
-        row("法抗", Math.round(f.res)) + row("速度", f.spd) + row("暴击率", f.critRate + "%") + row("暴击伤害", f.critDmg + "%")) +
+        row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) + row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%")) +
       '<div class="hint" style="font-size:11px;color:' + tint + ';font-weight:700;letter-spacing:1px;margin:10px 0 5px;">② 专精面板</div>' +
       panel(row("基础四维", "生命 " + (basic.hp || 0) + " · 攻击 " + (basic.atk || 0) + " · 防御 " + (basic.def || 0) + " · 法抗 " + (basic.res || 0)) +
         row("专精四项", "力量 " + (spec.str || 0) + " · 智力 " + (spec.int || 0) + " · 技巧 " + (spec.tech || 0) + " · 敏捷 " + (spec.agi || 0))) +
