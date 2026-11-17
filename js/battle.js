@@ -163,7 +163,7 @@ export function damage(st, atkId, defId, opts = {}) {
   if (def.hp === 0 && Number(at.rageOnKill) > 0) {
     atk.rage = Math.min(100, (Number(atk.rage) || 0) + Number(at.rageOnKill));
   }
-  return { dmg, crit, killed: def.hp === 0, heal };
+  return { dmg, crit, killed: def.hp === 0, heal, block: Math.round(block), absorb: absorbed, thorns: (Number(dt.thorns) > 0 ? Math.max(1, Math.round(dmg * Number(dt.thorns) / 100)) : 0) };
 }
 export function setCooldown(st, unitId, cd) {
   const u = st.units.find((x) => x.id === String(unitId));

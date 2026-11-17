@@ -20,13 +20,13 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
-import { } from "./js/battle.js?v=95e5cc06";
+import { } from "./js/battle.js?v=abeb92c8";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=1502963d";
 import { makeItem } from "./js/items.js?v=4c8258c6";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=e13271f7";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=8483d05e";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=8c637db3";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=95e5cc06";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=abeb92c8";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
@@ -88,6 +88,17 @@ function clearedFor(s) {
   if (map[k] != null) return Number(map[k]) || 0;
   return k === "exp" ? (Number(f.expCleared) || 0) : 0;
 }
+function fxTags(r) {
+  if (!r) return "";
+  const out = [];
+  if (r.crit) out.push("暴击💥");
+  if (r.block) out.push("格挡 -" + r.block + "%");
+  if (r.absorb) out.push("护盾吸收 " + r.absorb);
+  if (r.heal) out.push("吸血 +" + r.heal);
+  if (r.thorns) out.push("反伤 " + r.thorns);
+  return out.length ? "（" + out.join(" · ") + "）" : "";
+}
+
 function rewardText(s) {
   const parts = [];
   if (s.gold) parts.push("💰 " + fmt(s.gold));
@@ -957,13 +968,13 @@ function doAct(kind) {
       for (let h = 0; h < uHitsN; h++) {
         const rr = damage(st, "me", t.id, { atk: m.atk, mult: segU[h], critRate: m.critRate, critDmg: m.critDmg });
         if (st.__endless) st.__endless.dmg += rr.dmg;
-        r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+        r.dmg += rr.dmg; r.heal = (r.heal || 0) + (rr.heal || 0); r.absorb = (r.absorb || 0) + (rr.absorb || 0); r.thorns = (r.thorns || 0) + (rr.thorns || 0); r.block = Math.max(r.block || 0, rr.block || 0); if (rr.crit) r.crit = true;
       }
       if (i > 0) pushLog("💥 连带命中 " + t.name, "line");
     });
     if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
-    pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + fxTags(r));
     commit(st, "me");
   } else if (kind === "skill") {
     const per = Number(wp.sMult) || 150;
@@ -975,7 +986,7 @@ function doAct(kind) {
     for (let i = 0; i < hits; i++) {
       const rr = damage(st, "me", foe().id, { atk: m.atk, mult: segPlan[i], critRate: m.critRate, critDmg: m.critDmg });
       if (st.__endless) st.__endless.dmg += rr.dmg;
-      r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+      r.dmg += rr.dmg; r.heal = (r.heal || 0) + (rr.heal || 0); r.absorb = (r.absorb || 0) + (rr.absorb || 0); r.thorns = (r.thorns || 0) + (rr.thorns || 0); r.block = Math.max(r.block || 0, rr.block || 0); if (rr.crit) r.crit = true;
       segs.push(rr.dmg + (rr.crit ? "💥" : ""));
       if (st.__isOrig && rr.dmg > 0) {
         st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1);
@@ -987,7 +998,7 @@ function doAct(kind) {
       addStatus(st, f2.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
     }
-    pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act", subs);
+    pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + fxTags(r), "act", subs);
     setCooldown(st, "me", cd);
     commit(st, "me");
   } else {
@@ -998,7 +1009,7 @@ function doAct(kind) {
     for (let i = 0; i < aHits; i++) {
       const rr = damage(st, "me", foe().id, { atk: m.atk, mult: aSeg[i], critRate: m.critRate, critDmg: m.critDmg });
       if (st.__endless) st.__endless.dmg += rr.dmg;
-      r.dmg += rr.dmg; if (rr.crit) r.crit = true;
+      r.dmg += rr.dmg; r.heal = (r.heal || 0) + (rr.heal || 0); r.absorb = (r.absorb || 0) + (rr.absorb || 0); r.thorns = (r.thorns || 0) + (rr.thorns || 0); r.block = Math.max(r.block || 0, rr.block || 0); if (rr.crit) r.crit = true;
       if (st.__isOrig && rr.dmg > 0) {
         st.__frost = Math.min(5, (Number(st.__frost) || 0) + 1);
         pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line");
@@ -1045,7 +1056,7 @@ function aiTurnIfNeeded() {
     setTimeout(() => {
       const t = foe();
       const r = damage(st, a.id, t.id, { atk: a.atk, mult: 100, critRate: a.critRate, critDmg: a.critDmg });
-      pushLog("🤝 " + a.name + " 出手 → " + t.name + " " + r.dmg, "line");
+      pushLog("🤝 " + a.name + " 出手 → " + t.name + " " + r.dmg + fxTags(r), "line");
       commit(st, a.id);
       if (st.finished && !spawnWave()) finish();
       renderBattle();
@@ -1100,7 +1111,7 @@ function aiTurnIfNeeded() {
     });
     if (tgts.length > 1) pushLog("🎯 命中 " + tgts.length + " 个目标", "line");
     const r = { dmg: total, crit };
-    pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + (used && used.name ? "「" + used.name + "」" : "") + " → " + m.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""));
+    pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + (used && used.name ? "「" + used.name + "」" : "") + " → " + m.name + " " + r.dmg + fxTags(r));
     if (used && used.burn) addStatus(st, f2.id, "me", "burn", Number(used.burn) || 20, 2, "灼烧");
     if (used && used.stun) addStatus(st, f2.id, "me", "stun", Number(used.stun) || 20, 1, "眩晕");
     if (used && used.silence) addStatus(st, f2.id, "me", "silence", Number(used.silence) || 20, 2, "沉默");
