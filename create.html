@@ -968,9 +968,9 @@ function renderTalent() {
         ? (actHas ? '<span class="tag" style="border-color:#7ee787;color:#7ee787;">已解锁</span>'
                   : '<button data-tp="' + tree.active.id + '" ' + (actCan ? '' : 'disabled') + ' style="font-size:10px;padding:1px 8px;">解锁</button>')
         : '<span class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + ' 自动升级</span>';
-      rows.push('<tr><td colspan="4" style="padding:0 4px 6px;"><div style="display:flex;align-items:center;gap:8px;border-left:3px solid #c9a0ff;background:#16102a;padding:5px 8px;border-radius:6px;font-size:11px;color:#c9a0ff;">' +
+      rows.push('<tr><td colspan="4" style="padding:0 4px 6px;"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-left:3px solid #c9a0ff;background:#16102a;padding:5px 8px;border-radius:6px;font-size:11px;color:#c9a0ff;">' +
         '<span>✨ 主动技 Lv' + AL + '：' + esc(tree.active.name) + ' — ' + val + '　<span class="hint" style="color:#8a97b8;">CD ' + tree.active.cd + ' 回合</span></span>' +
-        '<span style="margin-left:auto;">' + right + '</span></div></td></tr>');
+        '<span style="margin-left:auto;flex-shrink:0;">' + right + '</span></div></td></tr>');
     }
   }
   const grid = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;">' +
