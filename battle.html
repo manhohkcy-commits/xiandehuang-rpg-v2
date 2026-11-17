@@ -110,7 +110,10 @@ function rewardText(s) {
   rg("shardR", "R碎片");
   rg("shardSR", "SR碎片");
   rg("shardSSR", "SSR碎片");
-  if (Number(dp.bstone) > 0) parts.push("突破石 " + dp.bstone);
+  if (dp.bstone) {
+    if (Array.isArray(dp.bstone)) { if (dp.bstone[1] > 0) parts.push("突破石 " + dp.bstone[0] + "~" + dp.bstone[1]); }
+    else if (Number(dp.bstone) > 0) parts.push("突破石 " + Number(dp.bstone));
+  }
   const sub = (obj, names) => {
     if (!obj || typeof obj !== "object") return;
     Object.keys(obj).forEach((k) => {
