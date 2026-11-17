@@ -2282,11 +2282,15 @@ function renderStore() {
         : '<button id="bOn" style="font-size:11px;">🧹 批量分解</button>') +
     '</div></div>';
 
+  const rrow = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + fmt(Number(v) || 0) + '</span></div>';
   const resCard = '<div class="card"><div class="card-title">资源</div>' +
-    '<div class="row"><span class="k">金币</span><span class="v">' + fmt(Number(store.gold) || 0) + '</span></div>' +
-    '<div class="row"><span class="k">碎片</span><span class="v">' + fmt(Number(fl.shards) || 0) + '</span></div>' +
-    '<div class="row"><span class="k">强化石</span><span class="v">' + fmt(Number(fl.stone) || 0) + '</span></div>' +
-    '<div class="row"><span class="k">突破石</span><span class="v">' + fmt(Number(fl.bstone) || 0) + '</span></div>' + '</div>';
+    rrow("金币", store.gold) +
+    '<div class="hint" style="margin:8px 0 4px;color:#8fd8ff;font-weight:700;">碎片</div>' +
+    rrow("通用碎片", fl.shards) + rrow("R 碎片", fl.shardR) + rrow("SR 碎片", fl.shardSR) + rrow("SSR 碎片", fl.shardSSR) +
+    rrow("草薙流古武典碎片", fl.kyoShard) + rrow("究极热动拳套碎片", fl.kShard) +
+    '<div class="hint" style="margin:8px 0 4px;color:#ffd666;font-weight:700;">材料</div>' +
+    rrow("强化石", fl.stone) + rrow("精炼石", fl.refineStone) + rrow("突破石", fl.bstone) +
+    '</div>';
 
   if (!filtered.length) {
     view().innerHTML = propCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
