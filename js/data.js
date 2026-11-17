@@ -1350,3 +1350,12 @@ DUNGEONS.forEach((du) => {
     if (Array.isArray(r) && r[1] > 0) s.drop.refine = [Math.max(1, Math.round(r[0] / 2)), Math.max(1, Math.round(r[1] / 2))];
   });
 })();
+
+// 📈 经验曲线上调（等级越高消耗越大）
+(() => {
+  const oldNeed = CHAR.expNeed;
+  CHAR.expNeed = (lv) => {
+    const L = Math.max(1, Number(lv) || 1);
+    return Math.round(oldNeed(L) * (1.5 + L / 50));
+  };
+})();
