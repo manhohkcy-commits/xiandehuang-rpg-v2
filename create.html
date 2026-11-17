@@ -1387,6 +1387,80 @@ function renderDaily() {
     addReceipt(store, "成就", a.name, { gold: a.gold });
     await save(); render(); toast("🏅 " + a.name + " +" + a.gold + " 金");
   });
+}
+
+function renderCult() {
+  const ch = activeChar();
+  if (!ch) { window.__creating = 1; buildCreateScreen(); return; }
+  const entries = [];
+  ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
+    const d = ch.equip && ch.equip[k];
+    if (d) entries.push({ key: "eq:" + k, d, where: "已装备", id: null, lock: false });
+  });
+  (store.items || []).forEach((it) => {
+    if (isEquip(it)) entries.push({ key: "it:" + it.id, d: it.data || {}, where: "仓库", id: it.id, lock: !!it.lock });
+  });
+  const resolve = (key) => {
+    if (key.indexOf("eq:") === 0) {
+      const slot = key.slice(3);
+      const raw = ch.equip[slot];
+      if (!raw) return null;
+      const d = raw.data ? raw.data : raw;
+      return { id: raw.id || ("eq_" + slot), cat: raw.cat || (slot === "armor2" ? "armor" : slot), data: d, __eq: true, __slot: slot };
+    }
+    const it = findItem(store, key.slice(3));
+    if (it && it.data && it.data.data) return { id: it.id, cat: it.cat, data: it.data.data };
+    return it;
+  };
+  const row = (e) => {
+    const it = resolve(e.key);
+    if (!it || !it.data) return "";
+    const chk = cultCheck(it, "level", store);
+    const star = cultCheck(it, "star", store);
+    const rc = RARITY_COLOR[e.d.rarity] || "#23233a";
+    const bt = Number(e.d.bt) || 0;
+    const cap = 25 + bt * 25;
+    const bkCfg = (CULT.eqBreak || [])[bt];
+    const canBk = bkCfg && bt < 5 && (Number(e.d.lv) || 1) >= cap && (Number(store.flags.stone) || 0) >= bkCfg.stone && (Number(store.gold) || 0) >= bkCfg.gold;
+    return '<div style="border:1px solid ' + rc + '66;border-radius:10px;padding:10px;margin:8px 0;">' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+      '<span style="font-weight:600;cursor:pointer;text-decoration:underline dotted;color:' + rc + ';" data-cultdetail="' + e.key + '">' + esc(e.d.name || "装备") + '</span>' +
+      '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.rarity === "UR" ? "🔥" + (Number(e.d.fire) || 1) : (e.d.star || 1) + "★") + ' · Lv' + (e.d.lv || 1) + ' / 上限 ' + cap + '（突破 ' + bt + '/5）</span>' +
+      '<span class="tag">' + e.where + '</span></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+      '<button data-cult2="' + e.key + '"' + (chk.ok ? '' : ' style="opacity:.45;"') + '>强化 +1' + (chk.ok ? '（' + chk.gold + ' 金 / ' + chk.stone + ' 石）' : '（' + (chk.why || '') + '）') + '</button>' +
+      (bkCfg ? '<button data-brk2="' + e.key + '"' + (canBk ? '' : ' style="opacity:.45;"') + '>突破（上限 → ' + (25 + (bt + 1) * 25) + ' · 强化石 ' + bkCfg.stone + ' / 金 ' + fmt(bkCfg.gold) + '）</button>' : '') +
+      '<button data-star2="' + e.key + '"' + (star.ok ? '' : ' style="opacity:.45;"') + '>' + (star.ok ? '升星 → ' + star.to + '★（' + (star.rarity || '') + ' 碎片 ' + star.shards + '）' : (star.why || '已满星')) + '</button>' +
+      '<button disabled style="opacity:.45;">精炼（未开放）</button>' +
+      (() => {
+        const pm = promoteCheck(it, store);
+        const order = ["R", "SR", "SSR", "UR"];
+        const i2 = order.indexOf(e.d.rarity);
+        if (e.d.rarity === "UR") return "";
+        if ((Number(e.d.star) || 1) < 5 || i2 < 0) return "";
+        const next = order[i2 + 1];
+        const label = next === "UR" ? "⬆️ 升阶 → UR1🔥" : "⬆️ 升阶 → " + next;
+        return '<button data-promote="' + e.key + '"' + (pm.ok ? '' : ' style="opacity:.45;"') + ' style="border-color:#ffb347;color:#ffb347;">' + label + (pm.ok ? '（碎片 ' + pm.shards + ' / ' + pm.gold + ' 金）' : '') + '</button>';
+      })() +
+      (e.id && !e.lock ? '<button data-inh="' + e.id + '">🔁 继承到…</button>' : '') +
+      '</div></div>';
+  };
+  view().innerHTML = card("⚒ 装备培养",
+    '<div class="hint">强化 Lv1~150（每 25 级一次突破）、升星 1~5★、升阶、继承同部位。装备栏里的也能直接培养。</div>' +
+    (entries.length ? entries.map(row).join("") : '<div class="hint">还没有装备。</div>'));
+  const act = async (key, kind) => {
+    try {
+      const it = resolve(key);
+      if (!it || !it.data) return toast("找不到装备", true);
+      const r = cultApply(store, it, kind);
+      if (!r || !r.ok) return toast((r && r.why) || "无法执行", true);
+      if (kind === "level") { bumpDaily(store, "cults"); addReceipt(store, "培养", it.data.name + " → Lv" + r.lv); }
+      else addReceipt(store, "装备突破", it.data.name + " → 上限 " + r.cap, { gold: -r.gold });
+      await save(); render();
+      if (kind === "break") toast("🔓 突破成功：强化上限 " + r.cap);
+    } catch (err) { toast("出错：" + (err && err.message || err), true); }
+  };
+  view().querySelectorAll("[data-cult2]").forEach((b) => b.onclick = () => act(b.dataset.cult2, "level"));
 
   view().querySelectorAll("[data-brk2]").forEach((b) => b.onclick = async () => {
     const it = resolve(b.dataset.brk2);
@@ -1424,7 +1498,7 @@ function renderDaily() {
     await save(); render();
     toast("🔧 精炼成功：Lv" + r.refine);
   });
-  view().innerHTML += synthHtml();
+  // 材料合成卡由 renderCult 统一渲染，这里不再重新赋值
   view().querySelectorAll("[data-travel]").forEach((b) => b.onclick = async () => {
     if (!travelerOpen()) return toast("旅商还没开摊", true);
     const stock = travelerStock();
