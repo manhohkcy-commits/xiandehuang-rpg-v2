@@ -805,10 +805,10 @@ export const CHAR = {
 
 // ⚡ 突破节点（v2 定稿）：到点必须先突破才能继续升级
 export const BREAKS = [
-  { at: 20, capTo: 40, cert: "cert1", num: 8, gold: 5000, bonus: 3, points: 5 },
-  { at: 40, capTo: 60, cert: "cert2", num: 10, gold: 12000, bonus: 3, points: 5 },
-  { at: 60, capTo: 80, cert: "cert3", num: 12, gold: 25000, bonus: 3, points: 5 },
-  { at: 80, capTo: 100, cert: "cert4", num: 15, gold: 50000, bonus: 3, points: 5 }
+  { at: 20, capTo: 40, cert: "cert1", num: 12, gold: 6000, bonus: 3, points: 5 },
+  { at: 40, capTo: 60, cert: "cert2", num: 16, gold: 15000, bonus: 3, points: 5 },
+  { at: 60, capTo: 80, cert: "cert3", num: 20, gold: 30000, bonus: 3, points: 5 },
+  { at: 80, capTo: 100, cert: "cert4", num: 26, gold: 60000, bonus: 3, points: 5 }
 ];
 // 📅 日常任务：每天 3 个，跨天重置
 export const DAILY_QUESTS = [
