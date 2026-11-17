@@ -2243,7 +2243,7 @@ function renderStore() {
     });
     ["shards", "shardR", "shardSR", "shardSSR", "kyoShard", "kShard"].forEach((k) => {
       const n = Number(fl[k]) || 0;
-      if (n > 0) list.push(({ shards: "通用碎片", shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片", kyoShard: "草薙流古武典碎片", kShard: "究极热动拳套碎片" })[k] + " ×" + n);
+      if (n > 0) list.push(({ shards: "升阶碎片", shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片", kyoShard: "草薙流古武典碎片", kShard: "究极热动拳套碎片" })[k] + " ×" + n);
     });
     ["stone", "refineStone", "bstone"].forEach((k) => {
       const n = Number(fl[k]) || 0;
@@ -2286,7 +2286,7 @@ function renderStore() {
   const resCard = '<div class="card"><div class="card-title">资源</div>' +
     rrow("金币", store.gold) +
     '<div class="hint" style="margin:8px 0 4px;color:#8fd8ff;font-weight:700;">碎片</div>' +
-    rrow("通用碎片", fl.shards) + rrow("R 碎片", fl.shardR) + rrow("SR 碎片", fl.shardSR) + rrow("SSR 碎片", fl.shardSSR) +
+    rrow("升阶碎片", fl.shards) + rrow("R 碎片", fl.shardR) + rrow("SR 碎片", fl.shardSR) + rrow("SSR 碎片", fl.shardSSR) +
     rrow("草薙流古武典碎片", fl.kyoShard) + rrow("究极热动拳套碎片", fl.kShard) +
     '<div class="hint" style="margin:8px 0 4px;color:#ffd666;font-weight:700;">材料</div>' +
     rrow("强化石", fl.stone) + rrow("精炼石", fl.refineStone) + rrow("突破石", fl.bstone) +
