@@ -1585,7 +1585,7 @@ function renderOrigCult() {
     const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
     const okStar = star < ORIG_GEAR_CULT.maxStar && shN >= cStar.s && gN >= cStar.g;
     const okRef = refN >= cRef.r && gN >= cRef.g;
-    const okAdv = adv < 5 && stN >= cAdv.s && gN >= cAdv.g;
+    const okAdv = adv < 5 && shN >= cAdv.s && gN >= cAdv.g;
     const okAwk = awk < 3 && bsN >= cAwk.b;
     return card((GI[slot] || "🗡") + " " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
       '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / ★' + star +
@@ -1597,7 +1597,7 @@ function renderOrigCult() {
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
         '<button data-og="' + slot + ':refine"' + ' disabled style="opacity:.45;">精炼（未开放）</button>' +
         '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + '>升阶 ' + (it.rarity || "SSR") + '→' + ((it.rarity === "UR") ? "UR🔥" : ({ SSR: "UR", SR: "SSR", R: "SR" })[it.rarity] || "UR") +
-          '（强化石 ' + cAdv.s + ' / 金 ' + fmt(cAdv.g) + '）</button>' +
+          '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAdv.s + ' / 金 ' + fmt(cAdv.g) + '）</button>' +
         '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + '（证书 ' + cAwk.b + '）</button>' +
       '</div>');
   }).join("");
@@ -1641,7 +1641,7 @@ function renderOrigCult() {
       const n = Number(gs.awaken) || 0;
       if (n >= 3) return toast("已满觉醒", true);
       const cb = 20 + 15 * n;
-      if (matTotal("cert") < cb) return toast("突破石不足（需 " + cb + "）", true);
+      if (matTotal("cert") < cb) return toast("证书不足（需 " + cb + "）", true);
       matSpend("cert", cb); gs.awaken = n + 1;
       if (!prog.bonus) prog.bonus = {};
       prog.bonus.ultPct = (Number(prog.bonus.ultPct) || 0) + 3;
