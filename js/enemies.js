@@ -312,11 +312,21 @@ export function enemyPower(e) {
     (s.spd || 0) * 28 + (e.critRate || 5) * 16 + (e.critDmg || 150) * 5);
 }
 // 🏯 关卡建议战力：该关全部敌人（含增援/波次）的战力总和
+// 🏯 关卡建议战力：以「同等级裸角色」为基准，按敌人数量/阶级给难度系数
+// 之前是把敌人战力直接相加，高等级会虚高到同级的 10 倍以上
 export function stagePower(stage) {
   if (!stage) return 0;
-  const ids = stage.enemies && stage.enemies.length ? stage.enemies : [];
-  if (!ids.length) return enemyPower({ stats: stage.foe });
-  return ids.reduce((sum, id) => sum + enemyPower(enemyAt(id, stage.lv)), 0);
+  const L = Math.max(1, Number(stage.lv) || 1);
+  const baseAtk = 60 + 6 * (L - 1), baseHp = 500 + 40 * (L - 1);
+  const baseDef = 20 + 2 * (L - 1), baseRes = 15 + 1.5 * (L - 1);
+  const baseSpd = 10 + 0.1 * (L - 1);
+  const base = baseAtk * 16 + baseHp + baseDef * 7 + baseRes * 5 + baseSpd * 28 + 5 * 16 + 150 * 5;
+  const ids = (stage.enemies && stage.enemies.length) ? stage.enemies : [];
+  const n = Math.max(1, ids.length);
+  const tierMul = stage.tier === "首领" ? 1.55 : stage.tier === "特色" ? 1.35 : stage.tier === "精英" ? 1.18 : 1;
+  // 典型装备加成约 2.2 倍同级裸角色；敌人越多系数越高
+  const k = (0.55 + 0.15 * (n - 1)) * tierMul;
+  return Math.round(base * 2.2 * k / 10) * 10;
 }
 // 📊 数值重定：以「平均 Lv1 角色」为基准（攻 144 / 生 850 / 防 29 / 抗 22 / 速 11）
 const ENEMY_STATS = {
