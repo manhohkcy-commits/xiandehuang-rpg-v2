@@ -247,11 +247,41 @@ async function loadPlayers() {
     msg.textContent = "🟢 在线 " + onlineN + " 人 · 共 " + rows.length + " 名玩家角色（在线优先排序）";
     list.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
       '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>等级</th><th style="text-align:right;">战力</th></tr>' +
-      rows.map((r, i) => '<tr style="border-top:1px dashed #23233a;' + (r.box === (hostMode ? "zynSD117" : box) ? "background:#1b2740;" : "") + '">' +
+      rows.map((r, i) => '<tr data-player="' + esc(r.box) + '" style="cursor:pointer;border-top:1px dashed #23233a;' + (r.box === (hostMode ? "zynSD117" : box) ? "background:#1b2740;" : "") + '">' +
         '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
         '<td style="font-size:12.5px;"><span style="color:' + (onlineMap[r.box] ? "#7ee787" : "#4a4a68") + ';">●</span> <b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
         '<td style="font-size:11px;color:#8a8ab0;">Lv' + r.lv + '</td>' +
         '<td style="text-align:right;font-size:12px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") + '</table>';
+    list.querySelectorAll("[data-player]").forEach((tr) => tr.onclick = async () => {
+      const bx = tr.dataset.player;
+      try {
+        const row = await cloudGet(bx);
+        const s = row && row.store;
+        const ch = s && (s.chars || [])[0];
+        if (!ch) return alert("读不到这个玩家的角色。");
+        const f = charFinal(ch);
+        const eq = ch.equip || {};
+        const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+        const gear = Object.keys(SLOT).map((k) => {
+          const it = eq[k] && eq[k].data;
+          return '<div class="row"><span class="k">' + SLOT[k] + '</span><span class="v">' + (it ? esc(it.name) + ' <span class="hint">' + (it.rarity || "") + '</span>' : '<span class="hint">—</span>') + '</span></div>';
+        }).join("");
+        const ov = document.createElement("div");
+        ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+        ov.innerHTML = '<div class="card" style="width:min(420px,92vw);max-height:84vh;overflow:auto;margin:0;">' +
+          '<div class="card-title">' + esc(ch.name) + ' <span class="tag">Lv' + (ch.lv || 1) + '</span></div>' +
+          '<div class="hint">战力 ' + fmt(charPower(ch)) + ' · 位号 ' + esc(bx) + '</div>' +
+          '<div class="row"><span class="k">攻击</span><span class="v">' + Math.round(f.atk) + '</span></div>' +
+          '<div class="row"><span class="k">生命</span><span class="v">' + Math.round(f.hp) + '</span></div>' +
+          '<div class="row"><span class="k">防御 / 法抗</span><span class="v">' + Math.round(f.def) + ' / ' + Math.round(f.res) + '</span></div>' +
+          '<div class="row"><span class="k">速度 / 暴击</span><span class="v">' + Math.round(f.spd) + ' · ' + Math.round(f.critRate) + '%</span></div>' +
+          '<div class="hint" style="margin-top:8px;color:#8fd8ff;font-weight:700;">装备</div>' + gear +
+          '<button id="plClose" style="width:100%;margin-top:10px;">关闭</button></div>';
+        document.body.appendChild(ov);
+        ov.querySelector("#plClose").onclick = () => ov.remove();
+        ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+      } catch (e) { alert("读取失败：" + (e && e.message || e)); }
+    });
   } catch (e) {
     msg.textContent = "读取失败：" + (e && e.message || e);
   }

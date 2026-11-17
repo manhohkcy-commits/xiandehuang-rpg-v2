@@ -1120,7 +1120,7 @@ async function renderRank() {
     const prog = (store.orig || {})[o.id] || {};
     return {
       type: "orig", id: o.id, name: prog.name || o.name, title: o.title || "", role: o.role || "", rare: !!o.rare,
-      power: originalFinal(o, prog).power
+      power: originalFinal(o, {}).power
     };
   });
   const all = players.map((r) => Object.assign({ type: "player" }, r)).concat(origs).sort((a, b) => b.power - a.power);
