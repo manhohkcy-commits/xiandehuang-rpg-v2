@@ -24,9 +24,9 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=5fa204d6";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=0d8ecb9b";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=42e16747";
-import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=5fa204d6";
+import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=0d8ecb9b";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=a1cdc0e5";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=076cb032";
 
@@ -572,7 +572,7 @@ function breakRow(ch) {
   return '<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#101020;border:1px solid #2f2f4a;">' +
     '<div class="hint">突破 ' + BREAKS.map((b) => b.at).join(" ▸ ") + '　' + dots + '</div>' +
     '<div class="hint" style="margin-top:4px;">下一次：Lv' + next.at + '（' + (near ? "已到" : "还需 " + (next.at - lv) + " 级") +
-      '）· 突破石 ' + next.stone + '（有 ' + stone + '）· 金 ' + fmt(next.gold) + '</div>' +
+      '）· ' + ({ cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" })[next.cert] + ' ×' + next.num + '（有 ' + certHave + '）· 金 ' + fmt(next.gold) + '</div>' +
     '<div class="hint" style="margin-top:2px;">突破奖励：全属性 +' + next.bonus + '%，属性点 +' + next.points + '，等级上限 → ' + next.capTo + '</div>' +
     '<button id="btnBreak" style="margin-top:6px;height:30px;border-color:' + (canDo ? "#7ee787" : "#3a3a5c") + ';color:' + (canDo ? "#7ee787" : "#6a6a86") + ';"' + (canDo ? '' : ' disabled') + '>⚡ 突破</button>' +
     '</div>';
@@ -823,15 +823,15 @@ function renderChar() {
     if (!next) return;
     if ((Number(ch.lv) || 1) < next.at) return toast("还没到突破等级", true);
     store.flags = store.flags || {};
-    const stone = Number(store.flags.stone) || 0;
-    if (stone < next.stone) return toast("突破石不够（需要 " + next.stone + "）", true);
+    const certHave2 = Number(store.flags[next.cert]) || 0;
+    if (certHave2 < next.num) return toast(({ cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" })[next.cert] + "不够（需要 " + next.num + "）", true);
     if ((Number(store.gold) || 0) < next.gold) return toast("金币不够（需要 " + next.gold + "）", true);
-    store.flags.stone = stone - next.stone;
+    store.flags[next.cert] = certHave2 - next.num;
     store.gold -= next.gold;
     ch.breaks = done + 1;
     ch.tp = (Number(ch.tp) || 0) + 2;
     ch.free = (Number(ch.free) || 0) + next.points;
-    addReceipt(store, "突破", ch.name + " 第 " + ch.breaks + " 突", { gold: -next.gold, items: [{ name: "突破石", count: -next.stone }], note: "全属性 +" + next.bonus + "% · 属性点 +" + next.points });
+    addReceipt(store, "突破", ch.name + " 第 " + ch.breaks + " 突", { gold: -next.gold, items: [{ name: ({ cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" })[next.cert], count: -next.num }], note: "全属性 +" + next.bonus + "% · 属性点 +" + next.points });
     await save(); render();
     toast("⚡ 突破成功：全属性 +" + next.bonus + "%，属性点 +" + next.points);
   };
