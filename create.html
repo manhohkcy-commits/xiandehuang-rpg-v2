@@ -2639,6 +2639,34 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
+  // ⚖️ 专精点迁移：按新公式（24 + 每5级2点 + 突破5点）统一老角色
+  {
+    let changed2 = false;
+    (store.chars || []).forEach((ch3) => {
+      if (ch3.specNorm) return;
+      const lv = Number(ch3.lv) || 1, br = Number(ch3.breaks) || 0;
+      const allowed = (Number(BIRTH.specPoints) || 24) + Math.floor(lv / 5) * 2 + br * 5;
+      const keys = ["str", "intel", "tech", "agi"];
+      let total = keys.reduce((s, k) => s + (Number(ch3[k]) || 0), 0) + (Number(ch3.free) || 0);
+      if (total > allowed) {
+        // 从点数最多的属性开始回收，直到符合上限
+        let over = total - allowed;
+        while (over > 0) {
+          const k = keys.slice().sort((a, b) => (Number(ch3[b]) || 0) - (Number(ch3[a]) || 0))[0];
+          const cur = Number(ch3[k]) || 0;
+          if (cur <= 0) break;
+          const cut = Math.min(cur, over);
+          ch3[k] = cur - cut;
+          over -= cut;
+        }
+        ch3.free = 0;
+        changed2 = true;
+      }
+      ch3.specNorm = 1;
+      if (!changed2) changed2 = true;
+    });
+    if (changed2) { try { save(); } catch (e) {} }
+  }
   // 🎁 补发初始装备（老存档没有装备的角色）
   {
     let changed = false;
