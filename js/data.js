@@ -1328,3 +1328,15 @@ DUNGEONS.forEach((du) => {
     });
   }
 })();
+
+// 💎 SSR 碎片产出提前：15 关起 1~3，20 关 3~8
+(() => {
+  const g = DUNGEONS.find((x) => x.id === "d_gear");
+  if (!g) return;
+  g.stages.forEach((s, i) => {
+    if (!s.drop) return;
+    if (i === 19) s.drop.shardSSR = [3, 8];
+    else if (i >= 14) s.drop.shardSSR = [1, 3];
+    else s.drop.shardSSR = [0, 0];
+  });
+})();
