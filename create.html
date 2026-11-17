@@ -313,8 +313,10 @@ function showItemDetail(it) {
         : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶没有技能（SR 起才有）</span></div>')) +
     '<div class="row"><span class="k">必杀</span><span class="v">' + (Number(d.uMult) || 250) + '%' + ((Number(d.uHits) || 1) > 1 ? ' ×' + (Number(d.uHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + ' · 怒气满 100 时可用</span></div>';
 
-  const meta = (d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "—") +
-    " · " + (d.dmgType === "spell" ? "法术" : "物理");
+  const meta = (it.cat === "weapon")
+  ? ((d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "近战") + " · " + (d.dmgType === "spell" ? "法术" : "物理"))
+  : (it.cat === "armor" ? ("防具 · " + (d.part === "bottom" ? "下装" : "上装")) : "饰品");
+const skillShow = (it.cat === "weapon") ? skill : "";
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
@@ -325,7 +327,7 @@ function showItemDetail(it) {
     (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + esc(d.desc) + '</div>' : '') +
     mainHtml +
     (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
-    skill +
+    skillShow +
     '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +
     '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
