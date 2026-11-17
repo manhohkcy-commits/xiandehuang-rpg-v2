@@ -1228,7 +1228,9 @@ async function renderRank() {
     const prog = (window.__ORIG_PROG || {})[o.id] || (store.orig || {})[o.id] || {};
     return {
       type: "orig", id: o.id, name: prog.name || o.name, title: o.title || "", role: o.role || "", rare: !!o.rare,
-      power: originalFinal(o, prog).power
+      power: originalFinal(o, prog).power,
+      lv: Number(prog.lv) || 1,
+      color: ((GRADE.find((g) => g.key === (prog.grade || "D")) || GRADE[0]).color || "#ffb347")
     };
   });
   const all = players.map((r) => Object.assign({ type: "player" }, r)).concat(origs).sort((a, b) => b.power - a.power);
