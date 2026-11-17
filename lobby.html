@@ -143,10 +143,10 @@ function render() {
       if (it.def) parts.push("防御 +" + it.def);
       if (it.res) parts.push("法抗 +" + it.res);
       if (it.spd) parts.push("速度 +" + it.spd);
-      if (it.critRate) parts.push("暴击 +" + it.critRate + "%");
-      if (it.critDmg) parts.push("暴伤 +" + it.critDmg + "%");
-      if (it.lifesteal) parts.push("吸血 " + it.lifesteal + "%");
-      if (it.ultPct) parts.push("必杀 +" + it.ultPct + "%");
+      if (it.critRate) parts.push("【概率】暴击率 +" + it.critRate + "%");
+      if (it.critDmg) parts.push("【加成】暴伤 +" + it.critDmg + "%");
+      if (it.lifesteal) parts.push("【续航】吸血 " + it.lifesteal + "%");
+      if (it.ultPct) parts.push("【加成】必杀伤害 +" + it.ultPct + "%");
       return '<div data-gear="' + k + '" style="padding:7px 9px;border-bottom:1px solid #1a2438;cursor:pointer;">' +
         '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;color:#dbe4f3;">' + ({ weapon: "🗡", armor: "🛡", armor2: "👖", accessory: "💍" }[k] || "🗡") + ' ' + esc(it.name) + '</b>' +
         '<span class="hint">' + SLOT[k] + ' ›</span></div>' +
@@ -200,10 +200,10 @@ function render() {
       if (it.def) stats.push("防御 +" + it.def);
       if (it.res) stats.push("法抗 +" + it.res);
       if (it.spd) stats.push("速度 +" + it.spd);
-      if (it.critRate) stats.push("暴击 +" + it.critRate + "%");
-      if (it.critDmg) stats.push("暴伤 +" + it.critDmg + "%");
-      if (it.lifesteal) stats.push("吸血 " + it.lifesteal + "%");
-      if (it.ultPct) stats.push("必杀 +" + it.ultPct + "%");
+      if (it.critRate) stats.push("【概率】暴击率 +" + it.critRate + "%");
+      if (it.critDmg) stats.push("【加成】暴伤 +" + it.critDmg + "%");
+      if (it.lifesteal) stats.push("【续航】吸血 " + it.lifesteal + "%");
+      if (it.ultPct) stats.push("【加成】必杀伤害 +" + it.ultPct + "%");
       const rc2 = RARITY_COLOR[it.rarity] || tint;
       const skCard = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><b style="font-size:13px;color:#dbe4f3;"><span style="color:' + rc2 + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
