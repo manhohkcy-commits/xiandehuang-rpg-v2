@@ -1377,3 +1377,17 @@ CULT.eqBreak = [
 ];
 CULT.stone = (lv) => 2 + 2 * (Number(lv) || 1);
 CULT.gold = (lv) => 60 * (Number(lv) || 1);
+
+// ⚒ 矿采锻造基地：精炼石 → 突破石（精炼暂未开放）
+(() => {
+  const g = DUNGEONS.find((x) => x.id === "d_gear");
+  if (!g) return;
+  g.stages.forEach((s) => {
+    if (!s.drop) return;
+    const oldRef = s.drop.refine;
+    const oldB = Number(s.drop.bstone) || 0;
+    const addRef = Array.isArray(oldRef) ? Math.max(1, Math.round((oldRef[0] + oldRef[1]) / 4)) : 0;
+    s.drop.bstone = oldB + addRef;
+    delete s.drop.refine;
+  });
+})();
