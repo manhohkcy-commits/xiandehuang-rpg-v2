@@ -1834,6 +1834,7 @@ function renderOrig() {
         };
         return line("str", "力量", "str") + line("int", "智力", "intel") + line("tech", "技巧", "tech") + line("agi", "敏捷", "agi") +
           '<button id="btnFullPanel" style="margin-top:8px;border-color:#8fd8ff;color:#8fd8ff;">📋 查看完整面板</button>' +
+      '<button id="btnNormSpec" style="margin-top:8px;margin-left:6px;border-color:#ffd666;color:#ffd666;">⚖️ 重算专精点</button>' +
       '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每 5 级 +2，突破 +5）</div>' +
           '<div class="hint" style="margin-top:2px;">力 +2攻 · 敏 +0.05速 · 智 +1.5抗 · 技 +0.5防</div>';
       })()) +
