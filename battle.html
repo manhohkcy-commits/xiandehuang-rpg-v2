@@ -1102,6 +1102,29 @@ function aiTurnIfNeeded() {
     if (shape === "all") tgts = alliesA;
     else if (shape === "row") tgts = alliesA.filter((u) => (u.__row == null ? 1 : u.__row) === meRow);
     else if (shape === "col") tgts = alliesA.filter((u) => ((u.__col ? 1 : 0) === meCol));
+    // 🩹 治疗（自己或血最少的同伴）
+    if (used && used.heal) {
+      const amt = Math.max(1, Math.round(f2.maxHp * Number(used.heal) / 100));
+      const hurt = st.units.filter((u) => u.side === "B" && u.hp > 0).sort((a, b2) => a.hp / a.maxHp - b2.hp / b2.maxHp)[0] || f2;
+      hurt.hp = Math.min(hurt.maxHp, hurt.hp + amt);
+      pushLog("🩹 " + f2.name + "「" + (used.name || "治疗") + "」→ " + hurt.name + " 回复 " + amt, "line");
+    }
+    // 🛡️ 护盾
+    if (used && (used.shield || used.shieldPct)) {
+      const amt = used.shield
+        ? (Number(used.shield) || 0)
+        : Math.round(f2.maxHp * Number(used.shieldPct) / 100);
+      if (amt > 0) {
+        f2.shield = (Number(f2.shield) || 0) + amt;
+        pushLog("🛡️ " + f2.name + " 获得护盾 " + amt, "line");
+      }
+    }
+    // 🩸 吸血 / 🗡️ 穿透：临时写入 traits 供本次伤害使用
+    if (used && (used.drain || used.pierce)) {
+      f2.traits = f2.traits || {};
+      if (used.drain) f2.traits.lifesteal = Number(used.drain) || 0;
+      if (used.pierce) f2.traits.penetrate = Number(used.pierce) || 0;
+    }
     let total = 0, crit = false;
     const segPlan = segMults(mult * hits, hits, used && used.segWeights);
     tgts.forEach((t) => {
@@ -1124,6 +1147,22 @@ function aiTurnIfNeeded() {
         if (f2.hp === 0) f2.alive = false;
         pushLog("🌵 反伤 → " + f2.name + " " + refl, "line");
       }
+    }
+    // 🐺 召唤
+    if (used && used.summon) {
+      const n = Math.max(1, Number(used.summon) || 1);
+      for (let k = 0; k < n; k++) {
+        const bidx = st.units.filter((u) => u.side === "B").length;
+        st.units.push({
+          id: "sum" + Date.now() + "_" + k, name: f2.name + "的召唤物", side: "B",
+          spd: Math.max(1, Math.round(f2.spd * 0.8)), power: 0,
+          hp: Math.round(f2.maxHp * 0.25), maxHp: Math.round(f2.maxHp * 0.25),
+          atk: Math.round(f2.atk * 0.5), def: Math.round(f2.def * 0.6), res: Math.round((f2.res || 0) * 0.6),
+          critRate: 5, critDmg: 150, dmgCut: 0, rage: 0, allowed: 0, acted: 0,
+          __skills: [{ kind: "normal", name: "撕咬", mult: 100, rage: 20 }]
+        });
+      }
+      pushLog("🐺 " + f2.name + " 召唤了 " + n + " 个援军", "line");
     }
     commit(st, f2.id);
     busy = false;
