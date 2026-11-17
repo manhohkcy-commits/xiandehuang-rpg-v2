@@ -915,6 +915,26 @@ function renderTalent() {
   });
   if (Object.keys(ch.talent.points).some((k) => !valid.has(k))) ch.talent.points = {};
 
+  // 🔒 定位互斥：多点分散时只保留投入最多的那个定位，其余退回
+  {
+    const inTree = {};
+    TALENT_TREES.forEach((t) => {
+      let n = 0;
+      (t.branches || []).forEach((b) => b.nodes.forEach((nd) => { if (ch.talent.points[nd.id]) n++; }));
+      if (t.active && ch.talent.points[t.active.id]) n++;
+      inTree[t.id] = n;
+    });
+    const used = Object.keys(inTree).filter((k) => inTree[k] > 0);
+    if (used.length > 1) {
+      const keep = used.slice().sort((a, b) => inTree[b] - inTree[a])[0];
+      TALENT_TREES.filter((t) => t.id !== keep).forEach((t) => {
+        (t.branches || []).forEach((b) => b.nodes.forEach((nd) => { delete ch.talent.points[nd.id]; }));
+        if (t.active) delete ch.talent.points[t.active.id];
+      });
+      try { save(); } catch (e) {}
+    }
+  }
+
   const spent = Object.keys(ch.talent.points).length;
   const left = Math.max(0, Number(ch.tp) - spent);
   const tb = talentBonus(ch);
@@ -1046,7 +1066,10 @@ function renderTalent() {
     await save(); render();
   });
   view().querySelectorAll("[data-tree]").forEach((b) => b.onclick = () => {
-    window.__talentTree = b.dataset.tree;
+    const target = b.dataset.tree;
+    const usedOther = TALENT_TREES.filter((t) => t.id !== target).reduce((s, t) => s + talentSpentInTree(ch, t.id), 0);
+    if (usedOther > 0) return toast("已投入其他定位 " + usedOther + " 点，先清空天赋再换定位", true);
+    window.__talentTree = target;
     render();
   });
 
@@ -1447,7 +1470,7 @@ function renderCult() {
   };
   view().innerHTML = card("⚒ 装备培养",
     '<div class="hint">强化 Lv1~150（每 25 级一次突破）、升星 1~5★、升阶、继承同部位。装备栏里的也能直接培养。</div>' +
-    (entries.length ? entries.map(row).join("") : '<div class="hint">还没有装备。</div>'));
+    (entries.length ? entries.map(row).join('') : '<div class="hint">还没有装备。</div>')) + synthHtml();
   const act = async (key, kind) => {
     try {
       const it = resolve(key);

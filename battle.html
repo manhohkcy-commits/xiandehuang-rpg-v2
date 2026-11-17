@@ -254,12 +254,13 @@ async function buildMultiBattle(stageId) {
       } catch (e) {}
     }
     if (ch) {
-      const f = ch ? charFinal(ch) : null;
+      const f = charFinal(ch);
       m.char = {
         lv: ch.lv, atk: f.atk, hp: f.hp, def: f.def, res: f.res, spd: f.spd,
         critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut,
         weapon: (ch.equip && ch.equip.weapon) || null
       };
+      if (ch.name) m.name = ch.name;
     } else {
       m.char = { lv: 1, atk: 60, hp: 500, def: 20, res: 15, spd: 10, critRate: 5, critDmg: 150, dmgCut: 0 };
     }
@@ -677,8 +678,8 @@ function tickStatuses() {
 }
 
 function me() {
-  return st.units.find((u) => u.id === "me")
-    || (st.__myUnit ? st.units.find((u) => u.id === st.__myUnit) : null)
+  return (st.__myUnit ? st.units.find((u) => u.id === st.__myUnit) : null)
+    || st.units.find((u) => u.id === "me")
     || st.units.find((u) => u.side === "A" && u.hp > 0)
     || st.units.find((u) => u.side === "A");
 }
@@ -1051,7 +1052,7 @@ function aiTurnIfNeeded() {
     }
   }  const a = nextActor(st);
   if (!a) return;
-  if (a.side === "A" && a.id !== "me") {
+  if (a.side === "A" && a.id !== "me" && a.id !== st.__myUnit) {
     // 🤝 同行托管控
     setTimeout(() => {
       const t = foe();
