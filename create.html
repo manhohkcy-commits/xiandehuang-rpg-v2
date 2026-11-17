@@ -1449,6 +1449,15 @@ function renderCult() {
         ' · Lv' + (e.d.lv || 1) + ' · 精炼 ' + (Number(e.d.refine) || 1) + '</span>' +
         '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+        (() => {
+          const _bt = Number(e.d.bt) || 0;
+          const _cap = 25 + _bt * 25;
+          const _cfg = (CULT.eqBreak || [])[_bt];
+          if (!_cfg || _bt >= 5) return '';
+          const _lvOk = (Number(e.d.lv) || 1) >= _cap;
+          const _can = _lvOk && (Number(store.flags.stone) || 0) >= _cfg.stone && (Number(store.gold) || 0) >= _cfg.gold;
+          return '<button data-brk2="' + e.key + '"' + (_can ? '' : ' style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + ' · 强化石 ' + _cfg.stone + ' / 金 ' + fmt(_cfg.gold) + '）</button>';
+        })() +
         '<button data-cult2="' + e.key + '"' + (chk.ok ? '' : ' style="opacity:.45;"') + '>强化 +1' +
           (chk.ok ? '（' + chk.gold + ' 金 / ' + chk.stone + ' 石' + (chk.breakStone ? ' / 突破石 ' + chk.breakStone : '') + '）' : '') + '</button>' +
         '<button data-star2="' + e.key + '"' + (star.ok ? '' : ' style="opacity:.45;"') + '>' +
@@ -1642,7 +1651,7 @@ function renderOrigCult() {
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) +
           '（强化石 ' + cLv.s + ' / 金 ' + fmt(cLv.g) + '）</button>' +
-        (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + '）</button>' : '') +
+        (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + ' · 强化石 ' + cBtk.s + ' / 金 ' + fmt(cBtk.g) + '）</button>' : '') +
         '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
         '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '（精炼石 ' + cRef.r + '）</button>' +
