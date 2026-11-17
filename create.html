@@ -1580,7 +1580,7 @@ function renderOrigCult() {
   const stN = Number(store.flags.stone) || 0;
     const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
     const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
-    const cRef = { r: 2 + ref, g: 300 + 200 * ref }, cAdv = { s: 30 + 15 * adv, g: 2000 + 1200 * adv };
+    const cRef = { r: 2 + ref, g: 300 + 200 * ref }, cAdv = { s: 80 + 40 * adv, g: 3000 + 1500 * adv };
     const cAwk = { s: 20 + 15 * awk, k: 1 + awk };   // 碎片 + 觉醒石
     const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
     const okStar = star < ORIG_GEAR_CULT.maxStar && shN >= cStar.s && gN >= cStar.g;
@@ -1637,7 +1637,7 @@ function renderOrigCult() {
     } else if (act === "advance") {
       const n = Number(gs.advance) || 0;
       if (n >= 5) return toast("已满阶", true);
-      const cs = 30 + 15 * n, cg = 2000 + 1200 * n;
+      const cs = 80 + 40 * n, cg = 3000 + 1500 * n;
       if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);
       if (gold() < cg) return toast("金币不足（需 " + cg + "）", true);
       store.flags[_sKey] = _sHave() - cs; store.gold -= cg; gs.advance = n + 1;
