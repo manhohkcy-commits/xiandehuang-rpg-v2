@@ -1587,11 +1587,11 @@ function renderOrigCult() {
       '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / ★' + star +
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled') + '>强化 Lv' + lv + '→' + (lv + 1) + '</button>' +
-        '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled') + '>升星 ★' + star + '→' + (star + 1) + '</button>' +
-        '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled') + '>精炼 ' + ref + '→' + (ref + 1) + '</button>' +
-        '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled') + '>升阶 ' + adv + '→' + (adv + 1) + '</button>' +
-        '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled') + '>觉醒 ' + awk + '→' + (awk + 1) + '</button>' +
+        '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) + '</button>' +
+        '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) + '</button>' +
+        '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '</button>' +
+        '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + '>升阶 ' + adv + '→' + (adv + 1) + '</button>' +
+        '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + '</button>' +
       '</div>');
   }).join("");
   view().innerHTML = '<div class="tree-tabs">' + tabs + '</div>' + res + (body || card("⚒ 培养", '<div class="hint">这名角色还没有专属装备。</div>'));
