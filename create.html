@@ -1573,14 +1573,18 @@ function renderOrigCult() {
     const gs = prog.gear[slot] || (prog.gear[slot] = { lv: 1, star: 1 });
     const lv = Number(gs.lv) || 1, star = Number(gs.star) || 1;
     const ref = Number(gs.refine) || 0, adv = Number(gs.advance) || 0, awk = Number(gs.awaken) || 0;
-    const stN = Number(store.flags.stone) || 0, shN = Number(store.flags.shards) || 0;
+    const SHARD_KEY = { R: "shardR", SR: "shardSR", SSR: "shardSSR", UR: "shardSSR" };
+  const shardKey = SHARD_KEY[it.rarity] || "shardSR";
+  const shN = Number(store.flags[shardKey]) || 0;
+  const refN = Number(store.flags.refineStone) || 0;
+  const stN = Number(store.flags.stone) || 0;
     const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
     const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
-    const cRef = { s: 5 + 3 * ref, g: 300 + 200 * ref }, cAdv = { s: 30 + 15 * adv, g: 2000 + 1200 * adv };
+    const cRef = { r: 2 + ref, g: 300 + 200 * ref }, cAdv = { s: 30 + 15 * adv, g: 2000 + 1200 * adv };
     const cAwk = { b: 20 + 15 * awk };
     const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
     const okStar = star < ORIG_GEAR_CULT.maxStar && shN >= cStar.s && gN >= cStar.g;
-    const okRef = shN >= cRef.s && gN >= cRef.g;
+    const okRef = refN >= cRef.r && gN >= cRef.g;
     const okAdv = adv < 5 && stN >= cAdv.s && gN >= cAdv.g;
     const okAwk = awk < 3 && bsN >= cAwk.b;
     return card((GI[slot] || "🗡") + " " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
@@ -1588,8 +1592,8 @@ function renderOrigCult() {
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) + '</button>' +
-        '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) + '</button>' +
-        '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '</button>' +
+        '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) + '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + '）</button>' +
+        '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '（精炼石 ' + cRef.r + '）</button>' +
         '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + '>升阶 ' + adv + '→' + (adv + 1) + '</button>' +
         '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + '</button>' +
       '</div>');
