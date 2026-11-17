@@ -2664,6 +2664,39 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
+  // 🔻 一次性：Lv20 封顶（突破材料未开放），退回经验与专精点
+  {
+    let changed5 = false;
+    (store.chars || []).forEach((ch5) => {
+      if (ch5.lvCap20) return;
+      ch5.lvCap20 = 1;
+      const lv = Number(ch5.lv) || 1;
+      if (lv > 20) {
+        let refund = 0;
+        for (let l = 20; l < lv; l++) refund += CHAR.expNeed(l);
+        store.exp = (Number(store.exp) || 0) + refund;
+        ch5.lv = 20;
+        // 专精按 Lv20 上限收敛
+        const br = Number(ch5.breaks) || 0;
+        const allow = (Number(BIRTH.specPoints) || 24) + Math.floor(20 / 5) * 2 + br * 5;
+        const keys = ["str", "intel", "tech", "agi"];
+        let spent = keys.reduce((a, k) => a + (Number(ch5[k]) || 0), 0);
+        let over = spent - allow;
+        while (over > 0) {
+          const k = keys.slice().sort((a, b) => (Number(ch5[b]) || 0) - (Number(ch5[a]) || 0))[0];
+          const v = Number(ch5[k]) || 0;
+          if (v <= 0) break;
+          const cut = Math.min(v, over);
+          ch5[k] = v - cut; over -= cut;
+        }
+        ch5.free = Math.max(0, allow - keys.reduce((a, k) => a + (Number(ch5[k]) || 0), 0));
+        // 天赋点按等级重算，超出的节点撤销
+        ch5.tp = talentPointsOf(ch5);
+        changed5 = true;
+      }
+    });
+    if (changed5) { try { save(); } catch (e) {} }
+  }
   // 🔁 一次性：把迁移时错误清零的剩余点数补回
   {
     let fix = false;
