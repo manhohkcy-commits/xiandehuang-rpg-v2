@@ -21,7 +21,7 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
 import { } from "./js/battle.js?v=abeb92c8";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=4a01ccad";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=217f33e5";
 import { makeItem } from "./js/items.js?v=4c8258c6";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=b41f7035";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=8dd3fb98";
@@ -260,9 +260,12 @@ function renderPick() {
       };
       store.flags = store.flags || {};
       const drops = [];
-      if (Number(dp.bstone) > 0) {
-        store.flags.bstone = (Number(store.flags.bstone) || 0) + Number(dp.bstone);
-        drops.push({ name: "突破石", count: Number(dp.bstone) });
+      if (dp.bstone) {
+        const bsg = Array.isArray(dp.bstone) ? rnd(dp.bstone) : (Number(dp.bstone) || 0);
+        if (bsg > 0) {
+          store.flags.bstone = (Number(store.flags.bstone) || 0) + bsg;
+          drops.push({ name: "突破石", count: bsg });
+        }
       }
       if (Number(dp.bstone) > 0) {
         store.flags.bstone = (Number(store.flags.bstone) || 0) + Number(dp.bstone);
@@ -1309,7 +1312,7 @@ function finish() {
     ? Object.assign({}, ZERO, { shards: [5, 8], stone: [1, 2], gearChance: 5 }, s.drop || {})
     : ZERO;
   const shards = rnd(dp.shards), stone = rnd(dp.stone);
-  const bstGain = Number(dp.bstone) || 0;
+  const bstGain = Array.isArray(dp.bstone) ? rnd(dp.bstone) : (Number(dp.bstone) || 0);
   store.flags = store.flags || {};
   store.flags.shards = (Number(store.flags.shards) || 0) + shards;
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;

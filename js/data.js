@@ -1391,3 +1391,15 @@ CULT.gold = (lv) => 60 * (Number(lv) || 1);
     delete s.drop.refine;
   });
 })();
+
+// ⚒ 突破石区间掉落（避免每次固定）
+(() => {
+  const g = DUNGEONS.find((x) => x.id === "d_gear");
+  if (!g) return;
+  g.stages.forEach((s, i) => {
+    if (!s.drop) return;
+    const n = i + 1;
+    const base = n <= 5 ? 3 : n <= 10 ? 4 : n <= 15 ? 5 : n <= 19 ? 6 : 8;
+    s.drop.bstone = [base, base + 2 + (n <= 10 ? 0 : n <= 15 ? 1 : 2)];
+  });
+})();
