@@ -620,6 +620,59 @@ function charBreakdown(ch) {
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
 }
 
+function openCharPanel(ch) {
+  const f = charFinal(ch);
+  const eq = ch.equip || {};
+  const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+  const sec = (t) => '<div class="hint" style="font-size:11px;color:#8fd8ff;font-weight:700;letter-spacing:1px;margin:10px 0 5px;">' + t + '</div>';
+  const basic = ch.basic || {};
+  const spec = { str: ch.str || 0, int: ch.intel || 0, tech: ch.tech || 0, agi: ch.agi || 0 };
+  const abil = [];
+  Object.keys(SLOT).forEach((k) => {
+    const d = eq[k] && eq[k].data;
+    if (!d) return;
+    if (d.critRate) abil.push("暴击 +" + d.critRate + "%");
+    if (d.critDmg) abil.push("暴伤 +" + d.critDmg + "%");
+    if (d.dmgCut) abil.push("减伤 +" + d.dmgCut + "%");
+    if (d.thorns) abil.push("反伤 +" + d.thorns + "%");
+    if (d.lifesteal) abil.push("吸血 +" + d.lifesteal + "%");
+    if (d.atkPct) abil.push("攻击 +" + d.atkPct + "%");
+    if (d.hpPct) abil.push("生命 +" + d.hpPct + "%");
+    if (d.defPct) abil.push("防御 +" + d.defPct + "%");
+    if (d.resPct) abil.push("法抗 +" + d.resPct + "%");
+  });
+  const gearHtml = Object.keys(SLOT).map((k) => {
+    const d = eq[k] && eq[k].data;
+    return '<div class="row" style="cursor:default;"><span class="k">' + (d ? (d.rarity === "SSR" ? "🌟 " : "") + esc(d.name) : '<span class="hint">—</span>') +
+      '<div class="hint">' + (d ? [d.main && d.main.atk ? "攻击 +" + d.main.atk : "", d.main && d.main.hp ? "生命 +" + d.main.hp : ""].filter(Boolean).join(" · ") : "") + '</div></span>' +
+      '<span class="v hint">' + SLOT[k] + '</span></div>';
+  }).join("");
+  const wp = eq.weapon && eq.weapon.data;
+  const skills = wp ? [
+    row("普攻", esc(wp.aName || "—") + " · " + (wp.aMult || 100) + "%"),
+    row("技能", esc(wp.sName || "—") + " · " + (wp.sMult || 150) + "% · CD" + (wp.sCd || 3)),
+    row("必杀", esc(wp.uName || "—") + " · " + (wp.uMult || 250) + "%")
+  ].join("") : '<div class="hint" style="padding:6px 9px;">未装备武器</div>';
+
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:460px;width:100%;max-height:88vh;overflow:auto;margin:0;">' +
+    '<div class="card-title" style="font-size:18px;">' + esc(ch.name) + ' <span class="tag">Lv' + (ch.lv || 1) + '</span></div>' +
+    sec("① 基础面板") + panel(row("攻击", Math.round(f.atk)) + row("生命", fmt(Math.round(f.hp))) + row("防御", Math.round(f.def)) +
+      row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) + row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%")) +
+    sec("② 专精面板") + panel(row("基础四维", "生命 " + (basic.hp || 0) + " · 攻击 " + (basic.atk || 0) + " · 防御 " + (basic.def || 0) + " · 法抗 " + (basic.res || 0)) +
+      row("专精四项", "力量 " + spec.str + " · 智力 " + spec.int + " · 技巧 " + spec.tech + " · 敏捷 " + spec.agi)) +
+    sec("③ 其他属性（装备词条）") + panel(abil.length ? abil.map((t) => '<div class="hint" style="padding:6px 9px;border-bottom:1px solid #1a2438;color:#8fd8ff;">' + t + '</div>').join("") : '<div class="hint" style="padding:6px 9px;">没有额外词条</div>') +
+    sec("④ 装备栏") + panel(gearHtml) +
+    sec("⑤ 招式一览") + panel(skills) +
+    '<button id="cfClose" style="width:100%;margin-top:10px;">关闭</button></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#cfClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function renderChar() {
   const ch = activeChar();
   if (!ch || window.__creating) {
@@ -1764,7 +1817,8 @@ function renderOrig() {
             '</span></div>';
         };
         return line("str", "力量", "str") + line("int", "智力", "intel") + line("tech", "技巧", "tech") + line("agi", "敏捷", "agi") +
-          '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每 5 级 +2，突破 +5）</div>' +
+          '<button id="btnFullPanel" style="margin-top:8px;border-color:#8fd8ff;color:#8fd8ff;">📋 查看完整面板</button>' +
+      '<div class="hint" style="margin-top:4px;">剩余专精点：<b style="color:' + (free > 0 ? "#7ee787" : "#6a6a86") + ';">' + free + '</b>（每 5 级 +2，突破 +5）</div>' +
           '<div class="hint" style="margin-top:2px;">力 +2攻 · 敏 +0.05速 · 智 +1.5抗 · 技 +0.5防</div>';
       })()) +
     card("装备栏",
