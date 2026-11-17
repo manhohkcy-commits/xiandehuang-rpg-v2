@@ -24,7 +24,7 @@ import { } from "./js/battle.js?v=abeb92c8";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=1502963d";
 import { makeItem } from "./js/items.js?v=4c8258c6";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=e13271f7";
-import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=8483d05e";
+import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=8dd3fb98";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=8c637db3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=abeb92c8";
 
@@ -243,7 +243,7 @@ async function buildMultiBattle(stageId) {
   // 1) 补全每个成员的角色快照
   for (const bx of Object.keys(room.members || {})) {
     const m = room.members[bx];
-    if (m.char) continue;
+    // 不沿用旧快照：每次开战都重新读一次，保证是最新档案
     let ch = null;
     if (bx === box) { ch = activeChar(); }
     else {

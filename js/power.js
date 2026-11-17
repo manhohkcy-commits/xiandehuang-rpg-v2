@@ -204,7 +204,7 @@ export function charFinal(ch) {
   ["atk", "hp", "def", "res", "spd"].forEach((k) => { f[k] = f[k] * gm * am; });
   // 装备之后不再乘（装备是外物，不随资质长大）
   ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
-    const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
+    const b = itemBonus({ cat: k, data: (function () { const r = ch.equip && ch.equip[k]; return r && r.data ? r.data : r; })() });
     Object.keys(b).forEach((kk) => {
       if (kk === "atkPct") f.atkPct += b[kk];
       else f[kk] = (f[kk] || 0) + b[kk];
@@ -217,7 +217,7 @@ export function charFinal(ch) {
   // 🎯 装备的「专精」平值 + 专精 % 加成
   const gs = { str: 0, intel: 0, tech: 0, agi: 0 };
   ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
-    const b = itemBonus({ cat: k, data: ch.equip && ch.equip[k] });
+    const b = itemBonus({ cat: k, data: (function () { const r = ch.equip && ch.equip[k]; return r && r.data ? r.data : r; })() });
     gs.str += Number(b.str) || 0;
     gs.intel += Number(b.intel) || 0;
     gs.tech += Number(b.tech) || 0;
