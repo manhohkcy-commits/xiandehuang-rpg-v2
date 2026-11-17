@@ -1061,7 +1061,12 @@ function renderTalent() {
   view().querySelectorAll("[data-tp]").forEach((b) => b.onclick = async () => {
     const node = allNodes.find((n) => n.id === b.dataset.tp);
     if (!node) return;
-    if (spent >= Number(ch.tp)) return toast("天赋点不够", true);
+    const activeIds = TALENT_TREES.filter((t) => t.active).map((t) => t.active.id);
+  const isActiveNode = activeIds.indexOf(node.id) >= 0;
+  if (!isActiveNode && spent >= Number(ch.tp)) return toast("天赋点不够", true);
+  if (isActiveNode) {
+    if ((Number(ch.lv) || 1) < 15) return toast("到 Lv15 才能解锁主动技", true);
+  }
   {
     const t0 = TALENT_TREES.find((x) => x.id === node.tree);
     if (t0) {
