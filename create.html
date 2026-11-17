@@ -1618,7 +1618,8 @@ function renderOrigCult() {
     const cLv = { s: 2 + 2 * lv, g: 60 * lv }, cStar = { s: 60 * star, g: 300 * star };
     const BREAK_G = [{ s: 18, g: 3000 }, { s: 45, g: 8000 }, { s: 75, g: 16000 }, { s: 115, g: 30000 }, { s: 165, g: 50000 }];
     const cBtk = BREAK_G[_bt] || null;
-    const okBtk = !!cBtk && lv >= _cap && stN >= cBtk.s && gN >= cBtk.g;
+    const bsN2 = Number(store.flags.bstone) || 0;
+    const okBtk = !!cBtk && lv >= _cap && bsN2 >= cBtk.s && gN >= cBtk.g;
     const cRef = { r: 2 + ref, g: 300 + 200 * ref };
   const ADV_COST = { R: { s: 200, g: 2000 }, SR: { s: 500, g: 6000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
   const cAdv = ADV_COST[it.rarity || "SSR"] || ADV_COST.SSR;
@@ -1635,7 +1636,7 @@ function renderOrigCult() {
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) +
           '（强化石 ' + cLv.s + ' / 金 ' + fmt(cLv.g) + '）</button>' +
-        (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + ' · 强化石 ' + cBtk.s + ' / 金 ' + fmt(cBtk.g) + '）</button>' : '') +
+        (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + ' · 突破石 ' + cBtk.s + ' / 金 ' + fmt(cBtk.g) + '）</button>' : '') +
         '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
         '<button disabled style="opacity:.45;">精炼（未开放）</button>' +
@@ -1662,9 +1663,9 @@ function renderOrigCult() {
       const cfg = list[bt];
       if (!cfg) return toast("突破已满（Lv150）", true);
       if ((Number(gs.lv) || 1) < 25 + bt * 25) return toast("先强化到当前上限", true);
-      if ((Number(store.flags.stone) || 0) < cfg.s) return toast("强化石不足（需 " + cfg.s + "）", true);
+      if ((Number(store.flags.bstone) || 0) < cfg.s) return toast("突破石不足（需 " + cfg.s + "）", true);
       if (gold() < cfg.g) return toast("金币不足", true);
-      store.flags.stone -= cfg.s; store.gold -= cfg.g; gs.bt = bt + 1;
+      store.flags.bstone -= cfg.s; store.gold -= cfg.g; gs.bt = bt + 1;
       await save(); render(); toast("🔓 突破成功：上限 " + (25 + (bt + 1) * 25));
       return;
     }
