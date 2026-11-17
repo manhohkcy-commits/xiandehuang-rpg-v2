@@ -2639,6 +2639,26 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
+  // 🎁 补发初始装备（老存档没有装备的角色）
+  {
+    let changed = false;
+    (store.chars || []).forEach((ch2) => {
+      if (!ch2.equip) ch2.equip = {};
+      if (ch2.equip.weapon) return;
+      const str = Number(ch2.str) || 0, agi = Number(ch2.agi) || 0, intel = Number(ch2.intel) || 0, tech = Number(ch2.tech) || 0;
+      const top = Math.max(str, agi, intel, tech);
+      const want = top === agi ? "ranged" : top === intel ? "focus" : top === tech ? "melee" : "melee";
+      const pool = WEAPONS.filter((x) => x.rarity === "R" && (x.style || "melee") === want);
+      const w = pool[0] || WEAPONS.find((x) => x.rarity === "R") || WEAPONS[0];
+      const ar = ARMORS.find((x) => x.id === "a_cloth") || ARMORS[0];
+      const ac = ACCESSORIES.find((x) => x.rarity === "R") || ACCESSORIES[0];
+      ch2.equip.weapon = Object.assign({}, w, { lv: 1, star: 1, born: w.rarity });
+      ch2.equip[(ar.part === "bottom") ? "armor2" : "armor"] = Object.assign({}, ar, { lv: 1, star: 1, born: ar.rarity });
+      ch2.equip.accessory = Object.assign({}, ac, { lv: 1, star: 1, born: ac.rarity });
+      changed = true;
+    });
+    if (changed) { try { save(); } catch (e) {} }
+  }
   try {
     if (tab === "orig" && !ORIGINALS.length) pullOriginals().then(() => { try { render(); } catch (e) {} }).catch(() => {});
     if (hostMode && (tab === "char" || tab === "orig")) { renderOrig(); return; }
