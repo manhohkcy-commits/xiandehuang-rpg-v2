@@ -1213,13 +1213,16 @@ async function renderRank() {
   });
   const players = Array.from(map.values()).sort((a, b) => b.power - a.power);
   // 🧬 原创角色并入「可游玩角色」总榜
-  if (!window.__ORIG_PROG) {
-    window.__ORIG_PROG = (store.orig || {});
+  // 每次渲染都重新取主机存档的原创进度（不缓存，避免显示旧值）
+  {
+    let progMap = (store.orig || {});
     try {
-      const hr = await cloudGet("zynSD117");
+      const hr = await cloudGet(HOST_BOX || "zynSD117");
       const hp = hr && hr.store && hr.store.orig;
-      if (hp && Object.keys(hp).length) window.__ORIG_PROG = hp;
+      if (hp && Object.keys(hp).length) progMap = hp;
     } catch (e) {}
+    if (!Object.keys(progMap).length && window.__ORIG_PROG) progMap = window.__ORIG_PROG;
+    window.__ORIG_PROG = progMap;
   }
   const origs = ORIGINALS.map((o) => {
     const prog = (window.__ORIG_PROG || {})[o.id] || (store.orig || {})[o.id] || {};
