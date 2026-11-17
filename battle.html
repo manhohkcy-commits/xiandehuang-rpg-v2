@@ -155,7 +155,9 @@ function dungeonListHtml() {
         (rewardText(s) ? '<div class="hint" style="margin-top:2px;color:#ffd666;">🎁 ' + esc(rewardText(s)) + '</div>' : '') + '</span>' +
         '<span class="v">' + (locked
           ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
-          : '<button data-stage="' + s.id + '">开战</button>') + '</span></div>';
+          : '<button data-stage="' + s.id + '">开战</button>' +
+            ((localStorage.getItem("rpg2:host") === "1" && !activeChar() && no <= done)
+              ? ' <button data-sweep="' + s.id + '" style="border-color:#7ee787;color:#7ee787;">⚡ 扫荡</button>' : '')) + '</span></div>';
     };
     if (open) {
       if (d.type === "event") {
@@ -230,6 +232,65 @@ function renderPick() {
   });
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => renderPrep(b.dataset.stage);
+  });
+  view().querySelectorAll("[data-sweep]").forEach((b) => {
+    b.onclick = async () => {
+      const s2 = STAGES.find((x) => x.id === b.dataset.sweep);
+      if (!s2) return;
+      const no = stageNo(s2);
+      if (no > clearedFor(s2)) return alert("还没通关过这一关");
+      const gold = Number(s2.gold) || 0;
+      const exp = Number(s2.exp) || 0;
+      store.gold = (Number(store.gold) || 0) + gold;
+      const o0 = hostOrig();
+      if (o0) {
+        const prog = store.orig[o0.id] || (store.orig[o0.id] = { lv: 1, exp: 0, breaks: 0 });
+        prog.exp = (Number(prog.exp) || 0) + exp;
+      }
+      const rnd = (a) => a ? (a[0] + Math.floor(Math.random() * (a[1] - a[0] + 1))) : 0;
+      const ZERO = { shards: [0, 0], stone: [0, 0], refine: [0, 0], shardR: [0, 0], shardSR: [0, 0], shardSSR: [0, 0], bstone: 0, kyoShard: [0, 0], kShard: [0, 0], gearChance: 0 };
+      const dp = Object.assign({}, ZERO, s2.drop || {});
+      const MAT_NAME = {
+        ms1: "初级手稿", ms2: "中级手稿", ms3: "高级手稿",
+        md1: "青铜勋章", md2: "白银勋章", md3: "黄金勋章",
+        cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书"
+      };
+      store.flags = store.flags || {};
+      const drops = [];
+      ["shards", "stone", "refine", "shardR", "shardSR", "shardSSR"].forEach((k) => {
+        const n = rnd(dp[k]);
+        if (!n) return;
+        store.flags[k] = (Number(store.flags[k]) || 0) + n;
+        const nm = { shards: "升阶碎片", stone: "强化石", refine: "精炼石", shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片" }[k];
+        drops.push({ name: nm, count: n });
+      });
+      ["ms", "md", "cert"].forEach((grp) => {
+        const obj = dp[grp];
+        if (!obj) return;
+        Object.keys(obj).forEach((k) => {
+          const n = rnd(obj[k]);
+          if (!n) return;
+          store.flags[k] = (Number(store.flags[k]) || 0) + n;
+          drops.push({ name: MAT_NAME[k] || k, count: n });
+        });
+      });
+      const kyo = rnd(dp.kyoShard), kk = rnd(dp.kShard);
+      if (kyo) { store.flags.kyoShard = (Number(store.flags.kyoShard) || 0) + kyo; drops.push({ name: "草薙流古武典碎片", count: kyo }); }
+      if (kk) { store.flags.kShard = (Number(store.flags.kShard) || 0) + kk; drops.push({ name: "究极热动拳套碎片", count: kk }); }
+      if (Math.random() * 100 < (Number(dp.gearChance) || 0)) {
+        const list = ARMORS.filter((x) => x.rarity === "R" || x.rarity === "SR");
+        if (list.length) {
+          const def = list[Math.floor(Math.random() * list.length)];
+          store.items.push(makeItem("armor", def));
+          drops.push({ name: def.name, count: 1 });
+        }
+      }
+      addReceipt(store, "扫荡", s2.name, { gold, items: drops });
+      await save();
+      alert("⚡ 扫荡完成：" + s2.name + "\n金币 +" + gold + " · 经验 +" + exp +
+        (drops.length ? "\n" + drops.map((d) => d.name + "×" + d.count).join("、") : ""));
+      renderPick();
+    };
   });
 }
 
