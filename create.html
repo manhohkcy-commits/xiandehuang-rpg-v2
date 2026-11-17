@@ -2640,6 +2640,39 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
+  // ⚖️ 原创角色专精迁移（初创=角色设定值，成长=每5级2点 + 突破5点）
+  {
+    let ch3 = false;
+    Object.keys(store.orig || {}).forEach((id) => {
+      const o = ORIGINALS.find((x) => x.id === id);
+      if (!o) return;
+      const pg = store.orig[id];
+      if (!pg || pg.specNorm) return;
+      const sp = o.spec || {};
+      const start = ["str", "intel", "tech", "agi"].reduce((a, k) => a + (Number(sp[k]) || 0), 0);
+      const lv = Number(pg.lv) || 1, br = Number(pg.breaks) || 0;
+      const allowedGrow = Math.floor(lv / 5) * 2 + br * 5;
+      const cur = pg.spec || {};
+      const keys = ["str", "intel", "tech", "agi"];
+      let spent = keys.reduce((a, k) => a + (Number(cur[k]) || 0), 0) + (Number(pg.free) || 0);
+      if (spent > allowedGrow) {
+        let over = spent - allowedGrow;
+        while (over > 0) {
+          const k = keys.slice().sort((a, b) => (Number(cur[b]) || 0) - (Number(cur[a]) || 0))[0];
+          const v = Number(cur[k]) || 0;
+          if (v <= 0) break;
+          const cut = Math.min(v, over);
+          cur[k] = v - cut; over -= cut;
+        }
+        pg.free = 0;
+        ch3 = true;
+      }
+      pg.spec = cur;
+      pg.specNorm = 1;
+      ch3 = true;
+    });
+    if (ch3) { try { save(); } catch (e) {} }
+  }
   // ⚖️ 专精点迁移：按新公式（24 + 每5级2点 + 突破5点）统一老角色
   {
     let changed2 = false;
