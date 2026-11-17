@@ -1408,13 +1408,13 @@ function renderCult() {
         ' · Lv' + (e.d.lv || 1) + ' · 精炼 ' + (Number(e.d.refine) || 1) + '</span>' +
         '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
-        '<button data-cult2="' + e.key + '">强化 +1' +
+        '<button data-cult2="' + e.key + '"' + (chk.ok ? '' : ' style="opacity:.45;"') + '>强化 +1' +
           (chk.ok ? '（' + chk.gold + ' 金 / ' + chk.stone + ' 石' + (chk.breakStone ? ' / 突破石 ' + chk.breakStone : '') + '）' : '') + '</button>' +
-        '<button data-star2="' + e.key + '">' +
+        '<button data-star2="' + e.key + '"' + (star.ok ? '' : ' style="opacity:.45;"') + '>' +
           (star.ok ? '升星 → ' + star.to + '★（' + (star.rarity || '') + ' 碎片 ' + star.shards + '）' : (star.why || '已满星')) + '</button>' +
         (() => {
           const rf = refineCheck(it, store);
-          return '<button data-refine2="' + e.key + '">精炼 +1' +
+          return '<button data-refine2="' + e.key + '"' + (rf.ok ? '' : ' style="opacity:.45;"') + '>精炼 +1' +
             (rf.ok ? '（' + rf.gold + ' 金 / 精炼石 ' + rf.stone + '）' : (Number(e.d.refine) >= 10 ? '（已满）' : (rf.why || ''))) + '</button>';
         })() +
         (() => {
