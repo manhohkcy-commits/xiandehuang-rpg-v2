@@ -1359,3 +1359,7 @@ DUNGEONS.forEach((du) => {
     return Math.round(oldNeed(L) * (1.5 + L / 50));
   };
 })();
+
+// ⚒ 强化成本统一：强化石 = 2 + 2×等级，金币 = 60×等级
+CULT.stone = (lv) => 2 + 2 * (Number(lv) || 1);
+CULT.gold = (lv) => 60 * (Number(lv) || 1);

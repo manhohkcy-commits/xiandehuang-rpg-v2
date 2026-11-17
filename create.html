@@ -24,11 +24,11 @@
 
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily } from "./js/core.js?v=13807141";
-import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=9ee51e6d";
+import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=3669afac";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=42e16747";
-import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=9ee51e6d";
+import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=3669afac";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=ee4aa808";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=6ff8836a";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=8dbb64a3";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 
@@ -1913,17 +1913,20 @@ function renderOrig() {
         const nG = GRADE[gi + 1], nA = APTITUDE[ai];
         const ms = matTotal("ms") || 0, md = matTotal("md") || 0;
         const gold = Number(store.gold) || 0;
-        const gCost = nG ? { ms: nG.cost, gold: 1000 * (gi + 1) } : null;
-        const aCost = nA ? { md: nA.cost, gold: 800 * ai } : null;
-        const canG = gCost && ms >= gCost.ms && gold >= gCost.gold;
-        const canA = aCost && md >= aCost.md && gold >= aCost.gold;
+        const gTier = (MAT_TIER.grade[gi + 1] || 1);
+        const aTier = (MAT_TIER.apt[ai] || 1);
+        const msTier = matCount("ms", gTier), mdTier = matCount("md", aTier);
+        const gCost = nG ? { ms: nG.cost, tier: gTier, gold: 0 } : null;
+        const aCost = nA ? { md: nA.cost, tier: aTier, gold: 0 } : null;
+        const canG = gCost && msTier >= gCost.ms;
+        const canA = aCost && mdTier >= aCost.md;
         return '<div class="row"><span class="k">资历评级</span><span class="v" style="color:' + (G.color || "#dbe4f3") + ';font-weight:800;">' + G.key + "（全属性 ×" + (G.mult || 1).toFixed(2) + '）</span></div>' +
           '<div class="row"><span class="k">资质评估</span><span class="v" style="color:#c9a0ff;font-weight:800;">' + ai + "★（全属性 ×" + (A.mult || 1).toFixed(2) + '）</span></div>' +
           '<div class="hint" style="margin-top:6px;">手稿 ' + ms + ' · 勋章 ' + md + '</div>' +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
-          (nG ? '<button id="btnOrigGrade"' + (canG ? '' : ' disabled') + '>晋升 → ' + nG.key + '（手稿 ' + gCost.ms + ' · ' + fmt(gCost.gold) + ' 金）</button>'
+          (nG ? '<button id="btnOrigGrade"' + (canG ? '' : ' disabled') + '>晋升 → ' + nG.key + '（' + MAT_TIER.msName[gTier - 1] + ' ' + gCost.ms + '，有 ' + msTier + '）</button>'
               : '<button disabled>资历已满</button>') +
-          (nA ? '<button id="btnOrigApt"' + (canA ? '' : ' disabled') + '>评估 → ' + (ai + 1) + '★（勋章 ' + aCost.md + ' · ' + fmt(aCost.gold) + ' 金）</button>'
+          (nA ? '<button id="btnOrigApt"' + (canA ? '' : ' disabled') + '>评估 → ' + (ai + 1) + '★（' + MAT_TIER.mdName[aTier - 1] + ' ' + aCost.md + '，有 ' + mdTier + '）</button>'
               : '<button disabled>资质已满</button>') +
           '</div>';
       })()) +
@@ -2097,11 +2100,11 @@ function renderOrig() {
     const nG = GRADE[gi + 1];
     if (!nG) return toast("资历已满", true);
     const gTier = (MAT_TIER.grade[gi + 1] || 1);
-    const ms = matCount("ms", gTier), gold = Number(store.gold) || 0;
-    const cost = 1000 * (gi + 1);
+    const ms = matCount("ms", gTier);
+
     if (ms < nG.cost) return toast(MAT_TIER.msName[gTier - 1] + "不足（需 " + nG.cost + "）", true);
-    if (gold < cost) return toast("金币不足（需 " + fmt(cost) + "）", true);
-    matUse("ms", gTier, nG.cost); store.gold = gold - cost;
+
+    matUse("ms", gTier, nG.cost);
     prog.grade = gi + 1; store.orig[o.id] = prog;
     await save(); render(); toast("🎖 资历晋升 → " + nG.key);
   };
@@ -2110,11 +2113,11 @@ function renderOrig() {
     const nA = APTITUDE[ai];
     if (!nA) return toast("资质已满", true);
     const aTier = (MAT_TIER.apt[ai] || 1);
-    const md = matCount("md", aTier), gold = Number(store.gold) || 0;
-    const cost = 800 * ai;
+    const md = matCount("md", aTier);
+
     if (md < nA.cost) return toast("资质勋章不足（需 " + nA.cost + "）", true);
-    if (gold < cost) return toast("金币不足（需 " + fmt(cost) + "）", true);
-    matUse("md", aTier, nA.cost); store.gold = gold - cost;
+
+    matUse("md", aTier, nA.cost);
     prog.apt = ai + 1; store.orig[o.id] = prog;
     await save(); render(); toast("⭐ 资质评估 → " + (ai + 1) + "★");
   };
