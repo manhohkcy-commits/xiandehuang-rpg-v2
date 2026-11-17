@@ -569,8 +569,8 @@ function breakRow(ch) {
   }
   const lv = Number(ch.lv) || 1;
   const near = lv >= next.at;
-  const stone = Number((store.flags || {}).stone) || 0;
-  const canDo = near && stone >= next.stone && (Number(store.gold) || 0) >= next.gold;
+  const certHave = Number((store.flags || {})[next.cert]) || 0;
+  const canDo = near && certHave >= next.num && (Number(store.gold) || 0) >= next.gold;
   return '<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#101020;border:1px solid #2f2f4a;">' +
     '<div class="hint">突破 ' + BREAKS.map((b) => b.at).join(" ▸ ") + '　' + dots + '</div>' +
     '<div class="hint" style="margin-top:4px;">下一次：Lv' + next.at + '（' + (near ? "已到" : "还需 " + (next.at - lv) + " 级") +
@@ -1766,7 +1766,7 @@ function renderOrig() {
   const atk = fin.atk, hp = fin.hp, def = fin.def, res = fin.res, spd = fin.spd;
   const s = o.stats || {};
   const pw = fin.power;
-  const BRK_COST = BREAKS.map((b) => ({ b: b.stone, g: b.gold, at: b.at }));
+  const BRK_COST = BREAKS.map((b) => ({ cert: b.cert, num: b.num, g: b.gold, at: b.at, bonus: b.bonus, capTo: b.capTo }));
   const brkNext = brk < 5 ? BRK_COST[brk] : null;
   const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
   const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
@@ -1808,7 +1808,7 @@ function renderOrig() {
       '<div class="bar' + (pct >= 100 ? ' full' : '') + '" style="margin:6px 0;"><i style="width:' + pct + '%"></i></div>' +
       '<div class="hint">经验 ' + fmt(prog.exp || 0) + ' / ' + fmt(need) + '</div>' +
       '<div class="hint" style="margin-top:6px;">突破 ' + brk + '/5 · 每次全属性 +3%' +
-        (brkNext ? '（下次需 Lv' + brkNext.at + ' · 突破石 ' + brkNext.b + ' + ' + fmt(brkNext.g) + ' 金）' : '（已满）') + '</div>' +
+        (brkNext ? '（下次需 Lv' + brkNext.at + ' · ' + ({ cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" })[brkNext.cert] + ' ×' + brkNext.num + ' + ' + fmt(brkNext.g) + ' 金）' : '（已满）') + '</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
         '<button id="btnOrigLevel"' + ((prog.exp || 0) >= need && lv < CHAR.maxLevel ? '' : ' disabled') + '>🔼 升级到 Lv' + (lv + 1) + '</button>' +
         '<button id="btnOrigBreak" ' + (brkNext ? '' : 'disabled') + '>⚡ 突破</button>' +
@@ -2039,7 +2039,7 @@ function renderOrig() {
     store.gold = (Number(store.gold) || 0) - cost.g;
     store.orig = store.orig || {};
     store.orig[o.id] = Object.assign({}, prog, { breaks: brk + 1 });
-    addReceipt(store, "突破", o.name + " 第 " + (brk + 1) + " 突", { gold: -cost.g, items: [{ name: "突破石", count: -cost.b }], note: "全属性 +3%" });
+    addReceipt(store, "突破", o.name + " 第 " + (brk + 1) + " 突", { gold: -cost.g, items: [{ name: certName, count: -cost.num }], note: "全属性 +3%" });
     await save(); render(); toast("⚡ 突破成功：" + (brk + 1) + "/3");
   };
 }
