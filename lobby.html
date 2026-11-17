@@ -160,8 +160,8 @@ function render() {
     const abil = [];
     Object.keys(g).forEach((k) => {
       const it = g[k] || {};
-      if (it.lifesteal) abil.push("吸血 " + it.lifesteal + "%");
-      if (it.ultPct) abil.push("必杀 +" + it.ultPct + "%");
+      if (it.lifesteal) abil.push("【续航】吸血 " + it.lifesteal + "%（造成伤害的 " + it.lifesteal + "% 转为治疗）");
+      if (it.ultPct) abil.push("【加成】必杀伤害 +" + it.ultPct + "%");
     });
 
     const ov = document.createElement("div");
@@ -276,13 +276,13 @@ async function loadPlayers() {
         Object.keys(SLOT).forEach((k) => {
           const d = eq[k] && eq[k].data;
           if (!d) return;
-          if (d.critRate) abil.push("暴击 +" + d.critRate + "%");
-          if (d.critDmg) abil.push("暴伤 +" + d.critDmg + "%");
-          if (d.dmgCut) abil.push("减伤 +" + d.dmgCut + "%");
-          if (d.thorns) abil.push("反伤 +" + d.thorns + "%");
-          if (d.lifesteal) abil.push("吸血 +" + d.lifesteal + "%");
-          if (d.atkPct) abil.push("攻击 +" + d.atkPct + "%");
-          if (d.hpPct) abil.push("生命 +" + d.hpPct + "%");
+          if (d.critRate) abil.push("【概率】暴击率 +" + d.critRate + "%（攻击时触发暴击的几率）");
+          if (d.critDmg) abil.push("【加成】暴击伤害 +" + d.critDmg + "%（暴击时的额外伤害）");
+          if (d.dmgCut) abil.push("【减伤】受到伤害 -" + d.dmgCut + "%");
+          if (d.thorns) abil.push("【反伤】受到攻击时反弹伤害的 " + d.thorns + "%");
+          if (d.lifesteal) abil.push("【续航】吸血 " + d.lifesteal + "%（造成伤害的 " + d.lifesteal + "% 转为治疗）");
+          if (d.atkPct) abil.push("【加成】攻击 +" + d.atkPct + "%");
+          if (d.hpPct) abil.push("【加成】生命 +" + d.hpPct + "%");
         });
         const gear = Object.keys(SLOT).map((k) => {
           const d = eq[k] && eq[k].data;
