@@ -1299,3 +1299,14 @@ WEAPONS.forEach((w) => {
   w.sMult = s.per;
   w.uMult = u.per;
 });
+
+
+// 🎁 装备掉落下调（活动限定武器 100% 不受影响）
+DUNGEONS.forEach((du) => {
+  (du.stages || []).forEach((s) => {
+    const dp = s.drop;
+    if (!dp || dp.gearChance == null) return;
+    if (dp.gearChance >= 100) return;           // 限定武器保持必掉
+    dp.gearChance = Math.max(0, Math.round(dp.gearChance * 0.35));
+  });
+});
