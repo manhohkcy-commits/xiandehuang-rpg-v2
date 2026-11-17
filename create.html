@@ -1248,14 +1248,14 @@ async function renderRank() {
   '</div>' +
       (top.length
         ? '<table style="width:100%;border-collapse:collapse;">' +
-          '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>类型</th><th style="text-align:right;">战力</th></tr>' +
+          '<tr style="color:#8a8ab0;font-size:10.5px;text-align:left;"><th style="padding:4px 2px;">#</th><th>名字</th><th>类型</th><th>等级</th><th style="text-align:right;">战力</th></tr>' +
           top.map((r, i) => {
             const isOrig = r.type === "orig";
             const nameCell = isOrig
               ? '<b style="color:#ffb347;">' + esc(r.name) + '</b>' + (r.title ? ' <span class="hint">' + esc(r.title) + '</span>' : '') + (r.rare ? ' <span class="tag">稀有</span>' : '')
               : '<b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '');
-            return '<tr' + (isOrig ? ' data-origcard="' + r.id + '"' : "") + ' style="border-top:1px dashed #23233a;' +
-              (r.type === "player" && r.box === meBox ? "background:#1b2740;" : "") + (isOrig ? "cursor:pointer;" : "") + '">' +
+            return '<tr' + (isOrig ? ' data-origcard="' + r.id + '"' : ' data-rankbox="' + r.box + '"') + ' style="border-top:1px dashed #23233a;cursor:pointer;' +
+              (r.type === "player" && r.box === meBox ? "background:#1b2740;" : "") + '">' +
               '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
               '<td style="font-size:12.5px;">' + nameCell + '</td>' +
               '<td style="font-size:10.5px;color:' + (isOrig ? "#ffb347" : "#6ea8fe") + ';">' + (isOrig ? "🧬 原创" : "🧑 玩家") + '</td>' +
@@ -1267,6 +1267,16 @@ async function renderRank() {
       weekHtml +
       '<div class="hint" style="margin-top:8px;">玩家角色只统计最近更新的 200 个位号；原创角色来自主机发布。</div>');
 
+  view().querySelectorAll("[data-rankbox]").forEach((tr) => tr.onclick = async () => {
+    const bx = tr.dataset.rankbox;
+    try {
+      const row = await cloudGet(bx);
+      const s = row && row.store;
+      const ch2 = s && ((s.chars || []).find((x) => x.id === s.activeChar) || (s.chars || [])[0]);
+      if (!ch2) return toast("读不到该角色", true);
+      openCharPanel(ch2);
+    } catch (e) { toast("读取失败：" + (e && e.message || e), true); }
+  });
   view().querySelectorAll("[data-origcard]").forEach((tr) => tr.onclick = () => {
     const o = ORIGINALS.find((x) => x.id === tr.dataset.origcard);
     if (o) openOrigCard(o);
