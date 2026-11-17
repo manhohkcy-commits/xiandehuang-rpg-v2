@@ -1463,9 +1463,7 @@ function renderCult() {
         '<button data-star2="' + e.key + '"' + (star.ok ? '' : ' style="opacity:.45;"') + '>' +
           (star.ok ? '升星 → ' + star.to + '★（' + (star.rarity || '') + ' 碎片 ' + star.shards + '）' : (star.why || '已满星')) + '</button>' +
         (() => {
-          const rf = refineCheck(it, store);
-          return '<button data-refine2="' + e.key + '"' + (rf.ok ? '' : ' style="opacity:.45;"') + '>精炼 +1' +
-            (rf.ok ? '（' + rf.gold + ' 金 / 精炼石 ' + rf.stone + '）' : (Number(e.d.refine) >= 10 ? '（已满）' : (rf.why || ''))) + '</button>';
+          return '<button disabled style="opacity:.45;">精炼（未开放）</button>';
         })() +
         (() => {
           const pm = promoteCheck(it, store);
@@ -1654,7 +1652,7 @@ function renderOrigCult() {
         (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + ' · 强化石 ' + cBtk.s + ' / 金 ' + fmt(cBtk.g) + '）</button>' : '') +
         '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
-        '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '（精炼石 ' + cRef.r + '）</button>' +
+        '<button disabled style="opacity:.45;">精炼（未开放）</button>' +
         '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + (adv >= 1 ? '>升阶 已完成' : '>升阶 ' + (it.rarity || "SSR") + '→UR') +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAdv.s + ' / 金 ' + fmt(cAdv.g) + '）</button>' +
         '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + (adv < 1 ? '（先升阶到 UR）' : '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAwk.s + ' + 觉醒石 ' + cAwk.k + '）') + '</button>' +
