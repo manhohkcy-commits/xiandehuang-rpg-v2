@@ -187,7 +187,7 @@ function renderPick() {
     '<div class="card"><div class="card-title">出战</div>' +
       (ch
         ? '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>'
-        : '<div class="row"><span class="k">🧬 ' + esc(o0.name) + '</span><span class="v">Lv1 · 战力 ' + fmt(originalFinal(o0, {}).power) + '</span></div>') +
+        : '<div class="row"><span class="k">🧬 ' + esc(o0.name) + '</span><span class="v">Lv1 · 战力 ' + fmt(originalFinal(o0, (store.orig || {})[o0.id] || {}).power) + '</span></div>') +
       '<div class="hint">' + (ch ? '攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) : '🧬 原创角色出战') + '</div>' +
     '</div>' +
     '<div class="card"><div class="card-title">选择关卡</div>' +
@@ -399,7 +399,7 @@ function startBattle(stageId, col, row) {
   }
   const ch = activeChar();
   const o0 = !ch ? hostOrig() : null;
-  const of = o0 ? originalFinal(o0, {}) : null;
+  const of = o0 ? originalFinal(o0, (store.orig || {})[o0.id] || {}) : null;
   const f = ch ? charFinal(ch) : { atk: of.atk, hp: of.hp, def: of.def, res: of.res, spd: of.spd, critRate: of.critRate, critDmg: of.critDmg, dmgCut: 0 };
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
@@ -434,7 +434,7 @@ function startBattle(stageId, col, row) {
   const allies = partyIds.map((id, i) => {
     const o = ORIGINALS.find((x) => x.id === id);
     if (!o) return null;
-    const ofx = originalFinal(o, {});
+    const ofx = originalFinal(o, (store.orig || {})[o.id] || {});
     return { id: "ally" + i, name: o.name, lv: 1, side: "A", spd: ofx.spd, power: ofx.power, hp: ofx.hp, maxHp: ofx.hp,
       atk: ofx.atk, def: ofx.def, critRate: ofx.critRate, critDmg: ofx.critDmg, dmgCut: 0, rage: 0, traits: {}, __auto: true };
   }).filter(Boolean);
