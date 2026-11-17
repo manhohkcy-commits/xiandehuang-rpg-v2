@@ -70,12 +70,16 @@ export function refineApply(store, it) {
 export function promoteCheck(it, store) {
   const d = it && it.data;
   if (!d) return { ok: false, why: "没有装备" };
-  const haveS = Number((store.flags || {}).shards) || 0;
+  // 🎯 升阶消耗「该装备初始品质」的碎片（R→R碎片 / SR→SR碎片 / SSR→SSR碎片）
+  const born = d.born || d.rarity || "R";
+  const key = ({ R: "shardR", SR: "shardSR", SSR: "shardSSR", UR: "shardSSR" })[born] || "shardR";
+  const labelMap = { shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片" };
+  const haveS = Number((store.flags || {})[key]) || 0;
   const haveG = Number(store.gold) || 0;
   const check = (cost, extra) => {
-    if (haveS < cost.shards) return { ok: false, why: "碎片不够", shards: cost.shards, gold: cost.gold, ...extra };
-    if (haveG < cost.gold) return { ok: false, why: "金币不够", shards: cost.shards, gold: cost.gold, ...extra };
-    return { ok: true, shards: cost.shards, gold: cost.gold, ...extra };
+    if (haveS < cost.shards) return { ok: false, why: (labelMap[key] || "碎片") + "不够", key, shards: cost.shards, gold: cost.gold, ...extra };
+    if (haveG < cost.gold) return { ok: false, why: "金币不够", key, shards: cost.shards, gold: cost.gold, ...extra };
+    return { ok: true, key, shards: cost.shards, gold: cost.gold, ...extra };
   };
 
   if (d.rarity === "UR") {
@@ -104,7 +108,8 @@ export function promoteApply(store, it) {
   const c = promoteCheck(it, store);
   if (!c.ok) return c;
   store.flags = store.flags || {};
-  store.flags.shards = (Number(store.flags.shards) || 0) - c.shards;
+  const kk = c.key || "shardR";
+  store.flags[kk] = (Number(store.flags[kk]) || 0) - c.shards;
   store.gold = (Number(store.gold) || 0) - c.gold;
   // ⬜ 只有「升阶」给白值；觉醒（火数）不给
   if (c.action === "promote") {
