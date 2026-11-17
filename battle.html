@@ -499,9 +499,15 @@ function startBattle(stageId, col, row) {
       used.push(s2);
       return s2;
     };
+    const anyFront = foes.some(isFront);
     const sorted = foes.slice().sort((a, b) => (isFront(b) ? 1 : 0) - (isFront(a) ? 1 : 0));
+    if (!anyFront) {
+      // 没有识别到前排职业时：按顺序补 1~2 个到前排，避免全挤后排
+      const n = Math.min(2, sorted.length);
+      for (let k = 0; k < n; k++) sorted[k].__forceFront = true;
+    }
     sorted.forEach((u) => {
-      const sl = takeSlot(isFront(u));
+      const sl = takeSlot(isFront(u) || u.__forceFront);
       if (!sl) return;
       u.__col = sl.col; u.__row = sl.row; u.__back = sl.col === 1;
     });
@@ -816,14 +822,14 @@ function renderBattle() {
   const hpBar = (u) => {
     const pct = Math.max(0, Math.min(100, Math.round(u.hp / u.maxHp * 100)));
     return '<div class="bar' + (pct <= 25 ? '' : ' full') + '"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="hint">' + fmt(u.hp) + ' / ' + fmt(u.maxHp) + (u.cd > 0 ? ' · 招式冷却 ' + u.cd : '') + '</div>';
+      '<div class="hint">' + fmt(Math.round(u.hp)) + ' / ' + fmt(Math.round(u.maxHp)) + (u.cd > 0 ? ' · 招式冷却 ' + u.cd : '') + '</div>';
   };
 
   view().innerHTML =
     '<div class="card"><div class="card-title">' + turnText + '</div>' +
       queueHtml2() + gridHtml() +
-      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + m.hp + '/' + m.maxHp + '</span></div>' + hpBar(m) +
-      '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + f2.hp + '/' + f2.maxHp + '</span></div>' + hpBar(f2) +
+      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + fmt(Math.round(m.hp)) + ' / ' + fmt(Math.round(m.maxHp)) + '</span></div>' + hpBar(m) +
+      '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + fmt(Math.round(f2.hp)) + ' / ' + fmt(Math.round(f2.maxHp)) + '</span></div>' + hpBar(f2) +
     (st.__isOrig ? '<div class="row"><span class="k">❄️ 霜印</span><span class="v" style="color:#8fd8ff;">' +
       (Number(st.__frost) || 0) + ' / 5　（普攻 +1 · 必杀每层 +15%）</span></div>' : "") +
     '</div>' +
