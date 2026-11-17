@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf } from "./js/power.js?v=42e16747";
 import { GRADE, APTITUDE, MAT_TIER } from "./js/data.js?v=5cb86ce3";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply } from "./js/items.js?v=ee4aa808";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=076cb032";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=6ff8836a";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 
@@ -1591,7 +1591,7 @@ function renderOrigCult() {
     const bsN = matTotal("cert") || 0, gN = Number(store.gold) || 0;
     const cLv = { s: 3 + 2 * lv, g: 80 * lv }, cStar = { s: 10 * star, g: 300 * star };
     const cRef = { r: 2 + ref, g: 300 + 200 * ref };
-  const ADV_COST = { R: { s: 100, g: 4000 }, SR: { s: 200, g: 8000 }, SSR: { s: 400, g: 15000 }, UR: { s: 400, g: 15000 } };
+  const ADV_COST = { R: { s: 300, g: 6000 }, SR: { s: 600, g: 12000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
   const cAdv = ADV_COST[it.rarity || "SSR"] || ADV_COST.SSR;
     const cAwk = { s: [150, 250, 400][awk] || 400, k: [3, 5, 8][awk] || 8 };   // UC 觉醒：碎片 + 觉醒石
     const okLv = lv < ORIG_GEAR_CULT.maxLv && stN >= cLv.s && gN >= cLv.g;
@@ -1608,7 +1608,7 @@ function renderOrigCult() {
           '（强化石 ' + cLv.s + ' / 金 ' + fmt(cLv.g) + '）</button>' +
         '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
-        '<button data-og="' + slot + ':refine"' + ' disabled style="opacity:.45;">精炼（未开放）</button>' +
+        '<button data-og="' + slot + ':refine"' + (okRef ? '' : ' disabled style="opacity:.45;"') + '>精炼 ' + ref + '→' + (ref + 1) + '（精炼石 ' + cRef.r + '）</button>' +
         '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + (adv >= 1 ? '>升阶 已完成' : '>升阶 ' + (it.rarity || "SSR") + '→UR') +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAdv.s + ' / 金 ' + fmt(cAdv.g) + '）</button>' +
         '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + (adv < 1 ? '（先升阶到 UR）' : '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAwk.s + ' + 觉醒石 ' + cAwk.k + '）') + '</button>' +
@@ -1649,7 +1649,7 @@ function renderOrigCult() {
     } else if (act === "advance") {
       const n = Number(gs.advance) || 0;
       if (n >= 1) return toast("已升阶", true);
-      const _advTable = { R: { s: 100, g: 4000 }, SR: { s: 200, g: 8000 }, SSR: { s: 400, g: 15000 }, UR: { s: 400, g: 15000 } };
+      const _advTable = { R: { s: 300, g: 6000 }, SR: { s: 600, g: 12000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
       const _advNow = _advTable[_gdef.rarity || "SSR"] || _advTable.SSR;
       const cs = _advNow.s, cg = _advNow.g;
       if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);

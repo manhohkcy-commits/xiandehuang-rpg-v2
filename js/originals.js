@@ -100,8 +100,10 @@ export const ORIG_GEAR_CULT = {
   maxLv: 20, maxStar: 5,
   lvStone: (lv) => 3 + 2 * (Number(lv) || 1),
   lvGold: (lv) => 80 * (Number(lv) || 1),
-  starShards: (star) => 10 * (Number(star) || 1),
-  starGold: (star) => 300 * (Number(star) || 1)
+  starShards: (star) => 60 * (Number(star) || 1),
+  starGold: (star) => 300 * (Number(star) || 1),
+  refineStone: (r) => Math.round(2 + 0.8 * (Number(r) || 0)),
+  refineGold: (r) => 300 + 200 * (Number(r) || 0)
 };
 export function gearAbilities(o) {
   const g = (o && o.gearObj) || {};
