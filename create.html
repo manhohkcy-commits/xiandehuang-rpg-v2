@@ -2688,6 +2688,33 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
+  // ♻️ 一次性：全部角色专精点回退（自由重分配）+ Lv20 封顶
+  {
+    let ch6 = false;
+    (store.chars || []).forEach((ch7) => {
+      if (ch7.specReset2) return;
+      ch7.specReset2 = 1;
+      const lv = Number(ch7.lv) || 1;
+      if (lv > 20) {
+        let refund = 0;
+        for (let l = 20; l < lv; l++) refund += CHAR.expNeed(l);
+        store.exp = (Number(store.exp) || 0) + refund;
+        ch7.lv = 20;
+      }
+      const br = Number(ch7.breaks) || 0;
+      const allow = (Number(BIRTH.specPoints) || 24) + Math.floor(ch7.lv / 5) * 2 + br * 5;
+      // 专精清零 → 全部转为可分配点
+      ch7.str = 0; ch7.intel = 0; ch7.tech = 0; ch7.agi = 0;
+      ch7.free = allow;
+      ch7.specBase = { str: 0, intel: 0, tech: 0, agi: 0 };
+      // 天赋点重算；若已点节点超过上限，全部退回重选
+      ch7.tp = talentPointsOf(ch7);
+      const spentTp = Object.keys(ch7.talent && ch7.talent.points || {}).length;
+      if (spentTp > ch7.tp) { ch7.talent.points = {}; ch7.talent.active2 = ""; }
+      ch6 = true;
+    });
+    if (ch6) { try { save(); } catch (e) {} }
+  }
   // 🔻 一次性：Lv20 封顶（突破材料未开放），退回经验与专精点
   {
     let changed5 = false;
