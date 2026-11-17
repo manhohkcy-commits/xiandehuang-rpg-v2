@@ -824,6 +824,15 @@ function renderBattle() {
         : '<div class="hint">没有奖励，回去练练再来</div>') +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button id="btnAgain">🔁 再来一场</button><button id="btnBack">← 返回选关</button></div></div>'
       : '<div class="card"><div class="card-title">行动</div>' +
+        (function () {
+          const t2 = foe();
+          const wpn = (st.__weapon && st.__weapon.data) || {};
+          const style = wpn.style || "melee";
+          const rule = style === "melee" ? "近战：只能打前排" : style === "ranged" ? "远程：可自由选择前后排" : "法术：可自由选择前后排";
+          return '<div class="hint" style="margin-bottom:6px;color:#ffd666;">🎯 当前目标：' +
+            (t2 ? esc(t2.name) + '（' + ((t2.__col ? 1 : 0) === 0 ? "前排" : "后排") + '）' : "未选择") +
+            '　·　' + rule + '　·　点敌方格子切换</div>';
+        })() +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
           '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>[普攻] ' + esc(wp.aName || "普攻") + ' · ' + (Number(wp.aMult) || 100) + '%（回怒+' + (Number(wp.aRage) || 20) + '）</button>' +
           (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' + (st.__tcd > 0 ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) + (st.__tcd > 0 ? " 冷却 " + st.__tcd : "") + '</button>' : '') +
