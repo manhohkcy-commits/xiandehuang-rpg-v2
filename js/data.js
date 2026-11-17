@@ -1363,3 +1363,17 @@ DUNGEONS.forEach((du) => {
 // ⚒ 强化成本统一：强化石 = 2 + 2×等级，金币 = 60×等级
 CULT.stone = (lv) => 2 + 2 * (Number(lv) || 1);
 CULT.gold = (lv) => 60 * (Number(lv) || 1);
+
+
+// ⚒ 装备上限 150（每 25 级一次突破，共 5 次）
+CULT.eqLv = 25;
+CULT.ct = 5;
+CULT.eqBreak = [
+  { at: 25, stone: 18, gold: 3000 },
+  { at: 50, stone: 45, gold: 8000 },
+  { at: 75, stone: 75, gold: 16000 },
+  { at: 100, stone: 115, gold: 30000 },
+  { at: 125, stone: 165, gold: 50000 }
+];
+CULT.stone = (lv) => 2 + 2 * (Number(lv) || 1);
+CULT.gold = (lv) => 60 * (Number(lv) || 1);

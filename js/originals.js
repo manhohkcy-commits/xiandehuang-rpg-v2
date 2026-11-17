@@ -1,6 +1,6 @@
 import { cloudGet, cloudSave } from "./core.js?v=13807141";
 import { powerOf } from "./power.js?v=42e16747";
-import { GRADE, APTITUDE } from "./data.js?v=3669afac";
+import { GRADE, APTITUDE } from "./data.js?v=1502963d";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
@@ -97,7 +97,7 @@ export function origUnlocked(id, feature, prog) {
 }
 // 🛠 专属装备培养：每件 +2%/级（上限 20 级）、+12%/星（上限 5 星）
 export const ORIG_GEAR_CULT = {
-  maxLv: 20, maxStar: 5,
+  maxLv: 150, maxStar: 5,
   lvStone: (lv) => 2 + 2 * (Number(lv) || 1),
   lvGold: (lv) => 60 * (Number(lv) || 1),
   starShards: (star) => 60 * (Number(star) || 1),

@@ -1,5 +1,5 @@
 ﻿// 闲得慌RPG v2 · 装备操作（只改数据，不碰 UI / 云端）
-import { CULT, RARITY_MULT } from "./data.js?v=3669afac";
+import { CULT, RARITY_MULT } from "./data.js?v=1502963d";
 import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
@@ -146,18 +146,13 @@ export function cultCheck(it, kind, store) {
   if (!d) return { ok: false, why: "没有数据" };
   if (kind === "level") {
     const lv = Number(d.lv) || 1;
-    const cap = (CULT.eqLv || 20) + (Number(d.bt) || 0) * 5;
+    const cap = 25 + (Number(d.bt) || 0) * 25;
     if (lv >= cap) {
       const bt = Number(d.bt) || 0;
-      if (bt >= (CULT.ct || 3)) return { ok: false, why: "已满强化" };
+      if (bt >= 5) return { ok: false, why: "已满强化（Lv150）" };
       return { ok: false, why: "需要突破", needBreak: true, bt };
     }
-    const needBreak = CULT.breakNodes.indexOf(lv) >= 0;
-    return {
-      ok: true, to: lv + 1,
-      gold: CULT.gold(lv), stone: CULT.stone(lv),
-      breakStone: needBreak ? CULT.breakStone[lv] : 0
-    };
+    return { ok: true, to: lv + 1, gold: CULT.gold(lv), stone: CULT.stone(lv), breakStone: 0 };
   }
   if (kind === "break") {
     const bt = Number(d.bt) || 0;
