@@ -1599,7 +1599,7 @@ function renderOrigCult() {
   const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
   const tabs = ORIGINALS.map((x) => '<button data-osel="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + esc(x.name) + '</button>').join("");
   const res = '<div class="hint" style="margin-bottom:8px;">金币 ' + fmt(store.gold || 0) + ' · 强化石 ' + (store.flags.stone || 0) +
-    ' · 碎片 ' + (store.flags.shards || 0) + ' · 突破石 ' + matTotal("cert") + '</div>';
+    ' · 碎片 ' + (store.flags.shards || 0) + ' · 突破石 ' + (store.flags.bstone || 0) + ' · 证书 ' + matTotal("cert") + '</div>';
   const GI = { weapon: "🗡", armor: "🛡", armor2: "👖", accessory: "💍" };
   const body = Object.keys(SLOTN).map((slot) => {
     const it = gg[slot] || {};
