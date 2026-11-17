@@ -153,9 +153,22 @@ function render() {
         (parts.length ? '<div class="hint" style="margin-top:2px;">' + esc(parts.join(" · ")) + '</div>' : "") + '</div>';
     }).join("") || '<div class="hint" style="padding:8px 9px;">（暂无专属装备）</div>';
 
+    const wpn = g.weapon || {};
+    const skRow = (label, name, mult, hits, cd, rage, extra) => {
+      const t = [hits > 1 ? "×" + hits + " 段" : "", cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""].filter(Boolean).join(" · ");
+      return '<div style="padding:6px 9px;border-bottom:1px solid #1a2438;">' +
+        '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;">[' + label + '] ' + esc(name || "—") + '</b>' +
+        '<span style="color:' + tint + ';font-weight:700;">' + mult + '</span></div>' +
+        (t ? '<div class="hint" style="margin-top:2px;color:#8fd8ff;">' + t + '</div>' : "") +
+        (extra ? '<div class="hint" style="margin-top:2px;">' + esc(extra) + '</div>' : "") + '</div>';
+    };
     const skillsHtml = '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' +
-      '<div style="display:flex;justify-content:space-between;padding:6px 9px;border-bottom:1px solid #1a2438;"><b style="font-size:13px;">[普攻]</b><span style="color:' + tint + ';font-weight:700;">100%</span></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:6px 9px;"><b style="font-size:13px;">[必杀]</b><span style="color:' + tint + ';font-weight:700;">250% · 怒气 100</span></div></div>';
+      skRow("普攻", wpn.aName || "普通攻击", (wpn.aMult || 100) + "%", wpn.aHits || 1, 0, wpn.aRage, wpn.aDesc) +
+      (wpn.sName
+        ? skRow("技能", wpn.sName, (wpn.sMult || 150) + "%", wpn.sHits || 1, wpn.sCd || 3, wpn.sRage, wpn.sDesc)
+        : skRow("技能", "无", "—", 1, 0, null, "")) +
+      skRow("必杀", wpn.uName || "必杀", (wpn.uMult || 250) + "% · 怒气 100", wpn.uHits || 1, 0, null, wpn.uDesc || wpn.skillDesc) +
+      '</div>';
     const basic = o.basic || {}, spec = o.spec || {};
     const abil = [];
     Object.keys(g).forEach((k) => {
