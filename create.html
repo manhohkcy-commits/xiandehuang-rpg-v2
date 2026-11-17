@@ -1631,7 +1631,7 @@ function renderOrigCult() {
     const awkN = Number(store.flags.awakenStone) || 0;
   const okAwk = adv >= 1 && awk < 3 && shN >= cAwk.s && awkN >= cAwk.k;
     return card((GI[slot] || "🗡") + " " + esc(it.name) + "（" + (it.rarity || "") + " · " + SLOTN[slot] + "）",
-      '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / 上限 ' + _cap + '（突破 ' + _bt + '/3） / ★' + star +
+      '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / 上限 ' + _cap + '（突破 ' + _bt + '/5） / ★' + star +
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) +
