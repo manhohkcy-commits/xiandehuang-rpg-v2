@@ -21,6 +21,29 @@ import { cloudList, cloudGet, cloudSave } from "./js/core.js?v=13807141";
 import { charPower, charFinal, gradeOf } from "./js/power.js?v=42e16747";
 import { ORIGINALS, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=076cb032";
 
+
+function mergeAbilInPlace(arr) {
+  const map = new Map();
+  arr.forEach((s) => {
+    const m = String(s).match(/^(【[^】]+】[^0-9+\-]*?)([+\-]?\d+(?:\.\d+)?)(%?)/);
+    if (m) {
+      const key = m[1].trim() + (m[3] || "");
+      const val = Number(m[2]) || 0;
+      map.set(key, (map.get(key) || 0) + val);
+    } else {
+      map.set(String(s), null);
+    }
+  });
+  const out = [];
+  map.forEach((v, k) => {
+    if (v === null) { out.push(k); return; }
+    const m = k.match(/^(.*?)(%?)$/);
+    out.push(m[1] + (v >= 0 ? "+" : "") + (Math.round(v * 10) / 10) + (m[2] || ""));
+  });
+  arr.length = 0;
+  arr.push.apply(arr, out);
+}
+
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -134,6 +157,7 @@ function render() {
     const row = (k, v) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
       '<span class="hint">' + k + '</span><span style="font-weight:600;color:#dbe4f3;font-size:13px;">' + v + '</span></div>';
     const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+  mergeAbilInPlace(abil);
     const gearHtml = Object.keys(SLOT).map((k) => {
       const it = g[k] || {};
       if (!it.name) return "";
@@ -297,6 +321,7 @@ async function loadPlayers() {
           if (d.atkPct) abil.push("【加成】攻击 +" + d.atkPct + "%");
           if (d.hpPct) abil.push("【加成】生命 +" + d.hpPct + "%");
         });
+  mergeAbilInPlace(abil);
         const gear = Object.keys(SLOT).map((k) => {
           const d = eq[k] && (eq[k].data || eq[k]);
           return '<div class="row"><span class="k">' + (d ? (d.rarity === "SSR" ? "🌟 " : "") + esc(d.name) : '<span class="hint">—</span>') +

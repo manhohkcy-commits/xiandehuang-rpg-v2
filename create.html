@@ -31,6 +31,29 @@ import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, 
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=076cb032";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
+
+function mergeAbilInPlace(arr) {
+  const map = new Map();
+  arr.forEach((s) => {
+    const m = String(s).match(/^(【[^】]+】[^0-9+\-]*?)([+\-]?\d+(?:\.\d+)?)(%?)/);
+    if (m) {
+      const key = m[1].trim() + (m[3] || "");
+      const val = Number(m[2]) || 0;
+      map.set(key, (map.get(key) || 0) + val);
+    } else {
+      map.set(String(s), null);
+    }
+  });
+  const out = [];
+  map.forEach((v, k) => {
+    if (v === null) { out.push(k); return; }
+    const m = k.match(/^(.*?)(%?)$/);
+    out.push(m[1] + (v >= 0 ? "+" : "") + (Math.round(v * 10) / 10) + (m[2] || ""));
+  });
+  arr.length = 0;
+  arr.push.apply(arr, out);
+}
+
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
 
@@ -643,6 +666,7 @@ function openCharPanel(ch) {
     if (d.defPct) abil.push("【加成】防御 +" + d.defPct + "%");
     if (d.resPct) abil.push("【加成】法抗 +" + d.resPct + "%");
   });
+  mergeAbilInPlace(abil);
   const gearHtml = Object.keys(SLOT).map((k) => {
     const d = eq[k] && (eq[k].data || eq[k]);
     return '<div class="row" style="cursor:default;"><span class="k">' + (d ? (d.rarity === "SSR" ? "🌟 " : "") + esc(d.name) : '<span class="hint">—</span>') +
