@@ -1810,8 +1810,13 @@ function renderOrig() {
       '<div class="hint" style="margin-top:6px;">突破 ' + brk + '/5 · 每次全属性 +3%' +
         (brkNext ? '（下次需 Lv' + brkNext.at + ' · ' + ({ cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" })[brkNext.cert] + ' ×' + brkNext.num + ' + ' + fmt(brkNext.g) + ' 金）' : '（已满）') + '</div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
-        '<button id="btnOrigLevel"' + ((prog.exp || 0) >= need && lv < CHAR.maxLevel ? '' : ' disabled') + '>🔼 升级到 Lv' + (lv + 1) + '</button>' +
-        '<button id="btnOrigBreak" ' + (brkNext ? '' : 'disabled') + '>⚡ 突破</button>' +
+        '<button id="btnOrigLevel" style="' + (((prog.exp || 0) >= need && lv < CHAR.maxLevel) ? 'border-color:#6ea8fe;color:#cfe6ff;' : 'opacity:.55;') + '">🔼 升级到 Lv' + (lv + 1) + '</button>' +
+        (() => {
+        if (!brkNext) return '<button id="btnOrigBreak" style="opacity:.45;">⚡ 已满突破</button>';
+        const haveC = Number(store.flags[brkNext.cert]) || 0;
+        const okB = lv >= brkNext.at && haveC >= brkNext.num && (Number(store.gold) || 0) >= brkNext.g;
+        return '<button id="btnOrigBreak" style="border-color:' + (okB ? "#ffb347" : "#3a3a5c") + ';color:' + (okB ? "#ffb347" : "#6a6a86") + ';' + (okB ? '' : 'opacity:.55;') + '">⚡ 突破</button>';
+      })() +
       '</div>') +
     card("综合战力",
       '<div style="font-size:24px;font-weight:800;color:#6ea8fe;">' + fmt(pw) + '</div>' +
