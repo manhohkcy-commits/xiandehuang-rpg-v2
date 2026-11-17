@@ -2640,6 +2640,33 @@ function render() {
   }
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   (store.chars || []).forEach((c) => { if (c.tp == null) c.tp = talentPointsOf(c); });
+  // 🔁 一次性：把迁移时错误清零的剩余点数补回
+  {
+    let fix = false;
+    (store.chars || []).forEach((ch4) => {
+      if (ch4.specNorm !== 1) return;
+      const lv = Number(ch4.lv) || 1, br = Number(ch4.breaks) || 0;
+      const allow = (Number(BIRTH.specPoints) || 24) + Math.floor(lv / 5) * 2 + br * 5;
+      const spent = ["str", "intel", "tech", "agi"].reduce((a, k) => a + (Number(ch4[k]) || 0), 0);
+      ch4.free = Math.max(0, allow - spent);
+      ch4.specNorm = 2;
+      fix = true;
+    });
+    Object.keys(store.orig || {}).forEach((id) => {
+      const pg = store.orig[id];
+      if (!pg || pg.specNorm !== 1) return;
+      const o = ORIGINALS.find((x) => x.id === id);
+      if (!o) return;
+      const lv = Number(pg.lv) || 1, br = Number(pg.breaks) || 0;
+      const allowGrow = Math.floor(lv / 5) * 2 + br * 5;
+      const cur = pg.spec || {};
+      const spent = ["str", "intel", "tech", "agi"].reduce((a, k) => a + (Number(cur[k]) || 0), 0);
+      pg.free = Math.max(0, allowGrow - spent);
+      pg.specNorm = 2;
+      fix = true;
+    });
+    if (fix) { try { save(); } catch (e) {} }
+  }
   // ⚖️ 原创角色专精迁移（初创=角色设定值，成长=每5级2点 + 突破5点）
   {
     let ch3 = false;
