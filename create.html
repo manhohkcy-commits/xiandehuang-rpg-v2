@@ -2033,9 +2033,11 @@ function renderOrig() {
     const cost = BRK_COST[brk];
     if (lv < (Number(cost.at) || 0)) return toast("需要 Lv" + cost.at + " 才能突破", true);
     store.flags = store.flags || {};
-    if ((matTotal("cert") || 0) < cost.b) return toast("突破石不够（需要 " + cost.b + "）", true);
+    const certName = ({ cert1: "新手证书", cert2: "入门证书", cert3: "精英证书", cert4: "大师证书" })[cost.cert];
+    const haveCert = Number(store.flags[cost.cert]) || 0;
+    if (haveCert < cost.num) return toast(certName + "不够（需要 " + cost.num + "，现有 " + haveCert + "）", true);
     if ((Number(store.gold) || 0) < cost.g) return toast("金币不够（需要 " + fmt(cost.g) + "）", true);
-    matSpend("cert", cost.b);
+    store.flags[cost.cert] = haveCert - cost.num;
     store.gold = (Number(store.gold) || 0) - cost.g;
     store.orig = store.orig || {};
     store.orig[o.id] = Object.assign({}, prog, { breaks: brk + 1 });
