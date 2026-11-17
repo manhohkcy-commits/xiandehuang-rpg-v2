@@ -2118,6 +2118,41 @@ function travelerStock() {
   return out;
 }
 
+function showGearDetail(d) {
+  if (!d) return;
+  const rc = d.rarity === "SSR" ? "#ffd666" : d.rarity === "SR" ? "#c9a0ff" : "#6ea8fe";
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const mains = Object.keys(d.main || {}).map((k) => row({ atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度" }[k] || k, "+" + d.main[k])).join("");
+  const subs = [];
+  [["critRate", "暴击率"], ["critDmg", "暴击伤害"], ["dmgCut", "减伤"], ["thorns", "反伤"], ["atkPct", "攻击"], ["hpPct", "生命"], ["defPct", "防御"], ["resPct", "法抗"]].forEach(([k, n]) => {
+    if (d[k]) subs.push(row(n, "+" + d[k] + "%"));
+  });
+  const sk = (label, name, mult, cd, rage) => name
+    ? '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
+      '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;">[' + label + '] ' + esc(name) + '</b>' +
+      '<span style="color:' + rc + ';font-weight:700;">' + mult + '</span></div>' +
+      '<div class="hint" style="margin-top:2px;">' + [cd ? "CD " + cd : "", rage != null ? "回怒 +" + rage : ""].filter(Boolean).join(" · ") + '</div></div>'
+    : "";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+  ov.innerHTML = '<div class="card" style="width:min(420px,92vw);max-height:86vh;overflow:auto;margin:0;border-color:' + rc + '66;">' +
+    '<div class="card-title" style="color:' + rc + ';">' + esc(d.name) + ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + '</span></div>' +
+    (d.desc ? '<div class="hint">' + esc(d.desc) + '</div>' : "") +
+    (mains ? '<div class="hint" style="margin:8px 0 4px;color:#ffd666;font-weight:700;">主属性</div>' + mains : "") +
+    (subs.length ? '<div class="hint" style="margin:8px 0 4px;color:#8fd8ff;font-weight:700;">副属性</div>' + subs.join("") : "") +
+    '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;">招式组</div>' +
+    sk("普攻", d.aName, (d.aMult || 100) + "%", 0, d.aRage) +
+    sk("技能", d.sName, (d.sMult || 0) + "%", d.sCd, d.sRage) +
+    sk("必杀", d.uName, (d.uMult || 250) + "%", 0, null) +
+    '<button id="gdClose" style="width:100%;margin-top:10px;">关闭</button></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#gdClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+function findGear(id) {
+  return WEAPONS.find((x) => x.id === id) || ARMORS.find((x) => x.id === id) || ACCESSORIES.find((x) => x.id === id);
+}
+
 function travelerCard() {
   const open = travelerOpen();
   const stock = travelerStock();
@@ -2126,7 +2161,7 @@ function travelerCard() {
   const row = (it) => {
     const rc = it.def.rarity === "SSR" ? "#ffd666" : it.def.rarity === "SR" ? "#c9a0ff" : "#6ea8fe";
     const sold = !!bought[it.key];
-    return '<div class="row"><span class="k">' + esc(it.def.name) +
+    return '<div class="row"><span class="k"><a href="javascript:void(0)" data-gd="' + it.def.id + '" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">' + esc(it.def.name) + '</a>' +
       ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (it.def.rarity || "R") + '</span>' +
       '<span class="hint"> ' + (it.cat === "weapon" ? "武器" : it.cat === "armor" ? (it.def.part === "bottom" ? "下装" : "上装") : "饰品") + '</span></span>' +
       '<span class="v"><span style="color:#ffd666;">💰 ' + fmt(it.price) + '</span> ' +
@@ -2410,7 +2445,7 @@ function renderShop() {
     const trend = sp.pct === 0 ? '' : (sp.pct > 0
       ? ' <span class="hint" style="color:#ff9b9b;">↑' + sp.pct + '%</span>'
       : ' <span class="hint" style="color:#7ee787;">↓' + Math.abs(sp.pct) + '%</span>');
-    return '<div class="row"><span class="k">' + esc(d.name) + ' <span class="tag">' + d.rarity + '</span></span>' +
+    return '<div class="row"><span class="k"><a href="javascript:void(0)" data-gd="' + d.id + '" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">' + esc(d.name) + '</a> <span class="tag">' + d.rarity + '</span></span>' +
       '<span class="v"><span style="color:#ffd666;">' + sp.price + ' 金</span>' + trend +
       ' <span class="hint" style="text-decoration:line-through;">' + sp.base + '</span> ' +
       (sold ? '<span class="hint">已售罄</span>' : '<button data-buy="' + cat + ':' + d.id + '">购买</button>') +
@@ -2460,6 +2495,7 @@ function renderShop() {
         : '<div class="hint">仓库里没有可卖的东西</div>');
 
   view().innerHTML = tab === "cart" ? (tabBar + travelerCard()) : (tab === "store" ? storeHtml : gearHtml);
+  view().querySelectorAll("[data-gd]").forEach((a) => a.onclick = () => showGearDetail(findGear(a.dataset.gd)));
   view().querySelectorAll("[data-shoptab]").forEach((b) => b.onclick = () => {
     window.__shopTab = b.dataset.shoptab;
     render();
