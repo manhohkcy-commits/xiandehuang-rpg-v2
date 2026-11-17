@@ -1937,6 +1937,12 @@ function renderOrig() {
     const k = b.dataset.spec;
     const free = Number(prog.free) || 0;
     if (free <= 0) return toast("没有剩余专精点", true);
+    {
+      const baseV = Number((o.spec || {})[k]) || 0;
+      const addV = Number((prog.spec || {})[k]) || 0;
+      const capV = Number(BIRTH.specLevelCap) || 50;
+      if (baseV + addV >= capV) return toast("这一项已达上限 " + capV, true);
+    }
     prog.spec = prog.spec || {};
     prog.spec[k] = (Number(prog.spec[k]) || 0) + 1;
     prog.free = free - 1;
