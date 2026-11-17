@@ -2237,6 +2237,10 @@ function renderStore() {
       const n = Number(fl[p.id]) || 0;
       if (n > 0) list.push(p.name + " ×" + n);
     });
+    [["ms1", "初级手稿"], ["ms2", "中级手稿"], ["ms3", "高级手稿"], ["md1", "青铜勋章"], ["md2", "白银勋章"], ["md3", "黄金勋章"], ["cert1", "新手证书"], ["cert2", "入门证书"], ["cert3", "精英证书"], ["cert4", "大师证书"]].forEach(([k, n]) => {
+      const v = Number(fl[k]) || 0;
+      if (v > 0) list.push(n + " ×" + v);
+    });
     ["shards", "shardR", "shardSR", "shardSSR", "kyoShard", "kShard"].forEach((k) => {
       const n = Number(fl[k]) || 0;
       if (n > 0) list.push(({ shards: "通用碎片", shardR: "R 碎片", shardSR: "SR 碎片", shardSSR: "SSR 碎片", kyoShard: "草薙流古武典碎片", kShard: "究极热动拳套碎片" })[k] + " ×" + n);
@@ -2285,7 +2289,7 @@ function renderStore() {
     '<div class="row"><span class="k">突破石</span><span class="v">' + fmt(Number(fl.bstone) || 0) + '</span></div>' + '</div>';
 
   if (!filtered.length) {
-    view().innerHTML = propCard + matCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
+    view().innerHTML = propCard + tool + resCard + '<div class="card"><div class="hint">' + (all.length ? "这个筛选下没有装备" : "仓库是空的") + '</div></div>';
     bindStoreTool(filtered);
     return;
   }
