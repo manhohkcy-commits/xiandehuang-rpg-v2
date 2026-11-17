@@ -287,7 +287,7 @@ async function loadPlayers() {
         const basic = ch.basic || {};
         const abil = [];
         Object.keys(SLOT).forEach((k) => {
-          const d = eq[k] && eq[k].data;
+          const d = eq[k] && (eq[k].data || eq[k]);
           if (!d) return;
           if (d.critRate) abil.push("【概率】暴击率 +" + d.critRate + "%（攻击时触发暴击的几率）");
           if (d.critDmg) abil.push("【加成】暴击伤害 +" + d.critDmg + "%（暴击时的额外伤害）");
@@ -298,12 +298,12 @@ async function loadPlayers() {
           if (d.hpPct) abil.push("【加成】生命 +" + d.hpPct + "%");
         });
         const gear = Object.keys(SLOT).map((k) => {
-          const d = eq[k] && eq[k].data;
+          const d = eq[k] && (eq[k].data || eq[k]);
           return '<div class="row"><span class="k">' + (d ? (d.rarity === "SSR" ? "🌟 " : "") + esc(d.name) : '<span class="hint">—</span>') +
             '<div class="hint">' + (d ? [(d.main && d.main.atk) ? "攻击 +" + d.main.atk : "", (d.main && d.main.hp) ? "生命 +" + d.main.hp : ""].filter(Boolean).join(" · ") : "") + '</div></span>' +
             '<span class="v hint">' + SLOT[k] + '</span></div>';
         }).join("");
-        const wp = eq.weapon && eq.weapon.data;
+        const wp = eq.weapon && (eq.weapon.data || eq.weapon);
         const skills = wp
           ? rowv("普攻", esc(wp.aName || "—") + " · " + (wp.aMult || 100) + "%") +
             rowv("技能", esc(wp.sName || "—") + " · " + (wp.sMult || 150) + "% · CD" + (wp.sCd || 3)) +
