@@ -1500,10 +1500,11 @@ function renderDaily() {
 }
 
 function renderCult() {
-  const ch = activeChar();
-  if (!ch) { window.__creating = 1; buildCreateScreen(); return; }
+  let ch = activeChar();
+  const hostGear = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+  if (!ch && !hostGear) { window.__creating = 1; buildCreateScreen(); return; }
   const entries = [];
-  ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
+  if (ch) ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
     const d = ch.equip && ch.equip[k];
     if (d) entries.push({ key: "eq:" + k, d, where: "已装备", id: null, lock: false });
   });
@@ -1512,6 +1513,7 @@ function renderCult() {
   });
   const resolve = (key) => {
     if (key.indexOf("eq:") === 0) {
+      if (!ch) return null;
       const slot = key.slice(3);
       const raw = ch.equip[slot];
       if (!raw) return null;
@@ -1555,7 +1557,15 @@ function renderCult() {
       (e.id && !e.lock ? '<button data-inh="' + e.id + '">🔁 继承到…</button>' : '') +
       '</div></div>';
   };
-  view().innerHTML = card("⚒ 装备培养",
+  const cultTabs = (() => {
+    try {
+      if (localStorage.getItem("rpg2:host") !== "1") return "";
+      return '<div class="tree-tabs" style="margin-bottom:8px;">' +
+        '<button data-culttab="gear" class="on">🎒 仓库装备</button>' +
+        '<button data-culttab="orig">🧬 专属装备</button></div>';
+    } catch (e) { return ""; }
+  })();
+  view().innerHTML = cultTabs + card("⚒ 装备培养",
     '<div class="hint">强化 Lv1~150（每 25 级一次突破）、升星 1~5★、升阶、继承同部位。装备栏里的也能直接培养。</div>' +
     (entries.length ? entries.map(row).join('') : '<div class="hint">还没有装备。</div>')) + synthHtml();
   const act = async (key, kind) => {
@@ -1570,6 +1580,10 @@ function renderCult() {
       if (kind === "break") toast("🔓 突破成功：强化上限 " + r.cap);
     } catch (err) { toast("出错：" + (err && err.message || err), true); }
   };
+  view().querySelectorAll("[data-culttab]").forEach((b) => b.onclick = () => {
+    window.__hostCultGear = b.dataset.culttab === "gear";
+    render();
+  });
   view().querySelectorAll("[data-cult2]").forEach((b) => b.onclick = () => act(b.dataset.cult2, "level"));
 
   view().querySelectorAll("[data-brk2]").forEach((b) => b.onclick = async () => {
@@ -1732,7 +1746,19 @@ function renderOrigCult() {
         '<button data-og="' + slot + ':awakenG"' + (okAwk ? '' : ' disabled style="opacity:.45;"') + '>觉醒 ' + awk + '→' + (awk + 1) + (adv < 1 ? '（先升阶到 UR）' : '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAwk.s + ' + 觉醒石 ' + cAwk.k + '）') + '</button>' +
       '</div>');
   }).join("");
-  view().innerHTML = '<div class="tree-tabs">' + tabs + '</div>' + res + (body || card("⚒ 培养", '<div class="hint">这名角色还没有专属装备。</div>'));
+  const cultTabs2 = (() => {
+    try {
+      if (localStorage.getItem("rpg2:host") !== "1") return "";
+      return '<div class="tree-tabs" style="margin-bottom:8px;">' +
+        '<button data-culttab="gear">🎒 仓库装备</button>' +
+        '<button data-culttab="orig" class="on">🧬 专属装备</button></div>';
+    } catch (e) { return ""; }
+  })();
+  view().innerHTML = cultTabs2 + '<div class="tree-tabs">' + tabs + '</div>' + res + (body || card("⚒ 培养", '<div class="hint">这名角色还没有专属装备。</div>'));
+  view().querySelectorAll("[data-culttab]").forEach((b) => b.onclick = () => {
+    window.__hostCultGear = b.dataset.culttab === "gear";
+    render();
+  });
 
   view().querySelectorAll("[data-osel]").forEach((b) => b.onclick = () => { window.__origSel = b.dataset.osel; render(); });
   view().querySelectorAll("[data-og]").forEach((b) => b.onclick = async () => {
@@ -3090,7 +3116,11 @@ function render() {
   try {
     if (tab === "orig" && !ORIGINALS.length) pullOriginals().then(() => { try { render(); } catch (e) {} }).catch(() => {});
     if (hostMode && (tab === "char" || tab === "orig")) { renderOrig(); return; }
-    if (hostMode && tab === "cult") { renderOrigCult(); return; }
+    if (hostMode && tab === "cult") {
+    if (window.__hostCultGear) renderCult();
+    else renderOrigCult();
+    return;
+  }
     if (hostMode && tab === "talent") {
       view().innerHTML = card("🌳 天赋（原创角色）", '<div class="hint">按玩家端天赋树接入中；解锁阶段待配置。</div>');
       return;
