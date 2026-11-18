@@ -1251,6 +1251,30 @@ async function pullIntents() {
   } catch (e) {}
 }
 
+const ST_ICON = {
+  burn: "🔥", poison: "☠️", bleed: "🩸", stun: "💫", freeze: "❄️", silence: "🤐",
+  noheal: "🚫", disarm: "🔨", atkUp: "⬆️", atkDown: "⬇️", defUp: "🛡️", defDown: "🔻",
+  spdUp: "💨", spdDown: "🐌", critUp: "🎯", regen: "💚", shield: "🛡", mark: "🎯",
+  stack: "📚", taunt: "😡", dodge: "💨", blockUp: "🧱", pierce: "🗡", vamp: "🧛", reflect: "🪞"
+};
+const ST_NAME = {
+  burn: "灼烧", poison: "中毒", bleed: "流血", stun: "眩晕", freeze: "冰冻", silence: "沉默",
+  noheal: "禁疗", disarm: "缴械", atkUp: "攻击↑", atkDown: "攻击↓", defUp: "防御↑", defDown: "防御↓",
+  spdUp: "速度↑", spdDown: "速度↓", critUp: "暴击↑", regen: "回复", shield: "护盾", mark: "标记",
+  stack: "叠层", taunt: "嘲讽", dodge: "闪避", blockUp: "格挡↑", pierce: "穿透", vamp: "吸血", reflect: "反伤"
+};
+function statusHtml(u, small) {
+  const list = (u && u.statuses) || [];
+  if (!list.length) return "";
+  return '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">' + list.map((s) => {
+    const icon = ST_ICON[s.key] || "✨";
+    const t = Number(s.turns) || 0;
+    const title = (ST_NAME[s.key] || s.label || s.key) + (s.v ? " · " + Math.round(s.v * 10) / 10 : "") + (t ? " · 剩余 " + t + " 回合" : "");
+    return '<span title="' + esc(title) + '" style="font-size:' + (small ? "8.5px" : "10px") + ';background:#1b2337;border:1px solid #2b3a55;border-radius:3px;padding:0 3px;color:#cfe6ff;">' +
+      icon + (t ? t : "") + '</span>';
+  }).join("") + '</div>';
+}
+
 function gridHtml() {
   const cell = (u) => {
     if (!u) return '<div style="min-height:72px;border:1px dashed #2a3350;border-radius:8px;"></div>';
@@ -1265,7 +1289,7 @@ function gridHtml() {
       '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
       '<div style="height:3px;background:#1a1f2e;border-radius:3px;margin-top:2px;overflow:hidden;"><i style="display:block;height:100%;width:' + rage + '%;background:linear-gradient(90deg,#c9a0ff,#ff9bd2);"></i></div>' +
       '<div class="hint" style="font-size:9px;display:flex;justify-content:space-between;">' +
-      '<span>' + fmt(Math.round(u.hp)) + (Number(u.shield) > 0 ? ' <span style="color:#8fd8ff;">🛡' + fmt(Math.round(u.shield)) + '</span>' : '') + '</span><span style="color:#c9a0ff;">🔥' + rage + '</span></div></div>';
+      '<span>' + fmt(Math.round(u.hp)) + (Number(u.shield) > 0 ? ' <span style="color:#8fd8ff;">🛡' + fmt(Math.round(u.shield)) + '</span>' : '') + '</span><span style="color:#c9a0ff;">🔥' + rage + '</span></div>' + statusHtml(u, true) + '</div>';
   };
   const A = st.units.filter((u) => u.side === "A");
   const B = st.units.filter((u) => u.side === "B");
@@ -1313,7 +1337,7 @@ function renderBattle() {
       queueHtml2() + gridHtml() +
       '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + fmt(Math.round(m.hp)) + ' / ' + fmt(Math.round(m.maxHp)) + ' · 攻 ' + Math.round(m.atk) + ' · 防 ' + Math.round(m.def) + (Number(m.shield) > 0 ? ' · 🛡 ' + fmt(Math.round(m.shield)) : '') + '</span></div>' + hpBar(m) +
       '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + fmt(Math.round(f2.hp)) + ' / ' + fmt(Math.round(f2.maxHp)) + '</span></div>' + hpBar(f2) +
-    (st.__isOrig ? '<div class="row"><span class="k">❄️ 霜印</span><span class="v" style="color:#8fd8ff;">' +
+    statusHtml(m) + (st.__isOrig ? '<div class="row"><span class="k">❄️ 霜印</span><span class="v" style="color:#8fd8ff;">' +
       (Number(st.__frost) || 0) + ' / 5　（普攻 +1 · 必杀每层 +15%）</span></div>' : "") +
     '</div>' +
     (st.finished ? '<div class="card"><div class="card-title">' + (st.winner === "A" ? "🏆 胜利" : "💀 失败") + '</div>' +
