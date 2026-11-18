@@ -750,9 +750,11 @@ function renderChar() {
     card("属性（含装备）", row("攻击", Math.round(f.atk)) + row("生命", Math.round(f.hp)) + row("防御", Math.round(f.def)) +
       row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
       row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%") +
-      '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+      '<div class="hint" style="margin-top:4px;">数据时间 ' + (Number(store.__at) ? new Date(Number(store.__at)).toLocaleTimeString("zh-CN", { hour12: false }) : "未知") + '</div>' +
+    '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
       '<button id="btnCharBreakdown">📊 加成明细</button>' +
-      '<button id="btnCharPanel" style="border-color:#8fd8ff;color:#8fd8ff;">📋 完整面板</button></div>') +
+      '<button id="btnCharPanel" style="border-color:#8fd8ff;color:#8fd8ff;">📋 完整面板</button>' +
+      '<button id="btnReload">🔄 重新读档</button></div>') +
     card("天赋与专精", row("专精换算", "+" + spec) +
       attrRow("力量", "str", ch) + attrRow("敏捷", "agi", ch) + attrRow("智力", "intel", ch) + attrRow("技巧", "tech", ch) +
       '<div class="hint" style="margin-top:6px;">剩余可分配点数：<b style="color:' + ((ch.free || 0) > 0 ? "#7ee787" : "#6a6a86") + ';">' + (ch.free || 0) + '</b>（每次升级 +2）</div>') +
@@ -776,6 +778,13 @@ function renderChar() {
   });
   if ($("btnCharBreakdown")) $("btnCharBreakdown").onclick = () => charBreakdown(ch);
 if ($("btnCharPanel")) $("btnCharPanel").onclick = () => openCharPanel(ch);
+if ($("btnReload")) $("btnReload").onclick = async () => {
+  try {
+    const g = await gateLoad(box, {});
+    if (g.ok) { store = g.store; updatedAt = g.updatedAt || ""; try { cacheSave(box, store); } catch (e) {} }
+    render(); toast(g.ok ? "已重新读取云端存档" : "读取失败：" + (g.reason || ""));
+  } catch (e) { toast("读取失败：" + (e && e.message || e), true); }
+};
   if ($("btnNewChar")) $("btnNewChar").onclick = () => {
     window.__cc = null;
     window.__creating = 1;
