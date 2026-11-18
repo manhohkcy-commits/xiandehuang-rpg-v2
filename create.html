@@ -1756,11 +1756,11 @@ function renderOrigCult() {
       '<div class="hint" style="margin-bottom:6px;">Lv' + lv + ' / 上限 ' + _cap + '（突破 ' + _bt + '/5） / ★' + star +
         (ref ? ' · 精炼 ' + ref : '') + (adv ? ' · ' + adv + ' 阶' : '') + (awk ? ' · 觉醒 ' + awk : '') + '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + '>强化 Lv' + lv + '→' + (lv + 1) +
-          '（强化石 ' + cLv.s + ' / 金 ' + fmt(cLv.g) + '）</button>' +
+        '<button data-og="' + slot + ':lv"' + (okLv ? '' : ' disabled style="opacity:.45;"') + (lv >= _cap ? '>已满 Lv' + lv + '</button>' : '>强化 Lv' + lv + '→' + (lv + 1) +
+          '（强化石 ' + cLv.s + ' / 金 ' + fmt(cLv.g) + '）</button>') +
         (cBtk ? '<button data-og="' + slot + ':breakG"' + (okBtk ? '' : ' disabled style="opacity:.45;"') + '>突破（上限 → ' + (25 + (_bt + 1) * 25) + ' · 突破石 ' + cBtk.s + ' / 金 ' + fmt(cBtk.g) + '）</button>' : '') +
-        '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>升星 ★' + star + '→' + (star + 1) +
-          '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>' +
+        '<button data-og="' + slot + ':star"' + (okStar ? '' : ' disabled style="opacity:.45;"') + '>' + (star >= 5 ? '已满星</button>' : '升星 ★' + star + '→' + (star + 1) +
+          '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cStar.s + ' / 金 ' + fmt(cStar.g) + '）</button>') +
         '<button disabled style="opacity:.45;">精炼（未开放）</button>' +
         '<button data-og="' + slot + ':advance"' + (okAdv ? '' : ' disabled style="opacity:.45;"') + (adv >= 1 ? '>升阶 已完成' : '>升阶 ' + (it.rarity || "SSR") + '→UR') +
           '（' + ({ shardR: "R", shardSR: "SR", shardSSR: "SSR" })[shardKey] + '碎片 ' + cAdv.s + ' / 金 ' + fmt(cAdv.g) + '）</button>' +
