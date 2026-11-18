@@ -293,7 +293,7 @@ async function loadPlayers() {
       rows.map((r, i) => '<tr data-player="' + esc(r.box) + '" style="cursor:pointer;border-top:1px dashed #23233a;' + (r.box === (hostMode ? "zynSD117" : box) ? "background:#1b2740;" : "") + '">' +
         '<td style="padding:6px 2px;font-size:11px;color:' + (i < 3 ? "#ffd666" : "#8a8ab0") + ';">' + (i + 1) + '</td>' +
         '<td style="font-size:12.5px;"><span style="color:' + (onlineMap[r.box] ? "#7ee787" : "#4a4a68") + ';">●</span> <b style="color:' + r.color + ';">' + esc(r.name) + '</b>' + (r.dup > 1 ? ' <span class="hint">同名 ×' + r.dup + '</span>' : '') + '</td>' +
-        '<td style="font-size:11px;color:#8a8ab0;">Lv' + r.lv + '</td>' +
+        '<td style="font-size:11px;color:#8a8ab0;">Lv' + r.lv + '<div style="font-size:10px;color:#5c6a86;">#' + String(r.box || '').slice(-4) + '</div></td>' +
         '<td style="text-align:right;font-size:12px;color:#6ea8fe;font-weight:700;">' + fmt(r.power) + '</td></tr>').join("") + '</table>';
     list.querySelectorAll("[data-player]").forEach((tr) => tr.onclick = async () => {
       const bx = tr.dataset.player;
