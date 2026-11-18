@@ -1240,8 +1240,6 @@ function openOrigCard(o) {
       if (acc.dmgCut) rows2.push(row("减伤", (Math.round(acc.dmgCut * 10) / 10) + "%"));
       if (acc.thorns) rows2.push(row("反伤", (Math.round(acc.thorns * 10) / 10) + "%"));
       if (acc.ultPct) rows2.push(row("必杀伤害", "+" + (Math.round(acc.ultPct * 10) / 10) + "%"));
-      if (acc.critRate) rows2.push(row("装备暴击", "+" + (Math.round(acc.critRate * 10) / 10) + "%"));
-      if (acc.critDmg) rows2.push(row("装备暴伤", "+" + (Math.round(acc.critDmg * 10) / 10) + "%"));
       return panel(rows2.length ? rows2.join("") : '<div class="hint" style="padding:8px 9px;">暂无额外属性（专属装备没有机制词条）</div>');
     })() +
 
