@@ -569,11 +569,19 @@ function startBattle(stageId, col, row) {
   }).filter(Boolean);
   units.push(...allies);
 
-  // 👥 人数缩放：队伍越大，敌人越多（数值不变）
+  // 👥 人数缩放：日常本按人数加小怪；庆典/首领关只强化本体，不复制 BOSS
   const extra = allies.length;
-  if (extra > 0) {
+  const isEventStage = String(s.id).indexOf("fest") === 0 || s.type === "event";
+  if (extra > 0 && !isEventStage) {
     const base = foeSpecs.slice(0, 6);
     for (let k = 0; k < extra; k++) foeSpecs.push(base[k % base.length]);
+  } else if (extra > 0 && isEventStage) {
+    // 庆典：每多一名同行，BOSS 生命/攻击 +18%（不复制）
+    const mul = 1 + 0.18 * extra;
+    foeSpecs = foeSpecs.map((e) => Object.assign({}, e, {
+      hp: Math.round((e.hp || 0) * mul),
+      atk: Math.round((e.atk || 0) * mul)
+    }));
   }
   st = createBattle([
     { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), lv: ch ? ch.lv : 1, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : (() => { const g = (ORIGINAL_GEAR[o0.id] || o0.gearObj || {}); const t = {}; Object.keys(g).forEach((k) => { const it = g[k] || {}; ["lifesteal", "ultPct", "critRate", "critDmg", "dmgCut", "thorns", "block", "tenacity", "penetrate"].forEach((key) => { if (it[key]) t[key] = (t[key] || 0) + (Number(it[key]) || 0); }); }); return t; })() }
