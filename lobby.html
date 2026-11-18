@@ -18,7 +18,7 @@
 </div>
 <script type="module">
 import { cloudList, cloudGet, cloudSave } from "./js/core.js?v=13807141";
-import { charPower, charFinal, gradeOf } from "./js/power.js?v=5f9e4127";
+import { charPower, charFinal, gradeOf, itemBonus } from "./js/power.js?v=5f9e4127";
 import { ORIGINALS, pullOriginals, originalFinal, gearAbilities, ORIGINAL_GEAR } from "./js/originals.js?v=ba87a9d1";
 
 
@@ -61,6 +61,27 @@ let cache = null;
     ORIG_PROG = (r && r.store && r.store.orig) || {};
   } catch (e) {}
 })();
+
+function showPlayerItem(d, slot) {
+  const SLOT = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
+  const b = (() => { try { return itemBonus({ cat: slot, data: d }) || {}; } catch (e) { return {}; } })();
+  const LBL = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", lifesteal: "吸血", dmgCut: "减伤", thorns: "反伤", atkPct: "攻击加成", hpPct: "生命加成", defPct: "防御加成", resPct: "法抗加成", ragePct: "初始怒气" };
+  const PCT = { critRate: 1, critDmg: 1, lifesteal: 1, dmgCut: 1, thorns: 1, atkPct: 1, hpPct: 1, defPct: 1, resPct: 1 };
+  const n1 = (v) => Math.round((Number(v) || 0) * 10) / 10;
+  const rows = Object.keys(b).filter((k) => LBL[k] && Number(b[k])).map((k) =>
+    '<div class="row"><span class="k">' + LBL[k] + '</span><span class="v">' + (PCT[k] ? "+" + n1(b[k]) + "%" : "+" + n1(b[k])) + '</span></div>').join("");
+  const wp = slot === "weapon" ? ('<div class="hint" style="margin-top:6px;">普攻 ' + (d.aName || "—") + ' ' + (d.aMult || 100) + '% · 技能 ' + (d.sName || "—") + ' ' + (d.sMult || 150) + '% · 必杀 ' + (d.uName || "—") + ' ' + (d.uMult || 250) + '%</div>') : "";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;";
+  ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;">' +
+    '<div class="card-title">' + esc(d.name) + ' <span class="tag">' + (d.rarity || "") + ' · Lv' + (d.lv || 1) + ' · ' + (d.star || 1) + '★</span></div>' +
+    '<div class="hint" style="margin-bottom:6px;">' + (SLOT[slot] || "") + '</div>' +
+    (rows || '<div class="hint">没有属性</div>') + wp +
+    '<button id="piClose" style="width:100%;margin-top:10px;">关闭</button></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#piClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
 
 function playerRows(rows) {
   const map = new Map();
@@ -351,6 +372,13 @@ async function loadPlayers() {
         document.body.appendChild(ov);
         ov.querySelector("#plClose").onclick = () => ov.remove();
         ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+        ov.querySelectorAll("[data-pgear]").forEach((el) => el.onclick = (ev) => {
+          ev.stopPropagation();
+          const k = el.dataset.pgear;
+          const raw = eq[k];
+          const d = raw && (raw.data || raw);
+          if (d) showPlayerItem(d, k);
+        });
       } catch (e) { alert("读取失败：" + (e && e.message || e)); }
     });
   } catch (e) {
