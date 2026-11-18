@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=6072c09e";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=32f6b23a";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=57f7c515";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 
@@ -1216,7 +1216,7 @@ function openOrigCard(o) {
         if (!it.name) return "";
         const gs = _gprog[k] || { lv: 1, star: 1 };
         const glv = Number(gs.lv) || 1, gst = Number(gs.star) || 1;
-        const gm = (1 + 0.02 * (glv - 1)) * (1 + 0.12 * (gst - 1)) * (1 + 0.05 * (Number(gs.advance) || 0)) * (1 + 0.03 * (Number(gs.refine) || 0));
+        const gm = origGearMul(gs);
         const parts = [];
         if (it.atk) parts.push("攻击 +" + Math.round(it.atk * gm));
         if (it.hp) parts.push("生命 +" + Math.round(it.hp * gm));
@@ -1276,7 +1276,7 @@ function openOrigCard(o) {
         const it = gdef[k] || {};
         const gs = gp[k] || { lv: 1, star: 1 };
         const glv = Number(gs.lv) || 1, gst = Number(gs.star) || 1;
-        const gm = (1 + 0.02 * (glv - 1)) * (1 + 0.12 * (gst - 1)) * (1 + 0.05 * (Number(gs.advance) || 0)) * (1 + 0.03 * (Number(gs.refine) || 0));
+        const gm = origGearMul(gs);
         if (it.lifesteal) acc.lifesteal += Number(it.lifesteal) * gm;
         if (it.critRate) acc.critRate += Number(it.critRate) * gm;
         if (it.critDmg) acc.critDmg += Number(it.critDmg) * gm;
@@ -1914,7 +1914,7 @@ function origGearDetail(it, slot, gst) {
   const MAIN = { weapon: ["atk"], armor: ["hp", "def", "res"], armor2: ["hp", "def", "spd"], accessory: ["atk", "critRate", "critDmg"] };
   const mk = MAIN[slot] || [];
   const gLv = Number(gst && gst.lv) || 1, gStar = Number(gst && gst.star) || 1;
-  const gMul = (1 + 0.02 * (gLv - 1)) * (1 + 0.12 * (gStar - 1)) * (1 + 0.05 * (Number(gst && gst.advance) || 0)) * (1 + 0.03 * (Number(gst && gst.refine) || 0));
+  const gMul = origGearMul(gst);
   const IT = {};
   Object.keys(it).forEach((k) => { IT[k] = it[k]; });
   ['atk','hp','def','res'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
@@ -1988,7 +1988,7 @@ function origBreakdown(o, prog) {
   const gear = { atk: 0, hp: 0, def: 0, res: 0, spd: 0 };
   Object.keys(g).forEach((slot) => {
     const it = g[slot] || {}, st = gl[slot] || {};
-    const m = (1 + 0.02 * ((st.lv || 1) - 1)) * (1 + 0.12 * ((st.star || 1) - 1)) * (1 + 0.05 * (st.advance || 0)) * (1 + 0.03 * (st.refine || 0));
+    const m = origGearMul(st);
     ["atk", "hp", "def", "res", "spd"].forEach((k) => { gear[k] += (Number(it[k]) || 0) * m; });
   });
   const base = { atk: Number(s.atk) || 60, hp: Number(s.hp) || 500, def: Number(s.def) || 20, res: Number(s.res) || 15, spd: Number(s.spd) || 10 };

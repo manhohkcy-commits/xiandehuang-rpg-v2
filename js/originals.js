@@ -4,6 +4,17 @@ import { GRADE, APTITUDE } from "./data.js?v=dbf4b773";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
 // 等级每级 +4%，突破每次 +3%（最多 3 次），战力用 powerOf 实时计算
+// 🧮 专属装备培养倍率（与玩家装备同构：等级/星级/突破/升阶/精炼）
+export function origGearMul(st) {
+  const s = st || {};
+  const lv = Math.max(1, Number(s.lv) || 1);
+  const star = Math.max(1, Number(s.star) || 1);
+  const bt = Math.max(0, Number(s.bt) || 0);          // 已过突破节点数（25/50/75…）
+  const adv = Math.max(0, Number(s.advance) || 0);
+  const ref = Math.max(0, Number(s.refine) || 0);
+  return (1 + 0.02 * (lv - 1)) * (1 + 0.12 * (star - 1)) * (1 + 0.05 * bt) * (1 + 0.05 * adv) * (1 + 0.03 * ref);
+}
+
 export function originalFinal(o, prog, withGear, withBonus) {
   const useGear = withGear !== false;
   const lv = Number(prog && prog.lv) || 1;
@@ -20,9 +31,7 @@ export function originalFinal(o, prog, withGear, withBonus) {
   if (useGear) Object.keys(g).forEach((slot) => {
     const it = g[slot] || {};
     const st = gl[slot] || {};
-    const lv = Math.max(1, Number(st.lv) || 1);
-    const star = Math.max(1, Number(st.star) || 1);
-    const mul = (1 + 0.02 * (lv - 1)) * (1 + 0.12 * (star - 1)) * (1 + 0.05 * (Number(st.advance) || 0)) * (1 + 0.03 * (Number(st.refine) || 0));
+    const mul = origGearMul(st);
     ["atk", "hp", "def", "res", "spd"].forEach((key) => { gs[key] += (Number(it[key]) || 0) * mul; });
     gs.critRate += (Number(it.critRate) || 0) * mul;
     gs.critDmg += ((Number(it.critDmg) || 0) + (Number(st.refine) || 0)) * mul;
