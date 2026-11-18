@@ -344,12 +344,25 @@ async function buildMultiBattle(stageId) {
   const built = buildUnits(room, 6);
   // 多人 PvE：所有玩家都在我方，敌人来自关卡配置
   built.units.forEach((u) => { u.side = "A"; });
-  const foeUnits = (stg.enemies || []).map((eid, i) => {
+  // 👥 多人适配：人数越多，敌人规模越大（额外援军，少数精锐）
+  const _players = Object.keys(room.members || {}).length;
+  const _extra = Math.max(0, _players - 1);
+  const _baseIds = (stg.enemies && stg.enemies.length) ? stg.enemies.slice() : [];
+  const _ids = _baseIds.slice();
+  for (let k = 0; k < _extra && _baseIds.length; k++) {
+    // 每人额外 1 个援军（循环取关卡敌人），最多再加 3 个
+    if (_ids.length >= _baseIds.length + 3) break;
+    _ids.push(_baseIds[k % _baseIds.length]);
+  }
+  const foeUnits = _ids.map((eid, i) => {
     const e = enemyAt(eid, stg.lv) || {};
     const stt = e.stats || {};
+    const isExtra = i >= _baseIds.length;
+    const mul = isExtra ? 0.85 : 1;   // 援军略弱，避免人数一多就团灭
     return {
-      id: "foe" + i, name: e.name || ("敌人" + (i + 1)), side: "B", lv: stg.lv, power: 0,
-      hp: stt.hp || 500, maxHp: stt.hp || 500, atk: stt.atk || 50, def: stt.def || 10, res: stt.res || 10,
+      id: "foe" + i, name: (e.name || ("敌人" + (i + 1))) + (isExtra ? "·援军" : ""), side: "B", lv: stg.lv, power: 0,
+      hp: Math.round((stt.hp || 500) * mul), maxHp: Math.round((stt.hp || 500) * mul),
+      atk: Math.round((stt.atk || 50) * mul), def: Math.round((stt.def || 10) * mul), res: Math.round((stt.res || 10) * mul),
       spd: stt.spd || 10, critRate: 5, critDmg: 150, dmgCut: 0, rage: 0,
       __skills: e.skills || []
     };
