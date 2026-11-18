@@ -774,7 +774,7 @@ async function startBattle(stageId, col, row) {
     const boss = st.units.filter((u) => u.side === "B").sort((a, b) => b.maxHp - a.maxHp)[0];
     st.__endless.maxHp = boss ? boss.maxHp : 1;
   }
-  st.__weapon = ch ? (ch.equip.weapon || null) : (function () { const gw = (ORIGINAL_GEAR[o0.id] || {}).weapon; return gw ? { data: gw } : null; })();
+  st.__weapon = ch ? weaponOf(ch) : (function () { const gw = (ORIGINAL_GEAR[o0.id] || {}).weapon; return gw ? { data: gw } : null; })();
   // 🌦 天气 + 🏞 场地：双方属性叠加
   {
     const env = ENVIRONMENTS[s.weather || "clear"] || ENVIRONMENTS.clear;
@@ -908,6 +908,12 @@ function tickStatuses() {
       pushLog("🔥 " + u.name + " 灼烧 −" + d);
     });
   });
+}
+
+function weaponOf(ch) {
+  const r = ch && ch.equip && ch.equip.weapon;
+  if (!r) return null;
+  return r.data ? r : { data: r };
 }
 
 function me() {
