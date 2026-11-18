@@ -1561,7 +1561,8 @@ function renderCult() {
       '<span class="tag">' + (e.d.rarity || "") + ' · ' + (e.d.rarity === "UR" ? "🔥" + (Number(e.d.fire) || 1) : (e.d.star || 1) + "★") + ' · Lv' + (e.d.lv || 1) + ' / 上限 ' + cap + '（突破 ' + bt + '/5）</span>' +
       '<span class="tag">' + e.where + '</span></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
-      '<button data-cult2="' + e.key + '"' + (chk.ok ? '' : ' style="opacity:.45;"') + '>强化 +1' + (chk.ok ? '（' + chk.gold + ' 金 / ' + chk.stone + ' 石）' : '（' + (chk.why || '') + '）') + '</button>' +
+      '<button data-cult2="' + e.key + '"' + (chk.ok ? '' : ' style="opacity:.45;"') + '>强化 Lv' + (Number(e.d.lv) || 1) + '→' + ((Number(e.d.lv) || 1) + 1) +
+          '（石 ' + (chk.stone || 0) + '/' + (Number(store.flags && store.flags.stone) || 0) + ' · 金 ' + fmt(chk.gold || 0) + '/' + fmt(Number(store.gold) || 0) + '）</button>' +
       (bkCfg ? '<button data-brk2="' + e.key + '"' + (canBk ? '' : ' style="opacity:.45;"') + '>突破（上限 → ' + (25 + (bt + 1) * 25) + ' · 强化石 ' + bkCfg.stone + ' / 金 ' + fmt(bkCfg.gold) + '）</button>' : '') +
       '<button data-star2="' + e.key + '"' + (star.ok ? '' : ' style="opacity:.45;"') + '>' + (star.ok ? '升星 → ' + star.to + '★（' + (star.rarity || '') + ' 碎片 ' + star.shards + '）' : (star.why || '已满星')) + '</button>' +
       '<button disabled style="opacity:.45;">精炼（未开放）</button>' +
@@ -1586,7 +1587,21 @@ function renderCult() {
         '<button data-culttab="orig">🧬 专属装备</button></div>';
     } catch (e) { return ""; }
   })();
-  view().innerHTML = cultTabs + card("⚒ 装备培养",
+  const matBar = (() => {
+  const f = store.flags || {};
+  const chips = [
+    ["强化石", Number(f.stone) || 0],
+    ["突破石", Number(f.bstone) || 0],
+    ["金币", Number(store.gold) || 0],
+    ["R碎片", Number(f.shardR) || 0],
+    ["SR碎片", Number(f.shardSR) || 0],
+    ["SSR碎片", Number(f.shardSSR) || 0]
+  ];
+  return card("🧰 培养材料", '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+    chips.map(([n, v]) => '<span class="tag" style="font-size:11px;">' + n + ' <b style="color:#ffd666;">' + fmt(v) + '</b></span>').join("") +
+    '</div><div class="hint" style="margin-top:6px;">按钮上会写清「需要 / 拥有」，不够时按钮变灰。</div>');
+})();
+view().innerHTML = cultTabs + matBar + card("⚒ 装备培养",
     '<div class="hint">强化 Lv1~150（每 25 级一次突破）、升星 1~5★、升阶、继承同部位。装备栏里的也能直接培养。</div>' +
     (entries.length ? entries.map(row).join('') : '<div class="hint">还没有装备。</div>')) + synthHtml();
   const act = async (key, kind) => {
