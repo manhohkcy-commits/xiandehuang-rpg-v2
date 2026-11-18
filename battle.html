@@ -20,13 +20,13 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=a92639d1";
-import { } from "./js/battle.js?v=abeb92c8";
+import { } from "./js/battle.js?v=5b7d918a";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=dbf4b773";
 import { makeItem } from "./js/items.js?v=fa9f2627";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=7f1d6ed0";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel, finalOf } from "./js/power.js?v=5f9e4127";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=ba87a9d1";
-import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=abeb92c8";
+import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit, hasStatus, isStunned, isSilenced, isDisarmed } from "./js/battle.js?v=5b7d918a";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
 const $ = (id) => document.getElementById(id);
@@ -1103,14 +1103,23 @@ function afterCommit() {
 }
 
 function tickStatuses() {
-  if (!st) return;  st.units.forEach((u) => {
+  if (!st) return;
+  st.units.forEach((u) => {
     if (!u || u.alive === false) return;
     (u.statuses || []).forEach((s) => {
-      if (s.key !== "burn") return;
-      const d = Math.max(1, Math.round(u.maxHp * s.v / 100));
+      if (s.key === "regen") {
+        const h = Math.max(1, Math.round(u.maxHp * (Number(s.v) || 5) / 100));
+        u.hp = Math.min(u.maxHp, u.hp + h);
+        pushLog("💚 " + u.name + " 回复 +" + h, "line");
+        return;
+      }
+      if (["burn", "poison", "bleed"].indexOf(s.key) < 0) return;
+      const d = Math.max(1, Math.round(u.maxHp * (Number(s.v) || 5) / 100));
       u.hp = Math.max(0, u.hp - d);
       if (u.hp === 0) u.alive = false;
-      pushLog("🔥 " + u.name + " 灼烧 −" + d);
+      const icon = s.key === "burn" ? "🔥" : s.key === "poison" ? "☠️" : "🩸";
+      const nm = s.key === "burn" ? "灼烧" : s.key === "poison" ? "中毒" : "流血";
+      pushLog(icon + " " + u.name + " " + nm + " −" + d, "line");
     });
   });
 }
@@ -1359,8 +1368,8 @@ function renderBattle() {
             '　·　' + rule + '　·　点敌方格子切换</div>';
         })() +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
-          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>[普攻] ' + esc(wp.aName || "普攻") + ' · ' + (Number(wp.aMult) || 100) + '%（回怒+' + (Number(wp.aRage) || 20) + '）</button>' +
-          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
+          '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || isDisarmed(m) ? 'disabled' : '') + '>[普攻] ' + esc(wp.aName || "普攻") + ' · ' + (Number(wp.aMult) || 100) + '%（回怒+' + (Number(wp.aRage) || 20) + '）</button>' +
+          '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 || isSilenced(m) ? 'disabled' : '') + '>' +
         (m.cd > 0 ? '🥋 冷却 ' + m.cd + ' 回合' : '[技能] ' + esc(wp.sName || '招式') + (wp.sSupport ? '（辅助）' : ' · ' + (Number(wp.sMult) || 150) + '%')) + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 ? 'disabled' : '') + '>' +
             ((Number(m.rage) || 0) >= 100 ? '[必杀] ' + esc(wp.uName || "必杀") + ' · ' + (Number(wp.uMult) || 250) + '%' : '💥 必杀 ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
@@ -1406,6 +1415,18 @@ function segMults(totalMult, hits, weights) {
 function doAct(kind) {
   if (!st || st.finished || busy) return;
   if (st.__tcd > 0) st.__tcd -= 1;   // 天赋主动技冷却随玩家回合递减
+  {
+    const mm0 = me();
+    if (mm0 && isStunned(mm0)) {
+      pushLog('💫 ' + mm0.name + ' 被控制，跳过本回合', 'line');
+      commit(st, mm0.id);
+      renderBattle();
+      setTimeout(aiTurnIfNeeded, 300);
+      return;
+    }
+    if (kind === 'skill' && mm0 && isSilenced(mm0)) { toast('被沉默，无法使用技能', true); return; }
+    if ((kind === 'normal' || kind === 'talent') && mm0 && isDisarmed(mm0)) { toast('被缴械，无法普通攻击', true); return; }
+  }
   if (st.finished) return;
   const a = nextActor(st);
   if (!a || a.id !== "me") return;

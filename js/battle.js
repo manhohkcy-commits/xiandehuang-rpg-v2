@@ -24,9 +24,12 @@ export function createBattle(units) {
     const traits = u.traits || {};
     st.units.push({
       id: String(u.id), name: u.name || u.id, side: u.side || "A",
-      spd: Number(u.spd) || 1, power: Number(u.power) || 0,
-      hp: Number(u.hp) || 1, maxHp: Number(u.maxHp) || Number(u.hp) || 1,
-      atk: Number(u.atk) || 0, def: Number(u.def) || 0, res: Number(u.res) || 0,
+      spd: (Number(u.spd) || 1) * (1 + (Number(traits.spdPct) || 0) / 100), power: Number(u.power) || 0,
+      hp: Math.round((Number(u.hp) || 1) * (1 + (Number(traits.hpPct) || 0) / 100)),
+      maxHp: Math.round((Number(u.maxHp) || Number(u.hp) || 1) * (1 + (Number(traits.hpPct) || 0) / 100)),
+      atk: Math.round((Number(u.atk) || 0) * (1 + (Number(traits.atkPct) || 0) / 100)),
+      def: Math.round((Number(u.def) || 0) * (1 + (Number(traits.defPct) || 0) / 100)),
+      res: Math.round((Number(u.res) || 0) * (1 + (Number(traits.resPct) || 0) / 100)),
       critRate: Number(u.critRate) || 0, critDmg: Number(u.critDmg) || 150,
       dmgCut: Number(u.dmgCut) || 0,
       traits,
@@ -101,8 +104,10 @@ export function damage(st, atkId, defId, opts = {}) {
     : 1;
   let raw = (Number(opts.atk) || 0) * (mult / 100) * critMul;
   // ✨ 增益：攻击提升（辅佐）
-  const up = (atk.statuses || []).find((s) => s.key === "atkUp");
-  if (up) raw *= 1 + (Number(up.v) || 0) / 100;
+  const stUp = (atk.statuses || []).find((s) => s.key === "atkUp");
+  if (stUp) raw *= 1 + Math.min(200, Number(stUp.v) || 0) / 100;
+  const stDown = (atk.statuses || []).find((s) => s.key === "atkDown");
+  if (stDown) raw *= Math.max(0.2, 1 - Math.min(80, Number(stDown.v) || 0) / 100);
   // 🎯 伤害类型加成（普攻/技能/必杀 × 物理/法术 × 近战/远程/法器）
   const kindPct = opts.kind === "normal" ? at.normalPct : opts.kind === "skill" ? at.skillPct : opts.kind === "ult" ? at.ultPct : 0;
   const typePct = opts.dmgType === "spell" ? at.spellPct : at.physPct;
@@ -120,8 +125,11 @@ export function damage(st, atkId, defId, opts = {}) {
   // 🩸 残血减伤：生命 <30% 时再乘一次
   if (def.hp <= (Number(def.maxHp) || 0) * 0.3) raw *= 1 - Math.min(60, Number(dt.lowHpCut) || 0) / 100;
   // 🛡️ 防御 + 法抗共同减伤（法抗按 1.5 倍折算）；穿透按伤害类型削减对应部分
-  let gDef = Number(def.def) || 0;
-  let gRes = (Number(def.res) || 0) * 1.5;
+  const dUp = (def.statuses || []).find((s) => s.key === "defUp");
+  const dDown = (def.statuses || []).find((s) => s.key === "defDown");
+  const dMod = 1 + ((dUp ? Math.min(200, Number(dUp.v) || 0) : 0) - (dDown ? Math.min(80, Number(dDown.v) || 0) : 0)) / 100;
+  let gDef = (Number(def.def) || 0) * Math.max(0.2, dMod);
+  let gRes = (Number(def.res) || 0) * 1.5 * Math.max(0.2, dMod);
   if (opts.dmgType === "spell") gRes *= 1 - Math.min(80, Number(at.spellPen) || 0) / 100;
   else gDef *= 1 - Math.min(80, Number(at.physPen) || 0) / 100;
   // 等级缩放的防御常数：低级怪不该吃满减伤，高级怪也不该被无视
