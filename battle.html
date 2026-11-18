@@ -773,12 +773,16 @@ async function renderPrep(stageId) {
   view().innerHTML =
     '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
     _dbg +
-    ((roomId && window.__roomMembers) ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">👥 队友（联机）</div>' +
-      Object.keys(window.__roomMembers).map((bx) => {
-        const mm = window.__roomMembers[bx] || {};
-        const cc = mm.char || {};
-        return '<div class="row"><span class="k">' + esc(mm.name || bx) + '<div class="hint">Lv' + (cc.lv || 1) + (bx === box ? " · 你" : "") + '</div></span><span class="v hint">生命 ' + Math.round(cc.hp || 0) + ' · 攻 ' + Math.round(cc.atk || 0) + '</span></div>';
-      }).join("") : "") +
+    (roomId ? (() => {
+        const list = Object.keys(window.__roomMembers || {}).map((bx) => ({ bx, mm: window.__roomMembers[bx] || {} }))
+          .filter((x) => x.mm && x.mm.char && Number(x.mm.char.hp) > 0);
+        if (!list.length) return '<div class="hint" style="margin-top:8px;color:#8fb8ff;">👥 队友：暂无（其他玩家进房后会自动出现）</div>';
+        return '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">👥 队友（联机 ' + list.length + ' 人）</div>' +
+          list.map((x) => {
+            const cc = x.mm.char || {};
+            return '<div class="row"><span class="k">' + esc(x.mm.name || x.bx) + '<div class="hint">Lv' + (cc.lv || 1) + (x.bx === box ? " · 你" : "") + '</div></span><span class="v hint">生命 ' + Math.round(cc.hp || 0) + ' · 攻 ' + Math.round(cc.atk || 0) + '</span></div>';
+          }).join("");
+      })() : "") +
       '<div class="hint">' + esc(s.story || "") + '</div>' +
     '<div class="hint" style="margin-top:4px;">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
       (s.tier ? '　|　阶级 ' + s.tier : '') + '</div>' +
