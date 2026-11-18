@@ -19,8 +19,9 @@
 
 <script type="module">
 import { cloudGet, cacheLoad, esc, fmt, gateLoad } from "./js/core.js?v=13807141";
-import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed } from "./js/room.js?v=17f71e85";
+import { createRoom, joinRoom, getRoom, setReady, leaveRoom, changed, setMemberChar } from "./js/room.js?v=e40b6dc6";
 import { DUNGEONS } from "./js/data.js?v=46e9a1b3";
+import { charFinal } from "./js/power.js?v=8dd3fb98";
 
 let box = "", store = null, room = null, roomId = "", seq = 0, timer = 0;
 const $ = (id) => document.getElementById(id);
@@ -84,7 +85,7 @@ function startPoll() {
       toast("已发到公共频道");
     } catch (e) { toast("广播失败：" + (e && e.message || e), true); }
   };
-  timer = setInterval(pull, 400);
+  timer = setInterval(() => { pull(); pushMyChar(); }, 400);
 }
 
 async function doCreate() {
@@ -93,7 +94,31 @@ async function doCreate() {
   if (!r.ok) return toast(r.reason || "建房失败", true);
   roomId = r.id; room = r.room; seq = room.seq;
   history.replaceState(null, "", "?box=" + encodeURIComponent(box) + "&room=" + roomId);
-  startPoll(); render();
+  startPoll(); render(); pushMyChar();
+}
+
+let lastPush = 0;
+async function pushMyChar() {
+  try {
+    const now = Date.now();
+    if (now - lastPush < 8000) return;
+    lastPush = now;
+    let st = null;
+    try { const c = cacheLoad(box); st = c && c.store; } catch (e) {}
+    if (!st) { const g = await gateLoad(box, {}); if (g.ok) st = g.store; }
+    if (!st) return;
+    const ch = (st.chars || []).find((x) => x.id === st.activeChar) || (st.chars || [])[0];
+    if (!ch) return;
+    const f = charFinal(ch);
+    const wRaw = ch.equip && ch.equip.weapon;
+    const snap = {
+      lv: ch.lv || 1, name: ch.name,
+      atk: Math.round(f.atk), hp: Math.round(f.hp), def: Math.round(f.def), res: Math.round(f.res),
+      spd: Math.round(f.spd * 10) / 10, critRate: Math.round(f.critRate || 5), critDmg: Math.round(f.critDmg || 150),
+      dmgCut: Math.round(f.dmgCut || 0), weapon: wRaw || null, at: Date.now()
+    };
+    await setMemberChar(roomId, box, snap, ch.name);
+  } catch (e) {}
 }
 
 async function doJoin(id) {

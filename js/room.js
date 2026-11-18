@@ -75,6 +75,19 @@ export async function joinRoom(id, box, name) {
   return r.ok ? { ok: true, room } : r;
 }
 
+export async function setMemberChar(id, box, charData, name) {
+  const got = await getRoom(id);
+  if (!got) return { ok: false, reason: "房间不存在" };
+  const room = got.room;
+  room.members = room.members || {};
+  const m = room.members[box] || (room.members[box] = { name: name || "玩家", side: "B", ready: false });
+  m.char = charData;
+  m.charAt = Date.now();
+  if (name) m.name = name;
+  const res = await putRoom(room, got.updatedAt);
+  return res.ok ? { ok: true, room } : res;
+}
+
 export async function setReady(id, box, ready) {
   const got = await getRoom(id);
   if (!got) return { ok: false, reason: "房间不存在" };

@@ -19,7 +19,7 @@
 
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
-import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
+import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=e40b6dc6";
 import { } from "./js/battle.js?v=abeb92c8";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=46e9a1b3";
 import { makeItem } from "./js/items.js?v=4c8258c6";
@@ -326,7 +326,7 @@ async function buildMultiBattle(stageId) {
   // 1) 补全每个成员的角色快照
   for (const bx of Object.keys(room.members || {})) {
     const m = room.members[bx];
-    // 不沿用旧快照：每次开战都重新读一次，保证是最新档案
+    if (m.char && Number(m.charAt || 0) > 0) continue;   // 队友自己推送的最新快照
     let ch = null;
     if (bx === box) { ch = activeChar(); }
     else {
