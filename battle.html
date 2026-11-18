@@ -539,6 +539,26 @@ async function buildMultiBattle(stageId) {
     }
   });
   st = createBattle(built.units.concat(foeUnits).map((u) => Object.assign({ power: 0 }, u)));
+  // 📐 布阵：敌人按前排优先分散到 6 格；我方按顺序排
+  {
+    const ROW_ORDER = [1, 0, 2];
+    const slots = [];
+    for (let col = 0; col < 2; col++) ROW_ORDER.forEach((row) => slots.push({ col, row }));
+    const used = [];
+    const take = (arr) => arr.find((s) => !used.includes(s));
+    const foes2 = st.units.filter((u) => u.side === "B");
+    foes2.forEach((u, i) => {
+      const sl = take(slots.filter((s) => s.col === (i < 3 ? 0 : 1))) || take(slots);
+      if (!sl) return;
+      used.push(sl);
+      u.__col = sl.col; u.__row = sl.row; u.__back = sl.col === 1;
+    });
+    const allies2 = st.units.filter((u) => u.side === "A");
+    allies2.forEach((u, i) => {
+      if (u.__col != null) return;
+      u.__col = 0; u.__row = Math.min(2, i);
+    });
+  }
   st.__stage = stg.id;
   st.__owners = built.owners;
   st.__multi = true;
