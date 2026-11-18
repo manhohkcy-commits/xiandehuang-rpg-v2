@@ -444,10 +444,12 @@ ENEMIES.forEach((e) => { if (SNOW_TIER_FIX[e.id]) e.tier = SNOW_TIER_FIX[e.id]; 
 
 
 // 👑 矿采锻造基地的首领
+// 👑 艾登按首领处理（不参与人数缩放复制）
 const MINE_BOSSES = [
-  EM("b_eva", "艾登 · 伊娃", "法术", "特色", "岩爆术", 195, "锻造基地的技术主管，用岩土与炉火作战。"),
+  EM("b_eva", "艾登 · 伊娃", "法术", "特色", "岩爆术", 195, "锻造基地的技术主管，用岩土与炉火作战。"),   // 属性按特色，阶级在下面改成首领
   EM("b_harman", "哈曼 · 奥斯肯", "近战", "首领", "锻造之怒", 265, "矿区总负责人，亲手打造了整条生产线，也亲手把它变成武器。")
 ];
+MINE_BOSSES.forEach((b) => { if (b.id === "b_eva") b.tier = "boss"; });
 
 // 🧬 修行洞窟：角色突破素材副本
 const CAVE_TIER = {
@@ -477,7 +479,7 @@ ENEMIES.push(...MINE_BOSSES);
 
 // 🏅 修正矿脉敌人的阶级
 const MINE_TIER_FIX = {
-  b_eva: "special", b_harman: "boss",
+  b_eva: "boss", b_harman: "boss",
   m_lead: "elite", m_auto_crush: "elite", m_d_lead: "elite", m_px: "elite", m_tx: "elite",
   m_auto_mine: "normal", m_d_shield: "normal"
 };
