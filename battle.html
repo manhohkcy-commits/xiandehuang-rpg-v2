@@ -445,9 +445,14 @@ async function buildMultiBattle(stageId) {
       };
       if (ch.name) m.name = ch.name;
     } else {
-      m.char = { lv: 1, atk: 60, hp: 500, def: 20, res: 15, spd: 10, critRate: 5, critDmg: 150, dmgCut: 0 };
+      // 没有角色数据的成员不参战（避免出现「玩家 0/500」的空单位）
+      m.__skip = 1;
     }
   }
+  // 剔除无角色成员
+  Object.keys(room.members || {}).forEach((bx) => {
+    if (room.members[bx] && room.members[bx].__skip) delete room.members[bx];
+  });
   // 2) 生成单位
   const built = buildUnits(room, 6);
   // 多人 PvE：所有玩家都在我方，敌人来自关卡配置
@@ -466,10 +471,14 @@ async function buildMultiBattle(stageId) {
     if (_ids.length >= _baseIds.length + 3) break;
     if (_minionIds.length) _ids.push(_minionIds[k % _minionIds.length]);   // 只加小怪，不复制 BOSS
   }
+  if (!_ids.length && stg.foe) {
+    _baseIds.push("__foe__");
+    _ids.push("__foe__");
+  }
   const foeUnits = _ids.map((eid, i) => {
-    const e = enemyAt(eid, stg.lv) || {};
+    const e = eid === "__foe__" ? { name: (stg.foe && stg.foe.name) || "敌人", stats: stg.foe || {}, skills: [] } : (enemyAt(eid, stg.lv) || {});
     const stt = e.stats || {};
-    const isExtra = i >= _baseIds.length;
+    const isExtra = eid !== "__foe__" && i >= _baseIds.length;
     const mul = isExtra ? 0.85 : 1;   // 援军略弱，避免人数一多就团灭
     return {
       id: "foe" + i, name: (e.name || ("敌人" + (i + 1))) + (isExtra ? "·援军" : ""), side: "B", lv: stg.lv, power: 0,
