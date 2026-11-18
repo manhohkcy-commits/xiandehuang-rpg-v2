@@ -64,7 +64,15 @@ export function originalFinal(o, prog, withGear, withBonus) {
   out.spd += (Number(sp.agi) || 0) * 0.05;
   out.res += (Number(sp.intel) || 0) * 1.5;
   out.def += (Number(sp.tech) || 0) * 0.5;
-  out.power = powerOf(out);
+  const r1 = (v) => Math.round((Number(v) || 0) * 10) / 10;
+  out.critRate = r1(out.critRate);
+  out.critDmg = r1(out.critDmg);
+  out.lifesteal = r1(out.lifesteal);
+  out.ultPct = r1(out.ultPct);
+  out.dmgCut = r1(out.dmgCut);
+  out.thorns = r1(out.thorns);
+  out.spd = r1(out.spd);
+  out.power = Math.round(powerOf(out));
   return out;
 }
 

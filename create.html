@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=6072c09e";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=57f7c515";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=ba87a9d1";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 
@@ -1263,9 +1263,9 @@ function openOrigCard(o) {
       row("攻击", fmt(Math.round(_fin.atk))) +
       row("防御", Math.round(_fin.def)) +
       row("法抗", Math.round(_fin.res)) +
-      row("速度", Math.round(_fin.spd * 10) / 10) +
-      row("暴击", Math.round(_fin.critRate) + "%") +
-      row("暴伤", Math.round(_fin.critDmg) + "%")
+      row("速度", (Math.round(_fin.spd * 10) / 10) + "") +
+      row("暴击", (Math.round(_fin.critRate * 10) / 10) + "%") +
+      row("暴伤", (Math.round(_fin.critDmg * 10) / 10) + "%")
     ) +
     secChip("② 其他属性") +
     (() => {
@@ -2101,7 +2101,7 @@ function renderOrig() {
     card("属性（含装备）",
       row("攻击", Math.round(atk)) + row("生命", Math.round(hp)) + row("防御", Math.round(def)) +
       row("法抗", Math.round(res)) + row("速度", Math.round(spd * 10) / 10) +
-      row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%") +
+      row("暴击率", (Math.round((Number(fin.critRate) || 5) * 10) / 10) + "%") + row("暴击伤害", (Math.round((Number(fin.critDmg) || 150) * 10) / 10) + "%") +
       '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
       '<button id="btnOrigBreakdown">📊 加成明细</button>' +
       '<button id="btnOrigPanel" style="border-color:#ffb347;color:#ffb347;">📋 完整面板</button></div>') +
