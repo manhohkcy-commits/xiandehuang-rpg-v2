@@ -538,6 +538,12 @@ async function buildMultiBattle(stageId) {
       ];
     }
   });
+  const selfWeapon = (() => {
+    const mm = (room.members || {})[box];
+    const raw = mm && mm.char && mm.char.weapon;
+    if (!raw) return null;
+    return raw.data ? raw : { data: raw };
+  })();
   st = createBattle(built.units.concat(foeUnits).map((u) => Object.assign({ power: 0 }, u)));
   // 📐 布阵：敌人按前排优先分散到 6 格；我方按顺序排
   {
@@ -562,17 +568,14 @@ async function buildMultiBattle(stageId) {
   st.__stage = stg.id;
   st.__owners = built.owners;
   st.__multi = true;
-  const myUnit = unitOfPlayer(room, box);
-  st.__myUnit = myUnit;
-  {
-    const myU = (myUnit && built.units.find((u) => u.id === myUnit)) || built.units.find((u) => u.side === "A");
-    if (myU && myU.__w) st.__weapon = { data: myU.__w };
-    else {
-      const m0 = Object.values(room.members || {}).find((x) => x && x.name === (myU && myU.name));
-      const raw = m0 && m0.char && m0.char.weapon;
-      st.__weapon = raw ? { data: raw.data ? raw.data : raw } : null;
-    }
+  let myUnit = unitOfPlayer(room, box);
+  if (!myUnit) {
+    const selfName = ((room.members || {})[box] || {}).name;
+    const byName = st.units.find((u) => u.side === "A" && u.name === selfName);
+    myUnit = (byName && byName.id) || (st.units.find((u) => u.side === "A") || {}).id || null;
   }
+  st.__myUnit = myUnit;
+  st.__weapon = selfWeapon;
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
