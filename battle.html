@@ -1599,6 +1599,13 @@ function aiTurnIfNeeded() {
     }
   }  const a = nextActor(st);
   if (!a) return;
+  if (isStunned(a)) {
+    pushLog("💫 " + a.name + " 被控制，跳过行动", "line");
+    commit(st, a.id);
+    renderBattle();
+    setTimeout(aiTurnIfNeeded, 300);
+    return;
+  }
   if (a.side === "A" && a.id !== "me" && a.id !== st.__myUnit) {
     // 🤝 同行托管控
     setTimeout(() => {
