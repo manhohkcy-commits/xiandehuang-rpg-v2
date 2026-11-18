@@ -1058,9 +1058,9 @@ function doAct(kind) {
     });
     if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
-    const uSubs = tgts.length > 1 ? uPer.map((x) => x.name + "　物理 · " + x.dmg + (x.crit ? "（暴击💥）" : "") + (x.block ? "（格挡 -" + x.block + "%）" : "") + (x.absorb ? "（护盾吸收 " + x.absorb + "）" : "")) : [];
-    pushLog("💥 " + m.name + " [必杀]" + (wp.uName || "必杀") + " → " +
-      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "" : "") : f2.name + "　" + (wp.dmgType === "spell" ? "法术" : "物理") + " · " + r.dmg + fxTags(r)),
+    const uSubs = tgts.length > 1 ? uPer.map((x) => x.name + " " + x.dmg + (x.crit ? "（暴击💥）" : "") + (x.block ? "（格挡 -" + x.block + "%）" : "") + (x.absorb ? "（护盾吸收 " + x.absorb + "）" : "")) : [];
+    pushLog("💥 " + m.name + " 必杀「" + (wp.uName || "必杀") + "」→ " +
+      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "" : "") : f2.name + " " + r.dmg + fxTags(r)),
       tgts.length > 1 ? "act" : "line", uSubs);
     commit(st, "me");
   } else if (kind === "skill") {
@@ -1086,7 +1086,7 @@ function doAct(kind) {
       addStatus(st, f2.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
     }
-    pushLog("🥋 " + m.name + " [技能]" + (wp.sName || "招式") + " → " + f2.name + "　" + (wp.dmgType === "spell" ? "法术" : "物理") + " · " + r.dmg + fxTags(r), "act", subs);
+    pushLog("🥋 " + m.name + " 技能「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + fxTags(r), "act", subs);
     setCooldown(st, "me", cd);
     commit(st, "me");
   } else {
@@ -1103,7 +1103,7 @@ function doAct(kind) {
         pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line");
       }
     }
-    pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
+    pushLog("⚔️ " + m.name + " 普攻「" + (wp.aName || "普攻") + "」→ " + f2.name + " " + r.dmg + fxTags(r), "act",
       [(wp.dmgType === "spell" ? "法术" : "物理")]);
     commit(st, "me");
   }
@@ -1144,7 +1144,7 @@ function aiTurnIfNeeded() {
     setTimeout(() => {
       const t = foe();
       const r = damage(st, a.id, t.id, { atk: a.atk, mult: 100, critRate: a.critRate, critDmg: a.critDmg });
-      pushLog("🤝 " + a.name + " [普攻] → " + t.name + "　物理 · " + r.dmg + fxTags(r), "line");
+      pushLog("🤝 " + a.name + " 普攻 → " + t.name + " " + r.dmg + fxTags(r), "line");
       commit(st, a.id);
       if (st.finished && !spawnWave()) finish();
       renderBattle();
@@ -1225,14 +1225,14 @@ function aiTurnIfNeeded() {
       const tk = dmgType === "spell" ? "法术" : "物理";
       perTarget.push({
         name: t.name, dmg: sub, crit: sc, block: blk, absorb: abs2, thorns: thn,
-        text: t.name + "　" + tk + " · " + sub + (sc ? "（暴击💥）" : "") + (blk ? "（格挡 -" + blk + "%）" : "") + (abs2 ? "（护盾吸收 " + abs2 + "）" : "")
+        text: t.name + " " + sub + (sc ? "（暴击💥）" : "") + (blk ? "（格挡 -" + blk + "%）" : "") + (abs2 ? "（护盾吸收 " + abs2 + "）" : "")
       });
     });
     const r = { dmg: total, crit };
     const _subs = tgts.length > 1 ? perTarget.map((x) => x.text) : [];
     pushLog(
-      (label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " [" + label + "]" + ((used && used.name) || "") +
-      " → " + (tgts.length > 1 ? "我方 " + tgts.length + " 人 · 总伤害 " + total : m.name + "　" + (dmgType === "spell" ? "法术" : "物理") + " · " + r.dmg + fxTags(r)),
+      (label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " " + label + ((used && used.name) ? "「" + used.name + "」" : "") +
+      " → " + (tgts.length > 1 ? "我方 " + tgts.length + " 人 · 总伤害 " + total : m.name + " " + r.dmg + fxTags(r)),
       tgts.length > 1 ? "act" : "line", _subs);
     if (used && used.burn) addStatus(st, f2.id, "me", "burn", Number(used.burn) || 20, 2, "灼烧");
     if (used && used.stun) addStatus(st, f2.id, "me", "stun", Number(used.stun) || 20, 1, "眩晕");
