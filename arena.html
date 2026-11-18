@@ -263,14 +263,15 @@ function bind() {
 }
 
 async function ensureMyTeam() {
-  const rec = myRec();
-  if (rec && Array.isArray(rec.team) && rec.team.length) return;
   const snap = snapshot();
   if (!snap) return;
-  const r2 = rec || { name: myName, pts: 0, w: 0, l: 0, coin: 0, team: [] };
-  r2.team = [snap];
-  r2.name = myName;
-  data.players[me] = r2;
+  const rec = myRec() || { name: myName, pts: 0, w: 0, l: 0, coin: 0, team: [] };
+  const old = (rec.team && rec.team[0]) || {};
+  // 每次进入都刷新成本地最新角色（等级/战力/装备变化立即同步）
+  if (Number(old.lv) === Number(snap.lv) && Number(old.power) === Number(snap.power) && old.name === snap.name) return;
+  rec.team = [snap];
+  rec.name = myName;
+  data.players[me] = rec;
   try { await saveArena(); } catch (e) {}
 }
 
