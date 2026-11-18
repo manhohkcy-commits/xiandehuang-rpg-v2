@@ -153,13 +153,17 @@ let cloudPlayers = [];
 async function loadCloudPlayers() {
   try {
     const rows = await cloudList(200);
-    cloudPlayers = rows.filter((r) => r && r.store && Number(r.store.v) === 2 && String(r.box).indexOf("__") !== 0)
-      .map((r) => {
+    cloudPlayers = [];
+    rows.filter((r) => r && r.store && Number(r.store.v) === 2 && String(r.box).indexOf("__") !== 0)
+      .forEach((r) => {
         const s = r.store;
-        const ch = (s.chars || []).find((c) => c.id === s.activeChar) || (s.chars || [])[0];
-        if (!ch) return null;
-        return { box: String(r.box), name: ch.name || "无名", lv: Number(ch.lv) || 1, power: charPower(ch), count: (s.chars || []).length };
-      }).filter(Boolean);
+        (s.chars || []).forEach((ch) => {
+          cloudPlayers.push({
+            box: String(r.box), charId: ch.id, name: ch.name || "无名",
+            lv: Number(ch.lv) || 1, power: charPower(ch)
+          });
+        });
+      });
   } catch (e) { cloudPlayers = []; }
 }
 
@@ -177,11 +181,12 @@ function render() {
 
   const goTrain = '<a href="create.html?box=' + encodeURIComponent(me) + (isHost ? "&tab=orig" : "&tab=cult") + '" style="text-decoration:none;"><button style="margin-top:8px;border-color:#7ee787;color:#7ee787;">🧪 去培养 / 调整</button></a>';
 
-  const list = cloudPlayers.filter((p) => p.box !== me).length
-    ? cloudPlayers.filter((p) => p.box !== me).map((p) =>
-        '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">Lv' + p.lv + ' · 角色 ' + p.count + ' 个 · 位号尾号 #' + p.box.slice(-4) + '</div></span>' +
+  const others = cloudPlayers.filter((p) => p.box !== me).sort((x, y) => y.power - x.power);
+  const list = others.length
+    ? others.map((p) =>
+        '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">Lv' + p.lv + ' · 位号尾号 #' + p.box.slice(-4) + '</div></span>' +
         '<span class="v"><span style="color:#8fd8ff;font-weight:700;margin-right:8px;">' + fmt(p.power) + '</span>' +
-        '<button data-chal="' + esc(p.box) + '">挑战</button></span></div>').join("")
+        '<button data-chal="' + esc(p.box) + '" data-char="' + esc(p.charId || "") + '">挑战</button></span></div>').join("")
     : '<div class="hint">还没有其他玩家创建角色。</div>';
 
   $("view").innerHTML =
@@ -221,7 +226,8 @@ function bind() {
   document.querySelectorAll("[data-chal]").forEach((b) => b.onclick = () => {
     const rec = myRec();
     if (dailyUsed(rec) >= 5) return toast("今日挑战次数已用完（5/5）", true);
-    location.href = "battle.html?box=" + encodeURIComponent(me) + "&arena=" + encodeURIComponent(b.dataset.chal) + "&mode=" + (window.__amode || "1v1");
+    location.href = "battle.html?box=" + encodeURIComponent(me) + "&arena=" + encodeURIComponent(b.dataset.chal) +
+      "&char=" + encodeURIComponent(b.dataset.char || "") + "&mode=" + (window.__amode || "1v1");
   });
   document.querySelectorAll("[data-shop]").forEach((b) => b.onclick = async () => {
     const k = b.dataset.shop;

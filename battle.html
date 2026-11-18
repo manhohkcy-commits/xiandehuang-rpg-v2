@@ -1570,7 +1570,7 @@ document.addEventListener("visibilitychange", async () => {
   const q = new URLSearchParams(location.search);
   roomId = q.get("room") || "";
   const arenaFoe = q.get("arena") || "";
-  if (arenaFoe) { await startArena(arenaFoe, q.get("mode") || "1v1"); return; }
+  if (arenaFoe) { await startArena(arenaFoe, q.get("mode") || "1v1", q.get("char") || ""); return; }
   if (roomId) {
     try {
       const got = await getRoom(roomId);
@@ -1598,7 +1598,7 @@ document.addEventListener("visibilitychange", async () => {
 })();
 
 // 🏟 竞技场：与云端对手打真实战斗
-async function startArena(foeBox, mode) {
+async function startArena(foeBox, mode, foeCharId) {
   const AR = "__arena";
   let data = { v: 1, players: {} };
   let upd = "";
@@ -1669,7 +1669,12 @@ async function startArena(foeBox, mode) {
   try {
     const rr2 = await cloudGet(foeBox);
     const s3 = rr2 && rr2.store;
-    (s3 && s3.chars ? s3.chars : []).slice(0, maxN).forEach((c3, i) => {
+    let _foeChars = (s3 && s3.chars ? s3.chars : []);
+    if (foeCharId) {
+      const first = _foeChars.find((c) => c.id === foeCharId);
+      if (first) _foeChars = [first].concat(_foeChars.filter((c) => c.id !== foeCharId));
+    }
+    _foeChars.slice(0, maxN).forEach((c3, i) => {
       const ff = finalOf(c3, s3);
       const w3 = c3.equip && c3.equip.weapon;
       const wd3 = w3 && w3.data ? w3.data : (w3 || {});
