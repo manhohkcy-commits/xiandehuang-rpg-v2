@@ -148,6 +148,72 @@ function rewardText(s) {
   return parts.join(" · ");
 }
 
+function showUnitDetail(ch, o0) {
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
+  const sec = (t) => '<div class="hint" style="font-size:11px;color:#8fd8ff;font-weight:700;letter-spacing:1px;margin:12px 0 5px;">' + t + '</div>';
+  let title = "", body = "";
+  if (ch) {
+    const f = charFinal(ch);
+    const tr = combatTraits(ch);
+    const wpn = (ch.equip && ch.equip.weapon && (ch.equip.weapon.data || ch.equip.weapon)) || {};
+    title = ch.name + " · Lv" + (ch.lv || 1);
+    body = sec("① 基础属性") + panel(
+        row("生命", fmt(Math.round(f.hp))) + row("攻击", fmt(Math.round(f.atk))) + row("防御", Math.round(f.def)) +
+        row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
+        row("暴击", Math.round(f.critRate) + "%") + row("暴伤", Math.round(f.critDmg) + "%")) +
+      sec("② 其他属性") + panel(
+        row("吸血", (Number(tr.lifesteal) || 0) + "%") + row("减伤", Math.round((Number(f.dmgCut) || 0) + (Number(tr.block) || 0)) + "%") +
+        row("反伤", (Number(tr.thorns) || 0) + "%") + row("必杀伤害", "+" + (Number(tr.ultPct) || 0) + "%") +
+        row("格挡", (Number(tr.block) || 0) + "%") + row("韧性", (Number(tr.tenacity) || 0) + "%")) +
+      sec("③ 装备") + panel(
+        ["weapon", "armor", "armor2", "accessory"].map((k) => {
+          const raw = ch.equip && ch.equip[k];
+          if (!raw) return row({ weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" }[k], "—");
+          const d = raw.data || raw;
+          return '<div class="row"><span class="k">' + esc(d.name) + '<div class="hint">' + (d.rarity || "") + ' · Lv' + (d.lv || 1) + ' · ' + (d.star || 1) + '★</div></span><span class="v hint">' + { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" }[k] + '</span></div>';
+        }).join("")) +
+      sec("④ 招式") + panel(
+        row("普攻", esc(wpn.aName || "—") + " · " + (wpn.aMult || 100) + "%") +
+        row("技能", esc(wpn.sName || "—") + " · " + (wpn.sMult || 150) + "% · CD" + (wpn.sCd || 3)) +
+        row("必杀", esc(wpn.uName || "—") + " · " + (wpn.uMult || 250) + "%"));
+  } else if (o0) {
+    const p = (store.orig || {})[o0.id] || {};
+    const f = originalFinal(o0, p);
+    title = (p.name || o0.name) + " · Lv" + (Number(p.lv) || 1);
+    const g = ORIGINAL_GEAR[o0.id] || o0.gearObj || {};
+    const gp = p.gear || {};
+    body = sec("① 基础属性") + panel(
+        row("生命", fmt(Math.round(f.hp))) + row("攻击", fmt(Math.round(f.atk))) + row("防御", Math.round(f.def)) +
+        row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
+        row("暴击", Math.round(f.critRate) + "%") + row("暴伤", Math.round(f.critDmg) + "%")) +
+      sec("② 其他属性") + (() => {
+        let ls = 0, ult = 0;
+        Object.keys(g).forEach((k) => {
+          const it = g[k] || {}, gs = gp[k] || { lv: 1, star: 1 };
+          const m = (1 + 0.02 * ((Number(gs.lv) || 1) - 1)) * (1 + 0.12 * ((Number(gs.star) || 1) - 1)) * (1 + 0.05 * (Number(gs.advance) || 0));
+          ls += (Number(it.lifesteal) || 0) * m;
+          ult += (Number(it.ultPct) || 0) * m;
+        });
+        return panel(row("吸血", Math.round(ls * 10) / 10 + "%") + row("必杀伤害", "+" + Math.round(ult * 10) / 10 + "%"));
+      })() +
+      sec("③ 专属装备") + panel(Object.keys({ weapon: 1, armor: 1, armor2: 1, accessory: 1 }).map((k) => {
+        const it = g[k] || {};
+        if (!it.name) return "";
+        const gs = gp[k] || { lv: 1, star: 1 };
+        return '<div class="row"><span class="k">' + esc(it.name) + '<div class="hint">' + (it.rarity || "") + ' · Lv' + (Number(gs.lv) || 1) + ' · ' + (Number(gs.star) || 1) + '★</div></span><span class="v hint">' + { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" }[k] + '</span></div>';
+      }).join("") || '<div class="hint" style="padding:6px 9px;">无</div>');
+  }
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.86);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px;";
+  ov.innerHTML = '<div class="card" style="max-width:440px;width:100%;max-height:86vh;overflow:auto;">' +
+    '<div class="card-title">📋 ' + esc(title) + '</div>' + body +
+    '<div style="margin-top:10px;"><button id="udClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#udClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function dungeonListHtml() {
   const pref = (new URLSearchParams(location.search).get("pref") || "").toLowerCase();
   const all = DUNGEONS.filter((d) => (d.type === "daily" || d.type === "event") && d.stages && d.stages.length)
@@ -238,10 +304,7 @@ function renderPick() {
     '<div class="card"><div class="card-title">选择关卡</div>' +
       dungeonListHtml() +
     '</div>';
-  if ($("btnUnitDetail")) $("btnUnitDetail").onclick = () => {
-    if (ch) window.__showCharDetail ? window.__showCharDetail(ch) : alert(JSON.stringify(charFinal(ch), null, 1));
-    else alert("原创角色：" + (o0 && o0.name || "") + " Lv" + ((store.orig || {})[o0.id] || {}).lv);
-  };
+  if ($("btnUnitDetail")) $("btnUnitDetail").onclick = () => showUnitDetail(ch, o0);
   view().querySelectorAll("[data-boss]").forEach((el) => el.onclick = () => {
     const key = el.dataset.boss;
     window.__openB = window.__openB || {};
