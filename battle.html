@@ -261,7 +261,8 @@ function dungeonListHtml() {
           ? '<span class="hint">🔒 通关第 ' + (no - 1) + ' 关解锁</span>'
           : '<button data-stage="' + s.id + '">开战</button>' +
             ((localStorage.getItem("rpg2:host") === "1" && !activeChar() && no <= done)
-              ? ' <button data-sweep="' + s.id + '" style="border-color:#7ee787;color:#7ee787;">⚡ 扫荡</button>' : '')) + '</span></div>';
+              ? ' <button data-sweep="' + s.id + '" style="border-color:#7ee787;color:#7ee787;">⚡ 扫荡</button>' +
+              ' <button data-sweepn="' + s.id + '" style="border-color:#7ee787;color:#7ee787;">⚡×N</button>' : '')) + '</span></div>';
     };
     if (open) {
       if (d.type === "event") {
@@ -411,6 +412,26 @@ view().querySelectorAll("[data-sweep]").forEach((b) => {
     const r = await sweepOne(s2);
     await save();
     alert("⚡ 扫荡完成：" + s2.name + "\n金币 +" + r.gold + " · 经验 +" + r.exp + (r.drops.length ? "\n" + mergeDrops(r.drops) : ""));
+    renderPick();
+  };
+});
+
+view().querySelectorAll("[data-sweepn]").forEach((b) => {
+  b.onclick = async () => {
+    const s2 = STAGES.find((x) => x.id === b.dataset.sweepn);
+    if (!s2) return;
+    if (stageNo(s2) > clearedFor(s2)) return alert("还没通关过这一关");
+    const v = prompt("扫荡次数（1~30）", "5");
+    if (v == null) return;
+    const n = Math.max(1, Math.min(30, Number(v) || 1));
+    if (!confirm("连续扫荡「" + s2.name + "」" + n + " 次？")) return;
+    let g = 0, e = 0, all = [];
+    for (let i = 0; i < n; i++) {
+      const r = await sweepOne(s2);
+      g += r.gold; e += r.exp; all = all.concat(r.drops);
+    }
+    await save();
+    alert("⚡ 扫荡 " + n + " 次完成：" + s2.name + "\n金币 +" + g + " · 经验 +" + e + (all.length ? "\n" + mergeDrops(all) : ""));
     renderPick();
   };
 });
