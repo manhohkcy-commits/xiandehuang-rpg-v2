@@ -153,10 +153,16 @@ const skCard = (label, name, multText, meta, rageText, effects, desc) => {
         esc(desc || ("对" + (SHAPE_T[shape] || "单体") + "造成 " + Math.round(per * hits) + "% 攻击伤害" + (hits > 1 ? "（" + hits + " 段）" : "") + "。" + (cd ? " 冷却 " + cd + " 回合。" : "") + (rage != null ? " 回怒 +" + rage + "。" : ""))) +
       '</div></div>';
   };
-  const skill = it.cat !== "weapon" ? mech :
+  const supTxt = (w) => {
+  if (!w || !w.sSupport) return "";
+  if (w.sSupport === "shield") return "【辅助】额外为我方自身附加护盾，值为最大生命的 " + (Number(w.sShieldPct) || 20) + "%。";
+  if (w.sSupport === "dispel") return "【辅助】额外驱散我方全体最多 " + (Math.max(1, Number(w.sDispelN) || 2)) + " 个负面状态（灼烧/眩晕/沉默/冰冻/禁疗/缴械）。";
+  return "【辅助】" + w.sSupport;
+};
+const skill = it.cat !== "weapon" ? mech :
     mech + '<div class="hint" style="margin:10px 0 5px;color:#8fd8ff;font-weight:700;letter-spacing:1px;">招式组</div>' +
       sk("普攻", d.aName, (d.aMult || 100) + "%", d.aHits || 1, d.aShape || "single", 0, (Number(d.aRage) || 0), d.aDesc) +
-      ((d.sMult) ? sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), d.sDesc, null, d.sSegWeights) : "") +
+      ((d.sMult) ? sk("技能", d.sName, (d.sMult || 150) + "%", d.sHits || 1, d.sShape || "single", d.sCd || 3, (Number(d.sRage) || 0), (d.sSupport ? supTxt(d) : d.sDesc), (d.sSupport ? "辅助" : null), d.sSegWeights) : "") +
       sk("必杀", d.uName, (d.uMult || 250) + "%", d.uHits || 1, d.uShape || "single", 0, null, d.uDesc || d.skillDesc, "怒气 100", d.uSegWeights);
 
   const ov = document.createElement("div");
