@@ -16,7 +16,7 @@ export function originalFinal(o, prog, withGear, withBonus) {
   // 🗡 专属装备加成
   const g = o.gearObj || {};
   const gl = (prog && prog.gear) || {};
-  const gs = { atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 0 };
+  const gs = { atk: 0, hp: 0, def: 0, res: 0, spd: 0, critRate: 0, critDmg: 0, lifesteal: 0, ultPct: 0, dmgCut: 0, thorns: 0 };
   if (useGear) Object.keys(g).forEach((slot) => {
     const it = g[slot] || {};
     const st = gl[slot] || {};
@@ -26,6 +26,10 @@ export function originalFinal(o, prog, withGear, withBonus) {
     ["atk", "hp", "def", "res", "spd"].forEach((key) => { gs[key] += (Number(it[key]) || 0) * mul; });
     gs.critRate += Number(it.critRate) || 0;
     gs.critDmg += (Number(it.critDmg) || 0) + (Number(st.refine) || 0);
+    gs.lifesteal += (Number(it.lifesteal) || 0) * mul;
+    gs.ultPct += (Number(it.ultPct) || 0) * mul;
+    gs.dmgCut += (Number(it.dmgCut) || 0) * mul;
+    gs.thorns += (Number(it.thorns) || 0) * mul;
   });
   const out = {
     atk: (Number(s.atk) || 60) * k + gs.atk,
@@ -34,7 +38,11 @@ export function originalFinal(o, prog, withGear, withBonus) {
     res: (Number(s.res) || 15) * k + gs.res,
     spd: (Number(s.spd) || 10) + 0.1 * (lv - 1) + gs.spd,
     critRate: (Number(s.critRate) || 5) + gs.critRate,
-    critDmg: (Number(s.critDmg) || 150) + gs.critDmg
+    critDmg: (Number(s.critDmg) || 150) + gs.critDmg,
+    lifesteal: gs.lifesteal,
+    ultPct: gs.ultPct,
+    dmgCut: gs.dmgCut,
+    thorns: gs.thorns
   };
   // 🏋 属性强化 / 精炼等长期加成
   const bonus = (useGear && withBonus !== false) ? ((prog && prog.bonus) || {}) : {};

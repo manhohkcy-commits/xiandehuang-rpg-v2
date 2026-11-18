@@ -25,7 +25,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } fr
 import { makeItem } from "./js/items.js?v=6072c09e";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=ba52d324";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel, finalOf } from "./js/power.js?v=5f9e4127";
-import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=8c637db3";
+import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=20c6f937";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=abeb92c8";
 
 let box = "", store = null, updatedAt = "", st = null, log = [], busy = false, lastRound = 1;
@@ -865,7 +865,7 @@ async function startBattle(stageId, col, row) {
     }));
   }
   st = createBattle([
-    { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), lv: ch ? ch.lv : 1, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : (() => { const g = (ORIGINAL_GEAR[o0.id] || o0.gearObj || {}); const t = {}; Object.keys(g).forEach((k) => { const it = g[k] || {}; ["lifesteal", "ultPct", "critRate", "critDmg", "dmgCut", "thorns", "block", "tenacity", "penetrate"].forEach((key) => { if (it[key]) t[key] = (t[key] || 0) + (Number(it[key]) || 0); }); }); return t; })() }
+    { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), lv: ch ? ch.lv : 1, side: "A", spd: f.spd, power: ch ? charPower(ch) : of.power, hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0, traits: ch ? combatTraits(ch) : { lifesteal: of.lifesteal || 0, ultPct: of.ultPct || 0, dmgCut: of.dmgCut || 0, thorns: of.thorns || 0 } }
   ].concat(units));
   // ♾ 无尽试炼：记录回合与累计伤害
   if (s.endless) {
