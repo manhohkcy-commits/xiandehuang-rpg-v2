@@ -25,7 +25,7 @@
 <script type="module">
 import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad, esc, fmt, addReceipt, hashPw, dailyOf, bumpDaily, gateLoad } from "./js/core.js?v=13807141";
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=dbf4b773";
-import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=71db1133";
+import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=6072c09e";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=8c637db3";
@@ -1001,8 +1001,8 @@ function renderTalent() {
       '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.name + '</div></th>';
   };
   const act = tree.active;
-  const actHas = !!(act && ch.talent.points[act.id]);
-  const actCan = act && !actHas && lv >= 15;
+  const actHas = !!(act && Number(ch.talent.activeLv) > 0 && ch.talent.activeTree === tree.id);
+  const actCan = act && !actHas && lv >= (Number(act.unlockLv) || 15);
   const rows = [];
   for (let i = 0; i < TALENT_TIER_LV.length; i++) {
     const cells = branches.map((b) => {
@@ -1038,10 +1038,13 @@ function renderTalent() {
         : k === "gale" ? ("下回合额外行动 " + (AL >= 3 ? 2 : 1) + " 次")
         : k === "arcane" ? ("法术伤害 " + (180 + 18 * (AL - 1)) + "%")
         : ("恢复 " + (25 + 4 * (AL - 1)) + "% 生命");
-      const right = AL === 1
-        ? (actHas ? '<span class="tag" style="border-color:#7ee787;color:#7ee787;">已解锁</span>'
-                  : '<button data-tp="' + tree.active.id + '" ' + (actCan ? '' : 'disabled') + ' style="font-size:10px;padding:1px 8px;">解锁</button>')
-        : '<span class="hint" style="font-size:10px;">Lv' + TALENT_TIER_LV[i] + ' 自动升级</span>';
+      const curAL = (ch.talent.activeTree === tree.id ? (Number(ch.talent.activeLv) || 0) : 0);
+      const needLv2 = TALENT_TIER_LV[i] || 15;
+      const right = AL <= curAL
+        ? '<span class="tag" style="border-color:#7ee787;color:#7ee787;">已到 Lv' + AL + '</span>'
+        : (AL === curAL + 1 && lv >= needLv2
+          ? '<button data-actlvl="' + tree.id + ':' + AL + '" style="font-size:10px;padding:1px 8px;border-color:#c9a0ff;color:#c9a0ff;">' + (curAL ? '升级到 Lv' + AL : '解锁 Lv1') + '</button>'
+          : '<span class="hint" style="font-size:10px;">Lv' + needLv2 + ' 可' + (curAL ? '升级' : '解锁') + '</span>');
       rows.push('<tr><td colspan="4" style="padding:0 4px 6px;"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-left:3px solid #c9a0ff;background:#16102a;padding:5px 8px;border-radius:6px;font-size:11px;color:#c9a0ff;">' +
         '<span>✨ 主动技 Lv' + AL + '：' + esc(tree.active.name) + ' — ' + val + '　<span class="hint" style="color:#8a97b8;">CD ' + tree.active.cd + ' 回合</span></span>' +
         '<span style="margin-left:auto;flex-shrink:0;">' + right + '</span></div></td></tr>');
@@ -1135,12 +1138,27 @@ function renderTalent() {
   };
   view().querySelectorAll("[data-prev]").forEach((b) => b.onclick = () => previewNode(b.dataset.prev));
 
+  view().querySelectorAll("[data-actlvl]").forEach((b) => b.onclick = async () => {
+    const parts2 = String(b.dataset.actlvl).split(":");
+    const tid = parts2[0], want = Number(parts2[1]) || 1;
+    const lvNow = Number(ch.lv) || 1;
+    const needLv = [15, 35, 55, 75, 80][want - 1] || 15;
+    if (lvNow < needLv) return toast("到 Lv" + needLv + " 才能" + (want === 1 ? "解锁" : "升级"), true);
+    const cur = (ch.talent.activeTree === tid ? (Number(ch.talent.activeLv) || 0) : 0);
+    if (want !== cur + 1) return toast("请按顺序升级", true);
+    ch.talent.activeTree = tid;
+    ch.talent.activeLv = want;
+    addReceipt(store, "天赋", "主动技 Lv" + want, { note: "手动提升" });
+    await save(); render();
+    toast("✨ 主动技 → Lv" + want);
+  });
+  
   view().querySelectorAll("[data-tp]").forEach((b) => b.onclick = async () => {
     const node = allNodes.find((n) => n.id === b.dataset.tp);
     if (!node) return;
     const activeIds = TALENT_TREES.filter((t) => t.active).map((t) => t.active.id);
   const isActiveNode = activeIds.indexOf(node.id) >= 0;
-  if (!isActiveNode && spent >= Number(ch.tp)) return toast("天赋点不够", true);
+
   if (isActiveNode) {
     const actDef = TALENT_TREES.map((t) => t.active).find((a) => a && a.id === node.id) || {};
     const needLv = Number(actDef.unlockLv) || 15;

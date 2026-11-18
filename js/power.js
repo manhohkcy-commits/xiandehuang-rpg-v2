@@ -54,18 +54,22 @@ export function talentActiveLevel(ch) {
 }
 
 export function talentActive(ch) {
-  const pts = (ch && ch.talent && ch.talent.points) || {};
+  const tl = (ch && ch.talent) || {};
   const lv = Number(ch && ch.lv) || 1;
-  // 已投入点数最多的定位优先；都没点则用第一个满足等级要求的定位
-  let best = null, bestN = -1;
-  TALENT_TREES.forEach((t) => {
-    if (!t.active || lv < (Number(t.active.unlockLv) || 15)) return;
-    let n = 0;
-    (t.branches || []).forEach((b) => b.nodes.forEach((nd) => { if (pts[nd.id]) n++; }));
-    if (pts[t.active.id]) n += 1;
-    if (n > bestN) { bestN = n; best = t; }
-  });
-  return best ? Object.assign({ tree: best.id }, best.active) : null;
+  if (!(Number(tl.activeLv) > 0) || !tl.activeTree) return null;
+  const t = TALENT_TREES.find((x) => x.id === tl.activeTree && x.active);
+  if (!t) return null;
+  if (lv < (Number(t.active.unlockLv) || 15)) return null;
+  return Object.assign({ tree: t.id }, t.active);
+}
+
+// 当前主动技等级（玩家手动提升，受等级上限约束）
+export function activeLvOf(ch) {
+  const tl = (ch && ch.talent) || {};
+  const lv = Number(ch && ch.lv) || 1;
+  let max = 0;
+  ACT_LV_STEPS.forEach((t) => { if (lv >= t) max++; });
+  return Math.max(0, Math.min(max, Number(tl.activeLv) || 0));
 }
 
 export function talentActive2(ch) {
