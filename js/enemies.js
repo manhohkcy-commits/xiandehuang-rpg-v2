@@ -423,6 +423,12 @@ export function enemyAt(id, lv) {
     const g = key === "spd" ? 0.05 : (e.growth[key] || 0);
     let raw = (e.stats[key] || 0) * (1 + g * (L - 1));
     if (key !== "spd") raw *= enemyK(L) * tm * DIFF;
+    if (key === "hp") raw *= 0.65;   // ❤️ 血量单独下调（避免高等级墙）
+    // 🧱 上限封顶：不让单只敌人血量/攻击无限膨胀（上限封顶）
+    if (key === "hp") raw = Math.min(raw, (500 + 40 * (L - 1)) * 2.1);
+    if (key === "atk") raw = Math.min(raw, (60 + 6 * (L - 1)) * 1.45);
+    if (key === "def") raw = Math.min(raw, (20 + 2 * (L - 1)) * 2.4);
+    if (key === "res") raw = Math.min(raw, (15 + 1.5 * (L - 1)) * 2.4);
     if (key === "spd") {
       raw *= ROLE_SPD[e.role] || 1;
       if (ASSASSIN.test(e.name)) raw *= 1.1;
@@ -945,3 +951,9 @@ ENEMIES.forEach((en) => {
   en.stats.def = Math.max(1, Math.round((Number(en.stats.def) || 1) * 0.6));
   en.stats.res = Math.max(1, Math.round((Number(en.stats.res) || 1) * 0.6));
 });
+
+// ⚖️ 群体规模修正：敌人越多，单体越弱，避免 6 打 1 的团灭墙
+export function foeScale(n) {
+  const k = Math.max(1, Number(n) || 1);
+  return Math.max(0.55, Math.min(1.25, 1.25 / Math.pow(k, 0.55)));
+}

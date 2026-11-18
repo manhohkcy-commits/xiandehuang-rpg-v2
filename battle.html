@@ -21,9 +21,9 @@
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=17f71e85";
 import { } from "./js/battle.js?v=abeb92c8";
-import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=217f33e5";
+import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=98ceaec0";
 import { makeItem } from "./js/items.js?v=4c8258c6";
-import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=99a95a58";
+import { stagePower, enemyAt, enemyById, foeScale } from "./js/enemies.js?v=fbc85ccd";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel } from "./js/power.js?v=8dd3fb98";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=8c637db3";
 import { createBattle, nextActor, commit, damage, setCooldown, aliveUnits, addStatus, addShield, healUnit } from "./js/battle.js?v=abeb92c8";
@@ -344,9 +344,12 @@ async function buildMultiBattle(stageId) {
   const built = buildUnits(room, 6);
   // 多人 PvE：所有玩家都在我方，敌人来自关卡配置
   built.units.forEach((u) => { u.side = "A"; });
+  const _fsN = foeScale((stg.enemies || []).length || 1);
   const foeUnits = (stg.enemies || []).map((eid, i) => {
     const e = enemyAt(eid, stg.lv) || {};
     const stt = e.stats || {};
+    stt.hp = Math.round((stt.hp || 0) * _fsN); stt.atk = Math.round((stt.atk || 0) * _fsN);
+    stt.def = Math.round((stt.def || 0) * _fsN); stt.res = Math.round((stt.res || 0) * _fsN);
     return {
       id: "foe" + i, name: e.name || ("敌人" + (i + 1)), side: "B", lv: stg.lv, power: 0,
       hp: stt.hp || 500, maxHp: stt.hp || 500, atk: stt.atk || 50, def: stt.def || 10, res: stt.res || 10,
@@ -502,11 +505,12 @@ function startBattle(stageId, col, row) {
   const f = ch ? charFinal(ch) : { atk: of.atk, hp: of.hp, def: of.def, res: of.res, spd: of.spd, critRate: of.critRate, critDmg: of.critDmg, dmgCut: 0 };
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) return;
+  const fsN = foeScale(foeSpecs.length || 1);
   const mkFoe = (e, i) => {
     const def = (typeof enemyById === "function" ? enemyById(e.id || "") : null) || {};
     return {
       id: "foe" + i, name: e.name, side: "B", spd: e.spd, power: 0,
-      hp: e.hp, maxHp: e.hp, atk: e.atk, def: e.def, res: e.res || 0,
+      hp: Math.round(e.hp * fsN), maxHp: Math.round(e.hp * fsN), atk: Math.round(e.atk * fsN), def: Math.round(e.def * fsN), res: Math.round((e.res || 0) * fsN),
       critRate: 5, critDmg: 150, cd: 0, rage: 0,
       __skills: def.skills || e.skills || [],
       allowed: 0, acted: 0
