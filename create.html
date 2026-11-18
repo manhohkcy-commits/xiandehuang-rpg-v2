@@ -320,16 +320,54 @@ const skillShow = (it.cat === "weapon") ? skill : "";
 
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;";
-  ov.innerHTML = '<div class="card" style="width:min(480px,92vw);max-height:82vh;overflow:auto;margin:0;border-color:' + rc + ';box-shadow:0 0 22px ' + rc + '55;">' +
-    '<div class="card-title" style="color:' + rc + ';font-size:15px;">' + esc(d.name || "装备") +
-      ' <span class="tag" style="color:' + rc + ';border-color:' + rc + ';">' + (d.rarity || "") + ' · ' + (d.star || 1) + '★ · Lv' + (d.lv || 1) + '</span></div>' +
-    '<div class="hint">' + meta + (cur ? '　|　对比：' + esc(cur.name || "当前装备") : '　|　未装备同类') + '</div>' +
-    (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + esc(d.desc) + '</div>' : '') +
-    mainHtml +
-    (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
-    skillShow +
-    '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +
-    '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
+  const stat = (label, val, color) => '<div style="background:#0b1220;border:1px solid #1d2942;border-radius:9px;padding:7px 9px;">' +
+    '<div style="font-size:10.5px;color:#7d8aa3;">' + label + '</div>' +
+    '<div style="font-size:15px;font-weight:800;color:' + (color || "#dbe4f3") + ';">' + val + '</div></div>';
+  const secChip = (t) => '<div style="display:flex;align-items:center;gap:6px;margin:14px 0 7px;">' +
+    '<span style="width:3px;height:13px;background:' + tint + ';border-radius:2px;"></span>' +
+    '<span style="font-size:11.5px;letter-spacing:1px;color:' + tint + ';font-weight:800;">' + t + '</span></div>';
+
+  ov.innerHTML = '<div class="card" style="max-width:470px;width:100%;max-height:88vh;overflow:auto;border:1px solid ' + tint + '55;border-radius:14px;background:linear-gradient(180deg,#101a2e,#0a0f1a 40%);padding:14px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+      '<div style="font-size:22px;font-weight:900;color:' + tint + ';text-shadow:0 0 14px ' + tint + '55;">' + esc(o.name) + '</div>' +
+      '<span class="tag" style="border-color:' + tint + ';color:' + tint + ';font-weight:700;">' + (o.rare ? "稀有原创" : "原创") + '</span>' +
+      '<span class="tag">Lv' + (Number(_prog.lv) || 1) + '</span>' +
+      '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:4px 12px;font-size:11px;color:' + tint + ';">⚔️ <b style="font-size:14px;">' + fmt(_fin.power || 0) + '</b></span>' +
+    '</div>' +
+    '<div class="hint" style="margin:6px 0 2px;">' + esc(o.title || "无称号") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
+    (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#93a3ba;">' + esc(o.desc) + '</div>' : "") +
+
+    secChip("① 面板数据") +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+      stat("攻击", fmt(Math.round(_fin.atk)), "#ffb86b") +
+      stat("生命", fmt(Math.round(_fin.hp)), "#7ee787") +
+      stat("防御", Math.round(_fin.def), "#8fd8ff") +
+      stat("法抗", Math.round(_fin.res), "#c9a0ff") +
+      stat("速度", Math.round(_fin.spd * 10) / 10, "#8fd8ff") +
+      stat("暴击率", Math.round(_fin.critRate) + "%", "#ff9bd2") +
+      stat("暴击伤害", Math.round(_fin.critDmg) + "%", "#ff9bd2") +
+      stat("吸血", (Number(_fin.lifesteal) || 0) + "%", "#ff6b6b") +
+    '</div>' +
+
+    secChip("② 加点") +
+    (() => {
+      const sp = _prog.spec || {};
+      const b0 = (o.spec || {});
+      const spTxt = (k) => { const base = Number(b0[k]) || 0; const add = Number(sp[k === "int" ? "intel" : k]) || 0; return base + (add ? ' <span style="color:#7ee787;">+' + add + '</span>' : ''); };
+      const gi = Math.max(0, Math.min(GRADE.length - 1, Number(_prog.grade) || 0));
+      const ai = Math.max(1, Math.min(APTITUDE.length, Number(_prog.apt) || 1));
+      return panel(
+        row("基础", "生命 " + ((o.basic || {}).hp || 0) + " · 攻击 " + ((o.basic || {}).atk || 0) + " · 防御 " + ((o.basic || {}).def || 0) + " · 法抗 " + ((o.basic || {}).res || 0)) +
+        row("专精", "力量 " + spTxt("str") + " · 智力 " + spTxt("int") + " · 技巧 " + spTxt("tech") + " · 敏捷 " + spTxt("agi")) +
+        row("成长点数", '<span style="color:' + ((Number(_prog.free) || 0) > 0 ? "#7ee787" : "#7d8aa3") + ';">' + (Number(_prog.free) || 0) + ' 点可用</span>') +
+        row("资历", '<span style="color:' + (GRADE[gi].color || "#dbe4f3") + ';">' + GRADE[gi].key + '（×' + (GRADE[gi].mult || 1).toFixed(2) + '）</span>') +
+        row("资质", '<span style="color:#c9a0ff;">' + ai + '★（×' + (APTITUDE[ai - 1].mult || 1).toFixed(2) + '）</span>')
+      );
+    })() +
+
+    secChip("③ 专属装备") + panel(gearHtml) +
+    (o.notes ? '<div class="hint" style="margin-top:8px;line-height:1.6;">' + esc(o.notes) + '</div>' : "") +
+    '<div style="margin-top:12px;"><button id="ocClose" style="width:100%;height:36px;font-weight:700;">关闭</button></div></div>';
   document.body.appendChild(ov);
   ov.querySelector("#dpClose").onclick = () => ov.remove();
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
