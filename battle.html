@@ -1200,16 +1200,28 @@ function aiTurnIfNeeded() {
       if (used.pierce) f2.traits.penetrate = Number(used.pierce) || 0;
     }
     let total = 0, crit = false;
+    const perTarget = [];
     const segPlan = segMults(mult * hits, hits, used && used.segWeights);
     tgts.forEach((t) => {
+      let sub = 0, sc = false, blk = 0, abs2 = 0, thn = 0;
       for (let h = 0; h < hits; h++) {
         const rr = damage(st, f2.id, t.id, { atk: f2.atk * atkBuff, mult: segPlan[h], critRate: f2.critRate, critDmg: f2.critDmg, dmgType });
-        total += rr.dmg; if (rr.crit) crit = true;
+        sub += rr.dmg; total += rr.dmg;
+        if (rr.crit) { sc = true; crit = true; }
+        blk = Math.max(blk, rr.block || 0); abs2 += rr.absorb || 0; thn += rr.thorns || 0;
       }
+      const tk = dmgType === "spell" ? "法术" : "物理";
+      perTarget.push({
+        name: t.name, dmg: sub, crit: sc, block: blk, absorb: abs2, thorns: thn,
+        text: t.name + "　" + tk + "　−" + sub + (sc ? "　暴击💥" : "") + (blk ? "　格挡 -" + blk + "%" : "") + (abs2 ? "　护盾吸收 " + abs2 : "")
+      });
     });
-    if (tgts.length > 1) pushLog("🎯 命中 " + tgts.length + " 个目标", "line");
     const r = { dmg: total, crit };
-    pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " [" + label + "]" + ((used && used.name) || "") + " → " + (tgts.length > 1 ? "我方 " + tgts.length + " 人" : m.name) + " " + r.dmg + fxTags(r));
+    const _subs = tgts.length > 1 ? perTarget.map((x) => x.text) : [];
+    pushLog(
+      (label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " [" + label + "]" + ((used && used.name) || "") +
+      " → " + (tgts.length > 1 ? "我方 " + tgts.length + " 人 · 总伤害 " + total : m.name + " " + r.dmg + fxTags(r)),
+      tgts.length > 1 ? "act" : "line", _subs);
     if (used && used.burn) addStatus(st, f2.id, "me", "burn", Number(used.burn) || 20, 2, "灼烧");
     if (used && used.stun) addStatus(st, f2.id, "me", "stun", Number(used.stun) || 20, 1, "眩晕");
     if (used && used.silence) addStatus(st, f2.id, "me", "silence", Number(used.silence) || 20, 2, "沉默");
