@@ -1159,17 +1159,21 @@ function openOrigCard(o) {
   const sec = (t) => '<div style="font-size:11px;color:' + tint + ';font-weight:700;letter-spacing:1px;margin:12px 0 5px;">' + t + '</div>';
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
   const gearLabels = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
-  const gearObj = o.gearObj;
+  const gearObj = ORIGINAL_GEAR[o.id] || o.gearObj;
+  const _gprog = _prog.gear || {};
   const gearHtml = gearObj
     ? Object.keys(gearLabels).map((k) => {
         const it = gearObj[k] || {};
         if (!it.name) return "";
+        const gs = _gprog[k] || { lv: 1, star: 1 };
+        const glv = Number(gs.lv) || 1, gst = Number(gs.star) || 1;
+        const gm = (1 + 0.02 * (glv - 1)) * (1 + 0.12 * (gst - 1)) * (1 + 0.05 * (Number(gs.advance) || 0)) * (1 + 0.03 * (Number(gs.refine) || 0));
         const parts = [];
-        if (it.atk) parts.push("攻击 +" + it.atk);
-        if (it.hp) parts.push("生命 +" + it.hp);
-        if (it.def) parts.push("防御 +" + it.def);
-        if (it.res) parts.push("法抗 +" + it.res);
-        if (it.spd) parts.push("速度 +" + it.spd);
+        if (it.atk) parts.push("攻击 +" + Math.round(it.atk * gm));
+        if (it.hp) parts.push("生命 +" + Math.round(it.hp * gm));
+        if (it.def) parts.push("防御 +" + Math.round(it.def * gm));
+        if (it.res) parts.push("法抗 +" + Math.round(it.res * gm));
+        if (it.spd) parts.push("速度 +" + Math.round(it.spd * gm));
         if (it.critRate) parts.push("【概率】暴击率 +" + it.critRate + "%");
         if (it.critDmg) parts.push("【加成】暴伤 +" + it.critDmg + "%");
         if (it.lifesteal) parts.push("【续航】吸血 " + it.lifesteal + "%");
