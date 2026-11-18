@@ -56,12 +56,14 @@ async function load() {
     return;
   }
   store = g.store; updatedAt = g.updatedAt || "";
+  window.__dataSrc = "云端";
   // 个人页刚改过、云端还没写完时，优先用带 __at 的较新缓存
   try {
     const cached = cacheLoad(box);
     const cs = cached && cached.store;
     if (cs && Number(cs.v) === 2 && Number(cs.__at || 0) > Number(store.__at || 0)) {
       store = cs;
+      window.__dataSrc = "本地缓存（比云端新）";
     }
   } catch (e) {}
   window.addEventListener("error", (e) => {
@@ -235,6 +237,10 @@ function renderPick() {
     '<div class="card"><div class="card-title">选择关卡</div>' +
       dungeonListHtml() +
     '</div>';
+  if ($("btnUnitDetail")) $("btnUnitDetail").onclick = () => {
+    if (ch) window.__showCharDetail ? window.__showCharDetail(ch) : alert(JSON.stringify(charFinal(ch), null, 1));
+    else alert("原创角色：" + (o0 && o0.name || "") + " Lv" + ((store.orig || {})[o0.id] || {}).lv);
+  };
   view().querySelectorAll("[data-boss]").forEach((el) => el.onclick = () => {
     const key = el.dataset.boss;
     window.__openB = window.__openB || {};
@@ -469,7 +475,7 @@ function renderPrep(stageId) {
     const c = ch || o0;
     const ff = ch ? charFinal(ch) : (o0 ? originalFinal(o0, (store.orig || {})[o0.id] || {}) : null);
     return '<div class="hint" style="margin-top:4px;color:#7d8aa3;">数据：' + esc(box || "-") + ' · ' + esc((c && c.name) || "-") +
-      ' · 存档 ' + ts + ' · 攻击 ' + Math.round((ff && ff.atk) || 0) + ' · 生命 ' + Math.round((ff && ff.hp) || 0) + '</div>';
+      ' · 存档 ' + ts + ' · 来源 ' + (window.__dataSrc || "云端") + ' · 攻击 ' + Math.round((ff && ff.atk) || 0) + ' · 生命 ' + Math.round((ff && ff.hp) || 0) + '</div>';
   })();
   view().innerHTML =
     '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +

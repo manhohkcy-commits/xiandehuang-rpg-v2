@@ -214,7 +214,13 @@ async function save() {
   store.__at = Date.now();
   cacheSave(box, store);
   try {
-    const r = await cloudSave(box, store, updatedAt || null, activeChar() ? activeChar().name : "");
+    let r = await cloudSave(box, store, updatedAt || null, activeChar() ? activeChar().name : "");
+    if (!r.ok && String(r.reason || "").indexOf("冲突") >= 0) {
+      try {
+        const fresh = await cloudGet(box);
+        if (fresh && fresh.updated_at) { updatedAt = fresh.updated_at; r = await cloudSave(box, store, updatedAt, activeChar() ? activeChar().name : ""); }
+      } catch (e) {}
+    }
     if (!r.ok) { toast("保存未生效：" + r.reason, true); return false; }
     updatedAt = (r.row && r.row.updated_at) || updatedAt;
     toast("已保存");
