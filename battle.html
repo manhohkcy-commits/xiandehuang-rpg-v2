@@ -1085,7 +1085,7 @@ function renderBattle() {
   view().innerHTML =
     '<div class="card"><div class="card-title">' + turnText + '</div>' +
       queueHtml2() + gridHtml() +
-      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + fmt(Math.round(m.hp)) + ' / ' + fmt(Math.round(m.maxHp)) + '</span></div>' + hpBar(m) +
+      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + fmt(Math.round(m.hp)) + ' / ' + fmt(Math.round(m.maxHp)) + ' · 攻 ' + Math.round(m.atk) + ' · 防 ' + Math.round(m.def) + '</span></div>' + hpBar(m) +
       '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + fmt(Math.round(f2.hp)) + ' / ' + fmt(Math.round(f2.maxHp)) + '</span></div>' + hpBar(f2) +
     (st.__isOrig ? '<div class="row"><span class="k">❄️ 霜印</span><span class="v" style="color:#8fd8ff;">' +
       (Number(st.__frost) || 0) + ' / 5　（普攻 +1 · 必杀每层 +15%）</span></div>' : "") +
