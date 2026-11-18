@@ -1986,7 +1986,9 @@ function renderOrig() {
       row("攻击", Math.round(atk)) + row("生命", Math.round(hp)) + row("防御", Math.round(def)) +
       row("法抗", Math.round(res)) + row("速度", Math.round(spd * 10) / 10) +
       row("暴击率", (Number(fin.critRate) || 5) + "%") + row("暴击伤害", (Number(fin.critDmg) || 150) + "%") +
-      '<div style="margin-top:8px;"><button id="btnOrigBreakdown">📊 加成明细</button></div>') +
+      '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+      '<button id="btnOrigBreakdown">📊 加成明细</button>' +
+      '<button id="btnOrigPanel" style="border-color:#ffb347;color:#ffb347;">📋 完整面板</button></div>') +
     card("资历与资质",
       (() => {
         const gi = Math.max(0, Math.min(GRADE.length - 1, Number(prog.grade) || 0));
@@ -2076,6 +2078,7 @@ function renderOrig() {
     store.orig[o.id] = prog; await save(); render();
   });
   if ($("btnOrigBreakdown")) $("btnOrigBreakdown").onclick = () => origBreakdown(o, prog);
+  if ($("btnOrigPanel")) $("btnOrigPanel").onclick = () => { window.__ORIG_PROG = store.orig || {}; openOrigCard(o); };
   view().querySelectorAll("[data-spec]").forEach((b) => b.onclick = async () => {
     const k = b.dataset.spec;
     const free = Number(prog.free) || 0;
