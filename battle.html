@@ -347,7 +347,12 @@ function renderPick() {
   view().querySelectorAll("[data-stage]").forEach((b) => {
     b.onclick = () => renderPrep(b.dataset.stage);
   });
+function isHostSweep() {
+  try { return localStorage.getItem("rpg2:host") === "1" && !activeChar(); } catch (e) { return false; }
+}
+
 async function sweepOne(s2) {
+  if (!isHostSweep()) return { gold: 0, exp: 0, drops: [] };
   const gold = Number(s2.gold) || 0;
   const exp = Number(s2.exp) || 0;
   store.gold = (Number(store.gold) || 0) + gold;
@@ -406,6 +411,7 @@ function mergeDrops(list) {
 
 view().querySelectorAll("[data-sweep]").forEach((b) => {
   b.onclick = async () => {
+    if (!isHostSweep()) return alert("扫荡仅限主机原创端使用");
     const s2 = STAGES.find((x) => x.id === b.dataset.sweep);
     if (!s2) return;
     if (stageNo(s2) > clearedFor(s2)) return alert("还没通关过这一关");
@@ -418,6 +424,7 @@ view().querySelectorAll("[data-sweep]").forEach((b) => {
 
 view().querySelectorAll("[data-sweepn]").forEach((b) => {
   b.onclick = async () => {
+    if (!isHostSweep()) return alert("扫荡仅限主机原创端使用");
     const s2 = STAGES.find((x) => x.id === b.dataset.sweepn);
     if (!s2) return;
     if (stageNo(s2) > clearedFor(s2)) return alert("还没通关过这一关");
@@ -439,6 +446,7 @@ view().querySelectorAll("[data-sweepn]").forEach((b) => {
 view().querySelectorAll("[data-sweepall]").forEach((b) => {
   b.onclick = async (ev) => {
     ev.stopPropagation();
+    if (!isHostSweep()) return alert("扫荡仅限主机原创端使用");
     const d0 = DUNGEONS.find((x) => x.id === b.dataset.sweepall);
     if (!d0) return;
     const done = Math.min(clearedFor(d0.stages[0]), d0.stages.length);
@@ -459,6 +467,7 @@ view().querySelectorAll("[data-sweepall]").forEach((b) => {
 });
 
 if ($("btnSweepAllDaily")) $("btnSweepAllDaily").onclick = async () => {
+  if (!isHostSweep()) return alert("扫荡仅限主机原创端使用");
   const list = DUNGEONS.filter((x) => x.type === "daily" && x.stages && x.stages.length);
   let g = 0, e = 0, all = [], cnt = 0;
   for (const d0 of list) {
