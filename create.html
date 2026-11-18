@@ -1210,20 +1210,20 @@ function openOrigCard(o) {
     (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#93a3ba;">' + esc(o.desc) + '</div>' : "") +
 
     secChip("① 基础属性") +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-      stat("攻击", fmt(Math.round(_fin.atk)), "#ffb86b") +
-      stat("生命", fmt(Math.round(_fin.hp)), "#7ee787") +
-      stat("防御", Math.round(_fin.def), "#8fd8ff") +
-      stat("法抗", Math.round(_fin.res), "#c9a0ff") +
-      stat("速度", Math.round(_fin.spd * 10) / 10, "#8fd8ff") +
-    '</div>' +
+    panel(
+      row("生命", fmt(Math.round(_fin.hp))) +
+      row("攻击", fmt(Math.round(_fin.atk))) +
+      row("防御", Math.round(_fin.def)) +
+      row("法抗", Math.round(_fin.res)) +
+      row("速度", Math.round(_fin.spd * 10) / 10) +
+      row("暴击", Math.round(_fin.critRate) + "%") +
+      row("暴伤", Math.round(_fin.critDmg) + "%")
+    ) +
     secChip("② 其他属性") +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-      stat("暴击率", Math.round(_fin.critRate) + "%", "#ff9bd2") +
-      stat("暴击伤害", Math.round(_fin.critDmg) + "%", "#ff9bd2") +
-      stat("吸血", (Number(_fin.lifesteal) || 0) + "%", "#ff6b6b") +
-      stat("减伤", (Number(_fin.dmgCut) || 0) + "%", "#8fd8ff") +
-    '</div>' +
+    panel(
+      row("吸血", (Number(_fin.lifesteal) || 0) + "%") +
+      row("减伤", (Number(_fin.dmgCut) || 0) + "%")
+    ) +
 
     secChip("③ 加点") +
     (() => {
