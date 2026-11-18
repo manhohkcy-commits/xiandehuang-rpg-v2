@@ -1570,7 +1570,7 @@ document.addEventListener("visibilitychange", async () => {
   const q = new URLSearchParams(location.search);
   roomId = q.get("room") || "";
   const arenaFoe = q.get("arena") || "";
-  if (arenaFoe) { await startArena(arenaFoe); return; }
+  if (arenaFoe) { await startArena(arenaFoe, q.get("mode") || "1v1"); return; }
   if (roomId) {
     try {
       const got = await getRoom(roomId);
@@ -1598,7 +1598,7 @@ document.addEventListener("visibilitychange", async () => {
 })();
 
 // 🏟 竞技场：与云端对手打真实战斗
-async function startArena(foeBox) {
+async function startArena(foeBox, mode) {
   const AR = "__arena";
   let data = { v: 1, players: {} };
   let upd = "";
@@ -1645,16 +1645,54 @@ async function startArena(foeBox) {
       critDmg: (foeSnap && foeSnap.critDmg) || 150, dmgCut: 0
     };
   }
-  st = createBattle([
-    { id: "me", name: ch ? ch.name : (o0 ? o0.name : "你"), lv: ch ? ch.lv : 1, side: "A", spd: f.spd, power: 0,
+  // 队伍规模：1v1 = 1，3v3 / 团队 = 最多 3
+  const maxN = (mode === "3v3" || mode === "team") ? 3 : 1;
+  const myChars = (store.chars || []).slice(0, maxN);
+  const myUnits = [];
+  myChars.forEach((c2, i) => {
+    const ff = finalOf(c2, store);
+    const w2 = c2.equip && c2.equip.weapon;
+    const wd = w2 && w2.data ? w2.data : (w2 || {});
+    myUnits.push({
+      id: i === 0 ? "me" : ("me" + i), name: c2.name, lv: c2.lv || 1, side: "A", spd: ff.spd, power: 0,
+      hp: ff.hp, maxHp: ff.hp, atk: ff.atk, def: ff.def, res: ff.res, critRate: ff.critRate, critDmg: ff.critDmg,
+      dmgCut: ff.dmgCut || 0, rage: 0, traits: combatTraits(c2),
+      __w: wd, __auto: i > 0
+    });
+  });
+  if (!myUnits.length && (ch || o0)) {
+    myUnits.push({ id: "me", name: ch ? ch.name : o0.name, lv: ch ? ch.lv : 1, side: "A", spd: f.spd, power: 0,
       hp: f.hp, maxHp: f.hp, atk: f.atk, def: f.def, res: f.res, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, rage: 0,
-      traits: ch ? combatTraits(ch) : {} },
-    { id: "foe0", name: foeStats.name, lv: foeStats.lv, side: "B", spd: foeStats.spd, power: 0,
+      traits: ch ? combatTraits(ch) : {} });
+  }
+  const foeUnits = [];
+  try {
+    const rr2 = await cloudGet(foeBox);
+    const s3 = rr2 && rr2.store;
+    (s3 && s3.chars ? s3.chars : []).slice(0, maxN).forEach((c3, i) => {
+      const ff = finalOf(c3, s3);
+      const w3 = c3.equip && c3.equip.weapon;
+      const wd3 = w3 && w3.data ? w3.data : (w3 || {});
+      foeUnits.push({
+        id: "foe" + i, name: c3.name, lv: c3.lv || 1, side: "B", spd: ff.spd, power: 0,
+        hp: ff.hp, maxHp: ff.hp, atk: ff.atk, def: ff.def, res: ff.res, critRate: ff.critRate, critDmg: ff.critDmg,
+        dmgCut: ff.dmgCut || 0, rage: 0, traits: combatTraits(c3),
+        __skills: [
+          { kind: "normal", name: wd3.aName || "普攻", mult: Number(wd3.aMult) || 100, hits: Number(wd3.aHits) || 1, rage: Number(wd3.aRage) || 20 },
+          { kind: "skill", name: wd3.sName || "技能", mult: Number(wd3.sMult) || 150, hits: Number(wd3.sHits) || 1, cd: Number(wd3.sCd) || 3, rage: Number(wd3.sRage) || 15 },
+          { kind: "ult", name: wd3.uName || "必杀", mult: Number(wd3.uMult) || 250, hits: Number(wd3.uHits) || 1, rage: 100 }
+        ]
+      });
+    });
+  } catch (e) {}
+  if (!foeUnits.length) {
+    foeUnits.push({ id: "foe0", name: foeStats.name, lv: foeStats.lv, side: "B", spd: foeStats.spd, power: 0,
       hp: foeStats.hp, maxHp: foeStats.hp, atk: foeStats.atk, def: foeStats.def, res: foeStats.res || 0,
       critRate: foeStats.critRate, critDmg: foeStats.critDmg, dmgCut: foeStats.dmgCut || 0, rage: 0,
-      __skills: foeSkills || [{ kind: "normal", name: "普攻", mult: 100, rage: 20 }, { kind: "skill", name: "交锋", mult: 150, cd: 3, rage: 15 }, { kind: "ult", name: "必杀", mult: 250, rage: 100 }] }
-  ]);
-  st.__arena = { foeBox, arenaData: data, upd, foeName: foeStats.name };
+      __skills: foeSkills || [{ kind: "normal", name: "普攻", mult: 100, rage: 20 }, { kind: "skill", name: "交锋", mult: 150, cd: 3, rage: 15 }, { kind: "ult", name: "必杀", mult: 250, rage: 100 }] });
+  }
+  st = createBattle(myUnits.concat(foeUnits));
+  st.__arena = { foeBox, mode: mode || "1v1", arenaData: data, upd, foeName: foeUnits[0] ? foeUnits[0].name : foeStats.name };
   st.__multi = false;
   log = [];
   pushLog("🏟 竞技场 · " + (ch ? ch.name : (o0 ? o0.name : "你")) + " VS " + foeStats.name, "hdr");

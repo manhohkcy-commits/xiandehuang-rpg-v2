@@ -143,48 +143,74 @@ function dailyUsed(rec) {
   if (!rec) return 0;
   return rec.day === today() ? (Number(rec.used) || 0) : 0;
 }
+function modes() { return [
+  { k: "1v1", n: "1v1 单挑" },
+  { k: "3v3", n: "3v3 小队战" },
+  { k: "team", n: "团队战" },
+  { k: "room", n: "自定义房间" }
+]; }
+let cloudPlayers = [];
+async function loadCloudPlayers() {
+  try {
+    const rows = await cloudList(200);
+    cloudPlayers = rows.filter((r) => r && r.store && Number(r.store.v) === 2 && String(r.box).indexOf("__") !== 0)
+      .map((r) => {
+        const s = r.store;
+        const ch = (s.chars || []).find((c) => c.id === s.activeChar) || (s.chars || [])[0];
+        if (!ch) return null;
+        return { box: String(r.box), name: ch.name || "无名", lv: Number(ch.lv) || 1, power: charPower(ch), count: (s.chars || []).length };
+      }).filter(Boolean);
+  } catch (e) { cloudPlayers = []; }
+}
+
 function render() {
-  const chars = (store && store.chars) || [];
+  const mode = window.__amode || "1v1";
   const rec = myRec();
-  const myTeam = (rec && Array.isArray(rec.team)) ? rec.team : [];
-  const others = Object.keys(data.players).filter((k) => k !== me).map((k) => ({ box: k, ...data.players[k] }));
-  others.sort((a, b) => b.pts - a.pts);
+  const isHost = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+  const chars = (store && store.chars) || [];
+  const team = (rec && Array.isArray(rec.team)) ? rec.team : [];
+  const tabs = modes().map((m) => '<button data-mode="' + m.k + '" class="' + (mode === m.k ? "on" : "") + '">' + m.n + '</button>').join("");
 
-  const defender = myTeam[0] || null;
-  const pick = defender
-    ? '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;"><span>' + esc(defender.name) + '（Lv' + defender.lv + '）</span><span style="color:#6ea8fe;font-weight:700;">战力 ' + Math.round(defender.power != null ? defender.power : (defender.atk * 2 + defender.hp * 0.5)) + '</span></div>'
-    : '<div class="hint">还没布防，点下面按钮即可用当前角色布防</div>';
+  const defHtml = team.length
+    ? team.map((t) => '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;padding:4px 0;"><span>' + esc(t.name) + '（Lv' + t.lv + '）</span><span style="color:#6ea8fe;font-weight:700;">战力 ' + Math.round(t.power || (t.atk * 2 + t.hp * 0.5)) + '</span></div>').join("")
+    : '<div class="hint">正在自动布防…</div>';
 
-  const list = others.length
-    ? others.map((o) => {
-      const p = powerOf(o.team || []);
-      return '<div class="row"><span class="k">' + esc(o.name) + '<div class="hint">积分 ' + (o.pts || 0) + ' · ' + (o.w || 0) + "胜 " + (o.l || 0) + '负 · 战力 ' + Math.round(p) + '</div></span>' +
-        '<span class="v"><button data-fight="' + esc(o.box) + '">挑战</button></span></div>';
-    }).join("")
-    : '<div class="hint">还没有其他玩家布防，等朋友进来后就会出现在这里。</div>';
+  const goTrain = '<a href="create.html?box=' + encodeURIComponent(me) + (isHost ? "&tab=orig" : "&tab=cult") + '" style="text-decoration:none;"><button style="margin-top:8px;border-color:#7ee787;color:#7ee787;">🧪 去培养 / 调整</button></a>';
+
+  const list = cloudPlayers.filter((p) => p.box !== me).length
+    ? cloudPlayers.filter((p) => p.box !== me).map((p) =>
+        '<div class="row"><span class="k">' + esc(p.name) + '<div class="hint">Lv' + p.lv + ' · 角色 ' + p.count + ' 个 · 位号尾号 #' + p.box.slice(-4) + '</div></span>' +
+        '<span class="v"><span style="color:#8fd8ff;font-weight:700;margin-right:8px;">' + fmt(p.power) + '</span>' +
+        '<button data-chal="' + esc(p.box) + '">挑战</button></span></div>').join("")
+    : '<div class="hint">还没有其他玩家创建角色。</div>';
 
   $("view").innerHTML =
     '<div class="card"><div class="card-title">🏟 竞技场</div>' +
-    '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "尚未布防") + '</div>' +
-    '<div class="hint">🪙 竞技币 ' + (rec ? rec.coin || 0 : 0) + ' · 今日挑战 ' + dailyUsed(rec) + '/5</div>' +
-    '<button id="btnRoom" style="margin-top:8px;border-color:#7ee787;color:#7ee787;">🏠 开自定义房切磋（可观战）</button></div>' +
+      '<div class="tree-tabs" style="margin-bottom:8px;">' + tabs + '</div>' +
+      '<div class="hint">积分 ' + (rec ? rec.pts || 0 : 0) + ' · ' + (rec ? (rec.w || 0) + "胜 " + (rec.l || 0) + "负" : "未开始") +
+      ' · 🪙 竞技币 ' + (rec ? rec.coin || 0 : 0) + ' · 今日挑战 ' + dailyUsed(rec) + '/5</div>' +
+      (mode === "room"
+        ? '<div class="hint" style="margin-top:6px;">自定义房间：可邀请朋友 6 人同场，支持观战。</div>' +
+          '<button id="btnRoom" style="margin-top:8px;border-color:#7ee787;color:#7ee787;">🏠 开自定义房切磋（可观战）</button>'
+        : '<div class="hint" style="margin-top:6px;">当前模式：' + (modes().find((m) => m.k === mode) || {}).n + '（' + (mode === "1v1" ? "单人角色对战" : "最多 3 名角色组队") + '）</div>') +
+    '</div>' +
     '<div class="card"><div class="card-title">🛡 我的防守队</div>' +
-    '<div class="hint">直接用当前角色布防，朋友挑战的就是这份快照</div>' +
-    '<div style="margin-top:6px;">' + pick + '</div>' +
-    '<button id="btnSaveTeam" style="margin-top:8px;border-color:#ffd666;color:#ffd666;">🔄 用当前角色布防</button></div>' +
-    '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>' +
+      '<div class="hint">' + (isHost ? "主机端：使用原创角色自动布防" : "玩家端：使用你自己的最新角色自动布防") + '</div>' +
+      '<div style="margin-top:6px;">' + defHtml + '</div>' + goTrain + '</div>' +
+    (mode === "room" ? "" : '<div class="card"><div class="card-title">⚔️ 挑战</div>' + list + '</div>') +
     '<div class="card"><div class="card-title">🪙 竞技币兑换</div>' +
-    '<div class="row"><span class="k">R 碎片 ×10<div class="hint">30 币</div></span><span class="v"><button data-shop="shardR">兑换</button></span></div>' +
-    '<div class="row"><span class="k">SR 碎片 ×5<div class="hint">90 币</div></span><span class="v"><button data-shop="shardSR">兑换</button></span></div>' +
-    '<div class="row"><span class="k">SSR 碎片 ×2<div class="hint">150 币</div></span><span class="v"><button data-shop="shardSSR">兑换</button></span></div>' +
-    '<div class="row"><span class="k">金币袋（5,000）<div class="hint">40 币</div></span><span class="v"><button data-shop="gold">兑换</button></span></div>' +
-    '<div class="row"><span class="k">随机 R 装备箱<div class="hint">60 币</div></span><span class="v"><button data-shop="boxR">兑换</button></span></div>' +
-    '<div class="row"><span class="k">随机 SR 装备箱<div class="hint">200 币</div></span><span class="v"><button data-shop="boxSR">兑换</button></span></div>' +
+      '<div class="row"><span class="k">R 碎片 ×10<div class="hint">30 币</div></span><span class="v"><button data-shop="shardR">兑换</button></span></div>' +
+      '<div class="row"><span class="k">SR 碎片 ×5<div class="hint">90 币</div></span><span class="v"><button data-shop="shardSR">兑换</button></span></div>' +
+      '<div class="row"><span class="k">SSR 碎片 ×2<div class="hint">150 币</div></span><span class="v"><button data-shop="shardSSR">兑换</button></span></div>' +
+      '<div class="row"><span class="k">金币袋（5,000）<div class="hint">40 币</div></span><span class="v"><button data-shop="gold">兑换</button></span></div>' +
+      '<div class="row"><span class="k">随机 R 装备箱<div class="hint">60 币</div></span><span class="v"><button data-shop="boxR">兑换</button></span></div>' +
+      '<div class="row"><span class="k">随机 SR 装备箱<div class="hint">200 币</div></span><span class="v"><button data-shop="boxSR">兑换</button></span></div>' +
     '</div>';
   bind();
 }
 
 function bind() {
+  document.querySelectorAll("[data-mode]").forEach((b) => b.onclick = () => { window.__amode = b.dataset.mode; render(); });
   if ($("btnRoom")) $("btnRoom").onclick = async () => {
     try {
       const r = await createRoom(me, myName);
@@ -192,24 +218,43 @@ function bind() {
       location.href = "rooms.html?room=" + encodeURIComponent(r.id) + "&box=" + encodeURIComponent(me);
     } catch (e) { toast("建房失败：" + (e && e.message || e), true); }
   };
-  if ($("btnSaveTeam")) $("btnSaveTeam").onclick = async () => {
-    const snap = snapshot();
-    if (!snap) return toast("没有角色", true);
-    const rec = myRec() || { name: myName, pts: 0, w: 0, l: 0, coin: 0, team: [] };
-    rec.team = [snap];
-    rec.name = myName;
-    data.players[me] = rec;
-    try { await saveArena(); render(); toast("已用 " + snap.name + " 布防"); } catch (e) { toast("保存失败：" + (e && e.message || e), true); }
-  };
-  document.querySelectorAll("[data-fight]").forEach((b) => b.onclick = async () => {
+  document.querySelectorAll("[data-chal]").forEach((b) => b.onclick = () => {
     const rec = myRec();
-    if (!rec || !rec.team || !rec.team.length) return toast("先保存防守队", true);
-    const foe = data.players[b.dataset.fight];
-    if (!foe) return;
     if (dailyUsed(rec) >= 5) return toast("今日挑战次数已用完（5/5）", true);
-    // 直接进入真实战斗（结算在战斗页写回积分）
-    location.href = "battle.html?arena=" + encodeURIComponent(b.dataset.fight);
+    location.href = "battle.html?box=" + encodeURIComponent(me) + "&arena=" + encodeURIComponent(b.dataset.chal) + "&mode=" + (window.__amode || "1v1");
   });
+  document.querySelectorAll("[data-shop]").forEach((b) => b.onclick = async () => {
+    const k = b.dataset.shop;
+    const COST = { shardR: 30, shardSR: 90, shardSSR: 150, gold: 40, boxR: 60, boxSR: 200 };
+    const rec = myRec() || { name: myName, pts: 0, w: 0, l: 0, coin: 0, team: [] };
+    const cost = COST[k] || 0;
+    if ((Number(rec.coin) || 0) < cost) return toast("竞技币不足（需 " + cost + "）", true);
+    rec.coin = (Number(rec.coin) || 0) - cost;
+    const f = (store.flags = store.flags || {});
+    if (k === "shardR") f.shardR = (Number(f.shardR) || 0) + 10;
+    else if (k === "shardSR") f.shardSR = (Number(f.shardSR) || 0) + 5;
+    else if (k === "shardSSR") f.shardSSR = (Number(f.shardSSR) || 0) + 2;
+    else if (k === "gold") store.gold = (Number(store.gold) || 0) + 5000;
+    else {
+      const pool = (k === "boxR" ? [ARMORS, ACCESSORIES, WEAPONS] : [ARMORS, ACCESSORIES, WEAPONS]);
+      const arr = pool[Math.floor(Math.random() * pool.length)].filter((x) => x.rarity === (k === "boxR" ? "R" : "SR"));
+      if (arr.length) store.items.push(makeItem(arr[0].cat || (pool[0] === WEAPONS ? "weapon" : pool[0] === ARMORS ? "armor" : "accessory"), arr[Math.floor(Math.random() * arr.length)]));
+    }
+    data.players[me] = rec;
+    try { await saveStore(); await saveArena(); render(); toast("兑换成功"); } catch (e) { toast("兑换失败：" + (e && e.message || e), true); }
+  });
+}
+
+async function ensureMyTeam() {
+  const rec = myRec();
+  if (rec && Array.isArray(rec.team) && rec.team.length) return;
+  const snap = snapshot();
+  if (!snap) return;
+  const r2 = rec || { name: myName, pts: 0, w: 0, l: 0, coin: 0, team: [] };
+  r2.team = [snap];
+  r2.name = myName;
+  data.players[me] = r2;
+  try { await saveArena(); } catch (e) {}
 }
 
 (async () => {
@@ -225,6 +270,8 @@ function bind() {
     return;
   }
   await loadArena();
+  await loadCloudPlayers();
+  await ensureMyTeam();
   render();
   } catch (e) {
     document.getElementById("view").innerHTML = '<div class="card"><div class="card-title">竞技场初始化失败</div><div class="hint">' + String(e && e.message || e) + '</div></div>';
