@@ -388,7 +388,7 @@ async function sweepOne(s2) {
       drops.push({ name: MAT_NAME[k] || k, count: n });
     });
   });
-  const kyo = rnd(dp.kyoShard), kk = rnd(dp.kShard);
+  const kyo = rnd(dp.kyoShard || dp.kyo), kk = rnd(dp.kShard || dp.k);
   if (kyo) { store.flags.kyoShard = (Number(store.flags.kyoShard) || 0) + kyo; drops.push({ name: "草薙流古武典碎片", count: kyo }); }
   if (kk) { store.flags.kShard = (Number(store.flags.kShard) || 0) + kk; drops.push({ name: "究极热动拳套碎片", count: kk }); }
   if (Math.random() * 100 < (Number(dp.gearChance) || 0)) {
@@ -1770,6 +1770,11 @@ function finish() {
   if (stone) drops.push({ name: "强化石", count: stone });
   if (refine) drops.push({ name: "精炼石", count: refine });
   if (bstGain) { store.flags.bstone = (Number(store.flags.bstone) || 0) + bstGain; drops.push({ name: "突破石", count: bstGain }); }
+const rndAny = (v) => Array.isArray(v) ? (Number(v[0]) + Math.floor(Math.random() * (Number(v[1]) - Number(v[0]) + 1))) : 0;
+const kyoGain = rndAny(dp.kyoShard || dp.kyo);
+const kGain = rndAny(dp.kShard || dp.k);
+if (kyoGain) { store.flags.kyoShard = (Number(store.flags.kyoShard) || 0) + kyoGain; drops.push({ name: "草薙流古武典碎片", count: kyoGain }); }
+if (kGain) { store.flags.kShard = (Number(store.flags.kShard) || 0) + kGain; drops.push({ name: "究极热动拳套碎片", count: kGain }); }
   if (shR) drops.push({ name: "R 碎片", count: shR });
   if (shSR) drops.push({ name: "SR 碎片", count: shSR });
   if (shSSR) drops.push({ name: "SSR 碎片", count: shSSR });
