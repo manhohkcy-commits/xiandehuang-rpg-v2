@@ -524,13 +524,35 @@ async function buildMultiBattle(stageId) {
       __skills: e.skills || []
     };
   });
+  // 把成员武器招式挂到对应单位
+  built.units.forEach((u) => {
+    const m = Object.values(room.members || {}).find((x) => x && x.name === u.name);
+    const raw = m && m.char && m.char.weapon;
+    if (raw) {
+      const wd = raw.data ? raw.data : raw;
+      u.__w = wd;
+      u.__skills = [
+        { kind: "normal", name: wd.aName || "普攻", mult: Number(wd.aMult) || 100, hits: Number(wd.aHits) || 1, rage: Number(wd.aRage) || 20 },
+        { kind: "skill", name: wd.sName || "技能", mult: Number(wd.sMult) || 150, hits: Number(wd.sHits) || 1, cd: Number(wd.sCd) || 3, rage: Number(wd.sRage) || 15, sSupport: wd.sSupport },
+        { kind: "ult", name: wd.uName || "必杀", mult: Number(wd.uMult) || 250, hits: Number(wd.uHits) || 1, rage: 100 }
+      ];
+    }
+  });
   st = createBattle(built.units.concat(foeUnits).map((u) => Object.assign({ power: 0 }, u)));
   st.__stage = stg.id;
   st.__owners = built.owners;
   st.__multi = true;
   const myUnit = unitOfPlayer(room, box);
   st.__myUnit = myUnit;
-  st.__weapon = (myUnit && built.units.find((u) => u.id === myUnit) || {}).weapon || null;
+  {
+    const myU = (myUnit && built.units.find((u) => u.id === myUnit)) || built.units.find((u) => u.side === "A");
+    if (myU && myU.__w) st.__weapon = { data: myU.__w };
+    else {
+      const m0 = Object.values(room.members || {}).find((x) => x && x.name === (myU && myU.name));
+      const raw = m0 && m0.char && m0.char.weapon;
+      st.__weapon = raw ? { data: raw.data ? raw.data : raw } : null;
+    }
+  }
   log = [];
   lastRound = 1;
   pushLog("— 回合 1 —", "hdr");
