@@ -1142,7 +1142,10 @@ function renderTalent() {
   const isActiveNode = activeIds.indexOf(node.id) >= 0;
   if (!isActiveNode && spent >= Number(ch.tp)) return toast("天赋点不够", true);
   if (isActiveNode) {
-    if ((Number(ch.lv) || 1) < 15) return toast("到 Lv15 才能解锁主动技", true);
+    const actDef = TALENT_TREES.map((t) => t.active).find((a) => a && a.id === node.id) || {};
+    const needLv = Number(actDef.unlockLv) || 15;
+    if ((Number(ch.lv) || 1) < needLv) return toast("到 Lv" + needLv + " 自动解锁（不需要点数）", true);
+    return toast("主动技按等级自动解锁/升级，不消耗天赋点");
   }
   {
     const t0 = TALENT_TREES.find((x) => x.id === node.tree);
