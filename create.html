@@ -1524,6 +1524,7 @@ function renderCult() {
   let ch = activeChar();
   const hostGear = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
   if (!ch && !hostGear) { window.__creating = 1; buildCreateScreen(); return; }
+  const CF = window.__cultFilter || (window.__cultFilter = "all");
   const entries = [];
   if (ch) ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
     const d = ch.equip && ch.equip[k];
@@ -1579,6 +1580,11 @@ function renderCult() {
       (e.id && !e.lock ? '<button data-inh="' + e.id + '">🔁 继承到…</button>' : '') +
       '</div></div>';
   };
+  const entries2 = entries.filter((e) => CF === "all" ? true : (CF === "eq" ? e.where === "已装备" : e.where !== "已装备"));
+  const cultChips = '<div class="tree-tabs" style="margin-bottom:8px;">' +
+    '<button data-cultf="all" class="' + (CF === "all" ? "on" : "") + '">全部（' + entries.length + '）</button>' +
+    '<button data-cultf="eq" class="' + (CF === "eq" ? "on" : "") + '">🎽 已装备（' + entries.filter((e) => e.where === "已装备").length + '）</button>' +
+    '<button data-cultf="bag" class="' + (CF === "bag" ? "on" : "") + '">🎒 闲置（' + entries.filter((e) => e.where !== "已装备").length + '）</button></div>';
   const cultTabs = (() => {
     try {
       if (localStorage.getItem("rpg2:host") !== "1") return "";
@@ -1601,9 +1607,9 @@ function renderCult() {
     chips.map(([n, v]) => '<span class="tag" style="font-size:11px;">' + n + ' <b style="color:#ffd666;">' + fmt(v) + '</b></span>').join("") +
     '</div><div class="hint" style="margin-top:6px;">按钮上会写清「需要 / 拥有」，不够时按钮变灰。</div>');
 })();
-view().innerHTML = cultTabs + matBar + card("⚒ 装备培养",
+view().innerHTML = cultTabs + cultChips + matBar + card("⚒ 装备培养",
     '<div class="hint">强化 Lv1~150（每 25 级一次突破）、升星 1~5★、升阶、继承同部位。装备栏里的也能直接培养。</div>' +
-    (entries.length ? entries.map(row).join('') : '<div class="hint">还没有装备。</div>')) + synthHtml();
+    (entries2.length ? entries2.map(row).join('') : '<div class="hint">这个分类下没有装备。</div>')) + synthHtml();
   const act = async (key, kind) => {
     try {
       const it = resolve(key);
@@ -1616,6 +1622,10 @@ view().innerHTML = cultTabs + matBar + card("⚒ 装备培养",
       if (kind === "break") toast("🔓 突破成功：强化上限 " + r.cap);
     } catch (err) { toast("出错：" + (err && err.message || err), true); }
   };
+  view().querySelectorAll("[data-cultf]").forEach((b) => b.onclick = () => {
+    window.__cultFilter = b.dataset.cultf;
+    render();
+  });
   view().querySelectorAll("[data-culttab]").forEach((b) => b.onclick = () => {
     window.__hostCultGear = b.dataset.culttab === "gear";
     render();
