@@ -1403,12 +1403,3 @@ CULT.gold = (lv) => 60 * (Number(lv) || 1);
     s.drop.bstone = [base, base + 2 + (n <= 10 ? 0 : n <= 15 ? 1 : 2)];
   });
 })();
-
-// 📐 副本等级重排：日常本按玩家进度（Lv5→Lv44）铺开，庆典保持挑战向
-(() => {
-  DUNGEONS.filter((d) => d.type === "daily").forEach((d) => {
-    (d.stages || []).forEach((s, i) => {
-      s.lv = 5 + 2 * i;            // 5,7,9 … 43
-    });
-  });
-})();

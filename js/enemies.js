@@ -423,12 +423,6 @@ export function enemyAt(id, lv) {
     const g = key === "spd" ? 0.05 : (e.growth[key] || 0);
     let raw = (e.stats[key] || 0) * (1 + g * (L - 1));
     if (key !== "spd") raw *= enemyK(L) * tm * DIFF;
-    if (key === "hp") raw *= 0.65;   // ❤️ 血量单独下调（避免高等级墙）
-    // 🧱 上限封顶：不让单只敌人血量/攻击无限膨胀（上限封顶）
-    if (key === "hp") raw = Math.min(raw, (500 + 40 * (L - 1)) * 2.1);
-    if (key === "atk") raw = Math.min(raw, (60 + 6 * (L - 1)) * 1.45);
-    if (key === "def") raw = Math.min(raw, (20 + 2 * (L - 1)) * 2.4);
-    if (key === "res") raw = Math.min(raw, (15 + 1.5 * (L - 1)) * 2.4);
     if (key === "spd") {
       raw *= ROLE_SPD[e.role] || 1;
       if (ASSASSIN.test(e.name)) raw *= 1.1;
