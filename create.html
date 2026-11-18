@@ -2498,7 +2498,7 @@ function renderStore() {
   });
   const ch = activeChar(), all = store.items || [];
   const fl = store.flags || {};
-  const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "lv" });
+  const F = window.__stFilter || (window.__stFilter = { cat: "all", sort: "rarity" });
   const batch = window.__batch || (window.__batch = { on: false, sel: {} });
   const MAT_ROWS = [
     ["ms1", "初级手稿"], ["ms2", "中级手稿"], ["ms3", "高级手稿"],
@@ -2534,12 +2534,18 @@ function renderStore() {
   const filtered = all.filter((it) => F.cat === "all" || it.cat === F.cat);
   const rank = { R: 1, SR: 2, SSR: 3, UR: 4 };
   filtered.sort((a, b) => {
-    if (F.sort === "rarity") {
-      const d = (rank[b.data.rarity] || 0) - (rank[a.data.rarity] || 0);
-      if (d) return d;
-    }
     if (F.sort === "name") return String(a.data.name).localeCompare(String(b.data.name));
-    return (Number(b.data.lv) || 1) - (Number(a.data.lv) || 1);
+    if (F.sort === "lv") {
+      const dl = (Number(b.data.lv) || 1) - (Number(a.data.lv) || 1);
+      if (dl) return dl;
+    } else {
+      const d = (rank[b.data.rarity] || 0) - (rank[a.data.rarity] || 0);   // 默认：品质降序
+      if (d) return d;
+      const dl = (Number(b.data.lv) || 1) - (Number(a.data.lv) || 1);
+      if (dl) return dl;
+    }
+    return (Number(b.data.star) || 1) - (Number(a.data.star) || 1);
+  });
   });
 
   const chip = (key, label) => '<button data-f="' + key + '" style="font-size:11px;padding:3px 9px;border-color:' + (F.cat === key ? "#6ea8fe" : "#3a3a5c") + ';color:' + (F.cat === key ? "#cfe6ff" : "#8a8ab0") + ';">' + label + '</button>';
