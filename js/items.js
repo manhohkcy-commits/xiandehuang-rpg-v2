@@ -6,12 +6,13 @@ import { applyAffixes } from "./affixes.js?v=ee432832";
 export const isEquip = (it) => !!(it && (it.cat === "weapon" || it.cat === "armor" || it.cat === "accessory"));
 export function catOf(def) {
   if (!def) return "weapon";
+  if (def.part === "top" || def.part === "bottom") return "armor";   // 有部位就是防具
   const id = String(def.id || "");
   if (id.indexOf("a_") === 0) return "armor";
   if (id.indexOf("c_") === 0) return "accessory";
   if (id.indexOf("w_") === 0) return "weapon";
-  if (def.part) return "armor";
-  return "weapon";
+  if (def.uMult || def.aMult || def.sMult) return "weapon";          // 有招式模板 = 武器
+  return "accessory";
 }
 
 export function makeItem(cat, def) {
