@@ -106,6 +106,7 @@ async function buildCandidates() {
   if (!isHostMode) return;
   try {
     const origs = await pullOriginals();
+    window.__originals = origs || [];
     (origs || []).forEach((o) => {
       const prog = (store && store.orig && store.orig[o.id]) || {};
       const f = originalFinal(o, {});
@@ -131,7 +132,17 @@ function snapshot() {
     return { name: act.name, lv: act.lv || 1, charId: act.id, box: me, atk: Math.round(f.atk), hp: Math.round(f.hp), def: Math.round(f.def), res: Math.round(f.res), spd: Math.round(f.spd || 0), critRate: Math.round(f.critRate || 5), critDmg: Math.round(f.critDmg || 150) };
   }
   const c0 = candidates[0];
-  return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd, power: c0.power } : null;
+  if (c0) {
+    const o = (window.__originals || []).find((x) => x.name === c0.name);
+    if (o) {
+      const prog = (store && store.orig && store.orig[o.id]) || {};
+      const f = originalFinal(o, prog);
+      return { name: c0.name, lv: c0.lv, charId: o.id, box: me, atk: Math.round(f.atk), hp: Math.round(f.hp),
+        def: Math.round(f.def), res: Math.round(f.res), spd: Math.round(f.spd * 10) / 10, power: Math.round(f.power || 0) };
+    }
+    return { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd, power: c0.power };
+  }
+  return null;
 }
 
 function powerOf(team) {
