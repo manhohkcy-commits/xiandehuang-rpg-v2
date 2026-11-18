@@ -1238,6 +1238,16 @@ function gridHtml() {
 function renderBattle() {
   if (!st) return;
   afterCommit();
+  // 🧯 双方同归于尽 / 有一方全灭但没触发结算时，强制收尾
+  if (!st.finished) {
+    const aliveA2 = st.units.filter((u) => u.side === "A" && u.hp > 0).length;
+    const aliveB2 = st.units.filter((u) => u.side === "B" && u.hp > 0).length;
+    if (!aliveA2 || !aliveB2) {
+      st.finished = true;
+      st.winner = aliveB2 && !aliveA2 ? "B" : "A";
+      try { finish(); } catch (e) {}
+    }
+  }
   const a = nextActor(st);
   const m = me(), f2 = foe();
   if (!m) {
@@ -1477,6 +1487,17 @@ function doAct(kind) {
 
 function aiTurnIfNeeded() {
   if (!st || st.finished) return;
+  {
+    const aA = st.units.filter((u) => u.side === "A" && u.hp > 0).length;
+    const aB = st.units.filter((u) => u.side === "B" && u.hp > 0).length;
+    if (!aA || !aB) {
+      st.finished = true;
+      st.winner = aB && !aA ? "B" : "A";
+      try { finish(); } catch (e) {}
+      renderBattle();
+      return;
+    }
+  }
   if (roomId && amHost) {
     // 联机模式：等对手提交；超时 20 秒由房主代打
     const a0 = nextActor(st);
