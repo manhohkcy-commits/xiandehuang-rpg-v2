@@ -1879,14 +1879,20 @@ function origGearDetail(it, slot, gst) {
   const UNIT = { critRate: "%", critDmg: "%", lifesteal: "%", ultPct: "%" };
   const MAIN = { weapon: ["atk"], armor: ["hp", "def", "res"], armor2: ["hp", "def", "spd"], accessory: ["atk", "critRate", "critDmg"] };
   const mk = MAIN[slot] || [];
+  const gLv = Number(gst && gst.lv) || 1, gStar = Number(gst && gst.star) || 1;
+  const gMul = (1 + 0.02 * (gLv - 1)) * (1 + 0.12 * (gStar - 1)) * (1 + 0.05 * (Number(gst && gst.advance) || 0)) * (1 + 0.03 * (Number(gst && gst.refine) || 0));
+  const IT = {};
+  Object.keys(it).forEach((k) => { IT[k] = it[k]; });
+  ['atk','hp','def','res','spd'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
+  ['critRate','critDmg','lifesteal','ultPct'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
   const row = (k, v) => '<div style="display:flex;justify-content:space-between;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
     '<span class="hint">' + k + '</span><b style="font-size:13px;color:#dbe4f3;">' + v + '</b></div>';
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
   const sec = (t) => '<div class="hint" style="margin:10px 0 5px;color:' + rc + ';font-weight:700;">' + t + '</div>';
-  const mainRows = mk.filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + (UNIT[k] || ""))).join("");
-  const subRows = ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].filter((k) => mk.indexOf(k) < 0 && it[k])
-    .map((k) => row(LBL[k], "+" + it[k] + (UNIT[k] || ""))).join("");
-  const specRows = ["lifesteal", "ultPct"].filter((k) => it[k]).map((k) => row(LBL[k], "+" + it[k] + "%")).join("");
+  const mainRows = mk.filter((k) => IT[k]).map((k) => row(LBL[k], "+" + IT[k] + (UNIT[k] || ""))).join("");
+  const subRows = ["atk", "hp", "def", "res", "spd", "critRate", "critDmg"].filter((k) => mk.indexOf(k) < 0 && IT[k])
+    .map((k) => row(LBL[k], "+" + IT[k] + (UNIT[k] || ""))).join("");
+  const specRows = ["lifesteal", "ultPct"].filter((k) => IT[k]).map((k) => row(LBL[k], "+" + IT[k] + "%")).join("");
   const sk = (label, name, mult, extra) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:9px;padding:7px 9px;margin-bottom:6px;">' +
     '<div style="display:flex;justify-content:space-between;"><b style="font-size:13px;"><span style="color:' + rc + ';">[' + label + ']</span> ' + esc(name || "") + '</b>' +
     '<b style="color:' + rc + ';">' + mult + '</b></div>' + (extra ? '<div class="hint" style="margin-top:2px;">' + esc(extra) + '</div>' : "") + '</div>';
