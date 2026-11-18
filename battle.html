@@ -1060,7 +1060,7 @@ function doAct(kind) {
     m.rage = 0;
     const uSubs = tgts.length > 1 ? uPer.map((x) => x.name + "　物理　−" + x.dmg + (x.crit ? "　暴击💥" : "") + (x.block ? "　格挡 -" + x.block + "%" : "") + (x.absorb ? "　护盾吸收 " + x.absorb : "")) : [];
     pushLog("💥 " + m.name + " [必杀]" + (wp.uName || "必杀") + " → " +
-      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "（每目标 " + uHitsN + " 段）" : "") : f2.name + " " + (wp.dmgType === "spell" ? "法术" : "物理") + " −" + r.dmg + fxTags(r)),
+      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "" : "") : f2.name + " " + (wp.dmgType === "spell" ? "法术" : "物理") + " −" + r.dmg + fxTags(r)),
       tgts.length > 1 ? "act" : "line", uSubs);
     commit(st, "me");
   } else if (kind === "skill") {
@@ -1081,7 +1081,7 @@ function doAct(kind) {
       }
     }
     const dmgTypeTxt = (wp.dmgType === "spell" ? "法术" : "物理");
-    const subs = [dmgTypeTxt + " · " + hits + " 段（" + segPlan.join("/") + "%）· 合计 " + r.dmg + (r.crit ? "（含暴击）" : "") + (hits > 1 ? " · 分段 " + segs.join(" / ") : "")];
+    const subs = [dmgTypeTxt + (hits > 1 ? " · " + hits + " 段 · 分段 " + segs.join(" / ") : "")];
     if (wp.hitStatus && r.dmg > 0) {
       addStatus(st, f2.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
@@ -1104,7 +1104,7 @@ function doAct(kind) {
       }
     }
     pushLog("⚔️ " + m.name + " 普攻 → " + f2.name + " " + r.dmg + (r.crit ? " 暴击💥" : ""), "act",
-      [(wp.dmgType === "spell" ? "法术" : "物理") + " · 攻击 " + Math.round(m.atk) + " × 100% → 目标防御 " + Math.round(f2.def) + " 减免 → 实际 " + r.dmg + (r.crit ? "（暴击 ×" + (m.critDmg / 100).toFixed(1) + "）" : "")]);
+      [(wp.dmgType === "spell" ? "法术" : "物理")]);
     commit(st, "me");
   }
 
