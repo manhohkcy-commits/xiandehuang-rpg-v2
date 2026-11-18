@@ -47,8 +47,11 @@ export function equip(store, charId, itemId) {
 
 export function unequip(store, charId, kind) {
   const ch = (store.chars || []).find((c) => c.id === charId);
-  if (!ch || !ch.equip[kind]) return { ok: false, why: "这里没有装备" };
-  store.items.push({ id: uid("it"), cat: kind, lock: false, data: ch.equip[kind] });
+  const raw = ch && ch.equip && ch.equip[kind];
+  if (!raw) return { ok: false, why: "这里没有装备" };
+  const def = raw.data ? raw.data : raw;     // 防止重复包裹
+  store.items = store.items || [];
+  store.items.push({ id: uid("it"), cat: kind, lock: false, data: def });
   ch.equip[kind] = null;
   return { ok: true };
 }

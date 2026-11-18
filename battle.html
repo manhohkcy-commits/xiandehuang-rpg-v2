@@ -22,7 +22,7 @@ import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLo
 import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=e40b6dc6";
 import { } from "./js/battle.js?v=abeb92c8";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=dbf4b773";
-import { makeItem } from "./js/items.js?v=7b2be3b9";
+import { makeItem } from "./js/items.js?v=fa9f2627";
 import { stagePower, enemyAt, enemyById } from "./js/enemies.js?v=7f1d6ed0";
 import { charFinal, charPower, combatTraits, talentActive, talentActiveLevel, finalOf } from "./js/power.js?v=5f9e4127";
 import { ORIGINALS, originalFinal, ORIGINAL_GEAR, pullOriginals } from "./js/originals.js?v=ba87a9d1";
@@ -1253,7 +1253,7 @@ function gridHtml() {
       '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
       '<div style="height:3px;background:#1a1f2e;border-radius:3px;margin-top:2px;overflow:hidden;"><i style="display:block;height:100%;width:' + rage + '%;background:linear-gradient(90deg,#c9a0ff,#ff9bd2);"></i></div>' +
       '<div class="hint" style="font-size:9px;display:flex;justify-content:space-between;">' +
-      '<span>' + fmt(Math.round(u.hp)) + '</span><span style="color:#c9a0ff;">🔥' + rage + '</span></div></div>';
+      '<span>' + fmt(Math.round(u.hp)) + (Number(u.shield) > 0 ? ' <span style="color:#8fd8ff;">🛡' + fmt(Math.round(u.shield)) + '</span>' : '') + '</span><span style="color:#c9a0ff;">🔥' + rage + '</span></div></div>';
   };
   const A = st.units.filter((u) => u.side === "A");
   const B = st.units.filter((u) => u.side === "B");
@@ -1299,7 +1299,7 @@ function renderBattle() {
   view().innerHTML =
     '<div class="card"><div class="card-title">' + turnText + '</div>' +
       queueHtml2() + gridHtml() +
-      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + fmt(Math.round(m.hp)) + ' / ' + fmt(Math.round(m.maxHp)) + ' · 攻 ' + Math.round(m.atk) + ' · 防 ' + Math.round(m.def) + '</span></div>' + hpBar(m) +
+      '<div class="row"><span class="k">🔵 ' + esc(m.name) + '</span><span class="v">' + fmt(Math.round(m.hp)) + ' / ' + fmt(Math.round(m.maxHp)) + ' · 攻 ' + Math.round(m.atk) + ' · 防 ' + Math.round(m.def) + (Number(m.shield) > 0 ? ' · 🛡 ' + fmt(Math.round(m.shield)) : '') + '</span></div>' + hpBar(m) +
       '<div class="row"><span class="k">🔴 ' + esc(f2.name) + '</span><span class="v">' + fmt(Math.round(f2.hp)) + ' / ' + fmt(Math.round(f2.maxHp)) + '</span></div>' + hpBar(f2) +
     (st.__isOrig ? '<div class="row"><span class="k">❄️ 霜印</span><span class="v" style="color:#8fd8ff;">' +
       (Number(st.__frost) || 0) + ' / 5　（普攻 +1 · 必杀每层 +15%）</span></div>' : "") +

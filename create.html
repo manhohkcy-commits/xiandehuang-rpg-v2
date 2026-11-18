@@ -27,7 +27,7 @@ import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=dbf4b773";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=7b2be3b9";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=fa9f2627";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked, origGearMul } from "./js/originals.js?v=ba87a9d1";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -319,7 +319,7 @@ function showItemDetail(it) {
       : d.sSupport) + '</span></div>'
   : "";
 const skill = '<div class="hint" style="margin-top:10px;font-weight:700;color:#8fd8ff;">招式</div>' +
-    '<div class="row"><span class="k">普攻</span><span class="v">' + (Number(d.aMult) || 100) + '%' + ((Number(d.aHits) || 1) > 1 ? ' ×' + (Number(d.aHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + '</span></div>' +
+    '<div class="row"><span class="k">普攻「' + esc(d.aName || "普攻") + '」</span><span class="v">' + (Number(d.aMult) || 100) + '%' + ((Number(d.aHits) || 1) > 1 ? ' ×' + (Number(d.aHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + '</span></div>' +
     (d.sSupport
       ? '<div class="row"><span class="k">技能（辅助）</span><span class="v">「' + esc(d.sName || "—") + '」· CD ' + (d.sCd || 3) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>'
       : (d.sMult
@@ -327,9 +327,13 @@ const skill = '<div class="hint" style="margin-top:10px;font-weight:700;color:#8
           ' · CD ' + (d.sCd || 2) + ' · 回怒 ' + (d.sRage || 0) + '%</span></div>' +
           (d.hitStatus ? '<div class="row"><span class="k">　└ 附带</span><span class="v" style="color:#ff9b6b;">' + esc(d.hitStatusName || d.hitStatus) + ' ' + (d.hitStatusV || 0) + '% · ' + (d.hitStatusTurns || 2) + ' 回合</span></div>' : '')
         : '<div class="row"><span class="k">技能</span><span class="v" style="color:#6a6a86;">R 阶没有技能（SR 起才有）</span></div>')) +
-    supportLine + '<div class="row"><span class="k">必杀</span><span class="v">' + (Number(d.uMult) || 250) + '%' + ((Number(d.uHits) || 1) > 1 ? ' ×' + (Number(d.uHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + ' · 怒气满 100 时可用</span></div>';
+    supportLine + '<div class="row"><span class="k">必杀「' + esc(d.uName || "必杀") + '」</span><span class="v">' + (Number(d.uMult) || 250) + '%' + ((Number(d.uHits) || 1) > 1 ? ' ×' + (Number(d.uHits) || 1) + ' 段' : '') + ' · ' + (d.dmgType === "spell" ? "法术" : "物理") + ' · 怒气满 100 时可用</span></div>';
 
-  const meta = (it.cat === "weapon")
+  const mechHtml = d.mech
+  ? '<div class="hint" style="margin-top:10px;font-weight:700;color:#ffd666;">机制说明</div>' +
+    '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;padding:8px 9px;line-height:1.7;color:#9fb0c8;font-size:11.5px;">' + esc(d.mech) + '</div>'
+  : "";
+const meta = (it.cat === "weapon")
   ? ((d.style ? (d.style === "melee" ? "近战" : d.style === "ranged" ? "远程" : "法器") : "近战") + " · " + (d.dmgType === "spell" ? "法术" : "物理"))
   : (catOf(d) === "armor" ? ("防具 · " + (d.part === "bottom" ? "下装" : "上装")) : catOf(d) === "weapon" ? "武器" : "饰品");
 const skillShow = (it.cat === "weapon") ? skill : "";
@@ -343,7 +347,7 @@ const skillShow = (it.cat === "weapon") ? skill : "";
     (d.desc ? '<div class="hint" style="margin-top:4px;color:#9aa4b8;">' + esc(d.desc) + '</div>' : '') +
     mainHtml +
     (groupsHtml || '<div class="hint" style="margin-top:8px;">没有属性加成</div>') +
-    skillShow +
+    skillShow + mechHtml + affixDescHtml +
     '<div class="hint" style="margin-top:10px;">强化 / 升星 / 继承 请到「⚒ 培养」页操作。</div>' +
     '<div style="margin-top:10px;"><button id="dpClose" style="width:100%;">关闭</button></div></div>';
   document.body.appendChild(ov);
