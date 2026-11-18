@@ -1033,24 +1033,35 @@ function doAct(kind) {
     const frost = st.__isOrig ? (Number(st.__frost) || 0) : 0;
     const ultMult = (Number(wp.uMult) || 250) * (1 + 0.15 * frost);
     const tgt0 = foe();
-    const tgts = wp.uShape === "col"
-      ? st.units.filter((u) => u.side === "B" && u.hp > 0 && ((u.__col ? 1 : 0) === (tgt0.__col ? 1 : 0)))
-      : [tgt0];
+    const aliveB2 = st.units.filter((u) => u.side === "B" && u.hp > 0);
+    const tgts = wp.uShape === "all"
+      ? aliveB2
+      : wp.uShape === "col"
+        ? aliveB2.filter((u) => ((u.__col ? 1 : 0) === (tgt0.__col ? 1 : 0)))
+        : [tgt0];
     const uHitsN = Math.max(1, Number(wp.uHits) || 1);
     const perU = (Number(wp.uMult) || 250);
     const segU = segMults(perU * uHitsN, uHitsN);
     let r = { dmg: 0, crit: false };
-    tgts.forEach((t, i) => {
+    const uPer = [];
+    tgts.forEach((t) => {
+      let sub = 0, sc = false, blk = 0, abs2 = 0;
       for (let h = 0; h < uHitsN; h++) {
         const rr = damage(st, "me", t.id, { atk: m.atk, mult: segU[h], critRate: m.critRate, critDmg: m.critDmg });
         if (st.__endless) st.__endless.dmg += rr.dmg;
-        r.dmg += rr.dmg; r.heal = (r.heal || 0) + (rr.heal || 0); r.absorb = (r.absorb || 0) + (rr.absorb || 0); r.thorns = (r.thorns || 0) + (rr.thorns || 0); r.block = Math.max(r.block || 0, rr.block || 0); if (rr.crit) r.crit = true;
+        sub += rr.dmg;
+        r.dmg += rr.dmg; r.heal = (r.heal || 0) + (rr.heal || 0); r.absorb = (r.absorb || 0) + (rr.absorb || 0); r.thorns = (r.thorns || 0) + (rr.thorns || 0); r.block = Math.max(r.block || 0, rr.block || 0);
+        if (rr.crit) { sc = true; r.crit = true; }
+        blk = Math.max(blk, rr.block || 0); abs2 += rr.absorb || 0;
       }
-      if (i > 0) pushLog("💥 连带命中 " + t.name, "line");
+      uPer.push({ name: t.name, dmg: sub, crit: sc, block: blk, absorb: abs2 });
     });
     if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
-    pushLog("💥 " + m.name + " [必杀]" + (wp.uName || "必杀") + " → " + f2.name + " " + r.dmg + fxTags(r));
+    const uSubs = tgts.length > 1 ? uPer.map((x) => x.name + "　物理　−" + x.dmg + (x.crit ? "　暴击💥" : "") + (x.block ? "　格挡 -" + x.block + "%" : "") + (x.absorb ? "　护盾吸收 " + x.absorb : "")) : [];
+    pushLog("💥 " + m.name + " [必杀]" + (wp.uName || "必杀") + " → " +
+      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "（每目标 " + uHitsN + " 段）" : "") : f2.name + " " + r.dmg + fxTags(r)),
+      tgts.length > 1 ? "act" : "line", uSubs);
     commit(st, "me");
   } else if (kind === "skill") {
     const per = Number(wp.sMult) || 150;
