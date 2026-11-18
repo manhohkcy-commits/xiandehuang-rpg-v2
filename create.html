@@ -1175,7 +1175,7 @@ function openOrigCard(o) {
         if (it.lifesteal) parts.push("【续航】吸血 " + it.lifesteal + "%");
         if (it.ultPct) parts.push("【加成】必杀伤害 +" + it.ultPct + "%");
         return '<div style="padding:7px 9px;border-bottom:1px solid #1a2438;">' +
-          '<div style="font-weight:700;font-size:13px;color:#dbe4f3;">🗡 ' + esc(it.name) + ' <span class="hint">' + gearLabels[k] + '</span></div>' +
+          '<div style="font-weight:700;font-size:13px;color:#dbe4f3;">🗡 ' + esc(it.name) + ' <span class="hint">' + gearLabels[k] + ' · Lv' + glv + ' ★' + gst + ((Number(gs.advance) || 0) ? ' · ' + gs.advance + '阶' : '') + ((Number(gs.awaken) || 0) ? ' · 觉醒' + gs.awaken : '') + '</span></div>' +
           (parts.length ? '<div class="hint" style="margin-top:2px;">' + esc(parts.join(" · ")) + '</div>' : "") + '</div>';
       }).join("") || '<div class="hint" style="padding:8px 9px;">（未填写专属装备）</div>'
     : (() => {
@@ -1199,8 +1199,20 @@ function openOrigCard(o) {
     panel(row("攻击", fmt(Math.round(_fin.atk)), true) + row("生命", fmt(Math.round(_fin.hp)), true) + row("防御", Math.round(_fin.def)) + row("法抗", Math.round(_fin.res)) +
       row("速度", Math.round(_fin.spd * 10) / 10) + row("暴击率", Math.round(_fin.critRate) + "%") + row("暴击伤害", Math.round(_fin.critDmg) + "%")) +
     sec("② 加点") +
-    panel(row("基础", "生命 " + ((o.basic || {}).hp || 0) + " · 攻击 " + ((o.basic || {}).atk || 0) + " · 防御 " + ((o.basic || {}).def || 0) + " · 法抗 " + ((o.basic || {}).res || 0)) +
-      row("专精", "力量 " + ((o.spec || {}).str || 0) + " · 智力 " + ((o.spec || {}).int || 0) + " · 技巧 " + ((o.spec || {}).tech || 0) + " · 敏捷 " + ((o.spec || {}).agi || 0))) +
+    (() => {
+      const sp = _prog.spec || {};
+      const b0 = (o.spec || {});
+      const spTxt = (k) => { const base = Number(b0[k]) || 0; const add = Number(sp[k === "int" ? "intel" : k]) || 0; return base + (add ? "+" + add : ""); };
+      const gi = Math.max(0, Math.min(GRADE.length - 1, Number(_prog.grade) || 0));
+      const ai = Math.max(1, Math.min(APTITUDE.length, Number(_prog.apt) || 1));
+      return panel(
+        row("基础", "生命 " + ((o.basic || {}).hp || 0) + " · 攻击 " + ((o.basic || {}).atk || 0) + " · 防御 " + ((o.basic || {}).def || 0) + " · 法抗 " + ((o.basic || {}).res || 0)) +
+        row("专精", "力量 " + spTxt("str") + " · 智力 " + spTxt("int") + " · 技巧 " + spTxt("tech") + " · 敏捷 " + spTxt("agi")) +
+        row("成长点数", String(_prog.free || 0) + " 点可用") +
+        row("资历", GRADE[gi].key + "（×" + (GRADE[gi].mult || 1).toFixed(2) + "）") +
+        row("资质", ai + "★（×" + (APTITUDE[ai - 1].mult || 1).toFixed(2) + "）")
+      );
+    })() +
     sec("③ 专属装备") + panel(gearHtml) +
     (o.notes ? '<div class="hint" style="margin-top:8px;line-height:1.6;">' + esc(o.notes) + '</div>' : "") +
     '<div style="margin-top:10px;"><button id="ocClose" style="width:100%;">关闭</button></div></div>';
