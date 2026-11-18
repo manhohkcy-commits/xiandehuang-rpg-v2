@@ -316,6 +316,13 @@ function renderPick() {
         ? '<div class="row"><span class="k">' + esc(ch.name) + '</span><span class="v">Lv' + ch.lv + ' · 战力 ' + fmt(charPower(ch)) + '</span></div>'
         : (() => { const _p = (store.orig || {})[o0.id] || {}; const _f = originalFinal(o0, _p); return '<div class="row"><span class="k">🧬 ' + esc(_p.name || o0.name) + '</span><span class="v">Lv' + (Number(_p.lv) || 1) + ' · 战力 ' + fmt(_f.power) + '</span></div>'; })()) +
       '<div class="hint">' + (ch ? '攻击 ' + Math.round(f.atk) + ' · 生命 ' + Math.round(f.hp) + ' · 防御 ' + Math.round(f.def) : (() => { const _p2 = (store.orig || {})[o0.id] || {}; const _f2 = originalFinal(o0, _p2); return '攻击 ' + Math.round(_f2.atk) + ' · 生命 ' + Math.round(_f2.hp) + ' · 防御 ' + Math.round(_f2.def); })()) + '</div>' +
+    (() => {
+      const c = ch || o0;
+      const ff = ch ? f : (o0 ? originalFinal(o0, (store.orig || {})[o0.id] || {}) : null);
+      const t = Number(store && store.__at) || 0;
+      const ts = t ? new Date(t).toLocaleTimeString("zh-CN", { hour12: false }) : "未知";
+      return '<div class="hint" style="margin-top:4px;color:#7d8aa3;">数据：' + esc(box || "-") + ' · ID ' + esc((c && c.id) || "-") + ' · ' + esc((c && c.name) || "-") + ' · 存档 ' + ts + ' · 来源 ' + (window.__dataSrc || "云端") + '</div>';
+    })() +
     '<div style="margin-top:8px;"><button id="btnUnitDetail" style="font-size:11px;">📋 查看详情</button></div>' +
     '</div>' +
     '<div class="card"><div class="card-title">选择关卡</div>' +
