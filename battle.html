@@ -557,6 +557,7 @@ async function renderPrep(stageId) {
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) { alert("找不到关卡数据：" + stageId); return; }
   const ch = activeChar();
+  const o0 = !ch ? hostOrig() : null;
   const colTxt = (v) => v === 0 ? "前排（受击多、近战优先打你）" : "后排（受击少、远程优先）";
   const _dbg = (() => {
     const t = Number(store && store.__at) || 0;
