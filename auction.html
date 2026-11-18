@@ -123,14 +123,15 @@ function render() {
   const mine = (auc.listings || []).filter((l) => l.box === box);
   const others = (auc.listings || []).filter((l) => l.box !== box);
   const listRow = (l, own) => {
-    const it = l.item || {};
+    const it = (l.item && l.item.data) ? l.item.data : (l.item || {});
     return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #1a2438;">' +
       '<div><b style="font-size:12.5px;cursor:pointer;text-decoration:underline dotted;" data-viewlid="' + l.lid + '">' + esc(it.name || "装备") + '</b> <span class="hint">' + esc(it.rarity || "") +
       ' Lv' + (it.lv || 1) + (it.star ? ' ★' + it.star : '') + '</span>' +
       '<div class="hint">卖家：' + esc(l.seller || l.box) + '</div></div>' +
       '<div style="text-align:right;">' +
       '<div style="color:#ffd666;font-weight:700;">' + fmt(l.price) + ' 金</div>' +
-      (own ? '<button data-unlist="' + l.lid + '" style="font-size:10.5px;padding:2px 8px;margin-top:3px;">下架</button>'
+      (own ? '<button data-reprice="' + l.lid + '" style="font-size:10.5px;padding:2px 8px;margin-top:3px;">改价</button>' +
+        ' <button data-unlist="' + l.lid + '" style="font-size:10.5px;padding:2px 8px;margin-top:3px;">下架</button>'
            : '<button data-buy="' + l.lid + '" style="font-size:10.5px;padding:2px 8px;margin-top:3px;">购买</button>') +
       '</div></div>';
   };
@@ -158,6 +159,18 @@ function render() {
     if (it) inp.value = String(suggestPrice(it));
   });
   view().querySelectorAll("[data-buy]").forEach((b) => b.onclick = () => buy(b.dataset.buy));
+  view().querySelectorAll("[data-reprice]").forEach((b) => b.onclick = async () => {
+    const l = (auc.listings || []).find((x) => x.lid === b.dataset.reprice);
+    if (!l) return;
+    const cur = Number(l.price) || 0;
+    const v = prompt("输入新价格（当前 " + fmt(cur) + "）", String(cur));
+    if (v == null) return;
+    const n = Math.max(1, Math.floor(Number(v) || 0));
+    if (!n) return alert("价格无效");
+    l.price = n;
+    await saveAuc("改价");
+    render();
+  });
   view().querySelectorAll("[data-unlist]").forEach((b) => b.onclick = () => unlist(b.dataset.unlist));
   view().querySelectorAll("[data-list]").forEach((b) => b.onclick = () => doList(b.dataset.list));
   view().querySelectorAll("[data-view]").forEach((b) => b.onclick = () => {
