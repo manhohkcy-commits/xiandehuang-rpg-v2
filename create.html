@@ -1206,7 +1206,6 @@ function openOrigCard(o) {
       '<span class="tag">Lv' + (Number(_prog.lv) || 1) + '</span>' +
       '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#241d10,#141014);border:1px solid ' + tint + '55;border-radius:20px;padding:4px 12px;font-size:11px;color:' + tint + ';">⚔️ <b style="font-size:14px;">' + fmt(_fin.power || 0) + '</b></span>' +
     '</div>' +
-    '<div class="hint" style="margin:6px 0 2px;">' + esc(o.title || "无称号") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
     (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#93a3ba;">' + esc(o.desc) + '</div>' : "") +
 
     secChip("① 基础属性") +
@@ -1220,10 +1219,31 @@ function openOrigCard(o) {
       row("暴伤", Math.round(_fin.critDmg) + "%")
     ) +
     secChip("② 其他属性") +
-    panel(
-      row("吸血", (Number(_fin.lifesteal) || 0) + "%") +
-      row("减伤", (Number(_fin.dmgCut) || 0) + "%")
-    ) +
+    (() => {
+      const gdef = ORIGINAL_GEAR[o.id] || o.gearObj || {};
+      const gp = _prog.gear || {};
+      const acc = { lifesteal: 0, critRate: 0, critDmg: 0, ultPct: 0, dmgCut: 0, thorns: 0 };
+      Object.keys(gdef).forEach((k) => {
+        const it = gdef[k] || {};
+        const gs = gp[k] || { lv: 1, star: 1 };
+        const glv = Number(gs.lv) || 1, gst = Number(gs.star) || 1;
+        const gm = (1 + 0.02 * (glv - 1)) * (1 + 0.12 * (gst - 1)) * (1 + 0.05 * (Number(gs.advance) || 0)) * (1 + 0.03 * (Number(gs.refine) || 0));
+        if (it.lifesteal) acc.lifesteal += Number(it.lifesteal) * gm;
+        if (it.critRate) acc.critRate += Number(it.critRate) * gm;
+        if (it.critDmg) acc.critDmg += Number(it.critDmg) * gm;
+        if (it.ultPct) acc.ultPct += Number(it.ultPct) * gm;
+        if (it.dmgCut) acc.dmgCut += Number(it.dmgCut) * gm;
+        if (it.thorns) acc.thorns += Number(it.thorns) * gm;
+      });
+      const rows2 = [];
+      if (acc.lifesteal) rows2.push(row("吸血", (Math.round(acc.lifesteal * 10) / 10) + "%"));
+      if (acc.dmgCut) rows2.push(row("减伤", (Math.round(acc.dmgCut * 10) / 10) + "%"));
+      if (acc.thorns) rows2.push(row("反伤", (Math.round(acc.thorns * 10) / 10) + "%"));
+      if (acc.ultPct) rows2.push(row("必杀伤害", "+" + (Math.round(acc.ultPct * 10) / 10) + "%"));
+      if (acc.critRate) rows2.push(row("装备暴击", "+" + (Math.round(acc.critRate * 10) / 10) + "%"));
+      if (acc.critDmg) rows2.push(row("装备暴伤", "+" + (Math.round(acc.critDmg * 10) / 10) + "%"));
+      return panel(rows2.length ? rows2.join("") : '<div class="hint" style="padding:8px 9px;">暂无额外属性（专属装备没有机制词条）</div>');
+    })() +
 
     secChip("③ 加点") +
     (() => {
