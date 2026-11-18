@@ -1116,11 +1116,11 @@ function renderBattle() {
         })() +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">' +
           '<button data-act="normal" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>[普攻] ' + esc(wp.aName || "普攻") + ' · ' + (Number(wp.aMult) || 100) + '%（回怒+' + (Number(wp.aRage) || 20) + '）</button>' +
-          (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' + (st.__tcd > 0 ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) + (st.__tcd > 0 ? " 冷却 " + st.__tcd : "") + '</button>' : '') +
           '<button data-act="skill" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || m.cd > 0 ? 'disabled' : '') + '>' +
             (m.cd > 0 ? '🥋 冷却 ' + m.cd + ' 回合' : '[技能] ' + esc(wp.sName || "招式") + ' · ' + (Number(wp.sMult) || 150) + '%') + '</button>' +
           '<button data-act="ult" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" || (Number(m.rage) || 0) < 100 ? 'disabled' : '') + '>' +
             ((Number(m.rage) || 0) >= 100 ? '[必杀] ' + esc(wp.uName || "必杀") + ' · ' + (Number(wp.uMult) || 250) + '%' : '💥 必杀 ' + Math.round(Number(m.rage) || 0) + '/100') + '</button>' +
+          (st.__talent ? '<button data-act="talent" style="flex:1;min-width:110px;height:38px;border-color:#c9a0ff;color:#c9a0ff;" ' + (st.__tcd > 0 ? 'disabled' : '') + '>✨ ' + esc(st.__talent.name) + (st.__tcd > 0 ? " 冷却 " + st.__tcd : "") + '</button>' : '') +
           '<button data-act="defend" style="flex:1;min-width:110px;height:38px;" ' + (busy || !a || a.id !== "me" ? 'disabled' : '') + '>[防御] 减伤 30%</button>' +
         '</div>' +
         '<div class="hint" style="margin-top:6px;font-size:11px;color:#9aa4b8;">' +
