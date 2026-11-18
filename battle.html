@@ -557,7 +557,7 @@ async function renderPrep(stageId) {
     const c = ch || o0;
     const ff = ch ? charFinal(ch) : (o0 ? originalFinal(o0, (store.orig || {})[o0.id] || {}) : null);
     return '<div class="hint" style="margin-top:4px;color:#7d8aa3;">数据：' + esc(box || "-") + ' · ' + esc((c && c.name) || "-") +
-      ' · 存档 ' + ts + ' · 来源 ' + (window.__dataSrc || "云端") + ' · 攻击 ' + Math.round((ff && ff.atk) || 0) + ' · 生命 ' + Math.round((ff && ff.hp) || 0) + '</div>';
+      ' · ID ' + esc((c && c.id) || "-") + ' · 存档 ' + ts + ' · 来源 ' + (window.__dataSrc || "云端") + ' · 攻击 ' + Math.round((ff && ff.atk) || 0) + ' · 生命 ' + Math.round((ff && ff.hp) || 0) + '</div>';
   })();
   view().innerHTML =
     '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
