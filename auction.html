@@ -19,6 +19,7 @@
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt } from "./js/core.js?v=13807141";
 import { sellPrice } from "./js/items.js?v=6072c09e";
+import { itemBonus } from "./js/power.js?v=5f9e4127";
 
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
@@ -93,17 +94,11 @@ function suggestPrice(it) {
 function showItem(it) {
   const d = (it && it.data) || {};
   const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
-  const stats = [];
-  if (d.atk) stats.push(row("攻击", "+" + d.atk));
-  if (d.hp) stats.push(row("生命", "+" + d.hp));
-  if (d.def) stats.push(row("防御", "+" + d.def));
-  if (d.res) stats.push(row("法抗", "+" + d.res));
-  if (d.spd) stats.push(row("速度", "+" + d.spd));
-  if (d.critRate) stats.push(row("暴击率", "+" + d.critRate + "%"));
-  if (d.critDmg) stats.push(row("暴击伤害", "+" + d.critDmg + "%"));
-  if (d.lifesteal) stats.push(row("吸血", d.lifesteal + "%"));
-  if (d.dmgCut) stats.push(row("减伤", d.dmgCut + "%"));
-  if (d.thorns) stats.push(row("反伤", d.thorns + "%"));
+  const b = (() => { try { return itemBonus(it) || {}; } catch (e) { return {}; } })();
+  const n1 = (v) => Math.round((Number(v) || 0) * 10) / 10;
+  const LBL = { atk: "攻击", hp: "生命", def: "防御", res: "法抗", spd: "速度", critRate: "暴击率", critDmg: "暴击伤害", lifesteal: "吸血", dmgCut: "减伤", thorns: "反伤", atkPct: "攻击加成", hpPct: "生命加成", defPct: "防御加成", resPct: "法抗加成", ragePct: "初始怒气" };
+  const PCT = { critRate: 1, critDmg: 1, lifesteal: 1, dmgCut: 1, thorns: 1, atkPct: 1, hpPct: 1, defPct: 1, resPct: 1 };
+  const stats = Object.keys(b).filter((k) => LBL[k] && Number(b[k])).map((k) => row(LBL[k], (PCT[k] ? "+" + n1(b[k]) + "%" : "+" + n1(b[k]))));
   const ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.86);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px;";
   ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;">' +
