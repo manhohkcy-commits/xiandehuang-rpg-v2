@@ -449,9 +449,22 @@ async function buildMultiBattle(stageId) {
       m.__skip = 1;
     }
   }
-  // 剔除无角色成员
+  // 剔除无角色成员（但自己永远保留）
   Object.keys(room.members || {}).forEach((bx) => {
-    if (room.members[bx] && room.members[bx].__skip) delete room.members[bx];
+    const m2 = room.members[bx];
+    if (!m2 || !m2.__skip) return;
+    if (bx === box) {
+      const self = activeChar();
+      if (self) {
+        const f2 = charFinal(self);
+        m2.char = { lv: self.lv, atk: f2.atk, hp: f2.hp, def: f2.def, res: f2.res, spd: f2.spd,
+          critRate: f2.critRate, critDmg: f2.critDmg, dmgCut: f2.dmgCut, weapon: (self.equip && self.equip.weapon) || null };
+        m2.name = self.name;
+        delete m2.__skip;
+        return;
+      }
+    }
+    delete room.members[bx];
   });
   // 2) 生成单位
   const built = buildUnits(room, 6);
@@ -1088,6 +1101,11 @@ function renderBattle() {
   afterCommit();
   const a = nextActor(st);
   const m = me(), f2 = foe();
+  if (!m) {
+    view().innerHTML = '<div class="card"><div class="card-title">战斗异常</div><div class="hint">没有我方单位（多人房间成员数据缺失）。</div>' +
+      '<div style="margin-top:8px;"><button onclick="location.href=\'battle.html\'">返回战斗页</button></div></div>';
+    return;
+  }
   const wp = (st.__weapon && st.__weapon.data) || {};
   const turnText = st.finished ? (st.winner === "A" ? "🏆 胜利" : "💀 失败") : ("回合 " + st.round + " · 轮到 " + (a ? esc(a.name) : "—"));
 
