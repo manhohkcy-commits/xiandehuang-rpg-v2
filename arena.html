@@ -270,7 +270,7 @@ async function ensureMyTeam() {
   // 每次进入都刷新成本地最新角色（等级/战力/装备变化立即同步）
   if (Number(old.lv) === Number(snap.lv) && Number(old.power) === Number(snap.power) && old.name === snap.name) return;
   rec.team = [snap];
-  rec.name = myName;
+  rec.name = snap.name || myName || "无名";
   data.players[me] = rec;
   try { await saveArena(); } catch (e) {}
 }
