@@ -673,7 +673,8 @@ async function buildMultiBattle(stageId) {
     });
   }
   st.__stage = stg.id;
-  st.__owners = built.owners;
+  st.__owners = built.owners || {};
+  window.__guestControls = Object.keys(st.__owners).some((k) => st.__owners[k] && st.__owners[k] !== box);
   st.__multi = true;
   let myUnit = unitOfPlayer(room, box);
   if (!myUnit) {
@@ -1608,9 +1609,10 @@ function aiTurnIfNeeded() {
     }
   }
   if (roomId && amHost) {
-    // 联机模式：等对手提交；超时 20 秒由房主代打
+    // 联机模式：当前该别人出手 → 等他提交，超时 20 秒代打
     const a0 = nextActor(st);
-    if (a0 && a0.side === "B" && window.__guestControls) {
+    const ownerOf = (id) => (st.__owners || {})[id];
+    if (a0 && ownerOf(a0.id) && ownerOf(a0.id) !== box) {
       if (!window.__waitSince || window.__waitUnit !== a0.id) { window.__waitSince = Date.now(); window.__waitUnit = a0.id; }
       const waited = Date.now() - window.__waitSince;
       if (waited < 20000) { setTimeout(pullIntents, 350); return; }
