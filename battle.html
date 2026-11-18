@@ -557,6 +557,18 @@ async function buildMultiBattle(stageId) {
     }
     delete room.members[bx];
   });
+  // 自己不在房间里也要能打
+  if (!(room.members || {})[box]) {
+    const self2 = activeChar();
+    room.members = room.members || {};
+    room.members[box] = { name: self2 ? self2.name : "我", side: "A", ready: true };
+    if (self2) {
+      const f2 = charFinal(self2);
+      room.members[box].char = { lv: self2.lv, atk: f2.atk, hp: f2.hp, def: f2.def, res: f2.res, spd: f2.spd,
+        critRate: f2.critRate, critDmg: f2.critDmg, dmgCut: f2.dmgCut, weapon: (self2.equip && self2.equip.weapon) || null, at: Date.now() };
+      room.members[box].charAt = Date.now();
+    }
+  }
   // 2) 生成单位
   let built = buildUnits(room, 6);
   // 🧬 主机端：房间没有玩家角色 → 用原创角色上阵
@@ -629,12 +641,16 @@ async function buildMultiBattle(stageId) {
       ];
     }
   });
-  const selfWeapon = (() => {
+  let selfWeapon = (() => {
     const mm = (room.members || {})[box];
     const raw = mm && mm.char && mm.char.weapon;
     if (!raw) return null;
     return raw.data ? raw : { data: raw };
   })();
+  if (!selfWeapon) {
+    const ach = activeChar();
+    if (ach) selfWeapon = weaponOf(ach);
+  }
   st = createBattle(built.units.concat(foeUnits).map((u) => Object.assign({ power: 0 }, u)));
   // 📐 布阵：敌人按前排优先分散到 6 格；我方按顺序排
   {
