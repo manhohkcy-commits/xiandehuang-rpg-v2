@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -66,10 +66,27 @@ async function saveAuc(name) {
   aucAt = (r && r.row && r.row.updated_at) || aucAt;
 }
 
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function marketMul() {
+  try {
+    const m = auc.market || {};
+    if (m.day !== todayStr()) return 1;   // 还没生成，按 1 处理
+    return Number(m.mul) || 1;
+  } catch (e) { return 1; }
+}
+async function ensureMarket() {
+  const day = todayStr();
+  if (auc.market && auc.market.day === day) return;
+  const mul = Math.round((0.82 + Math.random() * 0.43) * 100) / 100;   // 0.82 ~ 1.25
+  auc.market = { day, mul };
+  try { await saveAuc("市价刷新"); } catch (e) {}
+}
+
 function suggestPrice(it) {
   try {
     const base = sellPrice(it) || 500;      // 回收价
-    return Math.max(1, Math.round(base * 4 / 10) * 10);   // 参考价 ≈ 回收价 ×4（略高于回收，低于商店）
+    const raw = base * 4 * marketMul();
+    return Math.max(1, Math.round(raw / 10) * 10);   // 参考价 ≈ 回收价 ×4 × 今日市价系数
   } catch (e) { return 1000; }
 }
 
@@ -120,6 +137,11 @@ function render() {
   const sellable = (store.items || []).filter((it) => it && it.data && !it.equipped);
   view().innerHTML =
     card("💰 我的金币", '<div style="font-size:22px;font-weight:800;color:#ffd666;">' + fmt(store.gold || 0) + '</div>' +
+  '<div style="margin-top:4px;font-size:12px;">今日市价 ' +
+    (marketMul() >= 1
+      ? '<b style="color:#7ee787;">×' + marketMul().toFixed(2) + '（偏高）</b>'
+      : '<b style="color:#ff9b9b;">×' + marketMul().toFixed(2) + '（偏低）</b>') +
+    ' <span class="hint">每天 0 点刷新，影响上架参考价</span></div>' +
       '<div class="hint">待收款：' + fmt(Number((auc.pending || {})[box] || 0)) + ' 金 · 已上架 ' + mine.length + '/' + MAX_LIST + '</div>') +
     card("🏷 在售（" + others.length + "）", others.length ? others.map((l) => listRow(l, false)).join("") : '<div class="hint">暂时没有别人挂的东西。</div>') +
     card("🧺 我的上架（" + mine.length + "）", mine.length ? mine.map((l) => listRow(l, true)).join("") : '<div class="hint">还没上架东西。手续费 5%，成交后钱进「待收款」。</div>') +
@@ -193,6 +215,7 @@ async function buy(lid) {
 (async () => {
   try {
     const ok = await loadAll();
+  await ensureMarket();
     if (ok) render();
   } catch (e) {
     view().innerHTML = card("🔨 拍卖行", '<div class="hint">加载失败：' + esc(e.message || e) + '</div>');
