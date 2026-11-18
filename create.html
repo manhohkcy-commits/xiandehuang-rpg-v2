@@ -367,7 +367,9 @@ const skillShow = (it.cat === "weapon") ? skill : "";
 
     secChip("③ 专属装备") + panel(gearHtml) +
     (o.notes ? '<div class="hint" style="margin-top:8px;line-height:1.6;">' + esc(o.notes) + '</div>' : "") +
-    '<div style="margin-top:12px;"><button id="ocClose" style="width:100%;height:36px;font-weight:700;">关闭</button></div></div>';
+    '<div style="margin-top:12px;display:flex;align-items:center;gap:8px;">' +
+      '<button id="ocClose" style="flex:1;height:36px;font-weight:700;">关闭</button>' +
+      '<span class="hint" style="font-size:10px;">卡片 v2</span></div></div>';
   document.body.appendChild(ov);
   ov.querySelector("#dpClose").onclick = () => ov.remove();
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
