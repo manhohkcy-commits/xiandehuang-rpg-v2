@@ -34,8 +34,14 @@ const view = () => $("view");
 const activeChar = () => (store && store.chars || []).find((c) => c.id === store.activeChar) || (store && store.chars || [])[0] || null;
 
 function readBox() {
+  try {
+    if (localStorage.getItem("rpg2:host") === "1") {
+      return localStorage.getItem("rpg2:hostBox") || "zynSD117";
+    }
+  } catch (e) {}
   const q = new URLSearchParams(location.search);
-  if (q.get("box")) return q.get("box");
+  const qb = q.get("box");
+  if (qb) { try { localStorage.setItem("rpg2:box", qb); } catch (e) {} return qb; }
   return localStorage.getItem("rpg2:box") || "";
 }
 
