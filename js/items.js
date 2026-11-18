@@ -168,6 +168,9 @@ export function cultCheck(it, kind, store) {
   }
   if (kind === "break") {
     const bt = Number(d.bt) || 0;
+    const lvNow = Number(d.lv) || 1;
+    const capNow = 25 + bt * 25;
+    if (lvNow < capNow) return { ok: false, why: "先强化到 Lv" + capNow + " 才能突破（当前 Lv" + lvNow + "）" };
     const list = CULT.eqBreak || [];
     const cfg = list[bt];
     if (!cfg) return { ok: false, why: "突破已满" };

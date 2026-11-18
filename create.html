@@ -27,7 +27,7 @@ import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=dbf4b773";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=6072c09e";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=7b2be3b9";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked, origGearMul } from "./js/originals.js?v=ba87a9d1";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -1851,6 +1851,10 @@ function renderOrigCult() {
     if (!store.flags) store.flags = {};
     const gold = () => Number(store.gold) || 0;
     if (act === "breakG") {
+      {
+        const lvNow2 = Number(gs.lv) || 1, capNow2 = 25 + (Number(gs.bt) || 0) * 25;
+        if (lvNow2 < capNow2) return toast("先强化到 Lv" + capNow2 + " 才能突破（当前 Lv" + lvNow2 + "）", true);
+      }
       const bt = Number(gs.bt) || 0;
       const list = [{ s: 18, g: 3000 }, { s: 45, g: 8000 }, { s: 75, g: 16000 }, { s: 115, g: 30000 }, { s: 165, g: 50000 }];
       const cfg = list[bt];
