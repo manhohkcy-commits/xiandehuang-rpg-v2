@@ -489,6 +489,26 @@ if ($("btnSweepAllDaily")) $("btnSweepAllDaily").onclick = async () => {
 
 // ── 开战 ──────────────────────────────────────────────
 // 🧑‍🤝‍🧑 多人建战：把房间成员的角色快照补全，生成 2v2 / 3v3 单位表
+// 👑 单关卡只保留一个首领单位（其余首领转成同场小怪或移除）
+function dedupeBossIds(ids) {
+  const tierOf = (id) => (((typeof enemyById === "function" ? enemyById(id) : null) || {}).tier || "normal");
+  const minions = ids.filter((id) => tierOf(id) !== "boss");
+  const out = [];
+  let bossKept = false;
+  let replaced = 0;
+  ids.forEach((id) => {
+    if (tierOf(id) === "boss") {
+      if (bossKept) {                 // 多余的首领 → 换成同场小怪
+        if (minions.length) { out.push(minions[replaced % minions.length]); replaced++; }
+        return;
+      }
+      bossKept = true;
+    }
+    out.push(id);
+  });
+  return out;
+}
+
 async function buildMultiBattle(stageId) {
   const got = await getRoom(roomId);
   if (!got) return false;
@@ -567,7 +587,7 @@ async function buildMultiBattle(stageId) {
   // 👥 多人适配：人数越多，敌人规模越大（额外援军，少数精锐）
   const _players = Object.keys(room.members || {}).length;
   const _extra = Math.max(0, _players - 1);
-  const _baseIds = (stg.enemies && stg.enemies.length) ? stg.enemies.slice() : [];
+  const _baseIds = dedupeBossIds((stg.enemies && stg.enemies.length) ? stg.enemies.slice() : []);
   const _bossIds = _baseIds.filter((id) => {
     const e = (typeof enemyById === "function" ? enemyById(id) : null) || {};
     return e.tier === "boss";
@@ -818,6 +838,18 @@ async function startBattle(stageId, col, row) {
     });
   }
   if (!foeSpecs.length) foeSpecs = [s.foe];
+  // 👑 单关卡最多 1 个首领
+  {
+    let bossKept = false;
+    foeSpecs = foeSpecs.filter((e) => {
+      const t = ((typeof enemyById === "function" ? enemyById(e.id) : null) || {}).tier;
+      if (t === "boss") {
+        if (bossKept) return false;
+        bossKept = true;
+      }
+      return true;
+    });
+  }
   const total = foeSpecs.length;
   const waveCount = Math.max(1, Math.ceil(total / 6));
   const perWave = Math.ceil(total / waveCount);
