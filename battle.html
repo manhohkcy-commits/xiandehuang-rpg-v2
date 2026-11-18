@@ -1154,7 +1154,6 @@ function aiTurnIfNeeded() {
     if (ultS && (Number(f2.rage) || 0) >= 100) { used = ultS; f2.rage = 0; label = "必杀"; }
     else if (skillS && (Number(f2.cd) || 0) <= 0) { used = skillS; f2.cd = Number(skillS.cd) || 3; label = "技能"; }
     else { f2.rage = Math.min(100, (Number(f2.rage) || 0) + (Number(used && used.rage) || (label === "技能" ? 15 : 20))); }
-    if ((Number(f2.cd) || 0) > 0) f2.cd -= 1;
     // 🌀 增益：临时 buff，持续 buffTurns 回合
     if (used && used.buff) {
       const bu = Object.assign({}, used.buff);
@@ -1425,11 +1424,23 @@ async function startArena(foeBox) {
   if (!f) { view().innerHTML = '<div class="card"><div class="hint">没有可用角色，先去建角色。</div></div>'; return; }
   // 对手：优先读其最新存档
   let foeStats = null, foeName = (foeSnap && foeSnap.name) || (foeRec && foeRec.name) || "对手";
+  let foeSkills = null;
   try {
     const rr = await cloudGet(foeBox);
     const s2 = rr && rr.store;
     const c2 = s2 && ((s2.chars || []).find((x) => x.id === (foeSnap && foeSnap.charId)) || (s2.chars || [])[0]);
-    if (c2) { const ff = charFinal(c2); foeStats = { name: c2.name || foeName, lv: c2.lv || 1, atk: ff.atk, hp: ff.hp, def: ff.def, res: ff.res, spd: ff.spd, critRate: ff.critRate, critDmg: ff.critDmg, dmgCut: ff.dmgCut || 0 }; }
+    if (c2) {
+      const ff = charFinal(c2);
+      const wRaw = c2.equip && c2.equip.weapon;
+      const w = wRaw && wRaw.data ? wRaw.data : (wRaw || {});
+      foeStats = { name: c2.name || foeName, lv: c2.lv || 1, atk: ff.atk, hp: ff.hp, def: ff.def, res: ff.res, spd: ff.spd, critRate: ff.critRate, critDmg: ff.critDmg, dmgCut: ff.dmgCut || 0 };
+      foeSkills = [
+        { kind: "normal", name: w.aName || "普攻", mult: Number(w.aMult) || 100, hits: Number(w.aHits) || 1, rage: Number(w.aRage) || 20, dmgType: w.dmgType || "phys", shape: "single" },
+        { kind: "skill", name: w.sName || "技能", mult: Number(w.sMult) || 150, hits: Number(w.sHits) || 1, cd: Number(w.sCd) || 3, rage: Number(w.sRage) || 15, dmgType: w.dmgType || "phys", shape: w.sShape || "single" },
+        { kind: "ult", name: w.uName || "必杀", mult: Number(w.uMult) || 250, hits: Number(w.uHits) || 1, rage: 100, dmgType: w.dmgType || "phys", shape: w.uShape || "single" }
+      ];
+      if (w.hitStatus) { foeSkills[1].burn = w.hitStatus === "burn" ? 20 : 0; }
+    }
   } catch (e) {}
   if (!foeStats) {
     foeStats = {
@@ -1447,7 +1458,7 @@ async function startArena(foeBox) {
     { id: "foe0", name: foeStats.name, lv: foeStats.lv, side: "B", spd: foeStats.spd, power: 0,
       hp: foeStats.hp, maxHp: foeStats.hp, atk: foeStats.atk, def: foeStats.def, res: foeStats.res || 0,
       critRate: foeStats.critRate, critDmg: foeStats.critDmg, dmgCut: foeStats.dmgCut || 0, rage: 0,
-      __skills: [{ kind: "normal", name: "普攻", mult: 100, rage: 20 }, { kind: "skill", name: "交锋", mult: 150, cd: 3, rage: 15 }] }
+      __skills: foeSkills || [{ kind: "normal", name: "普攻", mult: 100, rage: 20 }, { kind: "skill", name: "交锋", mult: 150, cd: 3, rage: 15 }, { kind: "ult", name: "必杀", mult: 250, rage: 100 }] }
   ]);
   st.__arena = { foeBox, arenaData: data, upd, foeName: foeStats.name };
   st.__multi = false;
