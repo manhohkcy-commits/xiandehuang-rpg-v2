@@ -253,6 +253,18 @@ export function charFinal(ch) {
   return f;
 }
 
+export function finalOf(ch, store) {
+  try {
+    const f = ch && ch.__final;
+    const at = Number(ch && ch.__finalAt) || 0;
+    const sAt = Number(store && store.__at) || 0;
+    if (f && at && at >= sAt - 5000) {
+      return { atk: f.atk, hp: f.hp, def: f.def, res: f.res, spd: f.spd, critRate: f.critRate, critDmg: f.critDmg, dmgCut: f.dmgCut || 0, lifesteal: f.lifesteal || 0 };
+    }
+  } catch (e) {}
+  return charFinal(ch);
+}
+
 export function powerOf(f) {
   return Math.round((f.atk || 0) * 16 + (f.hp || 0) * 1.0 + (f.def || 0) * 7 +
     (f.res || 0) * 5 + (f.spd || 0) * 28 + (f.critRate || 0) * 16 + (f.critDmg || 0) * 5);

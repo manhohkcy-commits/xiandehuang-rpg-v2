@@ -1,5 +1,5 @@
 ﻿import { cloudGet, cloudSave } from "./core.js?v=13807141";
-import { powerOf } from "./power.js?v=8dd3fb98";
+import { powerOf } from "./power.js?v=a52c4ae8";
 import { GRADE, APTITUDE } from "./data.js?v=46e9a1b3";
 
 // 🧬 原创角色最终面板（与玩家同一套成长/突破公式）
