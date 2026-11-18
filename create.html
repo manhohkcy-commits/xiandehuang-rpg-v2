@@ -1671,7 +1671,40 @@ function renderCult() {
     await save(); render();
     toast("🧪 合成成功");
   });
-  view().querySelectorAll("[data-cultdetail]").forEach((b) => b.onclick = () => {
+  view().querySelectorAll("[data-synthall]").forEach((b) => b.onclick = async () => {
+  const [a, b2] = b.dataset.synthall.split(">");
+  const f = (store.flags = store.flags || {});
+  let have = Number(f[a]) || 0;
+  let made = 0;
+  while (have >= 3) { have -= 3; made++; }
+  if (!made) return toast("数量不足（需 3 个）", true);
+  f[a] = have;
+  f[b2] = (Number(f[b2]) || 0) + made;
+  addReceipt(store, "合成", a + " → " + b2 + " ×" + made);
+  await save(); render();
+  toast("🧪 合成 " + made + " 次");
+});
+if ($("btnSynthAll")) $("btnSynthAll").onclick = async () => {
+  const f = (store.flags = store.flags || {});
+  let total = 0, rounds = 0;
+  // 从最低档向上滚 3 遍，保证链式转换（新手→入门→精英→大师）
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = 0;
+    SYNTH_PAIRS.forEach(([a, b, na, nb]) => {
+      let have = Number(f[a]) || 0;
+      let made = 0;
+      while (have >= 3) { have -= 3; made++; }
+      if (made) { f[a] = have; f[b] = (Number(f[b]) || 0) + made; total += made; moved++; }
+    });
+    rounds += moved;
+    if (!moved) break;
+  }
+  if (!total) return toast("没有可合成的材料（每种至少 3 个）", true);
+  addReceipt(store, "合成", "一键合成 ×" + total);
+  await save(); render();
+  toast("🧪 一键合成完成，共 " + total + " 次");
+};
+view().querySelectorAll("[data-cultdetail]").forEach((b) => b.onclick = () => {
     const key = b.dataset.cultdetail;
     if (key.indexOf("eq:") === 0) {
       const k = key.slice(3);
@@ -1700,7 +1733,8 @@ function synthHtml() {
   const rows = SYNTH_PAIRS.map(([a, b, na, nb]) => {
     const have = Number(f[a]) || 0;
     return '<div class="row"><span class="k">' + na + ' ×3 → ' + nb + ' ×1</span><span class="v">' +
-      '<span class="hint">有 ' + have + '</span> <button data-synth="' + a + '>' + b + '" ' + (have >= 3 ? '' : 'disabled') + '>合成</button></span></div>';
+      '<span class="hint">有 ' + have + '</span> <button data-synth="' + a + '>' + b + '" ' + (have >= 3 ? '' : 'disabled') + '>合成</button>' +
+      ' <button data-synthall="' + a + '>' + b + '" ' + (have >= 3 ? '' : 'disabled') + ' style="border-color:#7ee787;color:#7ee787;">全部</button></span></div>';
   }).join("");
   return card("🧪 材料合成", rows + '<div class="hint">低档材料可 3:1 合成为高档，不会浪费。</div>');
 }
