@@ -1278,6 +1278,26 @@ function doAct(kind) {
       tgts.length > 1 ? "act" : "line", uSubs);
     commit(st, "me");
   } else if (kind === "skill") {
+    // 🛡 辅助技能：先结算辅助效果
+    if (wp.sSupport) {
+      if (wp.sSupport === "shield") {
+        const amt = Math.round(m.maxHp * (Number(wp.sShieldPct) || 20) / 100);
+        addShield(st, "me", amt);
+        pushLog("🛡 " + m.name + "「" + (wp.sName || "守护") + "」→ 获得护盾 " + amt, "line");
+      } else if (wp.sSupport === "dispel") {
+        const n = Math.max(1, Number(wp.sDispelN) || 2);
+        const list = st.units.filter((u) => u.side === "A" && u.hp > 0);
+        let removed = 0;
+        list.forEach((u) => {
+          const bad = (u.statuses || []).filter((s) => ["burn", "stun", "silence", "freeze", "noheal", "disarm"].indexOf(s.key) >= 0);
+          if (bad.length) {
+            u.statuses = (u.statuses || []).filter((s) => bad.indexOf(s) < 0);
+            removed += bad.length;
+          }
+        });
+        pushLog("✨ " + m.name + "「" + (wp.sName || "净化") + "」→ 驱散 " + removed + " 个负面状态", "line");
+      }
+    }
     const per = Number(wp.sMult) || 150;
     const hits = Math.max(1, Number(wp.sHits) || 1);
     const cd = Number(wp.sCd) || 3;
