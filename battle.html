@@ -356,11 +356,15 @@ async function buildMultiBattle(stageId) {
   const _players = Object.keys(room.members || {}).length;
   const _extra = Math.max(0, _players - 1);
   const _baseIds = (stg.enemies && stg.enemies.length) ? stg.enemies.slice() : [];
+  const _bossIds = _baseIds.filter((id) => {
+    const e = (typeof enemyById === "function" ? enemyById(id) : null) || {};
+    return e.tier === "boss";
+  });
+  const _minionIds = _baseIds.filter((id) => _bossIds.indexOf(id) < 0);
   const _ids = _baseIds.slice();
   for (let k = 0; k < _extra && _baseIds.length; k++) {
-    // 每人额外 1 个援军（循环取关卡敌人），最多再加 3 个
     if (_ids.length >= _baseIds.length + 3) break;
-    _ids.push(_baseIds[k % _baseIds.length]);
+    if (_minionIds.length) _ids.push(_minionIds[k % _minionIds.length]);   // 只加小怪，不复制 BOSS
   }
   const foeUnits = _ids.map((eid, i) => {
     const e = enemyAt(eid, stg.lv) || {};
@@ -573,8 +577,21 @@ function startBattle(stageId, col, row) {
   const extra = allies.length;
   const isEventStage = String(s.id).indexOf("fest") === 0 || s.type === "event";
   if (extra > 0 && !isEventStage) {
-    const base = foeSpecs.slice(0, 6);
-    for (let k = 0; k < extra; k++) foeSpecs.push(base[k % base.length]);
+    const bossIds = (s.enemies || []).filter((id) => {
+      const e = (typeof enemyById === "function" ? enemyById(id) : null) || {};
+      return e.tier === "boss";
+    });
+    const minionPool = foeSpecs.filter((e) => bossIds.indexOf(e.id) < 0);
+    const pool = minionPool.length ? minionPool : foeSpecs.slice(0, 1);
+    for (let k = 0; k < extra; k++) {
+      if (minionPool.length) foeSpecs.push(pool[k % pool.length]);
+      else { // 只有 BOSS：改为强化本体
+        const bm = 1 + 0.18;
+        const last = foeSpecs[0];
+        last.hp = Math.round((last.hp || 0) * bm);
+        last.atk = Math.round((last.atk || 0) * bm);
+      }
+    }
   } else if (extra > 0 && isEventStage) {
     // 庆典：每多一名同行，BOSS 生命/攻击 +18%（不复制）
     const mul = 1 + 0.18 * extra;
