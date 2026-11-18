@@ -152,6 +152,11 @@ function render() {
         '<button data-list="' + it.id + '" style="font-size:10.5px;padding:3px 9px;">上架</button></div></div>').join("")
       : '<div class="hint">仓库里没有可卖的装备。</div>');
 
+  view().querySelectorAll("[data-price]").forEach((inp) => {
+    if (inp.value) return;
+    const it = (store.items || []).find((x) => x.id === inp.dataset.price);
+    if (it) inp.value = String(suggestPrice(it));
+  });
   view().querySelectorAll("[data-buy]").forEach((b) => b.onclick = () => buy(b.dataset.buy));
   view().querySelectorAll("[data-unlist]").forEach((b) => b.onclick = () => unlist(b.dataset.unlist));
   view().querySelectorAll("[data-list]").forEach((b) => b.onclick = () => doList(b.dataset.list));
@@ -168,7 +173,11 @@ function render() {
 async function doList(itemId) {
   const mine = (auc.listings || []).filter((l) => l.box === box);
   if (mine.length >= MAX_LIST) return alert("最多同时上架 " + MAX_LIST + " 件");
-  const price = Number(($('input[data-price="' + itemId + '"]') || {}).value);
+  let price = Number(($('input[data-price="' + itemId + '"]') || {}).value);
+  if (!price || price < 1) {
+    const it0 = (store.items || []).find((x) => x.id === itemId);
+    if (it0) { price = suggestPrice(it0); const inp0 = $('input[data-price="' + itemId + '"]'); if (inp0) inp0.value = String(price); }
+  }
   if (!price || price < 1) return alert("先填价格");
   const idx = (store.items || []).findIndex((it) => it.id === itemId);
   if (idx < 0) return;
