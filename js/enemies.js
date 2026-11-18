@@ -320,18 +320,19 @@ export function stagePower(stage) {
   const baseDef = 20 + 2 * (L - 1), baseRes = 15 + 1.5 * (L - 1);
   const baseSpd = 10 + 0.1 * (L - 1);
   const naked = baseAtk * 16 + baseHp + baseDef * 7 + baseRes * 5 + baseSpd * 28 + 5 * 16 + 150 * 5;
-  const eraMul =
-    L <= 10 ? 1.2 :
-    L <= 20 ? 1.6 :
-    L <= 40 ? 2.2 :
-    L <= 60 ? 2.8 :
-    L <= 80 ? 3.4 : 4.2;
-  const ids = (stage.enemies && stage.enemies.length) ? stage.enemies : [];
-  const n = Math.max(1, ids.length);
-  const tierMul = stage.tier === "首领" ? 1.15 : stage.tier === "特色" ? 1.10 : stage.tier === "精英" ? 1.05 : 1;
-  // 敌人数越多越难，但幅度温和（0.92 ~ 1.08）
-  const countMul = Math.min(1.08, 0.92 + 0.05 * (n - 1));
-  return Math.round(naked * eraMul * tierMul * countMul / 100) * 100;
+  // 时期期望系数（用实测玩家战力校准：Lv20≈1.7 倍裸装，Lv30≈2.6，Lv37≈3.0）
+  const era =
+    L <= 10 ? 1.3 :
+    L <= 20 ? 1.7 :
+    L <= 30 ? 2.6 :
+    L <= 40 ? 3.1 :
+    L <= 50 ? 3.6 :
+    L <= 60 ? 4.1 :
+    L <= 80 ? 4.8 : 5.4;
+  const n = Math.max(1, (stage.enemies || []).length);
+  const countMul = 1 + 0.12 * (n - 1);
+  const tierMul = stage.tier === "首领" ? 1.30 : stage.tier === "特色" ? 1.18 : stage.tier === "精英" ? 1.10 : 1;
+  return Math.max(1000, Math.round(naked * era * countMul * tierMul / 100) * 100);
 }
 // 📊 数值重定：以「平均 Lv1 角色」为基准（攻 144 / 生 850 / 防 29 / 抗 22 / 速 11）
 const ENEMY_STATS = {
