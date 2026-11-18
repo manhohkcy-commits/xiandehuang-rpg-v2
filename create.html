@@ -212,6 +212,30 @@ function ensureSeed(withDefaultChar = true) {
 async function save() {
   if (!box || !store) return false;
   store.__at = Date.now();
+  try {
+    // 🛡 覆盖保护：先拉云端，把云端独有的物品并进来，避免本地旧档吞掉别人的写入
+    const remote = await cloudGet(box);
+    const rs = remote && remote.store;
+    if (rs && Number(rs.v) === 2) {
+      updatedAt = remote.updated_at || updatedAt;   // 用最新版本号，避免冲突重试
+      const have = new Set((store.items || []).map((x) => x && x.id));
+      let added = 0;
+      (rs.items || []).forEach((x) => {
+        if (x && x.id && !have.has(x.id)) { store.items.push(x); added++; }
+      });
+      // 装备槽：本地缺失而云端有，则补回
+      (store.chars || []).forEach((ch) => {
+        const rc = (rs.chars || []).find((x) => x && x.id === ch.id);
+        if (!rc) return;
+        ["weapon", "armor", "armor2", "accessory"].forEach((k) => {
+          if (!ch.equip) ch.equip = {};
+          const local = ch.equip[k], remoteG = rc.equip && rc.equip[k];
+          if (!local && remoteG) { ch.equip[k] = remoteG; added++; }
+        });
+      });
+      if (added) toast("已合并云端丢失物品 +" + added);
+    }
+  } catch (e) {}
   cacheSave(box, store);
   try {
     let r = await cloudSave(box, store, updatedAt || null, activeChar() ? activeChar().name : "");
