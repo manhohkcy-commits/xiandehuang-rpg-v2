@@ -1920,7 +1920,9 @@ function origGearDetail(it, slot, gst) {
   ['atk','hp','def','res'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
   ['lifesteal','ultPct'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
   // 速度、暴击率、暴击伤害不随培养放大（与 originalFinal 一致）
-  if (gst && gst.critDmg) IT.critDmg = Number(it.critDmg) || 0;
+  if (it.critRate) IT.critRate = Number(it.critRate) || 0;
+  if (it.critDmg) IT.critDmg = (Number(it.critDmg) || 0) + (Number(gst && gst.refine) || 0);
+  if (it.spd) IT.spd = Number(it.spd) || 0;
   const row = (k, v) => '<div style="display:flex;justify-content:space-between;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
     '<span class="hint">' + k + '</span><b style="font-size:13px;color:#dbe4f3;">' + v + '</b></div>';
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
