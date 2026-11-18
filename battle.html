@@ -50,6 +50,14 @@ async function load() {
     return;
   }
   store = g.store; updatedAt = g.updatedAt || "";
+  // 个人页刚改过、云端还没写完时，优先用带 __at 的较新缓存
+  try {
+    const cached = cacheLoad(box);
+    const cs = cached && cached.store;
+    if (cs && Number(cs.v) === 2 && Number(cs.__at || 0) > Number(store.__at || 0)) {
+      store = cs;
+    }
+  } catch (e) {}
   window.addEventListener("error", (e) => {
   const box = document.createElement("div");
   box.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#2a1215;border:1px solid #ff6b6b;color:#ffb3b3;padding:8px 10px;border-radius:8px;font-size:11px;";

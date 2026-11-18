@@ -1209,19 +1209,23 @@ function openOrigCard(o) {
     '<div class="hint" style="margin:6px 0 2px;">' + esc(o.title || "无称号") + ' · ' + esc(o.role || "") + ' · ' + (o.camp === "ally" ? "友方" : "敌对") + '</div>' +
     (o.desc ? '<div class="hint" style="margin:8px 0;line-height:1.7;color:#93a3ba;">' + esc(o.desc) + '</div>' : "") +
 
-    secChip("① 面板数据") +
+    secChip("① 基础属性") +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
       stat("攻击", fmt(Math.round(_fin.atk)), "#ffb86b") +
       stat("生命", fmt(Math.round(_fin.hp)), "#7ee787") +
       stat("防御", Math.round(_fin.def), "#8fd8ff") +
       stat("法抗", Math.round(_fin.res), "#c9a0ff") +
       stat("速度", Math.round(_fin.spd * 10) / 10, "#8fd8ff") +
+    '</div>' +
+    secChip("② 其他属性") +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
       stat("暴击率", Math.round(_fin.critRate) + "%", "#ff9bd2") +
       stat("暴击伤害", Math.round(_fin.critDmg) + "%", "#ff9bd2") +
       stat("吸血", (Number(_fin.lifesteal) || 0) + "%", "#ff6b6b") +
+      stat("减伤", (Number(_fin.dmgCut) || 0) + "%", "#8fd8ff") +
     '</div>' +
 
-    secChip("② 加点") +
+    secChip("③ 加点") +
     (() => {
       const sp = _prog.spec || {};
       const b0 = (o.spec || {});
@@ -1231,13 +1235,12 @@ function openOrigCard(o) {
       return panel(
         row("基础", "生命 " + ((o.basic || {}).hp || 0) + " · 攻击 " + ((o.basic || {}).atk || 0) + " · 防御 " + ((o.basic || {}).def || 0) + " · 法抗 " + ((o.basic || {}).res || 0)) +
         row("专精", "力量 " + spTxt("str") + " · 智力 " + spTxt("int") + " · 技巧 " + spTxt("tech") + " · 敏捷 " + spTxt("agi")) +
-        row("成长点数", '<span style="color:' + ((Number(_prog.free) || 0) > 0 ? "#7ee787" : "#7d8aa3") + ';">' + (Number(_prog.free) || 0) + ' 点可用</span>') +
         row("资历", '<span style="color:' + (GRADE[gi].color || "#dbe4f3") + ';">' + GRADE[gi].key + '（×' + (GRADE[gi].mult || 1).toFixed(2) + '）</span>') +
         row("资质", '<span style="color:#c9a0ff;">' + ai + '★（×' + (APTITUDE[ai - 1].mult || 1).toFixed(2) + '）</span>')
       );
     })() +
 
-    secChip("③ 专属装备") + panel(gearHtml) +
+    secChip("④ 专属装备") + panel(gearHtml) +
     (o.notes ? '<div class="hint" style="margin-top:8px;line-height:1.6;">' + esc(o.notes) + '</div>' : "") +
     '<div style="margin-top:12px;display:flex;align-items:center;gap:8px;">' +
       '<button id="ocClose" style="flex:1;height:36px;font-weight:700;">关闭</button>' +

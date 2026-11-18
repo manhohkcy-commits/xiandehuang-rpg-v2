@@ -92,7 +92,7 @@ function myRec() {
 let candidates = [];
 async function buildCandidates() {
   candidates = [];
-  const chars = candidates;
+  const chars = (store && store.chars) || [];
   if (chars.length) {
     chars.forEach((ch) => {
       const f = charFinal(ch);
