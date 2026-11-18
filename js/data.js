@@ -1403,3 +1403,28 @@ CULT.gold = (lv) => 60 * (Number(lv) || 1);
     s.drop.bstone = [base, base + 2 + (n <= 10 ? 0 : n <= 15 ? 1 : 2)];
   });
 })();
+
+
+// ⚖️ 副本规模重排（庆典除外）：数量 1→3，经验本最多 4
+(() => {
+  const plan = (type, i) => {
+    if (type === "d_exp") return Math.min(4, 1 + Math.floor(i / 5));
+    return Math.min(3, 1 + Math.floor(i / 8));
+  };
+  DUNGEONS.filter((x) => x.type === "daily").forEach((d0) => {
+    const pool = [];
+    (d0.stages || []).forEach((s) => (s.enemies || []).forEach((id) => { if (pool.indexOf(id) < 0) pool.push(id); }));
+    if (!pool.length) return;
+    (d0.stages || []).forEach((s, i) => {
+      const want = plan(d0.id, i);
+      const cur = (s.enemies || []).slice();
+      const list = cur.slice();
+      let k = 0;
+      while (list.length < want && k < 12) {
+        list.push(pool[(i + k * 3) % pool.length]);
+        k++;
+      }
+      s.enemies = list.slice(0, want);
+    });
+  });
+})();
