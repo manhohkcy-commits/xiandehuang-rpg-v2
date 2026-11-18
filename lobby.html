@@ -344,9 +344,13 @@ async function loadPlayers() {
         });
   mergeAbilInPlace(abil);
         const gear = Object.keys(SLOT).map((k) => {
-          const d = eq[k] && (eq[k].data || eq[k]);
-          return '<div class="row"><span class="k">' + (d ? (d.rarity === "SSR" ? "🌟 " : "") + esc(d.name) : '<span class="hint">—</span>') +
-            '<div class="hint">' + (d ? [(d.main && d.main.atk) ? "攻击 +" + d.main.atk : "", (d.main && d.main.hp) ? "生命 +" + d.main.hp : ""].filter(Boolean).join(" · ") : "") + '</div></span>' +
+          const raw = eq[k];
+          const d = raw && (raw.data || raw);
+          if (!d) return '<div class="row"><span class="k"><span class="hint">—</span></span><span class="v hint">' + SLOT[k] + '</span></div>';
+          const b = (() => { try { return itemBonus({ cat: k, data: d }) || {}; } catch (e) { return {}; } })();
+          const brief = ["atk","hp","def","res"].filter((x) => Number(b[x])).map((x) => ({ atk: "攻", hp: "生", def: "防", res: "抗" }[x] + " +" + Math.round(b[x]))).join(" · ");
+          return '<div class="row" data-pgear="' + k + '" style="cursor:pointer;"><span class="k">' + esc(d.name) +
+            '<div class="hint">' + (d.rarity || "") + ' · Lv' + (d.lv || 1) + ' · ' + (d.star || 1) + '★' + (brief ? " · " + brief : "") + '</div></span>' +
             '<span class="v hint">' + SLOT[k] + '</span></div>';
         }).join("");
         const wp = eq.weapon && (eq.weapon.data || eq.weapon);
