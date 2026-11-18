@@ -1428,3 +1428,27 @@ CULT.gold = (lv) => 60 * (Number(lv) || 1);
     });
   });
 })();
+
+
+// ⚔️ 普攻/技能倍率归一：技能总倍率 ≥ 普攻总倍率 ×1.7，单段也不低于普攻
+(() => {
+  (WEAPONS || []).forEach((w) => {
+    const aH = Math.max(1, Number(w.aHits) || 1);
+    const sH = Math.max(1, Number(w.sHits) || 1);
+    const aM = Number(w.aMult) || 100;
+    const sM = Number(w.sMult) || 150;
+    const totalA = aM * aH;
+    let totalS = sM * sH;
+    const wantS = Math.max(totalS, totalA * 1.7);
+    let newS = Math.round(wantS / sH);
+    newS = Math.max(newS, Math.ceil(aM * 1.2));
+    newS = Math.min(newS, 420);
+    if (newS !== sM) w.sMult = newS;
+    // 必杀总倍率至少是技能总倍率的 1.3 倍
+    const uH = Math.max(1, Number(w.uHits) || 1);
+    const uM = Number(w.uMult) || 250;
+    const totalU = uM * uH;
+    const minU = Math.max(totalU, w.sMult * sH * 1.3);
+    if (minU > totalU) w.uMult = Math.min(600, Math.round(minU / uH));
+  });
+})();
