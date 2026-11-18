@@ -453,8 +453,17 @@ function renderPrep(stageId) {
   if (!s) { alert("找不到关卡数据：" + stageId); return; }
   const ch = activeChar();
   const colTxt = (v) => v === 0 ? "前排（受击多、近战优先打你）" : "后排（受击少、远程优先）";
+  const _dbg = (() => {
+    const t = Number(store && store.__at) || 0;
+    const ts = t ? new Date(t).toLocaleTimeString("zh-CN", { hour12: false }) : "未知";
+    const c = ch || o0;
+    const ff = ch ? charFinal(ch) : (o0 ? originalFinal(o0, (store.orig || {})[o0.id] || {}) : null);
+    return '<div class="hint" style="margin-top:4px;color:#7d8aa3;">数据：' + esc(box || "-") + ' · ' + esc((c && c.name) || "-") +
+      ' · 存档 ' + ts + ' · 攻击 ' + Math.round((ff && ff.atk) || 0) + ' · 生命 ' + Math.round((ff && ff.hp) || 0) + '</div>';
+  })();
   view().innerHTML =
     '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
+    _dbg +
     '<div class="hint">' + esc(s.story || "") + '</div>' +
     '<div class="hint" style="margin-top:4px;">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
       (s.tier ? '　|　阶级 ' + s.tier : '') + '</div>' +
