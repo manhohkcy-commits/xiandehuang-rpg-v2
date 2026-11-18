@@ -70,7 +70,7 @@ export async function joinRoom(id, box, name) {
   if (room.phase === "fighting") return { ok: false, reason: "已经开打了" };
   if (Object.keys(room.members || {}).length >= 6 && !room.members[box]) return { ok: false, reason: "房间满了（最多 6 人）" };
   room.members = room.members || {};
-  room.members[box] = room.members[box] || { name: name || "玩家", side: "B", ready: false };
+  room.members[box] = room.members[box] || { name: name || "玩家", side: "A", ready: false };
   const r = await putRoom(room, got.updatedAt);
   return r.ok ? { ok: true, room } : r;
 }
@@ -137,13 +137,12 @@ export function myUnitOf(room, box) {
 export function buildUnits(room, maxPerSide = 6) {
   const boxes = Object.keys(room.members || {});
   const A = [], B = [];
+  // 合作模式：所有玩家都在 A 方（B 方由关卡敌人填充）
   boxes.forEach((bx) => {
     const m = room.members[bx] || {};
-    const side = m.side === "B" ? B : A;
-    if (side.length < maxPerSide) side.push({ box: bx, m });
+    if (A.length < maxPerSide) A.push({ box: bx, m });
+    else if (B.length < maxPerSide) B.push({ box: bx, m });
   });
-  // 人少的挪一半过去，保证两边都有人
-  while (!B.length && A.length > 1) B.push(A.pop());
   const units = [];
   const owners = {};
   [["A", A, "a"], ["B", B, "b"]].forEach(([side, team, prefix]) => {

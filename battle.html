@@ -19,7 +19,7 @@
 
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt, addReceipt, gateLoad } from "./js/core.js?v=13807141";
-import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=e40b6dc6";
+import { getRoom, putRoom, pushIntent, takeIntents, buildUnits, unitOfPlayer } from "./js/room.js?v=a92639d1";
 import { } from "./js/battle.js?v=abeb92c8";
 import { WEAPONS, ARMORS, ACCESSORIES, STAGES, ENVIRONMENTS, DUNGEONS, CHAR } from "./js/data.js?v=dbf4b773";
 import { makeItem } from "./js/items.js?v=fa9f2627";
@@ -735,6 +735,12 @@ let prepCol = 0;
 let prepRow = 1;
 async function renderPrep(stageId) {
   await refreshStore();
+  if (roomId) {
+    try {
+      const g0 = await getRoom(roomId);
+      window.__roomMembers = (g0 && g0.room && g0.room.members) || null;
+    } catch (e) { window.__roomMembers = null; }
+  }
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) { alert("找不到关卡数据：" + stageId); return; }
   const ch = activeChar();
@@ -751,7 +757,13 @@ async function renderPrep(stageId) {
   view().innerHTML =
     '<div class="card"><div class="card-title">⚔️ 备战 · ' + esc(s.name) + '</div>' +
     _dbg +
-    '<div class="hint">' + esc(s.story || "") + '</div>' +
+    ((roomId && window.__roomMembers) ? '<div class="hint" style="margin-top:8px;font-weight:700;color:#8fd8ff;">👥 队友（联机）</div>' +
+      Object.keys(window.__roomMembers).map((bx) => {
+        const mm = window.__roomMembers[bx] || {};
+        const cc = mm.char || {};
+        return '<div class="row"><span class="k">' + esc(mm.name || bx) + '<div class="hint">Lv' + (cc.lv || 1) + (bx === box ? " · 你" : "") + '</div></span><span class="v hint">生命 ' + Math.round(cc.hp || 0) + ' · 攻 ' + Math.round(cc.atk || 0) + '</span></div>';
+      }).join("") : "") +
+      '<div class="hint">' + esc(s.story || "") + '</div>' +
     '<div class="hint" style="margin-top:4px;">奖励：金币 ' + fmt(s.gold) + ' · 经验 ' + fmt(s.exp) +
       (s.tier ? '　|　阶级 ' + s.tier : '') + '</div>' +
     ((!activeChar() && ORIGINALS.length > 1) ? '<div style="margin-top:8px;"><div class="hint" style="font-weight:700;">🧬 出战角色</div>' +
