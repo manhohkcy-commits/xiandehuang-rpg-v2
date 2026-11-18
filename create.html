@@ -750,7 +750,9 @@ function renderChar() {
     card("属性（含装备）", row("攻击", Math.round(f.atk)) + row("生命", Math.round(f.hp)) + row("防御", Math.round(f.def)) +
       row("法抗", Math.round(f.res)) + row("速度", Math.round(f.spd * 10) / 10) +
       row("暴击率", Math.round(f.critRate) + "%") + row("暴击伤害", Math.round(f.critDmg) + "%") +
-      '<div style="margin-top:8px;"><button id="btnCharBreakdown">📊 加成明细</button></div>') +
+      '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+      '<button id="btnCharBreakdown">📊 加成明细</button>' +
+      '<button id="btnCharPanel" style="border-color:#8fd8ff;color:#8fd8ff;">📋 完整面板</button></div>') +
     card("天赋与专精", row("专精换算", "+" + spec) +
       attrRow("力量", "str", ch) + attrRow("敏捷", "agi", ch) + attrRow("智力", "intel", ch) + attrRow("技巧", "tech", ch) +
       '<div class="hint" style="margin-top:6px;">剩余可分配点数：<b style="color:' + ((ch.free || 0) > 0 ? "#7ee787" : "#6a6a86") + ';">' + (ch.free || 0) + '</b>（每次升级 +2）</div>') +
@@ -773,6 +775,7 @@ function renderChar() {
     render();
   });
   if ($("btnCharBreakdown")) $("btnCharBreakdown").onclick = () => charBreakdown(ch);
+if ($("btnCharPanel")) $("btnCharPanel").onclick = () => openCharPanel(ch);
   if ($("btnNewChar")) $("btnNewChar").onclick = () => {
     window.__cc = null;
     window.__creating = 1;
@@ -1869,7 +1872,7 @@ function origBreakdown(o, prog) {
   const gear = { atk: 0, hp: 0, def: 0, res: 0, spd: 0 };
   Object.keys(g).forEach((slot) => {
     const it = g[slot] || {}, st = gl[slot] || {};
-    const m = (1 + 0.02 * ((st.lv || 1) - 1)) * (1 + 0.12 * ((st.star || 1) - 1)) * (1 + 0.05 * (st.advance || 0));
+    const m = (1 + 0.02 * ((st.lv || 1) - 1)) * (1 + 0.12 * ((st.star || 1) - 1)) * (1 + 0.05 * (st.advance || 0)) * (1 + 0.03 * (st.refine || 0));
     ["atk", "hp", "def", "res", "spd"].forEach((k) => { gear[k] += (Number(it[k]) || 0) * m; });
   });
   const base = { atk: Number(s.atk) || 60, hp: Number(s.hp) || 500, def: Number(s.def) || 20, res: Number(s.res) || 15, spd: Number(s.spd) || 10 };
@@ -1883,14 +1886,14 @@ function origBreakdown(o, prog) {
       return '<td style="padding:6px;text-align:right;color:' + (color || "#dbe4f3") + ';">' + (v > 0 ? "+" : "") + Math.round(v * 10) / 10 + '</td>';
     }).join("") + '</tr>';
   html += line("基础本体", (k) => base[k]);
-  html += line("等级 / 突破", (k) => base[k] * lvk - base[k], "#8fd8ff");
-  html += line("资历 / 资质", (k) => base[k] * lvk * gm - base[k] * lvk, "#ffd666");
+  html += line("等级 / 突破", (k) => (k === "spd" ? 0.1 * (lv - 1) : base[k] * lvk - base[k]), "#8fd8ff");
+  html += line("资历 / 资质", (k) => (k === "spd" ? 0 : base[k] * lvk * gm - base[k] * lvk), "#ffd666");
   html += line("专精加点", (k) => SPEC[k] || 0, "#7ee787");
   html += line("专属装备", (k) => gear[k], "#ffb347");
   html += '<tr style="border-top:1px solid #2c3d5e;"><td style="padding:7px 4px;font-weight:700;">合计</td>' +
     rows.map((r) => {
       const k = r[1];
-      const v = base[k] * lvk * gm + (SPEC[k] || 0) + gear[k];
+        const v = (k === "spd" ? base.spd + 0.1 * (lv - 1) : base[k] * lvk * gm) + (SPEC[k] || 0) + gear[k];
       return '<td style="padding:7px 6px;text-align:right;font-weight:800;color:#6ea8fe;">' + (Math.round(v * 10) / 10) + '</td>';
     }).join("") + '</tr></table>';
   const ov = document.createElement("div");
