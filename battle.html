@@ -467,7 +467,30 @@ async function buildMultiBattle(stageId) {
     delete room.members[bx];
   });
   // 2) 生成单位
-  const built = buildUnits(room, 6);
+  let built = buildUnits(room, 6);
+  // 🧬 主机端：房间没有玩家角色 → 用原创角色上阵
+  if (!built.units.length) {
+    const isHost = (() => { try { return localStorage.getItem("rpg2:host") === "1"; } catch (e) { return false; } })();
+    if (isHost) {
+      const maxN = (String(new URLSearchParams(location.search).get("mode") || "") === "3v3") ? 3 : 1;
+      built.units = (ORIGINALS || []).slice(0, Math.max(1, maxN)).map((o, i) => {
+        const prog = (store.orig || {})[o.id] || {};
+        const ff = originalFinal(o, prog);
+        const gw = (ORIGINAL_GEAR[o.id] || {}).weapon || {};
+        return {
+          id: "me" + (i || ""), name: (prog.name || o.name), side: "A", lv: ff.lv || prog.lv || 1,
+          hp: ff.hp, maxHp: ff.hp, atk: ff.atk, def: ff.def, res: ff.res, spd: ff.spd,
+          critRate: ff.critRate, critDmg: ff.critDmg, dmgCut: ff.dmgCut || 0, rage: 0,
+          __skills: [
+            { kind: "normal", name: gw.aName || "普攻", mult: Number(gw.aMult) || 100, hits: Number(gw.aHits) || 1, rage: Number(gw.aRage) || 20 },
+            { kind: "skill", name: gw.sName || "技能", mult: Number(gw.sMult) || 150, hits: Number(gw.sHits) || 1, cd: Number(gw.sCd) || 3, rage: Number(gw.sRage) || 15 },
+            { kind: "ult", name: gw.uName || "必杀", mult: Number(gw.uMult) || 250, hits: Number(gw.uHits) || 1, rage: 100 }
+          ]
+        };
+      });
+      built.owners = built.owners || {};
+    }
+  }
   // 多人 PvE：所有玩家都在我方，敌人来自关卡配置
   built.units.forEach((u) => { u.side = "A"; });
   // 👥 多人适配：人数越多，敌人规模越大（额外援军，少数精锐）
@@ -1374,6 +1397,7 @@ function aiTurnIfNeeded() {
     const shape = (used && used.shape) || (used && used.aoe ? "all" : "single");
     const dmgType = (used && used.dmgType) || "phys";
     const alliesA = st.units.filter((u) => u.side === "A" && u.hp > 0);
+    if (!m) { commit(st, f2.id); return; }
     const meRow = (m.__row == null ? 1 : m.__row), meCol = m.__col ? 1 : 0;
     let tgts = [m];
     if (shape === "all") tgts = alliesA;
