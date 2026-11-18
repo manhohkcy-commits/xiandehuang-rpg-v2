@@ -45,6 +45,23 @@ function readBox() {
   return localStorage.getItem("rpg2:box") || "";
 }
 
+async function refreshStore() {
+  if (!box) return false;
+  try {
+    const g = await gateLoad(box, {});
+    if (g.ok) { store = g.store; updatedAt = g.updatedAt || ""; window.__dataSrc = "云端"; }
+  } catch (e) {}
+  try {
+    const cached = cacheLoad(box);
+    const cs = cached && cached.store;
+    if (cs && Number(cs.v) === 2 && Number(cs.__at || 0) > Number(store.__at || 0)) {
+      store = cs;
+      window.__dataSrc = "本地缓存（比云端新）";
+    }
+  } catch (e) {}
+  return !!store;
+}
+
 async function load() {
   box = readBox();
   $("boxTag").textContent = box || "缺 box";
@@ -528,7 +545,8 @@ window.__pickTgt = (id) => {
 };
 let prepCol = 0;
 let prepRow = 1;
-function renderPrep(stageId) {
+async function renderPrep(stageId) {
+  await refreshStore();
   const s = STAGES.find((x) => x.id === stageId);
   if (!s) { alert("找不到关卡数据：" + stageId); return; }
   const ch = activeChar();
@@ -594,7 +612,7 @@ function renderPrep(stageId) {
   $("prepBack").onclick = renderPick;
 }
 
-function startBattle(stageId, col, row) {
+async function startBattle(stageId, col, row) {
   if (roomId && amHost) {
     // 多人开战失败时给提示并回退单人，避免「点了没反应」
     buildMultiBattle(stageId).then((ok) => {
@@ -606,6 +624,7 @@ function startBattle(stageId, col, row) {
     });
     return;
   }
+  await refreshStore();
   const ch = activeChar();
   const o0 = !ch ? hostOrig() : null;
   const of = o0 ? originalFinal(o0, (store.orig || {})[o0.id] || {}) : null;
@@ -1524,6 +1543,12 @@ function finish() {
 }
 
 $("btnSave").onclick = () => save();
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState !== "visible") return;
+  if (st && !st.finished) return;          // 战斗中不打断
+  await refreshStore();
+  renderPick();
+});
 (async () => {
   try { await pullOriginals(); } catch (e) {}
   await load();
