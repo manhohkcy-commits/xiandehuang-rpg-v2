@@ -24,8 +24,8 @@ export function originalFinal(o, prog, withGear, withBonus) {
     const star = Math.max(1, Number(st.star) || 1);
     const mul = (1 + 0.02 * (lv - 1)) * (1 + 0.12 * (star - 1)) * (1 + 0.05 * (Number(st.advance) || 0)) * (1 + 0.03 * (Number(st.refine) || 0));
     ["atk", "hp", "def", "res", "spd"].forEach((key) => { gs[key] += (Number(it[key]) || 0) * mul; });
-    gs.critRate += Number(it.critRate) || 0;
-    gs.critDmg += (Number(it.critDmg) || 0) + (Number(st.refine) || 0);
+    gs.critRate += (Number(it.critRate) || 0) * mul;
+    gs.critDmg += ((Number(it.critDmg) || 0) + (Number(st.refine) || 0)) * mul;
     gs.lifesteal += (Number(it.lifesteal) || 0) * mul;
     gs.ultPct += (Number(it.ultPct) || 0) * mul;
     gs.dmgCut += (Number(it.dmgCut) || 0) * mul;

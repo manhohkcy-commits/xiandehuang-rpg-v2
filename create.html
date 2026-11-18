@@ -28,7 +28,7 @@ import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BI
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
 import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=6072c09e";
-import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=20c6f937";
+import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked } from "./js/originals.js?v=32f6b23a";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
 
@@ -1919,10 +1919,10 @@ function origGearDetail(it, slot, gst) {
   Object.keys(it).forEach((k) => { IT[k] = it[k]; });
   ['atk','hp','def','res'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
   ['lifesteal','ultPct'].forEach((k) => { if (it[k]) IT[k] = Math.round(Number(it[k]) * gMul * 10) / 10; });
-  // 速度、暴击率、暴击伤害不随培养放大（与 originalFinal 一致）
-  if (it.critRate) IT.critRate = Number(it.critRate) || 0;
-  if (it.critDmg) IT.critDmg = (Number(it.critDmg) || 0) + (Number(gst && gst.refine) || 0);
-  if (it.spd) IT.spd = Number(it.spd) || 0;
+  // 暴击/暴伤/速度与玩家装备一致：随培养放大
+  if (it.critRate) IT.critRate = Math.round(Number(it.critRate) * gMul * 10) / 10;
+  if (it.critDmg) IT.critDmg = Math.round(((Number(it.critDmg) || 0) + (Number(gst && gst.refine) || 0)) * gMul * 10) / 10;
+  if (it.spd) IT.spd = Math.round(Number(it.spd) * gMul * 10) / 10;
   const row = (k, v) => '<div style="display:flex;justify-content:space-between;padding:6px 9px;border-bottom:1px solid #1a2438;">' +
     '<span class="hint">' + k + '</span><b style="font-size:13px;color:#dbe4f3;">' + v + '</b></div>';
   const panel = (inner) => '<div style="background:#0d1322;border:1px solid #1c2740;border-radius:10px;overflow:hidden;">' + inner + '</div>';
