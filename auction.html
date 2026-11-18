@@ -18,6 +18,7 @@
 </div>
 <script type="module">
 import { cloudGet, cloudSave, cacheLoad, cacheSave, esc, fmt } from "./js/core.js?v=13807141";
+import { sellPrice } from "./js/items.js?v=6072c09e";
 
 const $ = (id) => document.getElementById(id);
 const view = () => $("view");
@@ -65,6 +66,41 @@ async function saveAuc(name) {
   aucAt = (r && r.row && r.row.updated_at) || aucAt;
 }
 
+function suggestPrice(it) {
+  try {
+    const base = sellPrice(it) || 500;      // 回收价
+    return Math.max(1, Math.round(base * 4 / 10) * 10);   // 参考价 ≈ 回收价 ×4（略高于回收，低于商店）
+  } catch (e) { return 1000; }
+}
+
+function showItem(it) {
+  const d = (it && it.data) || {};
+  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  const stats = [];
+  if (d.atk) stats.push(row("攻击", "+" + d.atk));
+  if (d.hp) stats.push(row("生命", "+" + d.hp));
+  if (d.def) stats.push(row("防御", "+" + d.def));
+  if (d.res) stats.push(row("法抗", "+" + d.res));
+  if (d.spd) stats.push(row("速度", "+" + d.spd));
+  if (d.critRate) stats.push(row("暴击率", "+" + d.critRate + "%"));
+  if (d.critDmg) stats.push(row("暴击伤害", "+" + d.critDmg + "%"));
+  if (d.lifesteal) stats.push(row("吸血", d.lifesteal + "%"));
+  if (d.dmgCut) stats.push(row("减伤", d.dmgCut + "%"));
+  if (d.thorns) stats.push(row("反伤", d.thorns + "%"));
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(5,8,16,.86);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px;";
+  ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;">' +
+    '<div class="card-title">' + esc(d.name || "装备") + ' <span class="tag">' + esc(d.rarity || "") + ' · Lv' + (d.lv || 1) + ' · ' + (d.star || 1) + '★</span></div>' +
+    '<div class="hint" style="margin-bottom:6px;">' + (it.cat === "weapon" ? "武器" : it.cat === "armor" ? ("防具 · " + (d.part === "bottom" ? "下装" : "上装")) : "饰品") + '</div>' +
+    (d.desc ? '<div class="hint" style="margin-bottom:6px;">' + esc(d.desc) + '</div>' : "") +
+    (stats.length ? stats.join("") : '<div class="hint">没有属性</div>') +
+    '<div class="hint" style="margin-top:8px;">参考价：' + fmt(suggestPrice(it)) + ' 金（回收价 ' + fmt(sellPrice(it)) + ' 金）</div>' +
+    '<div style="margin-top:10px;"><button id="aiClose" style="width:100%;">关闭</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#aiClose").onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function render() {
   if (!store) return;
   const mine = (auc.listings || []).filter((l) => l.box === box);
@@ -72,7 +108,7 @@ function render() {
   const listRow = (l, own) => {
     const it = l.item || {};
     return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #1a2438;">' +
-      '<div><b style="font-size:12.5px;">' + esc(it.name || "装备") + '</b> <span class="hint">' + esc(it.rarity || "") +
+      '<div><b style="font-size:12.5px;cursor:pointer;text-decoration:underline dotted;" data-viewlid="' + l.lid + '">' + esc(it.name || "装备") + '</b> <span class="hint">' + esc(it.rarity || "") +
       ' Lv' + (it.lv || 1) + (it.star ? ' ★' + it.star : '') + '</span>' +
       '<div class="hint">卖家：' + esc(l.seller || l.box) + '</div></div>' +
       '<div style="text-align:right;">' +
@@ -97,6 +133,14 @@ function render() {
   view().querySelectorAll("[data-buy]").forEach((b) => b.onclick = () => buy(b.dataset.buy));
   view().querySelectorAll("[data-unlist]").forEach((b) => b.onclick = () => unlist(b.dataset.unlist));
   view().querySelectorAll("[data-list]").forEach((b) => b.onclick = () => doList(b.dataset.list));
+  view().querySelectorAll("[data-view]").forEach((b) => b.onclick = () => {
+    const it = (store.items || []).find((x) => x.id === b.dataset.view);
+    if (it) showItem(it);
+  });
+  view().querySelectorAll("[data-viewlid]").forEach((b) => b.onclick = () => {
+    const l = (auc.listings || []).find((x) => x.lid === b.dataset.viewlid);
+    if (l) showItem(l.item);
+  });
 }
 
 async function doList(itemId) {
