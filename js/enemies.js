@@ -418,10 +418,11 @@ export function enemyAt(id, lv) {
   // 🏅 阶级加成：精英/特色/首领更强
   const TIER_MUL = { normal: 1.0, elite: 1.2, special: 1.35, boss: 1.5 };
   const tm = TIER_MUL[e.tier] || 1;
+  const DIFF = 1.12;   // 🎚 全局难度微调（副本敌人）
   const k = (key) => {
     const g = key === "spd" ? 0.05 : (e.growth[key] || 0);
     let raw = (e.stats[key] || 0) * (1 + g * (L - 1));
-    if (key !== "spd") raw *= enemyK(L) * tm;
+    if (key !== "spd") raw *= enemyK(L) * tm * DIFF;
     if (key === "spd") {
       raw *= ROLE_SPD[e.role] || 1;
       if (ASSASSIN.test(e.name)) raw *= 1.1;
