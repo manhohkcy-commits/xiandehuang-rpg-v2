@@ -2112,7 +2112,7 @@ function renderOrig() {
       const baseV = Number((o.spec || {})[k]) || 0;
       const addV = Number((prog.spec || {})[k]) || 0;
       const capV = Number(BIRTH.specLevelCap) || 50;
-      if (baseV + addV >= capV) return toast("这一项已达上限 " + capV, true);
+      if (addV >= capV) return toast("这一项成长加点已到上限 " + capV, true);
     }
     prog.spec = prog.spec || {};
     prog.spec[k] = (Number(prog.spec[k]) || 0) + 1;
