@@ -1086,7 +1086,7 @@ function doAct(kind) {
       addStatus(st, f2.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
     }
-    pushLog("🥋 " + m.name + " 技能「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + fxTags(r), "act", subs);
+    pushLog("🥋 " + m.name + " 技能「" + (wp.sName || "招式") + "」· " + (wp.dmgType === "spell" ? "法术" : "物理") + " → " + f2.name + " " + r.dmg + fxTags(r), "act", subs);
     setCooldown(st, "me", cd);
     commit(st, "me");
   } else {
@@ -1103,7 +1103,7 @@ function doAct(kind) {
         pushLog("❄️ 霜印 +1（" + st.__frost + "/5）", "line");
       }
     }
-    pushLog("⚔️ " + m.name + " 普攻「" + (wp.aName || "普攻") + "」→ " + f2.name + " " + r.dmg + fxTags(r), "act",
+    pushLog("⚔️ " + m.name + " 普攻「" + (wp.aName || "普攻") + "」· " + (wp.dmgType === "spell" ? "法术" : "物理") + " → " + f2.name + " " + r.dmg + fxTags(r), "act",
       [(wp.dmgType === "spell" ? "法术" : "物理")]);
     commit(st, "me");
   }
@@ -1231,7 +1231,7 @@ function aiTurnIfNeeded() {
     const r = { dmg: total, crit };
     const _subs = tgts.length > 1 ? perTarget.map((x) => x.text) : [];
     pushLog(
-      (label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " " + label + ((used && used.name) ? "「" + used.name + "」" : "") +
+      (label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " " + label + ((used && used.name) ? "「" + used.name + "」" : "") + "· " + (dmgType === "spell" ? "法术" : "物理") +
       " → " + (tgts.length > 1 ? "我方 " + tgts.length + " 人 · 总伤害 " + total : m.name + " " + r.dmg + fxTags(r)),
       tgts.length > 1 ? "act" : "line", _subs);
     if (used && used.burn) addStatus(st, f2.id, "me", "burn", Number(used.burn) || 20, 2, "灼烧");
