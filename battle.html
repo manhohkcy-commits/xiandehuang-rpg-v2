@@ -1050,7 +1050,7 @@ function doAct(kind) {
     });
     if (st.__isOrig && frost > 0) { st.__frost = 0; pushLog("❄️ 消耗霜印 ×" + frost + "（倍率 +" + Math.round(frost * 15) + "%）", "line"); }
     m.rage = 0;
-    pushLog("💥 " + m.name + " 必杀 → " + f2.name + " " + r.dmg + fxTags(r));
+    pushLog("💥 " + m.name + " [必杀]" + (wp.uName || "必杀") + " → " + f2.name + " " + r.dmg + fxTags(r));
     commit(st, "me");
   } else if (kind === "skill") {
     const per = Number(wp.sMult) || 150;
@@ -1074,7 +1074,7 @@ function doAct(kind) {
       addStatus(st, f2.id, wp.hitStatus, Number(wp.hitStatusV) || 3, Number(wp.hitStatusTurns) || 2, wp.hitStatusName || wp.hitStatus);
       subs.push("对 " + f2.name + " 施加「" + (wp.hitStatusName || wp.hitStatus) + "」（" + (Number(wp.hitStatusV) || 3) + "% · " + (Number(wp.hitStatusTurns) || 2) + " 回合）");
     }
-    pushLog("🥋 " + m.name + "「" + (wp.sName || "招式") + "」→ " + f2.name + " " + r.dmg + fxTags(r), "act", subs);
+    pushLog("🥋 " + m.name + " [技能]" + (wp.sName || "招式") + " → " + f2.name + " " + r.dmg + fxTags(r), "act", subs);
     setCooldown(st, "me", cd);
     commit(st, "me");
   } else {
@@ -1132,7 +1132,7 @@ function aiTurnIfNeeded() {
     setTimeout(() => {
       const t = foe();
       const r = damage(st, a.id, t.id, { atk: a.atk, mult: 100, critRate: a.critRate, critDmg: a.critDmg });
-      pushLog("🤝 " + a.name + " 出手 → " + t.name + " " + r.dmg + fxTags(r), "line");
+      pushLog("🤝 " + a.name + " [普攻] → " + t.name + " " + r.dmg + fxTags(r), "line");
       commit(st, a.id);
       if (st.finished && !spawnWave()) finish();
       renderBattle();
@@ -1209,7 +1209,7 @@ function aiTurnIfNeeded() {
     });
     if (tgts.length > 1) pushLog("🎯 命中 " + tgts.length + " 个目标", "line");
     const r = { dmg: total, crit };
-    pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + (used && used.name ? "「" + used.name + "」" : "") + " → " + m.name + " " + r.dmg + fxTags(r));
+    pushLog((label === "必杀" ? "💥 " : label === "技能" ? "🥋 " : "⚔️ ") + f2.name + " [" + label + "]" + ((used && used.name) || "") + " → " + (tgts.length > 1 ? "我方 " + tgts.length + " 人" : m.name) + " " + r.dmg + fxTags(r));
     if (used && used.burn) addStatus(st, f2.id, "me", "burn", Number(used.burn) || 20, 2, "灼烧");
     if (used && used.stun) addStatus(st, f2.id, "me", "stun", Number(used.stun) || 20, 1, "眩晕");
     if (used && used.silence) addStatus(st, f2.id, "me", "silence", Number(used.silence) || 20, 2, "沉默");
