@@ -4,7 +4,18 @@ import { uid } from "./core.js?v=13807141";
 import { applyAffixes } from "./affixes.js?v=ee432832";
 
 export const isEquip = (it) => !!(it && (it.cat === "weapon" || it.cat === "armor" || it.cat === "accessory"));
+export function catOf(def) {
+  if (!def) return "weapon";
+  const id = String(def.id || "");
+  if (id.indexOf("a_") === 0) return "armor";
+  if (id.indexOf("c_") === 0) return "accessory";
+  if (id.indexOf("w_") === 0) return "weapon";
+  if (def.part) return "armor";
+  return "weapon";
+}
+
 export function makeItem(cat, def) {
+  if (def && def.id) cat = catOf(def);   // 以数据为准，避免存错部位
   const data = Object.assign({}, def, { lv: 1, star: 1, born: def.rarity });
   try { applyAffixes(data, cat, data.rarity || "R"); } catch (e) {}
   return { id: uid("it"), cat, lock: false, data };
