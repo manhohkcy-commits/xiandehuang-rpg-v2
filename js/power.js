@@ -44,12 +44,28 @@ export function talentSpent(ch) {
 }
 
 // ⚡ 天赋主动技：本职业点满 10 点后，投入 1 点点亮职业主动技
+const ACT_LV_STEPS = [15, 35, 55, 75, 80];   // 主动技 Lv1~5 的解锁等级
+
+export function talentActiveLevel(ch) {
+  const lv = Number(ch && ch.lv) || 1;
+  let n = 0;
+  ACT_LV_STEPS.forEach((t) => { if (lv >= t) n++; });
+  return n;
+}
+
 export function talentActive(ch) {
   const pts = (ch && ch.talent && ch.talent.points) || {};
-  for (const t of TALENT_TREES) {
-    if (t.active && pts[t.active.id]) return Object.assign({ tree: t.id }, t.active);
-  }
-  return null;
+  const lv = Number(ch && ch.lv) || 1;
+  // 已投入点数最多的定位优先；都没点则用第一个满足等级要求的定位
+  let best = null, bestN = -1;
+  TALENT_TREES.forEach((t) => {
+    if (!t.active || lv < (Number(t.active.unlockLv) || 15)) return;
+    let n = 0;
+    (t.branches || []).forEach((b) => b.nodes.forEach((nd) => { if (pts[nd.id]) n++; }));
+    if (pts[t.active.id]) n += 1;
+    if (n > bestN) { bestN = n; best = t; }
+  });
+  return best ? Object.assign({ tree: best.id }, best.active) : null;
 }
 
 export function talentActive2(ch) {
@@ -63,7 +79,7 @@ export function talentActive2(ch) {
 }
 
 // ⚡ 主主动技等级：按本定位点数 10/20/30/36/42 → Lv1~5
-export function talentActiveLevel(ch, treeId) {
+export function talentActiveLevelByPoints(ch, treeId) {
   const n = talentSpentInTree(ch, treeId);
   const NEED = [10, 20, 30, 36, 42];
   let lv = 0;
