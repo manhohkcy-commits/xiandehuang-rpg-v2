@@ -128,7 +128,7 @@ function snapshot() {
   if (chars.length) {
     const act = chars.find((x) => x.id === store.activeChar) || chars[0];
     const f = charFinal(act);
-    return { name: act.name, lv: act.lv || 1, atk: Math.round(f.atk), hp: Math.round(f.hp), spd: Math.round(f.spd || 0) };
+    return { name: act.name, lv: act.lv || 1, charId: act.id, box: me, atk: Math.round(f.atk), hp: Math.round(f.hp), def: Math.round(f.def), res: Math.round(f.res), spd: Math.round(f.spd || 0), critRate: Math.round(f.critRate || 5), critDmg: Math.round(f.critDmg || 150) };
   }
   const c0 = candidates[0];
   return c0 ? { name: c0.name, lv: c0.lv, atk: c0.atk, hp: c0.hp, spd: c0.spd, power: c0.power } : null;
@@ -207,21 +207,8 @@ function bind() {
     const foe = data.players[b.dataset.fight];
     if (!foe) return;
     if (dailyUsed(rec) >= 5) return toast("今日挑战次数已用完（5/5）", true);
-    if (rec.day !== today()) { rec.day = today(); rec.used = 0; }
-    const teamPower = (t) => t.reduce((s, x) => s + (x.power != null ? Number(x.power) : (x.atk * 2 + x.hp * 0.5)), 0);
-    const myP = teamPower(rec.team), foeP = teamPower(foe.team || []);
-    const luck = 0.85 + Math.random() * 0.3;
-    const win = myP * luck >= foeP;
-    const pts = win ? 20 : -10;
-    rec.pts = Math.max(0, (rec.pts || 0) + pts);
-    if (win) rec.w = (rec.w || 0) + 1; else rec.l = (rec.l || 0) + 1;
-    rec.used = dailyUsed(rec) + 1;
-    rec.coin = (Number(rec.coin) || 0) + (win ? 10 : 3);
-    foe.pts = Math.max(0, (foe.pts || 0) - (win ? 10 : 0));
-    data.players[me] = rec;
-    try { await saveArena(); } catch (e) {}
-    toast((win ? "🏆 胜利！+" : "💀 失败…") + pts + " 分", !win);
-    render();
+    // 直接进入真实战斗（结算在战斗页写回积分）
+    location.href = "battle.html?arena=" + encodeURIComponent(b.dataset.fight);
   });
 }
 
