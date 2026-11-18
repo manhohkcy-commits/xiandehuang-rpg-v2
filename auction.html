@@ -148,7 +148,7 @@ function render() {
     card("📦 我的仓库", sellable.length
       ? sellable.map((it) => '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #1a2438;">' +
         '<div><b style="font-size:12.5px;">' + esc(it.data.name) + '</b> <span class="hint">' + esc(it.data.rarity || "") + ' Lv' + (it.lv || 1) + '</span></div>' +
-        '<div style="display:flex;gap:4px;align-items:center;"><input data-price="' + it.id + '" type="number" min="1" placeholder="价格" style="width:78px;background:#0b0e17;border:1px solid #24304a;border-radius:6px;color:#dbe4f3;padding:4px 6px;">' +
+        '<div style="display:flex;gap:4px;align-items:center;"><input data-price="' + it.id + '" type="number" min="1" value="' + suggestPrice(it) + '" placeholder="价格" style="width:78px;background:#0b0e17;border:1px solid #24304a;border-radius:6px;color:#dbe4f3;padding:4px 6px;">' +
         '<button data-list="' + it.id + '" style="font-size:10.5px;padding:3px 9px;">上架</button></div></div>').join("")
       : '<div class="hint">仓库里没有可卖的装备。</div>');
 
