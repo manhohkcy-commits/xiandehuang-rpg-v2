@@ -1060,7 +1060,7 @@ function doAct(kind) {
     m.rage = 0;
     const uSubs = tgts.length > 1 ? uPer.map((x) => x.name + "　物理 · " + x.dmg + (x.crit ? "（暴击💥）" : "") + (x.block ? "（格挡 -" + x.block + "%）" : "") + (x.absorb ? "（护盾吸收 " + x.absorb + "）" : "")) : [];
     pushLog("💥 " + m.name + " [必杀]" + (wp.uName || "必杀") + " → " +
-      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "" : "") : f2.name + " " + (wp.dmgType === "spell" ? "法术" : "物理") + " −" + r.dmg + fxTags(r)),
+      (tgts.length > 1 ? "敌方 " + tgts.length + " 人 · 总伤害 " + r.dmg + (uHitsN > 1 ? "" : "") : f2.name + "　" + (wp.dmgType === "spell" ? "法术" : "物理") + " · " + r.dmg + fxTags(r)),
       tgts.length > 1 ? "act" : "line", uSubs);
     commit(st, "me");
   } else if (kind === "skill") {
