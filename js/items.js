@@ -38,8 +38,10 @@ export function equip(store, charId, itemId) {
       return { ok: false, why: "同一件装备不能重复穿" };
     }
   }
-  const old = ch.equip[slot];
+  const oldRaw = ch.equip[slot];
+  const old = oldRaw && oldRaw.data ? oldRaw.data : oldRaw;   // 防止重复包裹
   store.items = store.items.filter((x) => x.id !== itemId);
+  store.__gone = (store.__gone || []).concat([itemId]).slice(-300);   // 穿上后不要被合并逻辑复活
   if (old) store.items.push({ id: uid("it"), cat: slot, lock: false, data: old });
   ch.equip[slot] = it.data;
   return { ok: true };
