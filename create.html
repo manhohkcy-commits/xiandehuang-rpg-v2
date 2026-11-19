@@ -27,7 +27,7 @@ import { newStore, newChar, cloudGet, cloudSave, cloudList, cacheSave, cacheLoad
 import { WEAPONS, ARMORS, ACCESSORIES, CONSUMABLES, CHAR, SHOP_PRICE, BREAKS, BIRTH, PRESETS, TALENT_TREES, talentPointsOf, TALENT_TIER_LV, CONTENT_READY, DAILY_QUESTS, DAILY_BONUS, ACHIEVEMENTS, WEEK_REWARD } from "./js/data.js?v=dbf4b773";
 import { charFinal, charPower, itemBonus, mainKeysOf, gradeOf, aptitudeOf, talentBonus, talentSpentInTree, talentSpentInBranch, powerOf, finalOf } from "./js/power.js?v=5f9e4127";
 import { GRADE, APTITUDE, MAT_TIER, CULT } from "./js/data.js?v=dbf4b773";
-import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=fa9f2627";
+import { makeItem, findItem, equip, unequip, cultCheck, cultApply, refineCheck, refineApply, promoteCheck, promoteApply, dismantle, sell, sellPrice, isEquip, inheritCheck, inheritApply, catOf } from "./js/items.js?v=cea21c36";
 import { ORIGINALS, pullOriginals, originalFinal, ORIGINAL_GEAR, ORIG_GEAR_CULT, origUnlocked, origGearMul } from "./js/originals.js?v=ba87a9d1";
 
 let box = "", store = null, updatedAt = "", tab = "char", tt = 0;
@@ -219,9 +219,10 @@ async function save() {
     if (rs && Number(rs.v) === 2) {
       updatedAt = remote.updated_at || updatedAt;   // 用最新版本号，避免冲突重试
       const have = new Set((store.items || []).map((x) => x && x.id));
+      const gone = new Set(store.__gone || []);
       let added = 0;
       (rs.items || []).forEach((x) => {
-        if (x && x.id && !have.has(x.id)) { store.items.push(x); added++; }
+        if (x && x.id && !have.has(x.id) && !gone.has(x.id)) { store.items.push(x); added++; }
       });
       // 装备槽：本地缺失而云端有，则补回
       (store.chars || []).forEach((ch) => {
@@ -1830,7 +1831,7 @@ function renderOrigCult() {
     const bsN2 = Number(store.flags.bstone) || 0;
     const okBtk = !!cBtk && lv >= _cap && bsN2 >= cBtk.s && gN >= cBtk.g;
     const cRef = { r: 2 + ref, g: 300 + 200 * ref };
-  const ADV_COST = { R: { s: 200, g: 2000 }, SR: { s: 500, g: 6000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
+  const ADV_COST = { R: { s: 100, g: 2000 }, SR: { s: 200, g: 6000 }, SSR: { s: 300, g: 18000 }, UR: { s: 300, g: 18000 } };
   const cAdv = ADV_COST[it.rarity || "SSR"] || ADV_COST.SSR;
     const cAwk = { s: [150, 250, 400][awk] || 400, k: [3, 5, 8][awk] || 8 };   // UC 觉醒：碎片 + 觉醒石
     const okLv = lv < _cap && stN >= cLv.s && gN >= cLv.g;
@@ -1917,7 +1918,7 @@ function renderOrigCult() {
     } else if (act === "advance") {
       const n = Number(gs.advance) || 0;
       if (n >= 1) return toast("已升阶", true);
-      const _advTable = { R: { s: 200, g: 2000 }, SR: { s: 500, g: 6000 }, SSR: { s: 1200, g: 18000 }, UR: { s: 1200, g: 18000 } };
+      const _advTable = { R: { s: 100, g: 2000 }, SR: { s: 200, g: 6000 }, SSR: { s: 300, g: 18000 }, UR: { s: 300, g: 18000 } };
       const _advNow = _advTable[_gdef.rarity || "SSR"] || _advTable.SSR;
       const cs = _advNow.s, cg = _advNow.g;
       if (_sHave() < cs) return toast("碎片不足（需 " + cs + "）", true);

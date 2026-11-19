@@ -275,6 +275,7 @@ export function dismantle(store, itemId) {
   const SHARD_BASE = { R: 20, SR: 40, SSR: 80, UR: 160 };
   const shards = Math.max(1, Math.round((SHARD_BASE[rarity] || 20) * (Number(d.star) || 1)));
   store.items = store.items.filter((x) => x.id !== itemId);
+  store.__gone = (store.__gone || []).concat([itemId]).slice(-300);
   store.flags = store.flags || {};
   store.flags.stone = (Number(store.flags.stone) || 0) + stone;
   store.flags[sKey] = (Number(store.flags[sKey]) || 0) + shards;
@@ -298,6 +299,7 @@ export function sell(store, itemId) {
   if (it.lock) return { ok: false, why: "已锁定，先解锁" };
   const price = sellPrice(it);
   store.items = store.items.filter((x) => x.id !== itemId);
+  store.__gone = (store.__gone || []).concat([itemId]).slice(-300);
   store.gold = (Number(store.gold) || 0) + price;
   return { ok: true, price };
 }
