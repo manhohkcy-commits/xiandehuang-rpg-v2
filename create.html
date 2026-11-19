@@ -1966,6 +1966,14 @@ function renderBase() {
 }
 
 // 🗡 原创装备详情弹窗
+function gearRarityText(it, st) {
+  const adv = Number(st && st.advance) || 0;
+  const awk = Number(st && st.awaken) || 0;
+  const base = (it && it.rarity) || "SSR";
+  const rar = adv >= 1 ? "UR" : base;
+  return rar + (awk >= 1 ? " 🔥" + awk : "");
+}
+
 function origGearDetail(it, slot, gst) {
   const rc = { SSR: "#ffd666", SR: "#c9a0ff", UR: "#ff6b6b", R: "#6ea8fe" }[it.rarity] || "#8a8ab0";
   const SLOTN = { weapon: "武器", armor: "上装", armor2: "下装", accessory: "饰品" };
@@ -2002,7 +2010,7 @@ function origGearDetail(it, slot, gst) {
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;";
   ov.innerHTML = '<div class="card" style="max-width:420px;width:100%;max-height:86vh;overflow:auto;border:1px solid ' + rc + '66;">' +
     '<div style="display:flex;align-items:center;gap:8px;"><b style="font-size:18px;color:' + rc + ';">' + esc(it.name) + '</b>' +
-    '<span class="tag" style="border-color:' + rc + ';color:' + rc + ';">' + (it.rarity || "") + '</span>' +
+    '<span class="tag" style="border-color:' + rc + ';color:' + rc + ';">' + gearRarityText(it, gst) + '</span>' +
     '<span class="tag" style="margin-left:auto;">' + SLOTN[slot] + ' · Lv' + (gst.lv || 1) + ' ★' + (gst.star || 1) + '</span></div>' +
     (mainRows ? '<div class="hint" style="margin:8px 0 5px;color:#ffd666;font-weight:700;">主属性</div>' + panel(mainRows) : "") +
     (subRows ? sec("副属性") + panel(subRows) : "") +
@@ -2236,7 +2244,7 @@ function renderOrig() {
         return '<div data-eqslot="' + k + '" style="flex:1;min-width:100px;background:#12182a;border:1px solid #3a3a5c;border-radius:9px;padding:9px;cursor:pointer;">' +
           '<div class="hint">' + (GI[k] || "🗡") + ' ' + SLOTN[k] + '</div>' +
           (it2.name ? '<div style="font-size:12.5px;font-weight:700;color:#dbe4f3;">' + esc(it2.name) + '</div>' +
-            '<div class="hint">' + (it2.rarity || "") + ' Lv' + (st2.lv || 1) + ' ★' + (st2.star || 1) + '</div>'
+            '<div class="hint">' + gearRarityText(it2, st2) + ' Lv' + (st2.lv || 1) + ' ★' + (st2.star || 1) + '</div>'
             : '<div class="hint">空</div>') + '</div>';
       }).join("") + '</div>') +
     card("操作", '<button id="btnOrigRename">✏️ 改名字</button><button id="btnNick">🏷 改账号昵称</button>') +
